@@ -1,0 +1,24 @@
+package com.melli.hub.domain.master.entity;
+
+import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
+
+@Entity
+@Table(name = "profile_role")
+@Setter
+@Getter
+@ToString
+@NoArgsConstructor
+public class ProfileRoleEntity extends BaseEntityAudit {
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "role_id", nullable = false)
+    private RoleEntity roleEntity;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "profile_id", nullable = false)
+    private ProfileEntity profileEntity;
+}

@@ -1,0 +1,94 @@
+services:
+  hub-web:
+    #build: .
+    image: repo.sadad.co.ir/repository/hub-mali/hub:1.0.10
+    container_name: hub-web
+    ports:
+      - 8080:8080
+    depends_on:
+      - db
+      - redis
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/hub
+      SPRING_DATASOURCE_USERNAME: hub
+      SPRING_DATASOURCE_PASSWORD: hub
+      SPRING_SLAVE_URL: jdbc:postgresql://db:5432/hub
+      SPRING_SLAVE_USERNAME: hub
+      SPRING_SLAVE_PASSWORD: hub
+      spring.data.redis.host: redis
+      spring.data.redis.port: 6379
+      spring.data.redis.password: 123456
+      SPRING_JPA_PROPERTIES_HIBERNATE_DEFAULT_SCHEMA: hubsc
+      # Disabling the swagger-ui
+      springdoc.swagger-ui.enabled: true
+      # Disabling the /v3/api-docs enpoint
+      springdoc.swagger-ui.path: /swagger-ui.html
+      springdoc.api-docs.enabled: true
+      springdoc.swagger-ui.disable-swagger-default-url: true
+      springdoc.version: 1
+      sadad.identity.url: https://identity.bmiapis.ir/identity/oauth2/auth/token
+      sadad.fundTransfer.url: https://moneytransfer.bmiapis.ir/services/rest/api/transfer/single/create
+      sadad.inquiry.url: https://moneytransfer.bmiapis.ir/services/rest/api/transfer/
+      sadad.shahkar.url: https://customer.bmiapis.ir/api/icms/v1/contact/validation
+      rayan.base.url.path: https://api.irbroker.com
+    volumes:
+      - ./log:/var/log/hub
+  hub-portal:
+    image: repo.sadad.co.ir/repository/hub-mali/hub:1.0.10
+    container_name: hub-portal
+    ports:
+      - 8010:8010
+    environment:
+      SERVER_PORT: 8010
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/hub
+      SPRING_DATASOURCE_USERNAME: hub
+      SPRING_DATASOURCE_PASSWORD: hub
+      SPRING_SLAVE_URL: jdbc:postgresql://db:5432/hub
+      SPRING_SLAVE_USERNAME: hub
+      SPRING_SLAVE_PASSWORD: hub
+      spring.data.redis.host: redis
+      spring.data.redis.port: 6379
+      spring.data.redis.password: 123456
+      SPRING_JPA_PROPERTIES_HIBERNATE_DEFAULT_SCHEMA: hubsc
+      # Disabling the swagger-ui
+      springdoc.swagger-ui.enabled: true
+      # Disabling the /v3/api-docs enpoint
+      springdoc.swagger-ui.path: /swagger-ui.html
+      springdoc.api-docs.enabled: true
+      springdoc.swagger-ui.disable-swagger-default-url: true
+      springdoc.version: 1
+      sadad.identity.url: https://identity.bmiapis.ir/identity/oauth2/auth/token
+      sadad.fundTransfer.url: https://moneytransfer.bmiapis.ir/services/rest/api/transfer/single/create
+      sadad.inquiry.url: https://moneytransfer.bmiapis.ir/services/rest/api/transfer/
+      sadad.shahkar.url: https://customer.bmiapis.ir/api/icms/v1/contact/validation
+      rayan.base.url.path: https://api.irbroker.com
+      JAVA_OPTS: |
+        -DLog4jContextSelector=org.apache.logging.log4j.core.async.AsyncLoggerContextSelector
+        -Djava.awt.headless=true
+        -Dfile.encoding=UTF-8
+        -server
+        -XX:+DisableExplicitGC
+        -Djava.security.egd=file:/dev/./urandom
+      JAVA_MEMORY: "-Xms512m -Xmx512m -XX:NewSize=512m -XX:MaxNewSize=512m"
+    entrypoint: ["sh", "-c", "exec java ${JAVA_OPTS:-} ${JAVA_MEMORY:-} -jar hub-portal.jar"]
+    volumes:
+      - ./log:/var/log/hub
+  db:
+    image: repo.sadad.co.ir/repository/hub-mali/postgres:16.2
+    ports:
+      - "5432:5432"
+    environment:
+      TZ: Asia/Tehran
+      POSTGRES_DB: hub
+      POSTGRES_USER: hub
+      POSTGRES_PASSWORD: hub
+    volumes:
+      - db-data:/var/lib/postgresql/data
+  redis:
+    image: repo.sadad.co.ir/repository/hub-mali/redis:7.4-alpine
+    ports:
+      - "6379:6379"
+    command: '--requirepass 123456'
+
+volumes:
+  db-data:

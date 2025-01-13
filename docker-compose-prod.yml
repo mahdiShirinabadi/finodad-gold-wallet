@@ -1,0 +1,45 @@
+services:
+  hub-web:
+    image: repo.bmi.ir:443/repository/hub-mali/hub-app:{{image_tags}}
+    container_name: hub-web
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://192.168.177.210:5432/hubdb
+      SPRING_DATASOURCE_USERNAME: hub_user
+      SPRING_DATASOURCE_PASSWORD: 
+      SPRING_SLAVE_URL: jdbc:postgresql://192.168.177.211:5432/hubdb
+      SPRING_SLAVE_USERNAME: hub_user
+      SPRING_SLAVE_PASSWORD: 
+      #SPRING_REDIS_HOST: 192.168.177.196
+      #SPRING_REDIS_PORT: 6379
+      #SPRING_DATA_REDIS_PASSWORD: 
+      spring.data.redis.host: 192.168.177.196
+      spring.data.redis.port: 6379
+      spring.data.redis.password: 
+      SPRING_JPA_PROPERTIES_HIBERNATE_DEFAULT_SCHEMA: hubsc
+      springdoc.swagger-ui.enabled: "true"
+      springdoc.swagger-ui.path: /swagger-ui.html
+      springdoc.api-docs.enabled: "true"
+      springdoc.swagger-ui.disable-swagger-default-url: "true"
+      springdoc.version: 1
+      sadad.identity.url: http://identity.bmiapis.ir:9080/identity/oauth2/auth/token
+      sadad.fundTransfer.url: http://moneytransfer.bmiapis.ir:9080/services/rest/api/transfer/single/create
+      sadad.inquiry.url: http://moneytransfer.bmiapis.ir:9080/services/rest/api/transfer/
+      sadad.shahkar.url: http://customer.bmiapis.ir:9080/api/icms/v1/contact/validation
+      rayan.base.url.path: http://api.irbroker.com:9080/
+      sadad.statement.url: http://account.bmiapis.ir:9080/api/mq-statement/v2/online-statement
+      sadad.sms.url: http://message.bmiapis.ir:9080/sms-gateway-api/resources/sms/send
+      sadad.psp.base.path: http://sadad.shaparak.ir:9080
+      sina.customer.base.url: http://api.sinainsurance.com:9080
+      sina.base.url: http://apimanager.iraneit.com/BimeApiManager:9080
+
+      JAVA_TOOL_OPTIONS: "-javaagent:/home/sadad/apm/elastic-apm-agent-1.51.0.jar -Delastic.apm.service_name=Baam-hubmali -Delastic.apm.service_node_name=Baam-hubmali -Delastic.apm.application_packages=org.example,org.another.example -Delastic.apm.server_urls=http://192.168.249.2:9080 -Delastic.apm.environment=Baam -Delastic.apm.transaction_sample_rate=0.3"
+    volumes:
+      - /opt/app/api/log:/var/log/hub
+      - /home/sadad/apm:/home/sadad/apm
+    networks:
+      - 'hubmali'
+networks:
+  hubmali:
+    external: true

@@ -1,0 +1,16 @@
+<!DOCTYPE html SYSTEM "http://www.thymeleaf.org/dtd/xhtml1-strict-thymeleaf-4.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <script type="text/javascript">
+        function closethisasap() {
+            document.forms["redirectpost"].submit();
+        }
+    </script>
+</head>
+<body onload="closethisasap();">
+<form name="redirectpost" method="GET" th:action="${response.redirectUrl}">
+    <input type="hidden" name="Token" th:value="${response.valueRefId}">
+</form>
+</body>
+</html>

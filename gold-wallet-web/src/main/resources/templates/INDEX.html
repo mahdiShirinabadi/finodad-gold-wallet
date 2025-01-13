@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>سرویس پرداخت هاب مالی بانک ملی</title>
+    <link href="http://cdn.font-store.ir/nazanin.css" rel="stylesheet"> <!-- Include Persian Font -->
+    <style>
+        body {
+            font-family: 'Nazanin', sans-serif; /* Use the Persian font */
+            background: linear-gradient(to right, #005b96, #00b09b); /* Gradient background */
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            color: #ffffff;
+            text-align: center;
+            overflow: hidden;
+        }
+        .container {
+            background-color: rgba(0, 0, 0, 0.8); /* Dark semi-transparent background */
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+            animation: fadeIn 1s ease-in-out; /* Animation */
+        }
+        .logo {
+            width: 180px; /* Adjust width as needed */
+            height: auto; /* Maintain aspect ratio */
+            margin-bottom: 20px;
+        }
+        .message {
+            font-size: 32px;
+            font-weight: bold;
+            margin: 0;
+            line-height: 1.4;
+            animation: slideIn 0.5s ease forwards; /* Animation */
+            opacity: 0; /* Initial opacity for animation */
+            transform: translateY(-20px); /* Initial position for animation */
+        }
+        .footer {
+            margin-top: 20px;
+            font-size: 18px;
+            opacity: 0.9;
+        }
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="message">
+        سرویس پرداخت هاب مالی بانک ملی ایران
+    </div>
+    <div class="footer">
+        © 2023 بانک ملی ایران
+    </div>
+</div>
+<script>
+    // Trigger the animation after the page loads
+    window.onload = function() {
+        const message = document.querySelector('.message');
+        message.style.opacity = '1'; // Set opacity to 1 for visibility
+    };
+</script>
+</body>
+</html>

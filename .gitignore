@@ -1,0 +1,60 @@
+##############################
+## Java
+##############################
+*.class
+*.jar
+*.war
+*.zip
+*.ra
+
+##############################
+## Maven
+##############################
+target/
+ws/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+pom.xml.bak
+
+##############################
+## Eclipse
+##############################
+.settings/
+bin/
+tmp/
+.metadata
+.classpath
+.project
+*.tmp
+*.bak
+*.swp
+*~.nib
+local.properties
+.loadpath
+.factorypath
+
+##############################
+## VSCode
+##############################
+.vscode
+
+##############################
+### Log file
+##############################
+*.log
+log
+##############################
+## IntelliJ
+##############################
+out/
+.idea/
+.idea_modules/
+*.iml
+*.ipr
+*.iws
+##############################
+## JPABuddy
+##############################
+.jpb/

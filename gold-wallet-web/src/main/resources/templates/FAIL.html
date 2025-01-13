@@ -1,0 +1,22 @@
+<!DOCTYPE html SYSTEM "http://www.thymeleaf.org/dtd/xhtml1-strict-thymeleaf-4.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <script type="text/javascript">
+        function closethisasap() {
+            document.forms["redirectpost"].submit();
+        }
+    </script>
+</head>
+<body onload="closethisasap();">
+<form name="redirectpost" th:method="${response.redirectMethod}" th:action="${response.redirectUrl}">
+    <input type="hidden" name="amount" th:value="${response.amount}">
+    <input type="hidden" name="uuid" th:value="${response.uuid}">
+    <input type="hidden" name="pspRefNumber" th:value="${response.pspRefnumber}">
+    <input type="hidden" name="issueRefNumber" th:value="${response.issueRefnumber}">
+    <input type="hidden" name="result" th:value="${response.status}">
+    <input type="hidden" name="additionalData" th:value="${response.orderId}">
+    <input type="hidden" name="description" th:value="${response.description}">
+</form>
+</body>
+</html>
