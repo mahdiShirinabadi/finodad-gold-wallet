@@ -1,6 +1,5 @@
 package com.melli.hub.security;
 
-import com.melli.hub.domain.master.entity.ProfileEntity;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.context.annotation.Scope;

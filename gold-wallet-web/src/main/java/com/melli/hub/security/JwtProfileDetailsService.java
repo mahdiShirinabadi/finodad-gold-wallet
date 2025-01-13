@@ -1,6 +1,5 @@
 package com.melli.hub.security;
 
-import com.melli.hub.domain.master.entity.ProfileEntity;
 import com.melli.hub.service.ProfileService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;

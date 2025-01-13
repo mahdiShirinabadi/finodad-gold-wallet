@@ -1,7 +1,5 @@
 package com.melli.hub.domain.master.persistence;
 
-import com.melli.hub.domain.master.entity.SettingEntity;
-import com.melli.hub.domain.master.entity.TempRegisterProfileEntity;
 import org.springframework.data.repository.CrudRepository;
 
 /**

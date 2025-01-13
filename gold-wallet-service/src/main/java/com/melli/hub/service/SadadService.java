@@ -1,6 +1,5 @@
 package com.melli.hub.service;
 
-import com.melli.hub.domain.master.entity.ShahkarInfoEntity;
 import com.melli.hub.exception.InternalServiceException;
 
 public interface SadadService {

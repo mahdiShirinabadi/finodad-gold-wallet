@@ -1,7 +1,6 @@
 package com.melli.hub.service.impl;
 
-import com.melli.hub.domain.master.entity.ProfileEntity;
-import com.melli.hub.domain.master.entity.ProfileRoleEntity;
+import com.melli.hub.domain.master.entity.ChannelRoleEntity;
 import com.melli.hub.domain.master.entity.RoleEntity;
 import com.melli.hub.domain.master.persistence.ProfileRoleRepository;
 import com.melli.hub.domain.master.persistence.RoleRepository;
@@ -33,20 +32,20 @@ public class RoleServiceImplementation implements RoleService {
     @Override
     public void addProfileToRole(ProfileEntity profileEntity, String roleName) throws InternalServiceException {
         RoleEntity roleEntity = roleRepository.findByName(roleName).orElseThrow(() -> new InternalServiceException("role name not found", StatusService.ROLE_NAME_NOT_FOUND, HttpStatus.OK));
-        ProfileRoleEntity profileRoleEntity = new ProfileRoleEntity();
-        profileRoleEntity.setRoleEntity(roleEntity);
-        profileRoleEntity.setProfileEntity(profileEntity);
-        profileRoleEntity.setCreatedAt(new Date());
-        profileRoleEntity.setCreatedBy(profileEntity.getUsername());
-        profileRoleRepository.save(profileRoleEntity);
+        ChannelRoleEntity channelRoleEntity = new ChannelRoleEntity();
+        channelRoleEntity.setRoleEntity(roleEntity);
+        channelRoleEntity.setProfileEntity(profileEntity);
+        channelRoleEntity.setCreatedAt(new Date());
+        channelRoleEntity.setCreatedBy(profileEntity.getUsername());
+        profileRoleRepository.save(channelRoleEntity);
     }
 
     @Override
     @Transactional
     public void removeProfileFromRole(ProfileEntity profileEntity, String roleName) throws InternalServiceException {
         RoleEntity roleEntity = roleRepository.findByName(roleName).orElseThrow(() -> new InternalServiceException("role name not found", StatusService.ROLE_NAME_NOT_FOUND, HttpStatus.OK));
-        ProfileRoleEntity profileRoleEntity = profileRoleRepository.findByProfileEntityAndRoleEntity(profileEntity, roleEntity);
-        profileRoleRepository.delete(profileRoleEntity);
+        ChannelRoleEntity channelRoleEntity = profileRoleRepository.findByProfileEntityAndRoleEntity(profileEntity, roleEntity);
+        profileRoleRepository.delete(channelRoleEntity);
     }
 
 }

@@ -1,7 +1,6 @@
 package com.melli.hub.web;
 
-import com.melli.hub.domain.master.entity.ProfileAccessTokenEntity;
-import com.melli.hub.domain.master.entity.ProfileEntity;
+import com.melli.hub.domain.master.entity.ChannelAccessTokenEntity;
 import com.melli.hub.domain.request.login.LoginRequestJson;
 import com.melli.hub.domain.request.login.LoginWithOtpRequestJson;
 import com.melli.hub.domain.request.login.RefreshTokenRequestJson;
@@ -36,7 +35,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Date;
 import java.util.Map;
-import java.util.Optional;
 
 /**
  * Class Name: AuthenticationEndPoint
@@ -143,10 +141,10 @@ public class AuthenticationEndPoint extends WebEndPoint {
 
     private boolean checkExpiration(ProfileEntity profileEntity) {
         log.info("start check expiration for profile ({})...", profileEntity.getUsername());
-        ProfileAccessTokenEntity profileAccessTokenEntity = profileAccessTokenService.findTopByProfileEntityAndEndTimeIsnUll(profileEntity);
-        if (profileAccessTokenEntity != null && profileAccessTokenEntity.getAccessToken() != null) {
+        ChannelAccessTokenEntity channelAccessTokenEntity = profileAccessTokenService.findTopByProfileEntityAndEndTimeIsnUll(profileEntity);
+        if (channelAccessTokenEntity != null && channelAccessTokenEntity.getAccessToken() != null) {
             try {
-                return jwtTokenUtil.getExpirationDateFromToken(profileAccessTokenEntity.getAccessToken()).after(new Date());
+                return jwtTokenUtil.getExpirationDateFromToken(channelAccessTokenEntity.getAccessToken()).after(new Date());
             } catch (Exception ex) {
                 log.error("failed check expiration for channel ({}), token is expired with error ({})",
                         profileEntity.getUsername(), ex.getMessage());

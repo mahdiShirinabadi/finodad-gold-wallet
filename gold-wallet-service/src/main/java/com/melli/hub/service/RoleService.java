@@ -1,6 +1,5 @@
 package com.melli.hub.service;
 
-import com.melli.hub.domain.master.entity.ProfileEntity;
 import com.melli.hub.exception.InternalServiceException;
 
 /**

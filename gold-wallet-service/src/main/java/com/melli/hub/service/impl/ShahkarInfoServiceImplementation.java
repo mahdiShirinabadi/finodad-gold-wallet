@@ -1,6 +1,5 @@
 package com.melli.hub.service.impl;
 
-import com.melli.hub.domain.master.entity.ShahkarInfoEntity;
 import com.melli.hub.domain.master.persistence.ShahkarInfoRepository;
 import com.melli.hub.service.ShahkarInfoService;
 import lombok.RequiredArgsConstructor;

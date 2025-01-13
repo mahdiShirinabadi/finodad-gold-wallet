@@ -1,7 +1,5 @@
 package com.melli.hub.service.impl;
 
-import com.melli.hub.domain.master.entity.ProfileAccessTokenEntity;
-import com.melli.hub.domain.master.entity.ProfileEntity;
 import com.melli.hub.domain.master.persistence.ProfileAccessTokenRepository;
 import com.melli.hub.domain.master.persistence.ProfileRepository;
 import com.melli.hub.exception.InternalServiceException;
@@ -10,8 +8,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 /**
  * Class Name: ProfileServiceImplementation

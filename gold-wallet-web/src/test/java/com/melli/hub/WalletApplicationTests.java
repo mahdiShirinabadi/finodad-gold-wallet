@@ -32,11 +32,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @Log4j2
-@SpringBootTest(classes = GoldApplication.class)
+@SpringBootTest(classes = WalletApplication.class)
 @ActiveProfiles("test")
 @RunWith(SpringRunner.class)
 @ExtendWith(SpringExtension.class)
-public class GoldApplicationTests {
+public class WalletApplicationTests {
 
     public static final ObjectMapper objectMapper = new ObjectMapper();
 

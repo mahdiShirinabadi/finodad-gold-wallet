@@ -1,10 +1,6 @@
 package com.melli.hub.domain.master.persistence;
 
-import com.melli.hub.domain.master.entity.ProfileAccessTokenEntity;
-import com.melli.hub.domain.master.entity.ProfileEntity;
 import org.springframework.data.repository.CrudRepository;
-
-import java.util.List;
 
 /**
  * Class Name: ProfileAccessToken

@@ -28,13 +28,13 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 @EnableConfigurationProperties({
         FileStorageProperties.class
 })
-public class GoldApplication {
+public class WalletApplication {
 
     public static void main(String[] args) {
 
         log.info("start app");
 
-        SpringApplication.run(GoldApplication.class, args);
+        SpringApplication.run(WalletApplication.class, args);
     }
 
     @Bean

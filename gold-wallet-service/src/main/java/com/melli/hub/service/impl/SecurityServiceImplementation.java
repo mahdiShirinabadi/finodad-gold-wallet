@@ -1,9 +1,7 @@
 package com.melli.hub.service.impl;
 
-import com.melli.hub.domain.enumaration.ChannelStatusEnum;
 import com.melli.hub.domain.enumaration.ProfileStatusEnum;
-import com.melli.hub.domain.master.entity.ProfileBlockEntity;
-import com.melli.hub.domain.master.entity.ProfileEntity;
+import com.melli.hub.domain.master.entity.ChannelBlockEntity;
 import com.melli.hub.domain.master.entity.SettingEntity;
 import com.melli.hub.exception.InternalServiceException;
 import com.melli.hub.service.*;
@@ -66,7 +64,7 @@ public class SecurityServiceImplementation implements SecurityService {
     }
 
     public void resetFailLoginCount(ProfileEntity profileEntity) {
-        ProfileBlockEntity profileBlock = profileBlockService.findByProfile(profileEntity);
+        ChannelBlockEntity profileBlock = profileBlockService.findByProfile(profileEntity);
         if (profileBlock == null) {
             log.info("channelBlock is null for profile ==> {}", profileEntity.getUsername());
             return;
@@ -92,9 +90,9 @@ public class SecurityServiceImplementation implements SecurityService {
 
 
     private synchronized void increaseFailLoginCount(ProfileEntity profileEntity) {
-        ProfileBlockEntity currentProfileBlock = profileBlockService.findByProfile(profileEntity);
+        ChannelBlockEntity currentProfileBlock = profileBlockService.findByProfile(profileEntity);
         if (currentProfileBlock == null) {
-            currentProfileBlock = new ProfileBlockEntity();
+            currentProfileBlock = new ChannelBlockEntity();
             currentProfileBlock.setCreatedAt(new Date());
             currentProfileBlock.setCreatedBy("System");
             currentProfileBlock.setStartBlockDate(new Date());
@@ -117,7 +115,7 @@ public class SecurityServiceImplementation implements SecurityService {
     }
 
     public boolean isBlock(ProfileEntity profileEntity) {
-        ProfileBlockEntity currentUserBlock = profileBlockService.findByProfile(profileEntity);
+        ChannelBlockEntity currentUserBlock = profileBlockService.findByProfile(profileEntity);
         if(currentUserBlock == null){
             return false;
         }

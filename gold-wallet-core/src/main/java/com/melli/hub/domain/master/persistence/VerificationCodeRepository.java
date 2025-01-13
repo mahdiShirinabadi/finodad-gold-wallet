@@ -2,7 +2,6 @@ package com.melli.hub.domain.master.persistence;
 
 
 import com.melli.hub.domain.enumaration.VerificationCodeEnum;
-import com.melli.hub.domain.master.entity.VerificationCodeEntity;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.query.Param;

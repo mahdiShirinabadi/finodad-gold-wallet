@@ -14,7 +14,7 @@ import java.util.Date;
 @Getter
 @ToString
 @NoArgsConstructor
-public class ProfileAccessTokenEntity extends BaseEntityAudit {
+public class ChannelAccessTokenEntity extends BaseEntityAudit {
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "profile_id", nullable = false)

@@ -15,7 +15,7 @@ import java.util.Objects;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class ProfileBlockEntity extends BaseEntityAudit implements Serializable {
+public class ChannelBlockEntity extends BaseEntityAudit implements Serializable {
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "profile_id", nullable = false)
@@ -34,11 +34,11 @@ public class ProfileBlockEntity extends BaseEntityAudit implements Serializable 
     @Override
     public boolean equals(Object o) {
 
-        if (!(o instanceof ProfileBlockEntity profileBlockEntity)) {
+        if (!(o instanceof ChannelBlockEntity channelBlockEntity)) {
             return false;
         }
 
-        return super.getId() == profileBlockEntity.getId();
+        return super.getId() == channelBlockEntity.getId();
 
     }
 

@@ -15,9 +15,9 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * Class Name: ProviderEntity
+ * Class Name: ProfileEntity
  * Author: Mahdi Shirinabadi
- * Date: 1/12/2025
+ * Date: 1/4/2025
  */
 @Entity
 @Setter
@@ -25,8 +25,9 @@ import java.util.stream.Collectors;
 @ToString
 @AllArgsConstructor
 @NoArgsConstructor
-@Table(name = "provider")
-public class ProviderEntity extends BaseEntityAudit implements Serializable, UserDetails {
+@Table(name = "channel")
+public class ChannelEntity extends BaseEntityAudit implements Serializable, UserDetails {
+
 
     @Column(name = "first_name")
     private String firstName;
@@ -40,15 +41,18 @@ public class ProviderEntity extends BaseEntityAudit implements Serializable, Use
     @Column(name = "mobile", nullable = false, unique = true)
     private String mobile;
 
-    @Column(name = "economical_code", nullable = false, unique = true)
-    private String economicalCode;
-
     @Column(name = "password")
     @ToString.Exclude
     private String password;
 
+    @Column(name = "birth_date", nullable = false, unique = true)
+    private String birthDate;
+
     @Column(name = "email", nullable = false, unique = true)
     private String email;
+
+    @Column(name = "two_factor_authentication", nullable = false, unique = true)
+    private Boolean towFactorAuthentication;
 
     @Column(name = "status")
     private String status;
@@ -56,17 +60,8 @@ public class ProviderEntity extends BaseEntityAudit implements Serializable, Use
     @Column(name = "valid_ip")
     private String validIp;
 
-    @Column(name = "price_gold_sell")
-    private String priceGoldSell;
-
-    @Column(name = "price_gold_buy")
-    private String priceGoldBuy;
-
-    @Column(name = "commission_gold_sell")
-    private String commissionGoldSell;
-
-    @Column(name = "commission_gold_buy")
-    private String commissionGoldBuy;
+    @Column(name = "level")
+    private String level;
 
     @Column(name = "end_time")
     @Temporal(TemporalType.TIMESTAMP)
@@ -74,7 +69,7 @@ public class ProviderEntity extends BaseEntityAudit implements Serializable, Use
 
     @JsonIgnore
     @OneToMany(fetch = FetchType.EAGER, mappedBy = "profileEntity")
-    private List<ProfileRoleEntity> profileRoleList = new ArrayList<>();
+    private List<ChannelRoleEntity> profileRoleList = new ArrayList<>();
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

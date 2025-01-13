@@ -1,7 +1,6 @@
 package com.melli.hub.service.impl;
 
-import com.melli.hub.domain.master.entity.ProfileBlockEntity;
-import com.melli.hub.domain.master.entity.ProfileEntity;
+import com.melli.hub.domain.master.entity.ChannelBlockEntity;
 import com.melli.hub.domain.master.persistence.ProfileBlockRepository;
 import com.melli.hub.service.ProfileBlockService;
 import lombok.RequiredArgsConstructor;
@@ -21,14 +20,14 @@ public class ProfileBlockServiceImplementation implements ProfileBlockService {
     private final ProfileBlockRepository profileBlockRepository;
 
     @Override
-    public ProfileBlockEntity findByProfile(ProfileEntity profileEntity)
+    public ChannelBlockEntity findByProfile(ProfileEntity profileEntity)
     {
         return profileBlockRepository.findByProfileEntityId(profileEntity.getId());
     }
 
     @Override
-    public void save(ProfileBlockEntity profileBlockEntity) {
-        profileBlockRepository.save(profileBlockEntity);
+    public void save(ChannelBlockEntity channelBlockEntity) {
+        profileBlockRepository.save(channelBlockEntity);
     }
 
     @Override

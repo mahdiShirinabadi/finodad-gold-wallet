@@ -1,14 +1,11 @@
 package com.melli.hub.service.impl;
 
-import com.melli.hub.domain.master.entity.TempRegisterProfileEntity;
 import com.melli.hub.domain.master.persistence.TempRegisterProfileRepository;
 import com.melli.hub.exception.InternalServiceException;
 import com.melli.hub.service.StatusService;
 import com.melli.hub.service.TempRegisterProfileService;
-import com.melli.hub.utils.Constant;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;

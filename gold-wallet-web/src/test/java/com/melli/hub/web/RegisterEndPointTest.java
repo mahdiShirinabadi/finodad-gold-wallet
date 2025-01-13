@@ -1,12 +1,10 @@
 package com.melli.hub.web;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.melli.hub.GoldApplicationTests;
+import com.melli.hub.WalletApplicationTests;
 import com.melli.hub.domain.enumaration.ProfileStatusEnum;
 import com.melli.hub.domain.enumaration.VerificationCodeEnum;
-import com.melli.hub.domain.master.entity.ProfileEntity;
 import com.melli.hub.domain.master.entity.SettingEntity;
-import com.melli.hub.domain.master.entity.VerificationCodeEntity;
 import com.melli.hub.domain.request.login.*;
 import com.melli.hub.domain.response.base.BaseResponse;
 import com.melli.hub.domain.response.login.*;
@@ -17,7 +15,6 @@ import org.junit.Assert;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -29,7 +26,7 @@ import static org.springframework.security.test.web.servlet.setup.SecurityMockMv
 @Log4j2
 @DisplayName("RegisterEndPointTest End2End test")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-class RegisterEndPointTest extends GoldApplicationTests {
+class RegisterEndPointTest extends WalletApplicationTests {
     private static final String BASE_URL_REGISTRATION = "/api/v1/profile/registration";
     private static final String BASE_URL_FORGET_PASSWORD = "/api/v1/profile/forgetPassword";
     private static final String BASE_URL_AUTHENTICATION = "/api/v1/profile/authentication";

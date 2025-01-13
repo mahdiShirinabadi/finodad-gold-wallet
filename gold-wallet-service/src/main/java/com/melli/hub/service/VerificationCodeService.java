@@ -2,7 +2,6 @@ package com.melli.hub.service;
 
 
 import com.melli.hub.domain.enumaration.VerificationCodeEnum;
-import com.melli.hub.domain.master.entity.VerificationCodeEntity;
 import com.melli.hub.exception.InternalServiceException;
 
 public interface VerificationCodeService {

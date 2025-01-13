@@ -7,12 +7,12 @@ import lombok.Setter;
 import lombok.ToString;
 
 @Entity
-@Table(name = "profile_role")
+@Table(name = "channel_role")
 @Setter
 @Getter
 @ToString
 @NoArgsConstructor
-public class ProfileRoleEntity extends BaseEntityAudit {
+public class ChannelRoleEntity extends BaseEntityAudit {
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "role_id", nullable = false)

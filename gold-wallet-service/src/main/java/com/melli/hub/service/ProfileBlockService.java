@@ -1,13 +1,12 @@
 package com.melli.hub.service;
 
-import com.melli.hub.domain.master.entity.ProfileBlockEntity;
-import com.melli.hub.domain.master.entity.ProfileEntity;
+import com.melli.hub.domain.master.entity.ChannelBlockEntity;
 
 public interface ProfileBlockService {
 
-	ProfileBlockEntity findByProfile(ProfileEntity profileEntity);
+	ChannelBlockEntity findByProfile(ProfileEntity profileEntity);
 
-	void save(ProfileBlockEntity profileBlockEntity);
+	void save(ChannelBlockEntity channelBlockEntity);
 
 	void clearCache();
 

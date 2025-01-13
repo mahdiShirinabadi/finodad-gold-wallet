@@ -1,6 +1,5 @@
 package com.melli.hub.security;
 
-import com.melli.hub.domain.master.entity.ProfileEntity;
 import com.melli.hub.service.ProfileAccessTokenService;
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;

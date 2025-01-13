@@ -1,6 +1,5 @@
 package com.melli.hub.domain.master.persistence;
 
-import com.melli.hub.domain.master.entity.ProfileRoleEntity;
 import com.melli.hub.domain.master.entity.RoleEntity;
 import org.springframework.data.repository.CrudRepository;
 
