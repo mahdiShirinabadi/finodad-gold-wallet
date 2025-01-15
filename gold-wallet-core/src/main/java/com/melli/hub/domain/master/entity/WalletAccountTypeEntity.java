@@ -12,24 +12,17 @@ import java.io.Serializable;
  *
  */
 @Entity
-@Table(name = "account_type")
+@Table(name = "wallet_account_type")
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
 @Setter
 @Getter
-public class AccountTypeEntity extends BaseEntityAudit implements Serializable {
+public class WalletAccountTypeEntity extends BaseEntityAudit implements Serializable {
 
 	//WAGE
 	//NORMAL
 	//
-
 	@Column(name = "name")
 	private String name;
-
-	@Column(name = "code")
-	private String code;
-
-	@Column(name = "display")
-	private int display;
 }

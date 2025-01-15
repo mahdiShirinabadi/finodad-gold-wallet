@@ -35,8 +35,8 @@ public class ChannelEntity extends BaseEntityAudit implements Serializable, User
     @Column(name = "last_name")
     private String lastName;
 
-    @Column(name = "national_code", nullable = false, unique = true)
-    private String nationalCode;
+    @Column(name = "username", nullable = false, unique = true)
+    private String username;
 
     @Column(name = "mobile", nullable = false, unique = true)
     private String mobile;
@@ -45,35 +45,50 @@ public class ChannelEntity extends BaseEntityAudit implements Serializable, User
     @ToString.Exclude
     private String password;
 
-    @Column(name = "birth_date", nullable = false, unique = true)
-    private String birthDate;
+    @Column(name = "trust")
+    private int trust;
 
-    @Column(name = "email", nullable = false, unique = true)
-    private String email;
+    @Column(name = "sign")
+    private int sign;
 
-    @Column(name = "two_factor_authentication", nullable = false, unique = true)
-    private Boolean towFactorAuthentication;
+    @Column(name = "public_key")
+    private String publicKey;
+
+    @Column(name = "ip")
+    private String ip;
 
     @Column(name = "status")
     private String status;
 
-    @Column(name = "valid_ip")
-    private String validIp;
+    @Column(name = "iban")
+    private String iban;
 
-    @Column(name = "level")
-    private String level;
+    @Column(name = "account")
+    private String account;
+
+    @Column(name = "balance_limitation")
+    private Long balanceLimitation;
+
+    @Column(name = "check_shahkar")
+    private int checkShahkar;
+
+    @Column(name = "wage_iban")
+    private String wageIban;
+
+    @Column(name = "wage_account")
+    private String wageAccount;
 
     @Column(name = "end_time")
     @Temporal(TemporalType.TIMESTAMP)
     private Date endTime;
 
     @JsonIgnore
-    @OneToMany(fetch = FetchType.EAGER, mappedBy = "profileEntity")
-    private List<ChannelRoleEntity> profileRoleList = new ArrayList<>();
+    @OneToMany(fetch = FetchType.EAGER, mappedBy = "channelEntity")
+    private List<ChannelRoleEntity> channelRoleList = new ArrayList<>();
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return profileRoleList.stream().flatMap(role->role.getRoleEntity().getResources().stream()).map(resourceEntity -> new SimpleGrantedAuthority(resourceEntity.getName())).collect(Collectors.toSet());
+        return channelRoleList.stream().flatMap(role->role.getRoleEntity().getResources().stream()).map(resourceEntity -> new SimpleGrantedAuthority(resourceEntity.getName())).collect(Collectors.toSet());
     }
 
     @Override
@@ -83,7 +98,7 @@ public class ChannelEntity extends BaseEntityAudit implements Serializable, User
 
     @Override
     public String getUsername() {
-        return nationalCode;
+        return username;
     }
 
     @Override

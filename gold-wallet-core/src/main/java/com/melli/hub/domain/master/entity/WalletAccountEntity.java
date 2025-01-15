@@ -21,12 +21,12 @@ public class WalletAccountEntity extends BaseEntityAudit implements Serializable
 	private WalletEntity walletEntity;
 
 	@ManyToOne(fetch = FetchType.EAGER)
-	@JoinColumn(name = "account_type_id", nullable = false)
-	private AccountTypeEntity accountTypeEntity;
+	@JoinColumn(name = "wallet_account_type_id", nullable = false)
+	private WalletAccountTypeEntity walletAccountTypeEntity;
 
 	@ManyToOne(fetch = FetchType.EAGER)
-	@JoinColumn(name = "account_currency_id", nullable = false)
-	private AccountCurrencyEntity accountCurrencyEntity;
+	@JoinColumn(name = "wallet_account_currency_id", nullable = false)
+	private WalletAccountCurrencyEntity walletAccountCurrencyEntity;
 
 	@Column(name = "account_number")
 	private String accountNumber;

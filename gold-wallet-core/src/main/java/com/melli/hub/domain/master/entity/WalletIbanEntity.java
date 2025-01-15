@@ -21,9 +21,6 @@ public class WalletIbanEntity extends BaseEntityAudit implements Serializable {
 	@JoinColumn(name = "wallet_account_id", nullable = false)
 	private WalletAccountEntity walletAccount;
 
-	@Column(name = "create_time")
-	private Date createTime;
-
 	@Column(name = "national_code")
 	private String nationalCode;
 

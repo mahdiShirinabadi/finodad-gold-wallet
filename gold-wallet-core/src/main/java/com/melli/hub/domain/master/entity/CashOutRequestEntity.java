@@ -7,6 +7,8 @@ import lombok.*;
 @Entity
 @Table(name = "cash_out_request")
 @PrimaryKeyJoinColumn(name = "request_id", referencedColumnName = "id")
+@Setter
+@Getter
 public class CashOutRequestEntity extends RequestEntity {
 
 	@Column(name = "amount")

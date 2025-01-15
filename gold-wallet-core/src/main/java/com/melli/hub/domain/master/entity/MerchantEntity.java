@@ -28,7 +28,7 @@ public class MerchantEntity extends BaseEntityAudit implements Serializable {
 	@Column(name = "mobile", nullable = false)
 	private String mobile;
 
-	@Column(name = "national_id", nullable = false)
+	@Column(name = "national_code", nullable = false)
 	private String nationalCode;
 
 	@Column(name = "economical_code")
@@ -46,12 +46,6 @@ public class MerchantEntity extends BaseEntityAudit implements Serializable {
 
 	@Column(name = "pay_id")
 	private String payId;
-	
-	@Column(name = "send_sms")
-	private int sendSms;
-
-	@Column(name = "calc_paya_wage")
-	private int calcPayaWage;
 
 	@Column(name = "status")
 	private int status;

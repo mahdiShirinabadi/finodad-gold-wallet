@@ -4,8 +4,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
-import org.hibernate.annotations.DynamicInsert;
-import org.hibernate.annotations.DynamicUpdate;
 
 import jakarta.persistence.*;
 import java.io.Serializable;
@@ -29,7 +27,7 @@ public class MerchantWalletAccountEntity extends BaseEntityAudit implements Seri
 
 	@ManyToOne(fetch = FetchType.EAGER)
 	@JoinColumn(name = "account_type_id", nullable = false)
-	private AccountTypeEntity accountTypeEntity;
+	private WalletAccountTypeEntity walletAccountTypeEntity;
 
 	@Column(name = "end_time")
 	private Date endTime;

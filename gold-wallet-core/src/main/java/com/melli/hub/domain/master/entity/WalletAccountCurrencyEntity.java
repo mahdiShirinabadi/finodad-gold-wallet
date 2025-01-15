@@ -12,25 +12,21 @@ import java.io.Serializable;
  *
  */
 @Entity
-@Table(name = "account_currency")
+@Table(name = "wallet_account_currency")
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
 @Setter
 @Getter
-public class AccountCurrencyEntity extends BaseEntityAudit implements Serializable {
+public class WalletAccountCurrencyEntity extends BaseEntityAudit implements Serializable {
 
 	//GOLD
 	//RIAL
 	//SILVER
 	//PLATINUM
-
 	@Column(name = "name")
 	private String name;
 
-	@Column(name = "code")
-	private String code;
-
-	@Column(name = "display")
-	private int display;
+	@Column(name = "suffix")
+	private String suffix;
 }

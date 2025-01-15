@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
+import java.math.BigDecimal;
 import java.util.Date;
 
 @Entity
@@ -17,18 +18,18 @@ import java.util.Date;
 public class Person2PersonRequestEntity extends RequestEntity {
 
 
-	@Column(name = "amount")
-	private long amount;
+	@Column(name = "amount", precision = 10, scale = 5)
+	private BigDecimal amount; // Purchased quantity
 
-	@ManyToOne(fetch = FetchType.EAGER)
+	@ManyToOne
 	@JoinColumn(name = "rrn_id", nullable = false)
 	private RrnEntity rrnEntity;
 
-	@ManyToOne(fetch = FetchType.EAGER)
+	@ManyToOne
 	@JoinColumn(name = "dest_wallet_account_id", nullable = false)
 	private WalletAccountEntity destinationAccountWalletEntity;
 
-	@ManyToOne(fetch = FetchType.EAGER)
+	@ManyToOne
 	@JoinColumn(name = "src_wallet_account_id", nullable = false)
 	private WalletAccountEntity sourceAccountWalletEntity;
 }

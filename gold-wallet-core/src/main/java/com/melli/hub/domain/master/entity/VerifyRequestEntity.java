@@ -5,7 +5,6 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
-import java.util.Date;
 
 @Entity
 @Table(name = "verify_request")
@@ -15,12 +14,12 @@ import java.util.Date;
 @ToString
 public class VerifyRequestEntity extends RequestEntity {
 
-	@ManyToOne(fetch = FetchType.EAGER)
+	@ManyToOne
 	@JoinColumn(name = "rrn_id", nullable = false)
 	private RrnEntity rrnEntity;
 
 
-	@ManyToOne(fetch = FetchType.EAGER)
+	@ManyToOne
 	@JoinColumn(name = "purchase_request_id", nullable = false)
 	private PurchaseRequestEntity purchaseRequestEntity;
 }

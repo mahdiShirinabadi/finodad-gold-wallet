@@ -45,6 +45,6 @@ public class WalletEntity extends BaseEntityAudit implements Serializable {
 	@Column(name = "identifier")
 	private String identifier;
 
-	@Column(name = "level")
+	@Column(name = "level_")
 	private int level;
 }
