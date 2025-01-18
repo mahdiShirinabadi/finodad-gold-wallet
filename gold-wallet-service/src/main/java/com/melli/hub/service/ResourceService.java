@@ -4,6 +4,10 @@ import com.melli.hub.domain.master.entity.ResourceEntity;
 
 public interface ResourceService {
     String LOGOUT = "LOGOUT";
+    String WALLET_CREATE = "WALLET_CREATE";
+    String WALLET_DEACTIVATE = "WALLET_DEACTIVATE";
+    String WALLET_DELETE = "WALLET_DELETE";
+    String WALLET_ACTIVE = "WALLET_ACTIVE";
 
     ResourceEntity getRequestType(String name);
 

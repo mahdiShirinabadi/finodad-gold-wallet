@@ -158,8 +158,8 @@ public class AuthenticationEndPoint extends WebEndPoint {
     @PreAuthorize("hasAuthority(\"" + ResourceService.LOGOUT + "\")")
     @Operation(security = {@SecurityRequirement(name = "bearer-key")}, summary = "خروج از حساب")
     public ResponseEntity<BaseResponse<ObjectUtils.Null>> logout() throws InternalServiceException {
-        log.info("start logout channel by ({}), ip({})", context.getProfileEntity().getUsername(), context.getClientIp());
-        authenticateService.logout(context.getProfileEntity());
+        log.info("start logout channel by ({}), ip({})", context.getChannelEntity().getUsername(), context.getClientIp());
+        authenticateService.logout(context.getChannelEntity());
         return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse<>(true));
     }
 }

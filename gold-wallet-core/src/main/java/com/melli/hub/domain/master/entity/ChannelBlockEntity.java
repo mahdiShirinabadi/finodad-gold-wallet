@@ -18,8 +18,8 @@ import java.util.Objects;
 public class ChannelBlockEntity extends BaseEntityAudit implements Serializable {
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "profile_id", nullable = false)
-    private ProfileEntity profileEntity;
+    @JoinColumn(name = "channel_id", nullable = false)
+    private ChannelEntity channelEntity;
 
     @Column(name = "start_block_date", nullable = false)
     private Date startBlockDate;

@@ -75,6 +75,10 @@ public class ChannelEntity extends BaseEntityAudit implements Serializable, User
     @Column(name = "wage_iban")
     private String wageIban;
 
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "wallet_id", nullable = true)
+    private WalletEntity walletEntity;
+
     @Column(name = "wage_account")
     private String wageAccount;
 

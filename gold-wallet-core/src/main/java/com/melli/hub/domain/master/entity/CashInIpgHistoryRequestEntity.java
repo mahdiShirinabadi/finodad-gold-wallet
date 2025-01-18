@@ -19,7 +19,7 @@ public class CashInIpgHistoryRequestEntity extends BaseEntityAudit implements Se
 
 	@OneToOne
 	@JoinColumn(name = "cash_in_ipg_request", nullable = false)
-	private CashInWithIpgRequestEntity cashInWithIpgRequestEntity;
+	private CashInRequestEntity cashInRequestEntity;
 
 	@Column(name = "additional_data")
 	private String additionalData;

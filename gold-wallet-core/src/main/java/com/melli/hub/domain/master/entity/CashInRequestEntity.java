@@ -1,5 +1,7 @@
 package com.melli.hub.domain.master.entity;
 
+import com.melli.hub.domain.enumaration.CashInPaymentTypeEnum;
+import com.melli.hub.domain.enumaration.TransactionTypeEnum;
 import lombok.*;
 import jakarta.persistence.*;
 
@@ -8,11 +10,11 @@ import java.util.Date;
 
 
 @Entity
-@Table(name = "cash_in_ipg_request")
+@Table(name = "cash_in_request")
 @Setter
 @Getter
 @PrimaryKeyJoinColumn(name = "request_id", referencedColumnName = "id")
-public class CashInWithIpgRequestEntity extends RequestEntity {
+public class CashInRequestEntity extends RequestEntity {
 	public static String REF_NUMBER_USED = "used";
 	public static String REF_NUMBER_FAIL = "fail";
 
@@ -47,4 +49,8 @@ public class CashInWithIpgRequestEntity extends RequestEntity {
 
 	@Column(name = "psp_response_time")
 	private Date channelResponseTime;
+
+	@Enumerated(EnumType.STRING) // Store the enum as a string in the database
+	@Column(name = "cash_in_payment_type", nullable = false, length = 50)
+	private CashInPaymentTypeEnum cashInPaymentTypeEnum;
 }

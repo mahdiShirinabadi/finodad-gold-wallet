@@ -77,7 +77,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
                 // Spring Security Configurations successfully.
                 SecurityContextHolder.getContext().setAuthentication(usernamePasswordAuthenticationToken);
             }
-            requestContext.setProfileEntity(profileEntity);
+            requestContext.setChannelEntity(profileEntity);
         }
         chain.doFilter(request, response);
         ThreadContext.clearAll();

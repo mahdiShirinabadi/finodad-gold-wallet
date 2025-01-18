@@ -1,4 +1,4 @@
-package com.melli.hub.domain.response.profile;
+package com.melli.hub.domain.response.channel;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -12,14 +12,9 @@ import lombok.ToString;
 @Setter
 @Getter
 @ToString
-public class ProfileObject {
-
-    private String id;
+public class ChannelObject {
     private String firstName;
     private String lastName;
     private String username;
-    private String birthDate;
     private String mobile;
-    private String email;
-    private String twoFactorAuthentication;
 }

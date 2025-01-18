@@ -1,12 +1,17 @@
 package com.melli.hub.utils;
 
-import com.melli.hub.domain.master.entity.*;
+import com.melli.hub.domain.master.entity.ChannelEntity;
+import com.melli.hub.domain.master.entity.WalletAccountEntity;
+import com.melli.hub.domain.master.entity.WalletEntity;
 import com.melli.hub.domain.response.base.BaseResponse;
 import com.melli.hub.domain.response.base.ErrorDetail;
 import com.melli.hub.domain.response.login.*;
-import com.melli.hub.domain.response.profile.ProfileObject;
+import com.melli.hub.domain.response.channel.ChannelObject;
+import com.melli.hub.domain.response.wallet.CreateWalletResponse;
+import com.melli.hub.domain.response.wallet.WalletAccountObject;
 import com.melli.hub.exception.InternalServiceException;
 import com.melli.hub.service.StatusService;
+import com.melli.hub.service.WalletAccountService;
 import com.melli.hub.util.StringUtils;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.ObjectUtils;
@@ -27,18 +32,18 @@ public class Helper {
     public static final String FORMAT_DATE_RESPONSE = "yyyy/MM/dd HH:mm:ss";
 
     private static String SALT_UPDATE_PASSWORD = "108bc591f8d9e09327133e02fd64d23f67f8f52439374bb6c56510b8ad453f7d9c87860126b5811879d9a9628650a6a5";
+    public static int WALLET_ACCOUNT_LENGTH = 8;
 
     public BaseResponse<ObjectUtils.Null> fillBaseResponse(boolean result, ErrorDetail errorDetail) {
         BaseResponse<ObjectUtils.Null> response = new BaseResponse<>(result, errorDetail);
         return response;
     }
 
-    public LoginResponse fillLoginResponse(ProfileEntity profileEntity, String accessToken, Long accessTokenExpireTime, String refreshToken, Long refreshTokenExpireTime){
+    public LoginResponse fillLoginResponse(ChannelEntity channelEntity, String accessToken, Long accessTokenExpireTime, String refreshToken, Long refreshTokenExpireTime){
         LoginResponse loginResponse = new LoginResponse();
-        loginResponse.setProfileObject(convertProfileEntityToProfileObject(profileEntity));
+        loginResponse.setChannelObject(convertChannelEntityToChannelObject(channelEntity));
         loginResponse.setAccessTokenObject(new TokenObject(accessToken, accessTokenExpireTime));
         loginResponse.setRefreshTokenObject(new TokenObject(refreshToken, refreshTokenExpireTime));
-        loginResponse.setTwoFactorAuthentication(profileEntity.getTowFactorAuthentication());
         return loginResponse;
     }
 
@@ -58,18 +63,33 @@ public class Helper {
         return response;
     }
 
+    public CreateWalletResponse fillCreateWalletResponse(WalletEntity walletEntity, List<WalletAccountEntity> walletAccountEntityList, WalletAccountService walletAccountService) {
+        CreateWalletResponse response = new CreateWalletResponse();
+        List<WalletAccountObject> walletAccountObjectList = new ArrayList<>();
+        response.setMobile(walletEntity.getMobile());
+        response.setNationalCode(walletEntity.getNationalCode());
+        response.setWalletId(String.valueOf(walletEntity.getId()));
+        for(WalletAccountEntity walletAccountEntity : walletAccountEntityList){
+            WalletAccountObject walletAccountObject = new WalletAccountObject();
+            walletAccountObject.setWalletAccountTypeObject(SubHelper.convertWalletAccountEntityToObject(walletAccountEntity.getWalletAccountTypeEntity()));
+            walletAccountObject.setWalletAccountCurrencyObject(SubHelper.convertWalletAccountCurrencyEntityToObject(walletAccountEntity.getWalletAccountCurrencyEntity()));
+            walletAccountObject.setAccountNumber(walletAccountEntity.getAccountNumber());
+            walletAccountObject.setStatus(String.valueOf(walletAccountEntity.getStatus()));
+            walletAccountObject.setBalance(String.valueOf(walletAccountService.getBalance(walletAccountEntity.getId())));
+            walletAccountObjectList.add(walletAccountObject);
+        }
+        response.setWalletAccountObjectList(walletAccountObjectList);
+        return response;
+    }
 
-   private ProfileObject convertProfileEntityToProfileObject(ProfileEntity profileEntity) {
-       ProfileObject profileObject = new ProfileObject();
-       profileObject.setId(String.valueOf(profileEntity.getId()));
-       profileObject.setFirstName(profileEntity.getFirstName());
-       profileObject.setLastName(profileEntity.getLastName());
-       profileObject.setUsername(profileEntity.getUsername());
-       profileObject.setBirthDate(profileEntity.getBirthDate());
-       profileObject.setMobile(profileEntity.getMobile());
-       profileObject.setEmail(profileEntity.getEmail());
-       profileObject.setTwoFactorAuthentication(String.valueOf(profileEntity.getTowFactorAuthentication()));
-       return profileObject;
+
+   private ChannelObject convertChannelEntityToChannelObject(ChannelEntity channelEntity) {
+       ChannelObject channelObject = new ChannelObject();
+       channelObject.setFirstName(channelEntity.getFirstName());
+       channelObject.setLastName(channelEntity.getLastName());
+       channelObject.setUsername(channelEntity.getUsername());
+       channelObject.setMobile(channelEntity.getMobile());
+       return channelObject;
    }
 
     public ForgetPasswordProfileResponse fillForgetPasswordProfileResponse(String nationalCode, Long otpExpireTime, String mobileNumber, String registerHash) {

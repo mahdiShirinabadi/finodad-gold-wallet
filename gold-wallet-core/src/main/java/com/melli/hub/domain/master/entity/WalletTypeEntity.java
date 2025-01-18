@@ -22,7 +22,7 @@ public class WalletTypeEntity extends BaseEntityAudit implements Serializable {
 
 	//FOR CHANNEL
 	//FOR MERCHANT
-	//FOR NORMAL USER
+	//FOR NORMAL_USER
 	@Column(name = "name")
 	private String name;
 }

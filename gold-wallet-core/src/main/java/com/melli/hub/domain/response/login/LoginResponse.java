@@ -1,6 +1,7 @@
 package com.melli.hub.domain.response.login;
 
-import com.melli.hub.domain.response.profile.ProfileObject;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.melli.hub.domain.response.channel.ChannelObject;
 import lombok.*;
 
 /**
@@ -12,8 +13,13 @@ import lombok.*;
 @NoArgsConstructor
 @ToString
 public class LoginResponse {
-    private boolean twoFactorAuthentication;
-    private ProfileObject profileObject;
+
+    @JsonProperty("channelObject")
+    private ChannelObject channelObject;
+
+    @JsonProperty("accessTokenObject")
     private TokenObject accessTokenObject;
+
+    @JsonProperty("refreshTokenObject")
     private TokenObject refreshTokenObject;
 }

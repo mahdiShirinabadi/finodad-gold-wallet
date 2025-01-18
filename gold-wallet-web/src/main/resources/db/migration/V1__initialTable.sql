@@ -177,6 +177,17 @@ CREATE TABLE if not exists wallet_type
     name       VARCHAR(100)
 );
 
+CREATE TABLE if not exists wallet_level
+(
+    id         BIGSERIAL PRIMARY KEY,
+    created_by VARCHAR(200)                NOT NULL,
+    updated_by VARCHAR(200),
+    created_at TIMESTAMP WITHOUT TIME ZONE NOT NULL,
+    updated_at TIMESTAMP WITHOUT TIME ZONE,
+    name       VARCHAR(100)
+);
+
+
 CREATE TABLE if not exists wallet
 (
     id               BIGSERIAL PRIMARY KEY,
@@ -191,7 +202,8 @@ CREATE TABLE if not exists wallet
     level_           INTEGER,
     status           INTEGER,
     owner_channel_id BIGINT                      NOT NULL REFERENCES channel,
-    wallet_type_id   BIGINT                      NOT NULL REFERENCES wallet_type
+    wallet_type_id   BIGINT                      NOT NULL REFERENCES wallet_type,
+    wallet_level_id   BIGINT                      NOT NULL REFERENCES wallet_level
 );
 
 create table if not exists escrow_wallet_account
@@ -322,24 +334,23 @@ CREATE TABLE if not exists merchant
 
 CREATE TABLE if not exists deactivate_wallet_account_request
 (
-    id              BIGSERIAL PRIMARY KEY,
-    created_by      VARCHAR(200)                NOT NULL,
-    updated_by      VARCHAR(200),
-    created_at      TIMESTAMP WITHOUT TIME ZONE NOT NULL,
-    updated_at      TIMESTAMP WITHOUT TIME ZONE,
-    wallet_account_id           BIGINT NOT NULL REFERENCES wallet_account
+    id                BIGSERIAL PRIMARY KEY,
+    created_by        VARCHAR(200)                NOT NULL,
+    updated_by        VARCHAR(200),
+    created_at        TIMESTAMP WITHOUT TIME ZONE NOT NULL,
+    updated_at        TIMESTAMP WITHOUT TIME ZONE,
+    wallet_account_id BIGINT                      NOT NULL REFERENCES wallet_account
 );
 
 CREATE TABLE if not exists deactivate_wallet_request
 (
-    id              BIGSERIAL PRIMARY KEY,
-    created_by      VARCHAR(200)                NOT NULL,
-    updated_by      VARCHAR(200),
-    created_at      TIMESTAMP WITHOUT TIME ZONE NOT NULL,
-    updated_at      TIMESTAMP WITHOUT TIME ZONE,
-    wallet_id           BIGINT NOT NULL REFERENCES wallet
+    id         BIGSERIAL PRIMARY KEY,
+    created_by VARCHAR(200)                NOT NULL,
+    updated_by VARCHAR(200),
+    created_at TIMESTAMP WITHOUT TIME ZONE NOT NULL,
+    updated_at TIMESTAMP WITHOUT TIME ZONE,
+    wallet_id  BIGINT                      NOT NULL REFERENCES wallet
 );
-
 
 CREATE TABLE if not exists create_wallet_request
 (
@@ -349,14 +360,14 @@ CREATE TABLE if not exists create_wallet_request
 
 CREATE TABLE if not exists purchase_request
 (
-    request_id                  BIGINT NOT NULL REFERENCES request,
-    transaction_type VARCHAR(50) NOT NULL CHECK (transaction_type IN ('CUSTOMER_BUY', 'CUSTOMER_SELL')),
+    request_id                  BIGINT      NOT NULL REFERENCES request,
+    transaction_type            VARCHAR(50) NOT NULL CHECK (transaction_type IN ('CUSTOMER_BUY', 'CUSTOMER_SELL')),
     price                       BIGINT,         -- Purchased quantity price
     amount                      NUMERIC(10, 5), -- Purchased quantity
-    wallet_account_id           BIGINT NOT NULL REFERENCES wallet_account,
-    escrow_wallet_account_id    BIGINT NOT NULL REFERENCES escrow_wallet_account,
-    rrn_id                      BIGINT NOT NULL REFERENCES rrn,
-    merchant_id                 BIGINT NOT NULL REFERENCES merchant,
+    wallet_account_id           BIGINT      NOT NULL REFERENCES wallet_account,
+    escrow_wallet_account_id    BIGINT      NOT NULL REFERENCES escrow_wallet_account,
+    rrn_id                      BIGINT      NOT NULL REFERENCES rrn,
+    merchant_id                 BIGINT      NOT NULL REFERENCES merchant,
     national_code               VARCHAR(100),
     terminal_amount             VARCHAR(100),
     additional_data             VARCHAR(500),
@@ -395,56 +406,58 @@ CREATE TABLE if not exists p_2_p_request
     dest_wallet_account_id BIGINT NOT NULL REFERENCES wallet_account
 );
 
-CREATE TABLE if not exists cash_in_ipg_request
+CREATE TABLE if not exists cash_in_request
 (
-    request_id                  BIGINT NOT NULL REFERENCES request,
-    amount                      BIGINT, -- Purchased quantity
-    wallet_account_id           BIGINT NOT NULL REFERENCES wallet_account,
-    rrn_id                      BIGINT NOT NULL REFERENCES rrn,
-    psp_token               VARCHAR(200),
-    psp_response             VARCHAR(500),
-    additional_data             VARCHAR(500),
-    ref_number                  VARCHAR(500),
-    psp_request_time      TIMESTAMP WITHOUT TIME ZONE,
-    psp_response_time      TIMESTAMP WITHOUT TIME ZONE
+    request_id           BIGINT NOT NULL REFERENCES request,
+    amount               BIGINT, -- Purchased quantity
+    wallet_account_id    BIGINT NOT NULL REFERENCES wallet_account,
+    rrn_id               BIGINT NOT NULL REFERENCES rrn,
+    psp_token            VARCHAR(200),
+    psp_response         VARCHAR(500),
+    additional_data      VARCHAR(500),
+    ref_number           VARCHAR(500),
+    cash_in_payment_type VARCHAR(100),
+    psp_request_time     TIMESTAMP WITHOUT TIME ZONE,
+    psp_response_time    TIMESTAMP WITHOUT TIME ZONE
 );
 
-CREATE TABLE if not exists cash_in_ipg_history_request
+CREATE TABLE if not exists cash_in_history_request
 (
-    id              BIGSERIAL PRIMARY KEY,
-    created_by      VARCHAR(200)                NOT NULL,
-    updated_by      VARCHAR(200),
-    created_at      TIMESTAMP WITHOUT TIME ZONE NOT NULL,
-    updated_at      TIMESTAMP WITHOUT TIME ZONE,
-    cash_in_ipg_request           BIGINT NOT NULL REFERENCES cash_in_ipg_request,
-    psp_response             VARCHAR(500),
-    additional_data             VARCHAR(500),
-    ref_number                  VARCHAR(200),
-    psp_request_time      TIMESTAMP WITHOUT TIME ZONE,
-    psp_response_time      TIMESTAMP WITHOUT TIME ZONE,
-    psp_step VARCHAR(50) NOT NULL CHECK (psp_step IN ('CREATE', 'GET_TOKEN','REDIRECT_IPG','CALL_BACK_FROM_PSP','VERIFY','REVERSE'))
+    id                  BIGSERIAL PRIMARY KEY,
+    created_by          VARCHAR(200)                NOT NULL,
+    updated_by          VARCHAR(200),
+    created_at          TIMESTAMP WITHOUT TIME ZONE NOT NULL,
+    updated_at          TIMESTAMP WITHOUT TIME ZONE,
+    cash_in_ipg_request BIGINT                      NOT NULL REFERENCES cash_in_request,
+    psp_response        VARCHAR(500),
+    additional_data     VARCHAR(500),
+    ref_number          VARCHAR(200),
+    psp_request_time    TIMESTAMP WITHOUT TIME ZONE,
+    psp_response_time   TIMESTAMP WITHOUT TIME ZONE,
+    psp_step            VARCHAR(50)                 NOT NULL CHECK (psp_step IN ('CREATE', 'GET_TOKEN', 'REDIRECT_IPG',
+                                                                                 'CALL_BACK_FROM_PSP', 'VERIFY',
+                                                                                 'REVERSE'))
 );
 
 CREATE TABLE if not exists cash_in_special_request
 (
-    request_id                  BIGINT NOT NULL REFERENCES request,
-    amount                      BIGINT, -- Purchased quantity
-    ref_number                  VARCHAR(500),
-    wallet_account_id           BIGINT NOT NULL REFERENCES wallet_account,
-    rrn_id                      BIGINT NOT NULL REFERENCES rrn,
-    additional_data             VARCHAR(500)
+    request_id        BIGINT NOT NULL REFERENCES request,
+    amount            BIGINT, -- Purchased quantity
+    ref_number        VARCHAR(500),
+    wallet_account_id BIGINT NOT NULL REFERENCES wallet_account,
+    rrn_id            BIGINT NOT NULL REFERENCES rrn,
+    additional_data   VARCHAR(500)
 );
 
 CREATE TABLE if not exists cash_out_request
 (
-    request_id                  BIGINT NOT NULL REFERENCES request,
-    amount                      BIGINT, -- Purchased quantity
-    iban                        VARCHAR(100),
-    wallet_account_id           BIGINT NOT NULL REFERENCES wallet_account,
-    rrn_id                      BIGINT NOT NULL REFERENCES rrn,
-    additional_data             VARCHAR(500)
+    request_id        BIGINT NOT NULL REFERENCES request,
+    amount            BIGINT, -- Purchased quantity
+    iban              VARCHAR(100),
+    wallet_account_id BIGINT NOT NULL REFERENCES wallet_account,
+    rrn_id            BIGINT NOT NULL REFERENCES rrn,
+    additional_data   VARCHAR(500)
 );
-
 
 insert into role_ (created_by, created_at, name, persian_description, additional_data)
 values ('admin', now(), 'WEB_PROFILE', 'کاربر وب', '')

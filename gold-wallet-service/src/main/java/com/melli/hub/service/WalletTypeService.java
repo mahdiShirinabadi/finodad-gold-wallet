@@ -1,0 +1,21 @@
+package com.melli.hub.service;
+
+import com.melli.hub.domain.master.entity.WalletAccountCurrencyEntity;
+import com.melli.hub.domain.master.entity.WalletTypeEntity;
+
+import java.util.List;
+
+/**
+ * Class Name: WalletAccountCurrencyService
+ * Author: Mahdi Shirinabadi
+ * Date: 1/18/2025
+ */
+public interface WalletTypeService {
+
+    public static String NORMAL_USER = "NORMAL_USER";
+    public static String CHANNEL = "CHANNEL";
+    public static String MERCHANT = "MERCHANT";
+
+    List<WalletTypeEntity> getAll();
+    void clearCache();
+}
