@@ -8,6 +8,7 @@ public interface ResourceService {
     String WALLET_DEACTIVATE = "WALLET_DEACTIVATE";
     String WALLET_DELETE = "WALLET_DELETE";
     String WALLET_ACTIVE = "WALLET_ACTIVE";
+    String CASH_IN = "CASH_IN";
 
     ResourceEntity getRequestType(String name);
 

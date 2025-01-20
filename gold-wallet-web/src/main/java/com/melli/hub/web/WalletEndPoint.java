@@ -80,7 +80,7 @@ public class WalletEndPoint extends WebEndPoint {
 
 	@Timed(description = "Time taken to delete wallet")
 	@GetMapping(path = "/get/{nationalCode}", produces = {MediaType.APPLICATION_JSON_VALUE})
-	@Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "حذف کردن کیف پول ")
+	@Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "دریافت اطلاعات کیف پول ")
 	@PreAuthorize("hasAuthority(\""+ ResourceService.WALLET_DELETE +"\")")
 	public ResponseEntity<BaseResponse<CreateWalletResponse>> deleteWallet(@PathVariable String nationalCode) throws InternalServiceException {
 		String channelIp = requestContext.getClientIp();
