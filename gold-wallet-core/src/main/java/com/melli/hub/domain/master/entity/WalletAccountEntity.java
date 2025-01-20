@@ -1,5 +1,6 @@
 package com.melli.hub.domain.master.entity;
 
+import com.melli.hub.domain.enumaration.WalletStatusEnum;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -32,7 +33,8 @@ public class WalletAccountEntity extends BaseEntityAudit implements Serializable
 	private String accountNumber;
 
 	@Column(name = "status")
-	private int status;
+	@Enumerated(EnumType.STRING)
+	private WalletStatusEnum status;
 
 	@Column(name = "pin")
 	private String pin;

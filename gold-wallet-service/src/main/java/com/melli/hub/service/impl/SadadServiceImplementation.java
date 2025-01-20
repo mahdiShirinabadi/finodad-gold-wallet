@@ -1,6 +1,7 @@
 package com.melli.hub.service.impl;
 
 import com.melli.hub.ChannelException;
+import com.melli.hub.domain.master.entity.ShahkarInfoEntity;
 import com.melli.hub.domain.master.persistence.SadadDailyTokenRepository;
 import com.melli.hub.domain.redis.SadadDailyTokenRedis;
 import com.melli.hub.exception.InternalServiceException;
@@ -31,7 +32,6 @@ public class SadadServiceImplementation implements SadadService {
     private final SadadChannelInterface sadadChannel;
     private final ShahkarInfoService shahkarInfoService;
     private final SadadDailyTokenRepository sadadDailyTokenRepository;
-    private AlertService alertService;
     @Value("${sadad.client.id}")
     private String clientId;
     @Value("${sadad.client.secret}")
@@ -133,12 +133,4 @@ public class SadadServiceImplementation implements SadadService {
         }
     }
 
-    public static void main(String[] args) {
-
-    }
-
-    @Autowired
-    public void setAlertService(@Lazy AlertService alertService) {
-        this.alertService = alertService;
-    }
 }

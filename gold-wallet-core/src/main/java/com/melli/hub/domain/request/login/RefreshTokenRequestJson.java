@@ -16,21 +16,12 @@ import lombok.ToString;
 public class RefreshTokenRequestJson {
 
     @NotNull(message = "نام کاربری نمی تواند خالی باشد")
-    @NationalCodeValidation(label = "نام کاربری")
     @StringValidation(label = "نام کاربری")
-    @JsonProperty(value = "nationalCode", required = true)
-    private String nationalCode;
+    @JsonProperty(value = "username", required = true)
+    private String username;
 
     @NotNull(message = "refreshToken نمی تواند خالی باشد")
     @StringValidation(label = "refreshToken")
     @JsonProperty(value = "refreshToken", required = true)
     private String refreshToken;
-
-    @StringValidation(label = "اطلاعات دستگاه")
-    @JsonProperty(value = "deviceName", required = true)
-    private String deviceName;
-
-    @StringValidation(label = "اطلاعات تکمیلی")
-    @JsonProperty(value = "additionalData", required = true)
-    private String additionalData;
 }

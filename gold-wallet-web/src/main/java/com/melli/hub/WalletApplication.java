@@ -16,14 +16,14 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 @OpenAPIDefinition(
         servers = {
-                @Server(url = "/gold", description = "Default Server URL")
+                @Server(url = "/wallet", description = "Default Server URL")
         }
 )
 @SpringBootApplication
 @EnableTransactionManagement
 @EnableScheduling
 @EnableAspectJAutoProxy(proxyTargetClass = true)
-@EnableCaching
+@EnableCaching(proxyTargetClass = true)
 @Log4j2
 @EnableConfigurationProperties({
         FileStorageProperties.class

@@ -22,9 +22,9 @@ public class WalletAccountObject {
     @JsonProperty("balance")
     private String balance;
 
-    @JsonProperty("shareAccountObject")
-    private ShareAccountObject shareAccountObject;
-
     @JsonProperty("status")
     private String status;
+
+    @JsonProperty("statusDescription")
+    private String statusDescription;
 }

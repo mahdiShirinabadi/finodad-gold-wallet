@@ -15,6 +15,7 @@ import java.util.List;
 public interface WalletOperationalService {
 
     CreateWalletResponse createWallet(ChannelEntity channelEntity, String mobile, String nationalCode, String walletType, List<String> walletAccountCurrencyList, List<String> walletAccountTypeList) throws InternalServiceException;
+    CreateWalletResponse get(ChannelEntity channelEntity, String nationalCode) throws InternalServiceException;
     BaseResponse deactivateWallet(ChannelEntity channel, String walletId, String ip) throws InternalServiceException;
     BaseResponse deleteWallet(ChannelEntity channel, String walletId, String ip) throws InternalServiceException;
     BaseResponse activateWallet(ChannelEntity channel, String walletId, String ip) throws InternalServiceException;

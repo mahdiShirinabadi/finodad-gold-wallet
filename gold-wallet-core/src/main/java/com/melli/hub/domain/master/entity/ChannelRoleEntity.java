@@ -19,6 +19,6 @@ public class ChannelRoleEntity extends BaseEntityAudit {
     private RoleEntity roleEntity;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "profile_id", nullable = false)
-    private ProfileEntity profileEntity;
+    @JoinColumn(name = "channel_id", nullable = false)
+    private ChannelEntity channelEntity;
 }

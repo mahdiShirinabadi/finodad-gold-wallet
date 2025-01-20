@@ -26,8 +26,6 @@ public interface WalletService {
 
     void save(WalletEntity wallet);
 
-    void clearCache(String mobile);
-
     List<WalletEntity> findAllByStatus(int status);
 
     void clearAllCache();

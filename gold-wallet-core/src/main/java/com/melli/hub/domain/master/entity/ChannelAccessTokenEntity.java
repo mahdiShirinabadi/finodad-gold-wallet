@@ -9,7 +9,7 @@ import lombok.ToString;
 import java.util.Date;
 
 @Entity
-@Table(name = "profile_access_token")
+@Table(name = "channel_access_token")
 @Setter
 @Getter
 @ToString
@@ -17,8 +17,8 @@ import java.util.Date;
 public class ChannelAccessTokenEntity extends BaseEntityAudit {
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "profile_id", nullable = false)
-    private ProfileEntity profileEntity;
+    @JoinColumn(name = "channel_id", nullable = false)
+    private ChannelEntity channelEntity;
 
     @Column(name = "access_token", nullable = false, unique = true)
     private String accessToken;

@@ -1,8 +1,9 @@
 package com.melli.hub.service.impl;
 
+import com.melli.hub.domain.master.entity.ChannelEntity;
 import com.melli.hub.domain.master.entity.ChannelRoleEntity;
 import com.melli.hub.domain.master.entity.RoleEntity;
-import com.melli.hub.domain.master.persistence.ProfileRoleRepository;
+import com.melli.hub.domain.master.persistence.ChannelRoleRepository;
 import com.melli.hub.domain.master.persistence.RoleRepository;
 import com.melli.hub.exception.InternalServiceException;
 import com.melli.hub.service.RoleService;
@@ -25,27 +26,27 @@ import java.util.Date;
 @RequiredArgsConstructor
 public class RoleServiceImplementation implements RoleService {
 
-    private final ProfileRoleRepository profileRoleRepository;
+    private final ChannelRoleRepository channelRoleRepository;
     private final RoleRepository roleRepository;
 
 
     @Override
-    public void addProfileToRole(ProfileEntity profileEntity, String roleName) throws InternalServiceException {
+    public void addChannelToRole(ChannelEntity channelEntity, String roleName) throws InternalServiceException {
         RoleEntity roleEntity = roleRepository.findByName(roleName).orElseThrow(() -> new InternalServiceException("role name not found", StatusService.ROLE_NAME_NOT_FOUND, HttpStatus.OK));
         ChannelRoleEntity channelRoleEntity = new ChannelRoleEntity();
         channelRoleEntity.setRoleEntity(roleEntity);
-        channelRoleEntity.setProfileEntity(profileEntity);
+        channelRoleEntity.setChannelEntity(channelEntity);
         channelRoleEntity.setCreatedAt(new Date());
-        channelRoleEntity.setCreatedBy(profileEntity.getUsername());
-        profileRoleRepository.save(channelRoleEntity);
+        channelRoleEntity.setCreatedBy(channelEntity.getUsername());
+        channelRoleRepository.save(channelRoleEntity);
     }
 
     @Override
     @Transactional
-    public void removeProfileFromRole(ProfileEntity profileEntity, String roleName) throws InternalServiceException {
+    public void removeChannelFromRole(ChannelEntity channelEntity, String roleName) throws InternalServiceException {
         RoleEntity roleEntity = roleRepository.findByName(roleName).orElseThrow(() -> new InternalServiceException("role name not found", StatusService.ROLE_NAME_NOT_FOUND, HttpStatus.OK));
-        ChannelRoleEntity channelRoleEntity = profileRoleRepository.findByProfileEntityAndRoleEntity(profileEntity, roleEntity);
-        profileRoleRepository.delete(channelRoleEntity);
+        ChannelRoleEntity channelRoleEntity = channelRoleRepository.findByChannelEntityAndRoleEntity(channelEntity, roleEntity);
+        channelRoleRepository.delete(channelRoleEntity);
     }
 
 }

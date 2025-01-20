@@ -1,5 +1,6 @@
 package com.melli.hub.domain.master.entity;
 
+import com.melli.hub.domain.enumaration.WalletStatusEnum;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -44,7 +45,8 @@ public class WalletEntity extends BaseEntityAudit implements Serializable {
 	private WalletLevelEntity walletLEvelEntity;
 
 	@Column(name = "status")
-	private int status;
+	@Enumerated(EnumType.STRING)
+	private WalletStatusEnum status;
 
 	@Column(name = "level_")
 	private int level;

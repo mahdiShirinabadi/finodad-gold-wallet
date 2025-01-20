@@ -2,12 +2,14 @@ package com.melli.hub.service.impl;
 
 import com.melli.hub.domain.enumaration.ProfileStatusEnum;
 import com.melli.hub.domain.master.entity.ChannelBlockEntity;
+import com.melli.hub.domain.master.entity.ChannelEntity;
 import com.melli.hub.domain.master.entity.SettingEntity;
 import com.melli.hub.exception.InternalServiceException;
 import com.melli.hub.service.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
@@ -31,9 +33,9 @@ public class SecurityServiceImplementation implements SecurityService {
 
     private static final String INVALID_SIGN = "invalid sign";
 
-    private final ProfileBlockService profileBlockService;
+    private final ChannelBlockService channelBlockService;
     private final SettingService settingService;
-    private final ProfileService profileService;
+    private final ChannelService channelService;
 
     @Value("${default.maxFailForWrongPassword}")
     private String maxFail;
@@ -63,68 +65,68 @@ public class SecurityServiceImplementation implements SecurityService {
         return Long.parseLong(maxFail);
     }
 
-    public void resetFailLoginCount(ProfileEntity profileEntity) {
-        ChannelBlockEntity profileBlock = profileBlockService.findByProfile(profileEntity);
+    public void resetFailLoginCount(ChannelEntity channelEntity) {
+        ChannelBlockEntity profileBlock = channelBlockService.findByProfile(channelEntity);
         if (profileBlock == null) {
-            log.info("channelBlock is null for profile ==> {}", profileEntity.getUsername());
+            log.info("channelBlock is null for profile ==> {}", channelEntity.getUsername());
             return;
         }
         if (profileBlock.getCountFail() == 0) {
-            log.info("channelBlock's fail count is {} for profile ==> {}", 0, profileEntity.getUsername());
+            log.info("channelBlock's fail count is {} for profile ==> {}", 0, channelEntity.getUsername());
             return;
         }
         profileBlock.setEndBlockDate(new Date());
         profileBlock.setCountFail(0);
-        profileBlockService.save(profileBlock);
+        channelBlockService.save(profileBlock);
     }
 
     @Async
-    public void increaseFailLogin(ProfileEntity profileEntity) {
-        if(profileEntity != null){
-            log.info("increase failed login count for nationalCode ({})", profileEntity.getNationalCode());
-            increaseFailLoginCount(profileEntity);
+    public void increaseFailLogin(ChannelEntity channelEntity) {
+        if(channelEntity != null){
+            log.info("increase failed login count for nationalCode ({})", channelEntity.getUsername());
+            increaseFailLoginCount(channelEntity);
         }else{
             log.error("increase failed login count for nationalCode is null");
         }
     }
 
 
-    private synchronized void increaseFailLoginCount(ProfileEntity profileEntity) {
-        ChannelBlockEntity currentProfileBlock = profileBlockService.findByProfile(profileEntity);
+    private synchronized void increaseFailLoginCount(ChannelEntity channelEntity) {
+        ChannelBlockEntity currentProfileBlock = channelBlockService.findByProfile(channelEntity);
         if (currentProfileBlock == null) {
             currentProfileBlock = new ChannelBlockEntity();
             currentProfileBlock.setCreatedAt(new Date());
             currentProfileBlock.setCreatedBy("System");
             currentProfileBlock.setStartBlockDate(new Date());
             currentProfileBlock.setCountFail(1);
-            currentProfileBlock.setProfileEntity(profileEntity);
-            profileBlockService.save(currentProfileBlock);
+            currentProfileBlock.setChannelEntity(channelEntity);
+            channelBlockService.save(currentProfileBlock);
         } else {
             currentProfileBlock.setStartBlockDate(new Date());
             if (currentProfileBlock.getCountFail() <= getMaxFail()){
                 currentProfileBlock.setCountFail(currentProfileBlock.getCountFail() + 1);
 
                 if(currentProfileBlock.getCountFail() == getMaxFail()){
-                    profileEntity.setStatus(ProfileStatusEnum.BLOCK.getText());
-                    profileEntity.setUpdatedAt(new Date());
-                    profileService.save(profileEntity);
+                    channelEntity.setStatus(ProfileStatusEnum.BLOCK.getText());
+                    channelEntity.setUpdatedAt(new Date());
+                    channelService.save(channelEntity);
                 }
             }
-            profileBlockService.save(currentProfileBlock);
+            channelBlockService.save(currentProfileBlock);
         }
     }
 
-    public boolean isBlock(ProfileEntity profileEntity) {
-        ChannelBlockEntity currentUserBlock = profileBlockService.findByProfile(profileEntity);
+    public boolean isBlock(ChannelEntity channelEntity) {
+        ChannelBlockEntity currentUserBlock = channelBlockService.findByProfile(channelEntity);
         if(currentUserBlock == null){
             return false;
         }
-        return Objects.equals(currentUserBlock.getProfileEntity().getStatus(), ProfileStatusEnum.BLOCK.getText());
+        return Objects.equals(currentUserBlock.getChannelEntity().getStatus(), ProfileStatusEnum.BLOCK.getText());
     }
 
     @Override
-    public void checkSign(ProfileEntity profileEntity, String sign, String data) throws InternalServiceException {
-        /*log.info("start check sign for channel ({}), sign ({})...", profileEntity.getUsername(), sign);
+    public void checkSign(ChannelEntity profileEntity, String sign, String data) throws InternalServiceException {
+        log.info("start check sign for channel ({}), sign ({})...", profileEntity.getUsername(), sign);
         // channel not use sign
         if (profileEntity.getSign() == ChannelService.FALSE) {
             log.info("success check sign for channel ({}), set in data base no need for check sign !!!!, and we return true", profileEntity.getUsername());
@@ -148,6 +150,6 @@ public class SecurityServiceImplementation implements SecurityService {
             log.error("failed verify signature for channel ({}), error is ({}) ", profileEntity.getUsername(), e.getMessage());
         }
         log.info("failed check sign for channel ({})", profileEntity.getUsername());
-        throw new InternalServiceException(INVALID_SIGN, StatusService.INVALID_SIGN, HttpStatus.OK);*/
+        throw new InternalServiceException(INVALID_SIGN, StatusService.INVALID_SIGN, HttpStatus.OK);
     }
 }

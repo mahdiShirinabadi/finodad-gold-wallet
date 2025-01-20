@@ -23,12 +23,4 @@ public class LoginRequestJson {
     @ToString.Exclude
     private String password;
 
-    @StringValidation(label = "اطلاعات دستگاه")
-    @JsonProperty(value = "deviceName", required = true)
-    private String deviceName;
-
-    @StringValidation(label = "اطلاعات تکمیلی")
-    @JsonProperty(value = "additionalData", required = true)
-    private String additionalData;
-
 }

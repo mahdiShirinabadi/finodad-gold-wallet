@@ -15,12 +15,14 @@ create table if not exists channel
     public_key         varchar(1000) default null,
     ip                 varchar(500)  default null,
     status             int           default null,
+    iban               varchar(13)   default null,
+    wallet_id          bigint        default null,
     account            varchar(13)   default null,
     balance_limitation bigint        default 2000000,
     check_shahkar      int           default 0,
     wage_iban          varchar(50)   default null,
     wage_account       varchar(50)   default null,
-    token              varchar(400)
+    end_time           TIMESTAMP WITHOUT TIME ZONE
 );
 
 CREATE TABLE if not exists role_
@@ -71,8 +73,6 @@ CREATE TABLE if not exists channel_access_token
     access_token              VARCHAR(400)                NOT NULL,
     refresh_token             VARCHAR(400)                NOT NULL,
     ip                        VARCHAR(500) DEFAULT NULL::CHARACTER VARYING,
-    device_name               VARCHAR(400),
-    additional_data           VARCHAR(400),
     access_token_expire_time  TIMESTAMP WITHOUT TIME ZONE,
     refresh_token_expire_time TIMESTAMP WITHOUT TIME ZONE,
     end_time                  TIMESTAMP WITHOUT TIME ZONE
@@ -115,16 +115,18 @@ CREATE TABLE if not exists channel_role
 
 CREATE TABLE if not exists wallet_account_currency
 (
-    id         BIGSERIAL PRIMARY KEY,
-    created_by VARCHAR(200)                NOT NULL,
-    updated_by VARCHAR(200),
-    created_at TIMESTAMP WITHOUT TIME ZONE NOT NULL,
-    updated_at TIMESTAMP WITHOUT TIME ZONE,
-    name       VARCHAR(100),
-    suffix     VARCHAR(100)
+    id              BIGSERIAL PRIMARY KEY,
+    created_by      VARCHAR(200)                NOT NULL,
+    updated_by      VARCHAR(200),
+    created_at      TIMESTAMP WITHOUT TIME ZONE NOT NULL,
+    updated_at      TIMESTAMP WITHOUT TIME ZONE,
+    name            VARCHAR(100),
+    suffix          VARCHAR(100),
+    additional_data VARCHAR(300),
+    description     VARCHAR(100)
 );
 
-CREATE TABLE if not exists wallet_account_type
+CREATE TABLE if not exists wallet_type
 (
     id         BIGSERIAL PRIMARY KEY,
     created_by VARCHAR(200)                NOT NULL,
@@ -132,6 +134,47 @@ CREATE TABLE if not exists wallet_account_type
     created_at TIMESTAMP WITHOUT TIME ZONE NOT NULL,
     updated_at TIMESTAMP WITHOUT TIME ZONE,
     name       VARCHAR(100)
+);
+
+CREATE TABLE if not exists wallet_account_type
+(
+    id              BIGSERIAL PRIMARY KEY,
+    created_by      VARCHAR(200)                NOT NULL,
+    updated_by      VARCHAR(200),
+    created_at      TIMESTAMP WITHOUT TIME ZONE NOT NULL,
+    updated_at      TIMESTAMP WITHOUT TIME ZONE,
+    name            VARCHAR(100),
+    additional_data VARCHAR(300),
+    description     VARCHAR(100)
+);
+
+CREATE TABLE if not exists wallet_level
+(
+    id         BIGSERIAL PRIMARY KEY,
+    created_by VARCHAR(200)                NOT NULL,
+    updated_by VARCHAR(200),
+    created_at TIMESTAMP WITHOUT TIME ZONE NOT NULL,
+    updated_at TIMESTAMP WITHOUT TIME ZONE,
+    name       VARCHAR(100)
+);
+
+CREATE TABLE if not exists wallet
+(
+    id               BIGSERIAL PRIMARY KEY,
+    created_by       VARCHAR(200)                NOT NULL,
+    updated_by       VARCHAR(200),
+    created_at       TIMESTAMP WITHOUT TIME ZONE NOT NULL,
+    updated_at       TIMESTAMP WITHOUT TIME ZONE,
+    mobile           VARCHAR(100),
+    national_code    VARCHAR(100),
+    description      VARCHAR(100),
+    identifier       VARCHAR(100),
+    level_           INTEGER,
+    status           VARCHAR(100),
+    owner_channel_id BIGINT                      NOT NULL REFERENCES channel,
+    wallet_type_id   BIGINT                      NOT NULL REFERENCES wallet_type,
+    wallet_level_id  BIGINT                      NOT NULL REFERENCES wallet_level,
+    end_time         TIMESTAMP WITHOUT TIME ZONE
 );
 
 CREATE TABLE if not exists wallet_account
@@ -145,9 +188,10 @@ CREATE TABLE if not exists wallet_account
     wallet_account_type_id     BIGINT                      NOT NULL REFERENCES wallet_account_type,
     wallet_account_currency_id BIGINT                      NOT NULL REFERENCES wallet_account_currency,
     account_number             VARCHAR(100),
-    status                     INTEGER,
+    status                     VARCHAR(100),
     pin                        VARCHAR(100),
     partner_id                 INTEGER,
+    balance                    BIGINT default 0,
     end_time                   TIMESTAMP WITHOUT TIME ZONE
 );
 
@@ -165,45 +209,6 @@ CREATE TABLE if not exists wallet_iban
     account_number    VARCHAR(100),
     account_bank_name VARCHAR(100),
     account_owner     VARCHAR(100)
-);
-
-CREATE TABLE if not exists wallet_type
-(
-    id         BIGSERIAL PRIMARY KEY,
-    created_by VARCHAR(200)                NOT NULL,
-    updated_by VARCHAR(200),
-    created_at TIMESTAMP WITHOUT TIME ZONE NOT NULL,
-    updated_at TIMESTAMP WITHOUT TIME ZONE,
-    name       VARCHAR(100)
-);
-
-CREATE TABLE if not exists wallet_level
-(
-    id         BIGSERIAL PRIMARY KEY,
-    created_by VARCHAR(200)                NOT NULL,
-    updated_by VARCHAR(200),
-    created_at TIMESTAMP WITHOUT TIME ZONE NOT NULL,
-    updated_at TIMESTAMP WITHOUT TIME ZONE,
-    name       VARCHAR(100)
-);
-
-
-CREATE TABLE if not exists wallet
-(
-    id               BIGSERIAL PRIMARY KEY,
-    created_by       VARCHAR(200)                NOT NULL,
-    updated_by       VARCHAR(200),
-    created_at       TIMESTAMP WITHOUT TIME ZONE NOT NULL,
-    updated_at       TIMESTAMP WITHOUT TIME ZONE,
-    mobile           VARCHAR(100),
-    national_code    VARCHAR(100),
-    description      VARCHAR(100),
-    identifier       VARCHAR(100),
-    level_           INTEGER,
-    status           INTEGER,
-    owner_channel_id BIGINT                      NOT NULL REFERENCES channel,
-    wallet_type_id   BIGINT                      NOT NULL REFERENCES wallet_type,
-    wallet_level_id   BIGINT                      NOT NULL REFERENCES wallet_level
 );
 
 create table if not exists escrow_wallet_account
@@ -360,14 +365,14 @@ CREATE TABLE if not exists create_wallet_request
 
 CREATE TABLE if not exists purchase_request
 (
-    request_id                  BIGINT      NOT NULL REFERENCES request,
-    transaction_type            VARCHAR(50) NOT NULL CHECK (transaction_type IN ('CUSTOMER_BUY', 'CUSTOMER_SELL')),
+    request_id                  BIGINT primary key NOT NULL REFERENCES request,
+    transaction_type            VARCHAR(50)        NOT NULL CHECK (transaction_type IN ('CUSTOMER_BUY', 'CUSTOMER_SELL')),
     price                       BIGINT,         -- Purchased quantity price
     amount                      NUMERIC(10, 5), -- Purchased quantity
-    wallet_account_id           BIGINT      NOT NULL REFERENCES wallet_account,
-    escrow_wallet_account_id    BIGINT      NOT NULL REFERENCES escrow_wallet_account,
-    rrn_id                      BIGINT      NOT NULL REFERENCES rrn,
-    merchant_id                 BIGINT      NOT NULL REFERENCES merchant,
+    wallet_account_id           BIGINT             NOT NULL REFERENCES wallet_account,
+    escrow_wallet_account_id    BIGINT             NOT NULL REFERENCES escrow_wallet_account,
+    rrn_id                      BIGINT             NOT NULL REFERENCES rrn,
+    merchant_id                 BIGINT             NOT NULL REFERENCES merchant,
     national_code               VARCHAR(100),
     terminal_amount             VARCHAR(100),
     additional_data             VARCHAR(500),
@@ -408,7 +413,7 @@ CREATE TABLE if not exists p_2_p_request
 
 CREATE TABLE if not exists cash_in_request
 (
-    request_id           BIGINT NOT NULL REFERENCES request,
+    request_id           BIGINT NOT NULL primary key REFERENCES request,
     amount               BIGINT, -- Purchased quantity
     wallet_account_id    BIGINT NOT NULL REFERENCES wallet_account,
     rrn_id               BIGINT NOT NULL REFERENCES rrn,
@@ -505,3 +510,35 @@ create index on escrow_wallet_account (wallet_account_id);
 create index on escrow_wallet_account (wallet_account_type_id);
 create index on escrow_wallet_account (wallet_id);
 CREATE UNIQUE INDEX idx_unique_national_code_wallet_type ON wallet (national_code, wallet_type_id);
+insert into channel(created_by, created_at, firstname, lastname, username, mobile, password, trust, sign, public_key,
+                    ip, status, account, balance_limitation, check_shahkar, wage_iban, wage_account)
+values ('Systen', now(), 'Mahdi', 'admin', 'admin', '09124162337',
+        '$2a$10$U5lecEunX.HBU.MBVLUV8OvwCrgGDJtaKVgGA5hzgwfsfTV8GD8TK', 1, 0, '', '0.0.0.0/0', 1,
+        '1234567890', '10000000', '1', 'IR111111111111111111111111', '1232131313');
+
+insert into resource(created_by, created_at, name, fa_name, display)
+values ('system', 'now()', 'WALLET_CREATE', 'ایجاد کیف پول', 1);
+insert into resource(created_by, created_at, name, fa_name, display)
+values ('system', 'now()', 'WALLET_DEACTIVATE', 'غیر فعال کیف پول', 1);
+insert into resource(created_by, created_at, name, fa_name, display)
+values ('system', 'now()', 'WALLET_DELETE', 'حذف کیف پول', 1);
+insert into resource(created_by, created_at, name, fa_name, display)
+values ('system', 'now()', 'WALLET_ACTIVE', 'فعال کردن کیف پول', 1);
+insert into resource(created_by, created_at, name, fa_name, display)
+values ('system', 'now()', 'LOGOUT', 'خروج', 1);
+insert into wallet_type(created_by, created_at, name)
+values ('system', 'now()', 'NORMAL_USER');
+insert into wallet_type(created_by, created_at, name)
+values ('system', 'now()', 'CHANNEL');
+insert into wallet_type(created_by, created_at, name)
+values ('system', 'now()', 'MERCHANT');
+insert into wallet_account_currency(created_by, created_at, name, suffix)
+VALUES ('system', now(), 'GOLD', 'گرم');
+insert into wallet_account_currency(created_by, created_at, name, suffix)
+VALUES ('system', now(), 'RIAL', 'ریال');
+insert into wallet_account_type(created_by, created_at, name)
+VALUES ('system', now(), 'NORMAL');
+insert into wallet_account_type(created_by, created_at, name)
+VALUES ('system', now(), 'WAGE');
+insert into wallet_level(created_by, created_at, name)
+VALUES ('system', now(), 'ONE');

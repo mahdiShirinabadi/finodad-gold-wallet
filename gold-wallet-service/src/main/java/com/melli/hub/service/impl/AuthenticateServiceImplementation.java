@@ -2,6 +2,7 @@ package com.melli.hub.service.impl;
 
 import com.melli.hub.domain.enumaration.VerificationCodeEnum;
 import com.melli.hub.domain.master.entity.ChannelAccessTokenEntity;
+import com.melli.hub.domain.master.entity.ChannelEntity;
 import com.melli.hub.domain.response.login.LoginResponse;
 import com.melli.hub.exception.InternalServiceException;
 import com.melli.hub.service.*;
@@ -26,140 +27,81 @@ import java.util.*;
 @RequiredArgsConstructor
 public class AuthenticateServiceImplementation implements AuthenticateService {
 
-    private final ProfileService profileService;
+    private final ChannelService channelService;
     private final Helper helper;
     private final SecurityService securityService;
-    private final VerificationCodeService verificationCodeService;
-    private final SettingService settingService;
-    private final MessageService messageService;
-    private final ProfileAccessTokenService profileAccessTokenService;
-    private final Environment environment;
+    private final ChannelAccessTokenService channelAccessTokenService;
 
     @Override
-    public LoginResponse login(String nationalCode, String deviceName, String additionalData, String ip, boolean isAfter, Map<String, String> accessTokenMap, Map<String, String> refreshTokenMap) throws InternalServiceException {
+    public LoginResponse login(String username, String ip, boolean isAfter, Map<String, String> accessTokenMap, Map<String, String> refreshTokenMap) throws InternalServiceException {
 
-        ProfileEntity profileEntity = profileService.findByNationalCode(nationalCode);
+        ChannelEntity channelEntity = channelService.findByUsername(username);
 
 
-        if (helper.notInAllowedList(profileEntity.getValidIp(), ip)) {
-            log.error("ip ({}), not exist in valid ip list ({})", ip, profileEntity.getValidIp());
-            throw new InternalServiceException("ip (" + ip + ", not exist in valid ip list ( " + profileEntity.getValidIp() + ")", StatusService.INVALID_IP_ADDRESS, HttpStatus.FORBIDDEN);
+        if (helper.notInAllowedList(channelEntity.getIp(), ip)) {
+            log.error("ip ({}), not exist in valid ip list ({})", ip, channelEntity.getIp());
+            throw new InternalServiceException("ip (" + ip + ", not exist in valid ip list ( " + channelEntity.getIp() + ")", StatusService.INVALID_IP_ADDRESS, HttpStatus.FORBIDDEN);
         }
 
-        if (securityService.isBlock(profileEntity)) {
-            log.info("channel ({}) is blocked !!!", nationalCode);
-            throw new InternalServiceException("channel (" + nationalCode + ") is blocked", StatusService.PROFILE_IS_BLOCKED, HttpStatus.FORBIDDEN);
+        if (securityService.isBlock(channelEntity)) {
+            log.info("channel ({}) is blocked !!!", username);
+            throw new InternalServiceException("channel (" + username + ") is blocked", StatusService.CHANNEL_IS_BLOCKED, HttpStatus.FORBIDDEN);
         }
 
-        if(Boolean.TRUE.equals(profileEntity.getTowFactorAuthentication())){
-            log.info("twoFactor authentication for nationalCode ({}) is active", nationalCode);
-            //send otp to user for authentication
-            int numberGenerated = Helper.generateRandomNumber();
-            String randomNumber = Utility.pad(String.valueOf(numberGenerated), Integer.parseInt(settingService.getSetting(SettingService.LENGTH_OTP).getValue()));//generate otp
-            log.info("generate random number ({}) for nationalCode ({})", randomNumber, nationalCode);
-            verificationCodeService.save(nationalCode, randomNumber, VerificationCodeEnum.LOGIN);
-            String template = settingService.getSetting(SettingService.SMS_OTP_TEMPLATE).getValue();
-            messageService.send(String.format(template, randomNumber), profileEntity.getMobile());
-            return helper.fillLoginResponse(profileEntity, null, Long.valueOf("0"), null, Long.valueOf("0"));
-        }
-
-        ChannelAccessTokenEntity channelAccessTokenEntity = saveProfileAccessTokenEntity(ip, profileEntity, accessTokenMap, refreshTokenMap, deviceName, additionalData);
-        securityService.resetFailLoginCount(profileEntity);
-        return helper.fillLoginResponse(profileEntity, channelAccessTokenEntity.getAccessToken(), channelAccessTokenEntity.getAccessTokenExpireTime().getTime(),
+        ChannelAccessTokenEntity channelAccessTokenEntity = saveChannelAccessTokenEntity(ip, channelEntity, accessTokenMap, refreshTokenMap);
+        securityService.resetFailLoginCount(channelEntity);
+        return helper.fillLoginResponse(channelEntity, channelAccessTokenEntity.getAccessToken(), channelAccessTokenEntity.getAccessTokenExpireTime().getTime(),
                 channelAccessTokenEntity.getRefreshToken(), channelAccessTokenEntity.getRefreshTokenExpireTime().getTime());
     }
 
     @Override
-    public LoginResponse generateRefreshToken(String refreshToken, String nationalCode, String deviceName, String additionalData, String ip, boolean isAfter, Map<String, String> accessTokenMap, Map<String, String> refreshTokenMap) throws InternalServiceException {
-        ChannelAccessTokenEntity channelAccessTokenEntityOld = profileAccessTokenService.findTopByRefreshTokenEndTimeIsnUll(refreshToken);
+    public LoginResponse generateRefreshToken(String refreshToken, String nationalCode, String ip, boolean isAfter, Map<String, String> accessTokenMap, Map<String, String> refreshTokenMap) throws InternalServiceException {
+        ChannelAccessTokenEntity channelAccessTokenEntityOld = channelAccessTokenService.findTopByRefreshTokenEndTimeIsnUll(refreshToken);
 
-        if (!channelAccessTokenEntityOld.getProfileEntity().getUsername().equalsIgnoreCase(nationalCode)) {
-            log.error("nationalCode refreshToken ({}) not same nationalCode ({})", nationalCode, channelAccessTokenEntityOld.getProfileEntity().getNationalCode());
+        if (!channelAccessTokenEntityOld.getChannelEntity().getUsername().equalsIgnoreCase(nationalCode)) {
+            log.error("username refreshToken ({}) not same username ({})", nationalCode, channelAccessTokenEntityOld.getChannelEntity().getUsername());
             throw new InternalServiceException("Unauthorized access to resources", StatusService.REFRESH_TOKEN_NOT_BELONG_TO_PROFILE, HttpStatus.UNAUTHORIZED);
         }
 
         if (channelAccessTokenEntityOld.getRefreshTokenExpireTime().before(new Date())) {
             channelAccessTokenEntityOld.setEndTime(new Date());
-            profileAccessTokenService.save(channelAccessTokenEntityOld);
+            channelAccessTokenService.save(channelAccessTokenEntityOld);
             throw new InternalServiceException("refresh token is expire", StatusService.REFRESH_TOKEN_IS_EXPIRE, HttpStatus.UNAUTHORIZED);
         }
 
 
         log.info("start generate token for username ({}), Ip ({})...", nationalCode, ip);
-        ChannelAccessTokenEntity channelAccessTokenEntity = saveProfileAccessTokenEntity(ip, channelAccessTokenEntityOld.getProfileEntity(), accessTokenMap, refreshTokenMap, deviceName, additionalData);
+        ChannelAccessTokenEntity channelAccessTokenEntity = saveChannelAccessTokenEntity(ip, channelAccessTokenEntityOld.getChannelEntity(), accessTokenMap, refreshTokenMap);
         log.info("success generate token for username ({}), Ip ({})", nationalCode, ip);
-        securityService.resetFailLoginCount(channelAccessTokenEntityOld.getProfileEntity());
-        return helper.fillLoginResponse(channelAccessTokenEntityOld.getProfileEntity(), channelAccessTokenEntity.getAccessToken(), channelAccessTokenEntity.getAccessTokenExpireTime().getTime(),
+        securityService.resetFailLoginCount(channelAccessTokenEntityOld.getChannelEntity());
+        return helper.fillLoginResponse(channelAccessTokenEntityOld.getChannelEntity(), channelAccessTokenEntity.getAccessToken(), channelAccessTokenEntity.getAccessTokenExpireTime().getTime(),
                 channelAccessTokenEntity.getRefreshToken(), channelAccessTokenEntity.getRefreshTokenExpireTime().getTime());
     }
 
-    @Override
-    public void resentOtp(String nationalCode, String ip) throws InternalServiceException {
-        ProfileEntity profileEntity = profileService.findByNationalCode(nationalCode);
-        log.info("start call method ({}) send otp user with email ({}), from Ip ({})", Utility.getCallerMethodName(),nationalCode, ip);
-        int numberGenerated = Helper.generateRandomNumber();
-        String randomNumber = Utility.pad(String.valueOf(numberGenerated), Integer.parseInt(settingService.getSetting(SettingService.LENGTH_OTP).getValue()));//generate otp
-        log.info("generate random number ({}) for nationalCode ({})", randomNumber, nationalCode);
-        verificationCodeService.save(nationalCode, randomNumber, VerificationCodeEnum.LOGIN);
-        String template = settingService.getSetting(SettingService.SMS_OTP_TEMPLATE).getValue();
-        messageService.send(String.format(template, randomNumber), profileEntity.getMobile());
-    }
 
     @Override
-    public LoginResponse validateOtp(String nationalCode, String deviceName, String additionalData, String ip, boolean isAfter, Map<String, String> accessTokenMap, Map<String, String> refreshTokenMap, String otp) throws InternalServiceException {
-        ProfileEntity profileEntity = profileService.findByNationalCode(nationalCode);
-        if (helper.notInAllowedList(profileEntity.getValidIp(), ip)) {
-            log.error("ip ({}), not exist in valid ip list ({})", ip, profileEntity.getValidIp());
-            throw new InternalServiceException("ip (" + ip + ", not exist in valid ip list ( " + profileEntity.getValidIp() + ")", StatusService.INVALID_IP_ADDRESS, HttpStatus.FORBIDDEN);
-        }
-
-        Optional<String> envorinmentOptional = Arrays.stream(environment.getActiveProfiles()).findAny();
-
-        if (envorinmentOptional.isPresent() && (envorinmentOptional.get().equalsIgnoreCase("test") || envorinmentOptional.get().equalsIgnoreCase("staging") || envorinmentOptional.get().equalsIgnoreCase("dev"))) {
-            log.info("this is a not production env and accept any code!!");
-            if(!nationalCode.substring(0,5).equalsIgnoreCase(otp)){
-                log.error("code ({}) for nationalCode ({}) is not found", otp, profileEntity.getUsername());
-                throw new InternalServiceException("otp (" + otp + ") for mobile (" + profileEntity.getUsername() + ") is not found", StatusService.OTP_NOT_FOUND, HttpStatus.OK, null);
-            }
-        } else {
-            verificationCodeService.findFirstByProfileAndCodeAndStatusAndType(nationalCode, otp, VerificationCodeEnum.LOGIN);
-        }
-
-        ChannelAccessTokenEntity channelAccessTokenEntityOld = profileAccessTokenService.findTopByProfileEntityAndEndTimeIsnUll(profileEntity);
-        if (channelAccessTokenEntityOld != null && !Validator.isNull(channelAccessTokenEntityOld.getAccessToken()) && isAfter) {
-            log.info("token for profile ({}) is not expired and we will return current token", channelAccessTokenEntityOld.getProfileEntity().getNationalCode());
-            return helper.fillLoginResponse(profileEntity, channelAccessTokenEntityOld.getAccessToken(), channelAccessTokenEntityOld.getAccessTokenExpireTime().getTime(),
-                    channelAccessTokenEntityOld.getRefreshToken(), channelAccessTokenEntityOld.getRefreshTokenExpireTime().getTime());
-        }
-        ChannelAccessTokenEntity channelAccessTokenEntity = saveProfileAccessTokenEntity(ip, profileEntity, accessTokenMap, refreshTokenMap, deviceName, additionalData);
-        securityService.resetFailLoginCount(profileEntity);
-        return helper.fillLoginResponse(profileEntity, channelAccessTokenEntity.getAccessToken(), channelAccessTokenEntity.getAccessTokenExpireTime().getTime(),
-                channelAccessTokenEntity.getRefreshToken(), channelAccessTokenEntity.getRefreshTokenExpireTime().getTime());
-    }
-
-    @Override
-    public void logout(ProfileEntity profileEntity) throws InternalServiceException {
-        List<ChannelAccessTokenEntity> channelAccessTokenEntityList = profileAccessTokenService.findAllByProfileEntityAndEndTimeIsNull(profileEntity);
+    public void logout(ChannelEntity channelEntity) throws InternalServiceException {
+        List<ChannelAccessTokenEntity> channelAccessTokenEntityList = channelAccessTokenService.findAllByChannelEntityAndEndTimeIsNull(channelEntity);
         for (ChannelAccessTokenEntity channelAccessTokenEntity : channelAccessTokenEntityList) {
-            channelAccessTokenEntity.setEndTime(profileEntity.getEndTime());
-            profileAccessTokenService.save(channelAccessTokenEntity);
+            channelAccessTokenEntity.setEndTime(new Date());
+            channelAccessTokenService.save(channelAccessTokenEntity);
         }
     }
 
 
-    private ChannelAccessTokenEntity saveProfileAccessTokenEntity(String ip, ProfileEntity profileEntity, Map<String, String> accessTokenMap, Map<String,String> refreshTokenMap, String deviceName, String additionalData) throws InternalServiceException {
-        log.info("start generate token for username ({}), Ip ({})...", profileEntity.getNationalCode(), ip);
+    private ChannelAccessTokenEntity saveChannelAccessTokenEntity(String ip, ChannelEntity channelEntity, Map<String, String> accessTokenMap, Map<String,String> refreshTokenMap) throws InternalServiceException {
+        log.info("start generate token for username ({}), Ip ({})...", channelEntity.getUsername(), ip);
         ChannelAccessTokenEntity channelAccessTokenEntity = new ChannelAccessTokenEntity();
-        channelAccessTokenEntity.setProfileEntity(profileEntity);
+        channelAccessTokenEntity.setChannelEntity(channelEntity);
         channelAccessTokenEntity.setAccessToken(accessTokenMap.get("accessToken"));
         channelAccessTokenEntity.setAccessTokenExpireTime(new Date(Long.parseLong(accessTokenMap.get("expireTime"))));
         channelAccessTokenEntity.setRefreshToken(refreshTokenMap.get("refreshToken"));
         channelAccessTokenEntity.setRefreshTokenExpireTime(new Date(Long.parseLong(refreshTokenMap.get("expireTime"))));
-        channelAccessTokenEntity.setDeviceName(deviceName);
+        channelAccessTokenEntity.setDeviceName("");
         channelAccessTokenEntity.setIp(ip);
-        channelAccessTokenEntity.setAdditionalData(additionalData);
-        profileAccessTokenService.save(channelAccessTokenEntity);
-        log.info("success generate token for username ({}), Ip ({})", profileEntity.getNationalCode(), ip);
+        channelAccessTokenEntity.setAdditionalData("");
+        channelAccessTokenService.save(channelAccessTokenEntity);
+        log.info("success generate token for username ({}), Ip ({})", channelEntity.getUsername(), ip);
         return channelAccessTokenEntity;
     }
 }

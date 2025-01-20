@@ -30,25 +30,25 @@ public interface WalletAccountRepository extends CrudRepository<WalletAccountEnt
 
     List<WalletAccountEntity> findByPartnerId(int id);
 
-    WalletAccountEntity findByWalletAndPartnerId(WalletEntity wallet, int id);
+    WalletAccountEntity findByWalletEntityAndPartnerId(WalletEntity wallet, int id);
 
-    @Query(value = "select balance from wallet_account where id = :id", nativeQuery = true)
-    long getBalance(@Param("id") long id);
+    @Query(value = "select balance from {h-schema}wallet_account where id = :id", nativeQuery = true)
+    Long getBalance(@Param("id") long id);
 
     @Modifying
-    @Query(value = "update wallet_account set balance= balance + :amount where id = :id", nativeQuery = true)
+    @Query(value = "update {h-schema}wallet_account set balance= balance + :amount where id = :id", nativeQuery = true)
     void increaseBalance(@Param("id") long id, @Param("amount") long amount);
 
     @Modifying
-    @Query(value = "update wallet_account set balance= balance - :amount  where id = :id and (balance - :amount) >=0", nativeQuery = true)
+    @Query(value = "update {h-schema}wallet_account set balance= balance - :amount  where id = :id and (balance - :amount) >=0", nativeQuery = true)
     int decreaseBalance(@Param("id") long id, @Param("amount") long amount);
 
     @Modifying
-    @Query(value = "update wallet_account set block_amount= block_amount + :amount where id = :id", nativeQuery = true)
+    @Query(value = "update {h-schema}wallet_account set block_amount= block_amount + :amount where id = :id", nativeQuery = true)
     void blockAmount(@Param("id") long id, @Param("amount") long amount);
 
     @Modifying
-    @Query(value = "update wallet_account  set block_amount= block_amount - :amount where id = :id", nativeQuery = true)
+    @Query(value = "update {h-schema}wallet_account  set block_amount= block_amount - :amount where id = :id", nativeQuery = true)
     void unblockAmount(@Param("id") long id, @Param("amount") long amount);
 
     List<WalletAccountEntity> findAllByStatus(int status);
@@ -58,6 +58,6 @@ public interface WalletAccountRepository extends CrudRepository<WalletAccountEnt
 
     WalletAccountEntity findByWalletEntityAndWalletAccountTypeEntityIdAndWalletAccountCurrencyEntityIdAndPartnerId(WalletEntity wallet, int accountTypeId, int accountGroupId, int partnerId);
 
-    @Query(value = "SELECT w.balance AS balance, w.block_amount AS blockAmount  FROM wallet_account w where id=:id", nativeQuery = true)
+    @Query(value = "SELECT w.balance AS balance, w.block_amount AS blockAmount  FROM {h-schema}wallet_account w where id=:id", nativeQuery = true)
     BalanceObjectDTO getBalanceById(@Param("id") long id);
 }

@@ -1,5 +1,6 @@
 package com.melli.hub.service;
 
+import com.melli.hub.domain.master.entity.ChannelEntity;
 import com.melli.hub.exception.InternalServiceException;
 
 /**
@@ -11,6 +12,6 @@ public interface RoleService {
 
     String WEB_PROFILE = "WEB_PROFILE";
 
-    void addProfileToRole(ProfileEntity profileEntity, String roleName) throws InternalServiceException;
-    void removeProfileFromRole(ProfileEntity profileEntity, String roleName) throws InternalServiceException;
+    void addChannelToRole(ChannelEntity channelEntity, String roleName) throws InternalServiceException;
+    void removeChannelFromRole(ChannelEntity channelEntity, String roleName) throws InternalServiceException;
 }

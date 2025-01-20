@@ -18,6 +18,7 @@ import org.apache.commons.lang3.ObjectUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.util.matcher.IpAddressMatcher;
 import org.springframework.stereotype.Service;
@@ -69,6 +70,8 @@ public class Helper {
         response.setMobile(walletEntity.getMobile());
         response.setNationalCode(walletEntity.getNationalCode());
         response.setWalletId(String.valueOf(walletEntity.getId()));
+        response.setStatus(walletEntity.getStatus().getText());
+        response.setStatusDescription(walletEntity.getStatus().getPersianDescription());
         for(WalletAccountEntity walletAccountEntity : walletAccountEntityList){
             WalletAccountObject walletAccountObject = new WalletAccountObject();
             walletAccountObject.setWalletAccountTypeObject(SubHelper.convertWalletAccountEntityToObject(walletAccountEntity.getWalletAccountTypeEntity()));
@@ -76,6 +79,8 @@ public class Helper {
             walletAccountObject.setAccountNumber(walletAccountEntity.getAccountNumber());
             walletAccountObject.setStatus(String.valueOf(walletAccountEntity.getStatus()));
             walletAccountObject.setBalance(String.valueOf(walletAccountService.getBalance(walletAccountEntity.getId())));
+            walletAccountObject.setStatus(walletAccountEntity.getStatus().getText());
+            walletAccountObject.setStatusDescription(walletAccountEntity.getStatus().getPersianDescription());
             walletAccountObjectList.add(walletAccountObject);
         }
         response.setWalletAccountObjectList(walletAccountObjectList);
@@ -158,5 +163,10 @@ public class Helper {
     public static Integer generateRandomNumber() {
         Random r = new Random(System.currentTimeMillis());
         return ((1 + r.nextInt(2)) * 10000 + r.nextInt(10000));
+    }
+
+    public static void main(String[] args) {
+        PasswordEncoder bCryptPasswordEncoder = new BCryptPasswordEncoder();
+        System.out.println(bCryptPasswordEncoder.encode("admin" + "M@hd!" + "admin"));
     }
 }

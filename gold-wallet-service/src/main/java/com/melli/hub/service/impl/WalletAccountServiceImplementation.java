@@ -1,6 +1,7 @@
 package com.melli.hub.service.impl;
 
 import com.melli.hub.domain.dto.BalanceObjectDTO;
+import com.melli.hub.domain.enumaration.WalletStatusEnum;
 import com.melli.hub.domain.master.entity.*;
 import com.melli.hub.domain.master.persistence.WalletAccountRepository;
 import com.melli.hub.exception.InternalServiceException;
@@ -70,7 +71,7 @@ public class WalletAccountServiceImplementation implements WalletAccountService 
 
     @Override
     public WalletAccountEntity findByWalletAndPartnerId(WalletEntity wallet, int partnerId) {
-        return walletAccountRepository.findByWalletAndPartnerId(wallet, partnerId);
+        return walletAccountRepository.findByWalletEntityAndPartnerId(wallet, partnerId);
     }
 
     @Override
@@ -152,7 +153,7 @@ public class WalletAccountServiceImplementation implements WalletAccountService 
                 //we checked in above!!
                 walletAccountEntity.setWalletAccountTypeEntity(walletAccountTypeEntity.get());
                 walletAccountEntity.setWalletAccountCurrencyEntity(walletAccountCurrencyEntity.get());
-                walletAccountEntity.setStatus(WalletAccountService.ACTIVE);
+                walletAccountEntity.setStatus(WalletStatusEnum.ACTIVE);
                 walletAccountEntity.setCreatedAt(new Date());
                 walletAccountEntity.setCreatedBy(channel.getUsername());
                 walletAccountRepository.save(walletAccountEntity);

@@ -1,6 +1,7 @@
 package com.melli.hub.security;
 
-import com.melli.hub.service.ProfileAccessTokenService;
+import com.melli.hub.domain.master.entity.ChannelEntity;
+import com.melli.hub.service.ChannelAccessTokenService;
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -22,16 +23,16 @@ import java.util.UUID;
 
 @Log4j2
 public class JwtRequestFilter extends OncePerRequestFilter {
-    private final JwtProfileDetailsService jwtProfileDetailsService;
+    private final JwtChannelDetailsService jwtChannelDetailsService;
     private final JwtTokenUtil jwtTokenUtil;
     private final RequestContext requestContext;
-    private final ProfileAccessTokenService profileAccessTokenService;
+    private final ChannelAccessTokenService channelAccessTokenService;
 
-    public JwtRequestFilter(JwtProfileDetailsService jwtProfileDetailsService, JwtTokenUtil jwtTokenUtil, RequestContext requestContext, ProfileAccessTokenService profileAccessTokenService) {
-        this.jwtProfileDetailsService = jwtProfileDetailsService;
+    public JwtRequestFilter(JwtChannelDetailsService jwtChannelDetailsService, JwtTokenUtil jwtTokenUtil, RequestContext requestContext, ChannelAccessTokenService channelAccessTokenService) {
+        this.jwtChannelDetailsService = jwtChannelDetailsService;
         this.jwtTokenUtil = jwtTokenUtil;
         this.requestContext = requestContext;
-        this.profileAccessTokenService = profileAccessTokenService;
+        this.channelAccessTokenService = channelAccessTokenService;
     }
 
     @Override
@@ -63,13 +64,13 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         // Once we get the token validate it.
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
 
-            ProfileEntity profileEntity = (ProfileEntity) this.jwtProfileDetailsService.loadUserByUsername(username);
+            ChannelEntity channelEntity = (ChannelEntity) this.jwtChannelDetailsService.loadUserByUsername(username);
 
             // if token is valid configure Spring Security to manually set authentication
-            if (profileEntity != null) {
+            if (channelEntity != null) {
 
                 UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = new UsernamePasswordAuthenticationToken(
-                        profileEntity, null, profileEntity.getAuthorities());
+                        channelEntity, null, channelEntity.getAuthorities());
                 usernamePasswordAuthenticationToken
                         .setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 // After setting the Authentication in the context, we specify
@@ -77,7 +78,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
                 // Spring Security Configurations successfully.
                 SecurityContextHolder.getContext().setAuthentication(usernamePasswordAuthenticationToken);
             }
-            requestContext.setChannelEntity(profileEntity);
+            requestContext.setChannelEntity(channelEntity);
         }
         chain.doFilter(request, response);
         ThreadContext.clearAll();

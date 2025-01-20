@@ -29,6 +29,6 @@ public class WalletAccountTypeEntity extends BaseEntityAudit implements Serializ
 	@Column(name = "description")
 	private String description;
 
-	@Column(name = "additionalData")
+	@Column(name = "additional_data")
 	private String additionalData;
 }

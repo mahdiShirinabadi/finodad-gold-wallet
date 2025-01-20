@@ -1,16 +1,16 @@
 package com.melli.hub.service;
 
+import com.melli.hub.domain.master.entity.ChannelEntity;
 import com.melli.hub.exception.InternalServiceException;
 
 
 public interface SecurityService {
+    void checkSign(ChannelEntity channelEntity, String sign, String data) throws InternalServiceException;
 
-    void checkSign(ProfileEntity profileEntity, String sign, String data) throws InternalServiceException;
+    void resetFailLoginCount(ChannelEntity channelEntity) throws InternalServiceException;
 
-    void resetFailLoginCount(ProfileEntity profileEntity) throws InternalServiceException;
+    boolean isBlock(ChannelEntity channelEntity);
 
-    boolean isBlock(ProfileEntity profileEntity);
-
-    void increaseFailLogin(ProfileEntity profileEntity);
+    void increaseFailLogin(ChannelEntity channelEntity);
 
 }

@@ -1,6 +1,7 @@
 package com.melli.hub.web;
 
 import com.melli.hub.domain.master.entity.ChannelAccessTokenEntity;
+import com.melli.hub.domain.master.entity.ChannelEntity;
 import com.melli.hub.domain.request.login.LoginRequestJson;
 import com.melli.hub.domain.request.login.LoginWithOtpRequestJson;
 import com.melli.hub.domain.request.login.RefreshTokenRequestJson;
@@ -43,17 +44,17 @@ import java.util.Map;
  */
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/v1/profile/authentication")
+@RequestMapping("/api/v1/authentication")
 @Validated
 @Log4j2
 public class AuthenticationEndPoint extends WebEndPoint {
 
     private final RequestContext context;
     private final AuthenticationManager authenticationManager;
-    private final ProfileService profileService;
+    private final ChannelService channelService;
     private final JwtTokenUtil jwtTokenUtil;
     private final SecurityService securityService;
-    private final ProfileAccessTokenService profileAccessTokenService;
+    private final ChannelAccessTokenService channelAccessTokenService;
     private final SettingService settingService;
     private final AuthenticateService authenticateService;
 
@@ -64,16 +65,16 @@ public class AuthenticationEndPoint extends WebEndPoint {
     public ResponseEntity<BaseResponse<LoginResponse>> login(@Valid @RequestBody LoginRequestJson loginJson, HttpServletRequest httpRequest) throws InternalServiceException {
         try {
             authenticate(loginJson.getUsername(), loginJson.getPassword());
-            boolean isAfter = checkExpiration(profileService.findByNationalCode(loginJson.getUsername()));
+            boolean isAfter = checkExpiration(channelService.findByUsername(loginJson.getUsername()));
             Map<String, String> accessToken = jwtTokenUtil.generateToken(loginJson.getUsername(), Long.parseLong(settingService.getSetting(SettingService.DURATION_ACCESS_TOKEN_PROFILE).getValue()));
             Map<String, String> refreshToken = jwtTokenUtil.generateRefreshToken(loginJson.getUsername(), Long.parseLong(settingService.getSetting(SettingService.DURATION_REFRESH_TOKEN_PROFILE).getValue()));
-            return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse<>(true, authenticateService.login(loginJson.getUsername(), loginJson.getDeviceName(), loginJson.getAdditionalData(), getIP(httpRequest), isAfter, accessToken, refreshToken)));
+            return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse<>(true, authenticateService.login(loginJson.getUsername(), getIP(httpRequest), isAfter, accessToken, refreshToken)));
         } catch (InternalServiceException ex) {
             log.error("failed in login with InternalServiceException ({})", ex.getMessage());
             throw ex;
         } catch (BadCredentialsException ex) {
             log.error("failed in login with BadCredentialsException ({})", ex.getMessage());
-            ProfileEntity profileEntity = profileService.findByNationalCode(loginJson.getUsername());
+            ChannelEntity profileEntity = channelService.findByUsername(loginJson.getUsername());
             securityService.increaseFailLogin(profileEntity);
             throw new InternalServiceException("invalid username password", StatusService.INVALID_USERNAME_PASSWORD, HttpStatus.UNAUTHORIZED);
         } catch (Exception ex) {
@@ -88,40 +89,10 @@ public class AuthenticationEndPoint extends WebEndPoint {
     @PostMapping(value = "/refreshToken", produces = {MediaType.APPLICATION_JSON_VALUE})
     public ResponseEntity<BaseResponse<LoginResponse>> refreshToken(@Valid @RequestBody RefreshTokenRequestJson requestJson, HttpServletRequest httpRequest) throws InternalServiceException {
         log.info("start refreshToken with data ({})", requestJson.toString());
-        boolean isAfter = checkExpiration(profileService.findByNationalCode(requestJson.getNationalCode()));
-        Map<String, String> accessToken = jwtTokenUtil.generateToken(requestJson.getNationalCode(), Long.parseLong(settingService.getSetting(SettingService.DURATION_ACCESS_TOKEN_PROFILE).getValue()));
-        Map<String, String> refreshToken = jwtTokenUtil.generateRefreshToken(requestJson.getNationalCode(), Long.parseLong(settingService.getSetting(SettingService.DURATION_REFRESH_TOKEN_PROFILE).getValue()));
-        return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse<>(true, authenticateService.generateRefreshToken(requestJson.getRefreshToken(), requestJson.getNationalCode(), requestJson.getDeviceName(), requestJson.getAdditionalData(), getIP(httpRequest), isAfter, accessToken, refreshToken)));
-    }
-
-    @Operation(summary = "ارسال مجدد کد برای ورود")
-    @PostMapping(value = "/resendOtp")
-    public ResponseEntity<BaseResponse<ObjectUtils.Null>> resendOtp(@Valid @RequestBody ResendOtpRequestJson request, HttpServletRequest httpRequest) throws InternalServiceException {
-        authenticateService.resentOtp(request.getNationalCode(), getIP(httpRequest));
-        return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse<>(true));
-    }
-
-    @Timed(description = "time taken to checkShahkar profile")
-    @Operation(summary = "چک کردن رمز یکبار مصرف برای ورود")
-    @PostMapping(value = "/checkOtp", produces = {MediaType.APPLICATION_JSON_VALUE})
-    public ResponseEntity<BaseResponse<LoginResponse>> validateOtp(@Valid @RequestBody LoginWithOtpRequestJson requestJson, HttpServletRequest httpRequest) throws InternalServiceException {
-        try {
-            authenticate(requestJson.getUsername(), requestJson.getPassword());
-            boolean isAfter = checkExpiration(profileService.findByNationalCode(requestJson.getUsername()));
-            Map<String, String> accessToken = jwtTokenUtil.generateToken(requestJson.getUsername(), Long.parseLong(settingService.getSetting(SettingService.DURATION_ACCESS_TOKEN_PROFILE).getValue()));
-            Map<String, String> refreshToken = jwtTokenUtil.generateRefreshToken(requestJson.getUsername(), Long.parseLong(settingService.getSetting(SettingService.DURATION_REFRESH_TOKEN_PROFILE).getValue()));
-            return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse<>(true, authenticateService.validateOtp(requestJson.getUsername(), requestJson.getDeviceName(), requestJson.getAdditionalData(), getIP(httpRequest), isAfter, accessToken, refreshToken, requestJson.getOtp())));
-
-        } catch (InternalServiceException ex) {
-            log.error("failed in login with InternalServiceException ({})", ex.getMessage());
-            throw ex;
-        } catch (BadCredentialsException ex) {
-            log.error("failed in login with BadCredentialsException ({})", ex.getMessage());
-            throw new InternalServiceException("invalid username password", StatusService.INVALID_USERNAME_PASSWORD, HttpStatus.UNAUTHORIZED);
-        } catch (Exception ex) {
-            log.error("failed in login with Exception ({})", ex.getMessage());
-            throw new InternalServiceException("general error", StatusService.GENERAL_ERROR, HttpStatus.OK);
-        }
+        boolean isAfter = checkExpiration(channelService.findByUsername(requestJson.getUsername()));
+        Map<String, String> accessToken = jwtTokenUtil.generateToken(requestJson.getUsername(), Long.parseLong(settingService.getSetting(SettingService.DURATION_ACCESS_TOKEN_PROFILE).getValue()));
+        Map<String, String> refreshToken = jwtTokenUtil.generateRefreshToken(requestJson.getUsername(), Long.parseLong(settingService.getSetting(SettingService.DURATION_REFRESH_TOKEN_PROFILE).getValue()));
+        return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse<>(true, authenticateService.generateRefreshToken(requestJson.getRefreshToken(), requestJson.getUsername(), getIP(httpRequest), isAfter, accessToken, refreshToken)));
     }
 
     private void authenticate(String username, String password) {
@@ -134,20 +105,20 @@ public class AuthenticationEndPoint extends WebEndPoint {
             throw new BadCredentialsException("USER_DISABLED", ex);
         } catch (BadCredentialsException ex) {
             log.error("failed authenticate for username ({}), with BadCredentialsException ({})", username, ex.getMessage());
-            securityService.increaseFailLogin(profileService.findByNationalCode(username));
+            securityService.increaseFailLogin(channelService.findByUsername(username));
             throw new BadCredentialsException("INVALID_CREDENTIALS for username (" + username + ")", ex);
         }
     }
 
-    private boolean checkExpiration(ProfileEntity profileEntity) {
-        log.info("start check expiration for profile ({})...", profileEntity.getUsername());
-        ChannelAccessTokenEntity channelAccessTokenEntity = profileAccessTokenService.findTopByProfileEntityAndEndTimeIsnUll(profileEntity);
+    private boolean checkExpiration(ChannelEntity channelEntity) {
+        log.info("start check expiration for channelEntity ({})...", channelEntity.getUsername());
+        ChannelAccessTokenEntity channelAccessTokenEntity = channelAccessTokenService.findTopByChannelEntityAndEndTimeIsnUll(channelEntity);
         if (channelAccessTokenEntity != null && channelAccessTokenEntity.getAccessToken() != null) {
             try {
                 return jwtTokenUtil.getExpirationDateFromToken(channelAccessTokenEntity.getAccessToken()).after(new Date());
             } catch (Exception ex) {
                 log.error("failed check expiration for channel ({}), token is expired with error ({})",
-                        profileEntity.getUsername(), ex.getMessage());
+                        channelEntity.getUsername(), ex.getMessage());
             }
         }
         return false;

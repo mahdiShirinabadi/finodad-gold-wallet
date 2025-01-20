@@ -46,7 +46,7 @@ public class WalletEndPoint extends WebEndPoint {
 		String username = requestContext.getChannelEntity().getUsername();
 		log.info("start call create wallet in username ===> {}, mobile ===> {}, from ip ===> {}", username, requestJson.getMobile(), channelIp);
 		String cleanMobile = Utility.cleanPhoneNumber(requestJson.getMobile());
-		CreateWalletResponse createWalletResponse = walletOperationalService.createWallet(requestContext.getChannelEntity(), cleanMobile, requestContext.getClientIp(), WalletTypeService.NORMAL_USER, List.of(WalletAccountCurrencyService.GOLD, WalletAccountCurrencyService.RIAL),
+		CreateWalletResponse createWalletResponse = walletOperationalService.createWallet(requestContext.getChannelEntity(), cleanMobile, requestJson.getNationalCode(), WalletTypeService.NORMAL_USER, List.of(WalletAccountCurrencyService.GOLD, WalletAccountCurrencyService.RIAL),
 				List.of(WalletAccountTypeService.NORMAL));
 		return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse<>(true,createWalletResponse));
 	}
@@ -75,6 +75,18 @@ public class WalletEndPoint extends WebEndPoint {
 		log.info("start delete wallet with id ==> {}", requestJson.getId());
 		walletOperationalService.deleteWallet(requestContext.getChannelEntity() ,requestJson.getId(), channelIp);
 		return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse<>(true));
+	}
+
+
+	@Timed(description = "Time taken to delete wallet")
+	@GetMapping(path = "/get/{nationalCode}", produces = {MediaType.APPLICATION_JSON_VALUE})
+	@Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "حذف کردن کیف پول ")
+	@PreAuthorize("hasAuthority(\""+ ResourceService.WALLET_DELETE +"\")")
+	public ResponseEntity<BaseResponse<CreateWalletResponse>> deleteWallet(@PathVariable String nationalCode) throws InternalServiceException {
+		String channelIp = requestContext.getClientIp();
+		log.info("start get wallet with nationalCode ==> {}, from Ip ({})", nationalCode, channelIp);
+		CreateWalletResponse response = walletOperationalService.get(requestContext.getChannelEntity() ,nationalCode);
+		return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse<>(true, response));
 	}
 
 

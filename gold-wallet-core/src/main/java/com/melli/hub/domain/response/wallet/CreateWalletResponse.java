@@ -21,6 +21,12 @@ public class CreateWalletResponse {
 	@JsonProperty("nationalCode")
 	private String nationalCode;
 
+	@JsonProperty("status")
+	private String status;
+
+	@JsonProperty("statusDescription")
+	private String statusDescription;
+
 	@JsonProperty("walletAccountObject")
 	private List<WalletAccountObject> walletAccountObjectList;
 }

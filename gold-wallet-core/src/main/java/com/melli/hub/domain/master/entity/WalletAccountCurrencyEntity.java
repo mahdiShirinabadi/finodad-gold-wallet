@@ -30,7 +30,7 @@ public class WalletAccountCurrencyEntity extends BaseEntityAudit implements Seri
 	@Column(name = "suffix")
 	private String suffix;
 
-	@Column(name = "additionalData")
+	@Column(name = "additional_data")
 	private String additionalData;
 
 	@Column(name = "description")

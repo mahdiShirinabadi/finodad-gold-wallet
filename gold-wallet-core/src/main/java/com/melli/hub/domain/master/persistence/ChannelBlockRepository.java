@@ -5,6 +5,6 @@ import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface ProfileBlockRepository extends CrudRepository<ChannelBlockEntity, Long> {
-	ChannelBlockEntity findByProfileEntityId(long channelId);
+public interface ChannelBlockRepository extends CrudRepository<ChannelBlockEntity, Long> {
+	ChannelBlockEntity findByChannelEntityId(long channelId);
 }

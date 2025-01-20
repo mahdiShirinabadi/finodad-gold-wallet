@@ -72,15 +72,8 @@ public class WebSecurityConfig {
                 })
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(request-> request.requestMatchers("/index.html",
-                        "/api/v1/profile/forgetPassword/firstStep",
-                        "/api/v1/profile/forgetPassword/checkOtp",
-                        "/api/v1/profile/forgetPassword/updatePassword",
-
-                        "/api/v1/profile/authentication/login",
-                        "/api/v1/profile/authentication/refreshToken",
-                        "/api/v1/profile/registration/sendOtp",
-                        "/api/v1/profile/registration/checkShahkar",
-                        "/api/v1/profile/registration/register",
+                        "/api/v1/authentication/login",
+                        "/api/v1/authentication/refreshToken",
                         "/",
                         "/v3/api-docs/**",
                         "/v2/api-docs/**",

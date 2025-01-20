@@ -11,9 +11,7 @@ import java.util.List;
 @Repository
 public interface WalletRepository extends CrudRepository<WalletEntity, Long> {
 
-	WalletEntity findByNationalCodeAndWalletTypeEntityIdAndEndTimeIsNotNull(String nationalCode, long walletTypeEntityId);
-
-	WalletEntity findByNationalCodeAndWalletTypeEntityAndEndTimeIsNull(String nationalCode);
+	WalletEntity findByNationalCodeAndWalletTypeEntityIdAndEndTimeIsNull(String nationalCode, long walletTypeEntityId);
 
 	WalletEntity findByNationalCodeAndIdAndEndTimeIsNotNull(String nationalCode,Integer id);
 	WalletEntity findByNationalCodeAndId(String nationalCode,Integer id);

@@ -1,5 +1,6 @@
 package com.melli.hub.service.impl;
 
+import com.melli.hub.domain.enumaration.WalletStatusEnum;
 import com.melli.hub.domain.master.entity.*;
 import com.melli.hub.domain.master.persistence.WalletLevelRepository;
 import com.melli.hub.domain.response.base.BaseResponse;
@@ -45,19 +46,23 @@ public class WalletOperationServiceImplementation implements WalletOperationalSe
             log.info("nationalCode({}) and mobile({}) are related together.", nationalCode, mobile);
         }
 
-        Optional<WalletTypeEntity> walletTypeEntity = walletTypeService.getAll().stream().filter(x->x.getName().equals(walletTypeString)).findFirst();
-        if(walletTypeEntity.isEmpty()) {
+        Optional<WalletTypeEntity> walletTypeEntity = walletTypeService.getAll().stream().filter(x -> x.getName().equals(walletTypeString)).findFirst();
+        if (walletTypeEntity.isEmpty()) {
             log.error("wallet type with name ({}) not found", walletTypeString);
             throw new InternalServiceException("walletType not found", StatusService.WALLET_TYPE_NOT_FOUND, HttpStatus.OK);
         }
 
-        redisLockService.runAfterLock(nationalCode, this.getClass(), () -> {
+        return redisLockService.runAfterLock(nationalCode, this.getClass(), () -> {
 
             WalletEntity walletEntity = walletService.findByNationalCodeAndWalletTypeId(nationalCode, walletTypeEntity.get().getId());
             if (walletEntity != null) {
-                walletAccountService.findByWallet(walletEntity);
+                List<WalletAccountEntity> walletAccountEntityList = walletAccountService.findByWallet(walletEntity);
                 log.info("Wallet already exists with id {}", walletEntity.getId());
-                return helper.fillCreateWalletResponse(walletEntity, walletAccountService.findByWallet(walletEntity), walletAccountService);
+                if (walletAccountEntityList.isEmpty()) {
+                    log.error("walletAccount is not create success");
+                    throw new InternalServiceException("walletAccount is not create success", StatusService.WALLET_NOT_CREATE_SUCCESS, HttpStatus.OK);
+                }
+                return helper.fillCreateWalletResponse(walletEntity, walletAccountEntityList, walletAccountService);
             }
 
             log.info("start create wallet with nationalCode ===> {}", nationalCode);
@@ -68,8 +73,8 @@ public class WalletOperationServiceImplementation implements WalletOperationalSe
             walletEntity.setDescription("");
             walletEntity.setOwner(channelEntity);
             walletEntity.setWalletTypeEntity(walletTypeEntity.get());
-            walletEntity.setStatus(WalletService.ACTIVE);
-            walletEntity.setWalletLEvelEntity(walletLevelService.getAll().stream().filter(x->x.getName().equals(WalletLevelService.ONE)).findFirst().get());
+            walletEntity.setStatus(WalletStatusEnum.ACTIVE);
+            walletEntity.setWalletLEvelEntity(walletLevelService.getAll().stream().filter(x -> x.getName().equals(WalletLevelService.ONE)).findFirst().get());
             walletEntity.setCreatedBy(nationalCode);
             walletEntity.setCreatedAt(new Date());
             walletService.save(walletEntity);
@@ -78,30 +83,56 @@ public class WalletOperationServiceImplementation implements WalletOperationalSe
 
             return helper.fillCreateWalletResponse(walletEntity, walletAccountService.findByWallet(walletEntity), walletAccountService);
         }, nationalCode);
-        return null;
     }
 
     @Override
-    public BaseResponse deactivateWallet(ChannelEntity channel, String walletId) throws InternalServiceException {
+    public BaseResponse deactivateWallet(ChannelEntity channelEntity, String walletId, String ip) throws InternalServiceException {
         WalletEntity walletEntity = walletService.findById(Long.parseLong(walletId));
-        walletEntity.setStatus(WalletService.DISABLED);
-        return helper.fillBaseResponse(true,null);
+        walletEntity.setStatus(WalletStatusEnum.DISABLE);
+        walletEntity.setUpdatedAt(new Date());
+        walletService.save(walletEntity);
+        return helper.fillBaseResponse(true, null);
     }
 
     @Override
-    public BaseResponse deleteWallet(ChannelEntity channel, String walletId) throws InternalServiceException {
+    public BaseResponse deleteWallet(ChannelEntity channelEntity, String walletId, String ip) throws InternalServiceException {
         WalletEntity walletEntity = walletService.findById(Long.parseLong(walletId));
         walletEntity.setNationalCode(walletEntity.getMobile() + "-" + walletEntity.getId());
+        walletEntity.setStatus(WalletStatusEnum.DELETED);
         walletEntity.setEndTime(new Date());
         walletService.save(walletEntity);
-        return helper.fillBaseResponse(true,null);
+        return helper.fillBaseResponse(true, null);
     }
 
     @Override
-    public BaseResponse activateWallet(ChannelEntity channel, String walletId) throws InternalServiceException {
+    public BaseResponse activateWallet(ChannelEntity channelEntity, String walletId, String ip) throws InternalServiceException {
         WalletEntity walletEntity = walletService.findById(Long.parseLong(walletId));
-        walletEntity.setStatus(WalletService.ACTIVE);
+        walletEntity.setStatus(WalletStatusEnum.ACTIVE);
+        walletEntity.setUpdatedAt(new Date());
         walletService.save(walletEntity);
-        return helper.fillBaseResponse(true,null);
+        return helper.fillBaseResponse(true, null);
+    }
+
+    @Override
+    public CreateWalletResponse get(ChannelEntity channelEntity, String nationalCode) throws InternalServiceException {
+
+        Optional<WalletTypeEntity> walletTypeEntity = walletTypeService.getAll().stream().filter(x -> x.getName().equals(WalletTypeService.NORMAL_USER)).findFirst();
+        if (walletTypeEntity.isEmpty()) {
+            log.error("walletType with name ({}) not found", WalletTypeService.NORMAL_USER);
+            throw new InternalServiceException("walletType not found", StatusService.WALLET_TYPE_NOT_FOUND, HttpStatus.OK);
+        }
+
+        WalletEntity walletEntity = walletService.findByNationalCodeAndWalletTypeId(nationalCode, walletTypeEntity.get().getId());
+        if (walletEntity == null) {
+            log.error("wallet is not create");
+            throw new InternalServiceException("walletAccount is not create success", StatusService.WALLET_NOT_FOUND, HttpStatus.OK);
+        }
+
+        List<WalletAccountEntity> walletAccountEntityList = walletAccountService.findByWallet(walletEntity);
+        if (walletAccountEntityList.isEmpty()) {
+            log.error("walletAccount is not create success");
+            throw new InternalServiceException("walletAccount is not create success", StatusService.WALLET_NOT_CREATE_SUCCESS, HttpStatus.OK);
+        }
+        return helper.fillCreateWalletResponse(walletEntity, walletAccountEntityList, walletAccountService);
     }
 }

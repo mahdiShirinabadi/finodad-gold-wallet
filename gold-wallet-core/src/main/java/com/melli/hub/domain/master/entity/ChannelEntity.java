@@ -29,10 +29,10 @@ import java.util.stream.Collectors;
 public class ChannelEntity extends BaseEntityAudit implements Serializable, UserDetails {
 
 
-    @Column(name = "first_name")
+    @Column(name = "firstname")
     private String firstName;
 
-    @Column(name = "last_name")
+    @Column(name = "lastname")
     private String lastName;
 
     @Column(name = "username", nullable = false, unique = true)

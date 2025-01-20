@@ -8,7 +8,7 @@ import java.util.Date;
 import java.util.Objects;
 
 @Entity
-@Table(name = "profile_block")
+@Table(name = "channel_block")
 @Setter
 @Getter
 @ToString

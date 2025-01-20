@@ -26,15 +26,11 @@ public class WalletServiceImplementation implements WalletService {
 
     private final WalletRepository walletRepository;
 
-    @Value(("${mail.set.from}"))
-    private String setFromEmail;
-
-
     @Override
     @Cacheable(key = "{#nationalCode, #walletTypeEntityId}",unless = "#result == null")
     public WalletEntity findByNationalCodeAndWalletTypeId(String nationalCode, long walletTypeEntityId) {
         log.info("start find wallet with nationalCode ===> ({})", nationalCode);
-        WalletEntity wallet = walletRepository.findByNationalCodeAndWalletTypeEntityIdAndEndTimeIsNotNull(nationalCode, walletTypeEntityId);
+        WalletEntity wallet = walletRepository.findByNationalCodeAndWalletTypeEntityIdAndEndTimeIsNull(nationalCode, walletTypeEntityId);
         log.info("finish find wallet with nationalCode ===> ({})", nationalCode);
         return wallet;
     }
@@ -53,18 +49,13 @@ public class WalletServiceImplementation implements WalletService {
 
 
     @Override
+    @CacheEvict(key = "{#walletEntity?.nationalCode, #walletEntity?.walletTypeEntity?.id}")
     public void save(WalletEntity walletEntity) {
         log.info("start save wallet with info ===> ({})", walletEntity.getNationalCode());
         walletRepository.save(walletEntity);
         log.info("finish save wallet with info ===> ({})", walletEntity.getNationalCode());
     }
 
-
-    @CacheEvict(key = "{#nationalCode, #walletTypeEntityId}")
-    @Override
-    public void clearCache(String mobile) {
-        log.info("start delete wallet for  mobile ==> ({})", mobile);
-    }
 
     @Override
     @CacheEvict(allEntries = true)

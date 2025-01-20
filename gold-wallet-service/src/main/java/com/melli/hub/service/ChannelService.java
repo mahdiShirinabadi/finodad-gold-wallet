@@ -22,10 +22,11 @@ public interface ChannelService {
 
 	ChannelEntity getChannel(String channelName);
 
-	ChannelEntity findById(int channelId);
+	ChannelEntity findById(Long channelId) throws InternalServiceException;
+	ChannelEntity findByUsername(String username);
 
 	@Transactional
-	void save(ChannelEntity channelEntity) throws InternalServiceException;
+	void save(ChannelEntity channelEntity);
 
 	@Transactional
 	ChannelEntity saveChannel(ChannelEntity channel) throws InternalServiceException;

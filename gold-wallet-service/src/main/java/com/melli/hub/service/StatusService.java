@@ -19,7 +19,7 @@ public interface StatusService {
     int TOKEN_NOT_VALID = 9;
     int PROFILE_NOT_FOUND = 10;
     int EXPIRE_TIME_FOR_UPDATE_PASSWORD = 11;
-    int PROFILE_IS_BLOCKED = 12;
+    int CHANNEL_IS_BLOCKED = 12;
     int INVALID_IP_ADDRESS = 13;
     int TOO_MANY_REQUESTS = 14;
     int STATUS_NOT_FOUND = 15;
@@ -27,9 +27,6 @@ public interface StatusService {
     int MOBILE_AND_NATIONAL_CODE_NOT_MATCH = 17;
 
     int ERROR_IN_SEND_SMS = 18;
-    int REGISTER_TIME_IS_EXPIRE = 19;
-    int OTP_NOT_FOUND = 20;
-    int OTP_EXPIRE = 21;
     int TOO_MANY_OTP = 22;
     int DUPLICATE_CHANNEL_NAME = 23;
     int CHANNEL_NOT_FOUND = 24;
@@ -37,6 +34,8 @@ public interface StatusService {
     int WALLET_ACCOUNT_CURRENCY_NOT_FOUND = 26;
     int WALLET_ACCOUNT_TYPE_NOT_FOUND = 27;
     int WALLET_TYPE_NOT_FOUND = 28;
+    int INVALID_SIGN = 29;
+    int WALLET_NOT_CREATE_SUCCESS = 30;
 
     int REFRESH_TOKEN_NOT_BELONG_TO_PROFILE = 898;
     int REFRESH_TOKEN_NOT_FOUND = 899;

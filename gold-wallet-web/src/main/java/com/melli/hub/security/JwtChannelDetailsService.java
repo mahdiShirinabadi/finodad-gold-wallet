@@ -1,6 +1,7 @@
 package com.melli.hub.security;
 
-import com.melli.hub.service.ProfileService;
+import com.melli.hub.domain.master.entity.ChannelEntity;
+import com.melli.hub.service.ChannelService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -11,17 +12,17 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 @Log4j2
-public class JwtProfileDetailsService implements UserDetailsService {
+public class JwtChannelDetailsService implements UserDetailsService {
 
-    private final ProfileService profileService;
+    private final ChannelService channelService;
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        ProfileEntity profileEntity = profileService.findByNationalCode(username);
-        if (profileEntity == null) {
+        ChannelEntity channelEntity = channelService.findByUsername(username);
+        if (channelEntity == null) {
             log.error("user with nationalCode ({}) not found", username);
             throw new UsernameNotFoundException("User not found with email: " + username);
         }
-        return profileEntity;
+        return channelEntity;
     }
 }
