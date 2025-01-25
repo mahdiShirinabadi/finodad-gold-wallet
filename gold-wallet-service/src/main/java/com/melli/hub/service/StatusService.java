@@ -36,6 +36,9 @@ public interface StatusService {
     int WALLET_TYPE_NOT_FOUND = 28;
     int INVALID_SIGN = 29;
     int WALLET_NOT_CREATE_SUCCESS = 30;
+    int UUID_NOT_FOUND = 31;
+    int DUPLICATE_UUID = 32;
+    int REF_NUMBER_USED_BEFORE = 33;
 
     int REFRESH_TOKEN_NOT_BELONG_TO_PROFILE = 898;
     int REFRESH_TOKEN_NOT_FOUND = 899;

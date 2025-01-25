@@ -34,7 +34,6 @@ public class StatusServiceImplementation implements StatusService {
 
     private final StatusRepository statusRepository;
     private final SettingService settingService;
-    private final Helper helper;
     private final RedisLockService redisLockService;
 
 

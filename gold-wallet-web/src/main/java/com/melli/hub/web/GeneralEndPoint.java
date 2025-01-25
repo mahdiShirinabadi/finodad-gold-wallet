@@ -1,7 +1,8 @@
 package com.melli.hub.web;
 
-import com.melli.hub.domain.request.wallet.CashInWalletRequestJson;
 import com.melli.hub.domain.request.wallet.CreateWalletRequestJson;
+import com.melli.hub.domain.request.wallet.GenerateUuidRequestJson;
+import com.melli.hub.domain.response.UuidResponse;
 import com.melli.hub.domain.response.base.BaseResponse;
 import com.melli.hub.domain.response.wallet.CreateWalletResponse;
 import com.melli.hub.exception.InternalServiceException;
@@ -32,26 +33,21 @@ import java.util.List;
  */
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/v1/cash")
+@RequestMapping("/api/v1/general")
 @Validated
 @Log4j2
-public class CashEndPoint extends WebEndPoint{
+public class GeneralEndPoint extends WebEndPoint{
 
     private final RequestContext requestContext;
-    private final CashService cashService;
+    private final GeneralService generalService;
 
     @Timed(description = "Time taken to create wallet")
-    @PostMapping(path = "/cashIn", produces = {MediaType.APPLICATION_JSON_VALUE})
-    @Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "افزایش موجودی کیف پول")
-    @PreAuthorize("hasAuthority(\""+ ResourceService.CASH_IN +"\")")
-    public ResponseEntity<BaseResponse<CreateWalletResponse>> createWallet(@RequestBody CashInWalletRequestJson requestJson) throws InternalServiceException {
-        String channelIp = requestContext.getClientIp();
-        String username = requestContext.getChannelEntity().getUsername();
-        log.info("start call create wallet in username ===> {}, mobile ===> {}, from ip ===> {}", username, requestJson.getMobile(), channelIp);
-        String cleanMobile = Utility.cleanPhoneNumber(requestJson.getMobile());
-        CreateWalletResponse createWalletResponse = cashService.cashIn(requestContext.getChannelEntity(), requestJson.getUniqueIdentifier(), requestJson.getAmount(), requestJson.getReferenceNumber(),
-                requestContext.getClientIp(),);
-                List.of(WalletAccountTypeService.NORMAL));
-        return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse<>(true,createWalletResponse));
+    @PostMapping(path = "generate/uuid", produces = {MediaType.APPLICATION_JSON_VALUE})
+    @Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "ایجاد شناسه یکتا")
+    @PreAuthorize("hasAuthority(\""+ ResourceService.GENERATE_UNIQUE_IDENTIFIER +"\")")
+    public ResponseEntity<BaseResponse<UuidResponse>> generateUuid(@RequestBody GenerateUuidRequestJson requestJson) throws InternalServiceException {
+        log.info("start call uuid nationalCode ===> {}", requestJson.getNationalCode());
+        UuidResponse response = generalService.generateUuid(requestContext.getChannelEntity(), requestJson.getNationalCode());
+        return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse<>(true,response));
     }
 }

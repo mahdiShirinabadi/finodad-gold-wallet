@@ -1,10 +1,9 @@
 package com.melli.hub.utils;
 
-import com.melli.hub.domain.master.entity.ChannelEntity;
-import com.melli.hub.domain.master.entity.WalletAccountEntity;
-import com.melli.hub.domain.master.entity.WalletEntity;
+import com.melli.hub.domain.master.entity.*;
 import com.melli.hub.domain.response.base.BaseResponse;
 import com.melli.hub.domain.response.base.ErrorDetail;
+import com.melli.hub.domain.response.cash.CashInTrackResponse;
 import com.melli.hub.domain.response.login.*;
 import com.melli.hub.domain.response.channel.ChannelObject;
 import com.melli.hub.domain.response.wallet.CreateWalletResponse;
@@ -13,6 +12,7 @@ import com.melli.hub.exception.InternalServiceException;
 import com.melli.hub.service.StatusService;
 import com.melli.hub.service.WalletAccountService;
 import com.melli.hub.util.StringUtils;
+import com.melli.hub.util.date.DateUtils;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.ObjectUtils;
 import org.json.JSONException;
@@ -40,7 +40,7 @@ public class Helper {
         return response;
     }
 
-    public LoginResponse fillLoginResponse(ChannelEntity channelEntity, String accessToken, Long accessTokenExpireTime, String refreshToken, Long refreshTokenExpireTime){
+    public LoginResponse fillLoginResponse(ChannelEntity channelEntity, String accessToken, Long accessTokenExpireTime, String refreshToken, Long refreshTokenExpireTime) {
         LoginResponse loginResponse = new LoginResponse();
         loginResponse.setChannelObject(convertChannelEntityToChannelObject(channelEntity));
         loginResponse.setAccessTokenObject(new TokenObject(accessToken, accessTokenExpireTime));
@@ -49,7 +49,7 @@ public class Helper {
     }
 
 
-    public SendOtpRegisterResponse fillOtpRegisterResponse(String  nationalCode, String tempUuid, Long expireTime){
+    public SendOtpRegisterResponse fillOtpRegisterResponse(String nationalCode, String tempUuid, Long expireTime) {
         SendOtpRegisterResponse response = new SendOtpRegisterResponse();
         response.setNationalCode(nationalCode);
         response.setTempUuid(tempUuid);
@@ -57,7 +57,24 @@ public class Helper {
         return response;
     }
 
-    public SendShahkarRegisterResponse fillShahkarRegisterResponse(String  nationalCode, String tempUuid){
+    public CashInTrackResponse fillCashInTrackResponse(CashInRequestEntity cashInRequestEntity, StatusService statusService) {
+        StatusEntity statusEntity = statusService.findByCode(String.valueOf(cashInRequestEntity.getResult()));
+        CashInTrackResponse response = new CashInTrackResponse();
+        response.setId(cashInRequestEntity.getId());
+        response.setNationalCode(cashInRequestEntity.getWalletAccount().getWalletEntity().getNationalCode());
+        response.setRefNumber(cashInRequestEntity.getRefNumber());
+        response.setAmount(cashInRequestEntity.getAmount());
+        response.setUniqueIdentifier(cashInRequestEntity.getRrnEntity().getUuid());
+        response.setResult(cashInRequestEntity.getResult());
+        response.setDescription(statusEntity != null ? statusEntity.getPersianDescription() : "");
+        response.setAccountNumber(cashInRequestEntity.getWalletAccount().getAccountNumber());
+        response.setCreateTime(DateUtils.getLocaleDate(DateUtils.FARSI_LOCALE, cashInRequestEntity.getCreatedAt(), FORMAT_DATE_RESPONSE, false));
+        response.setCreateTimeTimestamp(cashInRequestEntity.getCreatedAt().getTime());
+
+        return response;
+    }
+
+    public SendShahkarRegisterResponse fillShahkarRegisterResponse(String nationalCode, String tempUuid) {
         SendShahkarRegisterResponse response = new SendShahkarRegisterResponse();
         response.setNationalCode(nationalCode);
         response.setTempUuid(tempUuid);
@@ -72,7 +89,7 @@ public class Helper {
         response.setWalletId(String.valueOf(walletEntity.getId()));
         response.setStatus(walletEntity.getStatus().getText());
         response.setStatusDescription(walletEntity.getStatus().getPersianDescription());
-        for(WalletAccountEntity walletAccountEntity : walletAccountEntityList){
+        for (WalletAccountEntity walletAccountEntity : walletAccountEntityList) {
             WalletAccountObject walletAccountObject = new WalletAccountObject();
             walletAccountObject.setWalletAccountTypeObject(SubHelper.convertWalletAccountEntityToObject(walletAccountEntity.getWalletAccountTypeEntity()));
             walletAccountObject.setWalletAccountCurrencyObject(SubHelper.convertWalletAccountCurrencyEntityToObject(walletAccountEntity.getWalletAccountCurrencyEntity()));
@@ -88,14 +105,14 @@ public class Helper {
     }
 
 
-   private ChannelObject convertChannelEntityToChannelObject(ChannelEntity channelEntity) {
-       ChannelObject channelObject = new ChannelObject();
-       channelObject.setFirstName(channelEntity.getFirstName());
-       channelObject.setLastName(channelEntity.getLastName());
-       channelObject.setUsername(channelEntity.getUsername());
-       channelObject.setMobile(channelEntity.getMobile());
-       return channelObject;
-   }
+    private ChannelObject convertChannelEntityToChannelObject(ChannelEntity channelEntity) {
+        ChannelObject channelObject = new ChannelObject();
+        channelObject.setFirstName(channelEntity.getFirstName());
+        channelObject.setLastName(channelEntity.getLastName());
+        channelObject.setUsername(channelEntity.getUsername());
+        channelObject.setMobile(channelEntity.getMobile());
+        return channelObject;
+    }
 
     public ForgetPasswordProfileResponse fillForgetPasswordProfileResponse(String nationalCode, Long otpExpireTime, String mobileNumber, String registerHash) {
         ForgetPasswordProfileResponse response = new ForgetPasswordProfileResponse();
@@ -125,16 +142,16 @@ public class Helper {
         return true;
     }
 
-    public static String encodePassword(PasswordEncoder passwordEncoder, String username, String password){
+    public static String encodePassword(PasswordEncoder passwordEncoder, String username, String password) {
         return passwordEncoder.encode(username + "M@hd!" + password);
     }
 
-    public static String generateHashForForgetPassword(PasswordEncoder passwordEncoder, String username){
+    public static String generateHashForForgetPassword(PasswordEncoder passwordEncoder, String username) {
         return passwordEncoder.encode(username + SALT_UPDATE_PASSWORD);
     }
 
     public static void checkGenerateHashForForgetPassword(PasswordEncoder passwordEncoder, String username, String registerHash) throws InternalServiceException {
-        if(!passwordEncoder.matches(username + SALT_UPDATE_PASSWORD, registerHash)){
+        if (!passwordEncoder.matches(username + SALT_UPDATE_PASSWORD, registerHash)) {
             log.error("invalid access to resource, hashString is changed!!!");
             throw new InternalServiceException("invalid access to resource, hashString is changed", StatusService.GENERAL_ERROR, HttpStatus.FORBIDDEN, null);
         }
@@ -142,7 +159,7 @@ public class Helper {
 
     public boolean notInAllowedList(String allowedList, String ip) {
         log.info("start check Ip ({}) in allowedList ({})", ip, allowedList);
-        if(!StringUtils.hasText(allowedList)){
+        if (!StringUtils.hasText(allowedList)) {
             log.info("allewdList is empty !!!");
             return false;
         }

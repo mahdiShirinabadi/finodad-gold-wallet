@@ -302,8 +302,9 @@ CREATE TABLE if not exists rrn
     updated_at    TIMESTAMP WITHOUT TIME ZONE,
     national_code VARCHAR(10)                 NOT NULL,
     channel_id    BIGINT                      NOT NULL REFERENCES channel,
-    uuid          VARCHAR(100)
+    uuid          VARCHAR(100) default gen_random_uuid() || '-' || EXTRACT(EPOCH FROM NOW())
 );
+CREATE UNIQUE INDEX idx_unique_uuid_rrn ON rrn (uuid);
 
 CREATE TABLE if not exists request
 (

@@ -26,6 +26,6 @@ public class RrnEntity extends BaseEntityAudit implements Serializable {
 	@JoinColumn(name = "channel_id", nullable = false)
 	private ChannelEntity channel;
 
-	@Column(name = "uuid", insertable = false) //sha1
+	@Column(name = "uuid", insertable = false, updatable = false)
 	private String uuid;
 }
