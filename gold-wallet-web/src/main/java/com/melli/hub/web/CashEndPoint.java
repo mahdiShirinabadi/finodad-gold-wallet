@@ -47,10 +47,9 @@ public class CashEndPoint extends WebEndPoint{
     public ResponseEntity<BaseResponse<CreateWalletResponse>> createWallet(@RequestBody CashInWalletRequestJson requestJson) throws InternalServiceException {
         String channelIp = requestContext.getClientIp();
         String username = requestContext.getChannelEntity().getUsername();
-        log.info("start call create wallet in username ===> {}, mobile ===> {}, from ip ===> {}", username, requestJson.getMobile(), channelIp);
-        String cleanMobile = Utility.cleanPhoneNumber(requestJson.getMobile());
-        CreateWalletResponse createWalletResponse = cashService.cashIn(requestContext.getChannelEntity(), requestJson.getUniqueIdentifier(), requestJson.getAmount(), requestJson.getReferenceNumber(),
-                requestContext.getClientIp(),);
+        log.info("start call create wallet in username ===> {}, nationalCode ===> {}, from ip ===> {}", username, requestJson.getNationalCode(), channelIp);
+        CreateWalletResponse createWalletResponse = cashService.cashIn(requestContext.getChannelEntity(), requestJson.getNationalCode(),  requestJson.getUniqueIdentifier(),requestJson.getAmount(), requestJson.getReferenceNumber(),
+                requestJson.getSign(), requestJson.getDataString(), , requestContext.getClientIp(),);
                 List.of(WalletAccountTypeService.NORMAL));
         return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse<>(true,createWalletResponse));
     }
