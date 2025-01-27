@@ -3,7 +3,7 @@ package com.melli.hub.service.impl;
 import com.melli.hub.domain.enumaration.ProfileStatusEnum;
 import com.melli.hub.domain.master.entity.ChannelBlockEntity;
 import com.melli.hub.domain.master.entity.ChannelEntity;
-import com.melli.hub.domain.master.entity.SettingEntity;
+import com.melli.hub.domain.master.entity.SettingGeneralEntity;
 import com.melli.hub.exception.InternalServiceException;
 import com.melli.hub.service.*;
 import lombok.RequiredArgsConstructor;
@@ -34,7 +34,7 @@ public class SecurityServiceImplementation implements SecurityService {
     private static final String INVALID_SIGN = "invalid sign";
 
     private final ChannelBlockService channelBlockService;
-    private final SettingService settingService;
+    private final SettingGeneralService settingGeneralService;
     private final ChannelService channelService;
 
     @Value("${default.maxFailForWrongPassword}")
@@ -57,9 +57,9 @@ public class SecurityServiceImplementation implements SecurityService {
     }
 
     private long getMaxFail() {
-        SettingEntity setting = settingService.getSetting(SettingService.MAX_WRONG_PASSWORD_FOR_PROFILE);
+        SettingGeneralEntity setting = settingGeneralService.getSetting(SettingGeneralService.MAX_WRONG_PASSWORD_FOR_PROFILE);
         if (setting != null) {
-            log.info("setting object for {} is not null and set value {} to maxFail", SettingService.MAX_WRONG_PASSWORD_FOR_PROFILE, setting.getValue());
+            log.info("setting object for {} is not null and set value {} to maxFail", SettingGeneralService.MAX_WRONG_PASSWORD_FOR_PROFILE, setting.getValue());
             maxFail = setting.getValue();
         }
         return Long.parseLong(maxFail);

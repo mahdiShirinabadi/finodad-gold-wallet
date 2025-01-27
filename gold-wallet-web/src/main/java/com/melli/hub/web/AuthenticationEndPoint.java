@@ -3,9 +3,7 @@ package com.melli.hub.web;
 import com.melli.hub.domain.master.entity.ChannelAccessTokenEntity;
 import com.melli.hub.domain.master.entity.ChannelEntity;
 import com.melli.hub.domain.request.login.LoginRequestJson;
-import com.melli.hub.domain.request.login.LoginWithOtpRequestJson;
 import com.melli.hub.domain.request.login.RefreshTokenRequestJson;
-import com.melli.hub.domain.request.login.ResendOtpRequestJson;
 import com.melli.hub.domain.response.base.BaseResponse;
 import com.melli.hub.domain.response.login.LoginResponse;
 import com.melli.hub.exception.InternalServiceException;
@@ -55,7 +53,7 @@ public class AuthenticationEndPoint extends WebEndPoint {
     private final JwtTokenUtil jwtTokenUtil;
     private final SecurityService securityService;
     private final ChannelAccessTokenService channelAccessTokenService;
-    private final SettingService settingService;
+    private final SettingGeneralService settingGeneralService;
     private final AuthenticateService authenticateService;
 
 
@@ -66,8 +64,8 @@ public class AuthenticationEndPoint extends WebEndPoint {
         try {
             authenticate(loginJson.getUsername(), loginJson.getPassword());
             boolean isAfter = checkExpiration(channelService.findByUsername(loginJson.getUsername()));
-            Map<String, String> accessToken = jwtTokenUtil.generateToken(loginJson.getUsername(), Long.parseLong(settingService.getSetting(SettingService.DURATION_ACCESS_TOKEN_PROFILE).getValue()));
-            Map<String, String> refreshToken = jwtTokenUtil.generateRefreshToken(loginJson.getUsername(), Long.parseLong(settingService.getSetting(SettingService.DURATION_REFRESH_TOKEN_PROFILE).getValue()));
+            Map<String, String> accessToken = jwtTokenUtil.generateToken(loginJson.getUsername(), Long.parseLong(settingGeneralService.getSetting(SettingGeneralService.DURATION_ACCESS_TOKEN_PROFILE).getValue()));
+            Map<String, String> refreshToken = jwtTokenUtil.generateRefreshToken(loginJson.getUsername(), Long.parseLong(settingGeneralService.getSetting(SettingGeneralService.DURATION_REFRESH_TOKEN_PROFILE).getValue()));
             return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse<>(true, authenticateService.login(loginJson.getUsername(), getIP(httpRequest), isAfter, accessToken, refreshToken)));
         } catch (InternalServiceException ex) {
             log.error("failed in login with InternalServiceException ({})", ex.getMessage());
@@ -90,8 +88,8 @@ public class AuthenticationEndPoint extends WebEndPoint {
     public ResponseEntity<BaseResponse<LoginResponse>> refreshToken(@Valid @RequestBody RefreshTokenRequestJson requestJson, HttpServletRequest httpRequest) throws InternalServiceException {
         log.info("start refreshToken with data ({})", requestJson.toString());
         boolean isAfter = checkExpiration(channelService.findByUsername(requestJson.getUsername()));
-        Map<String, String> accessToken = jwtTokenUtil.generateToken(requestJson.getUsername(), Long.parseLong(settingService.getSetting(SettingService.DURATION_ACCESS_TOKEN_PROFILE).getValue()));
-        Map<String, String> refreshToken = jwtTokenUtil.generateRefreshToken(requestJson.getUsername(), Long.parseLong(settingService.getSetting(SettingService.DURATION_REFRESH_TOKEN_PROFILE).getValue()));
+        Map<String, String> accessToken = jwtTokenUtil.generateToken(requestJson.getUsername(), Long.parseLong(settingGeneralService.getSetting(SettingGeneralService.DURATION_ACCESS_TOKEN_PROFILE).getValue()));
+        Map<String, String> refreshToken = jwtTokenUtil.generateRefreshToken(requestJson.getUsername(), Long.parseLong(settingGeneralService.getSetting(SettingGeneralService.DURATION_REFRESH_TOKEN_PROFILE).getValue()));
         return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse<>(true, authenticateService.generateRefreshToken(requestJson.getRefreshToken(), requestJson.getUsername(), getIP(httpRequest), isAfter, accessToken, refreshToken)));
     }
 

@@ -12,8 +12,8 @@ import java.util.Date;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-@Table(name = "setting")
-public class SettingEntity extends BaseEntityAudit implements Serializable {
+@Table(name = "setting_general")
+public class SettingGeneralEntity extends BaseEntityAudit implements Serializable {
 
 	@Column(name = "name")
 	private String name;

@@ -1,12 +1,12 @@
 package com.melli.hub.service.impl;
 
-import com.melli.hub.domain.master.entity.SettingEntity;
+import com.melli.hub.domain.master.entity.SettingGeneralEntity;
 import com.melli.hub.domain.master.persistence.AlertHourlyMessageRepository;
 import com.melli.hub.domain.redis.AlertHourlyMessageRedis;
 import com.melli.hub.exception.InternalServiceException;
 import com.melli.hub.service.AlertService;
 import com.melli.hub.service.MessageService;
-import com.melli.hub.service.SettingService;
+import com.melli.hub.service.SettingGeneralService;
 import com.melli.hub.util.StringUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -23,8 +23,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
-import static com.melli.hub.service.SettingService.MOBILE_FOR_GOT_ALERT;
-import static com.melli.hub.service.SettingService.SMS_SEND_ALERT;
+import static com.melli.hub.service.SettingGeneralService.MOBILE_FOR_GOT_ALERT;
+import static com.melli.hub.service.SettingGeneralService.SMS_SEND_ALERT;
 
 @Service
 @Log4j2
@@ -33,7 +33,7 @@ public class AlertServiceImplementation implements AlertService {
 
     private MessageService messageService;
     private final AlertHourlyMessageRepository alertHourlyMessageRepository;
-    private final SettingService settingService;
+    private final SettingGeneralService settingGeneralService;
     private final Environment environment;
 
     @Value("${project.name}")
@@ -44,8 +44,8 @@ public class AlertServiceImplementation implements AlertService {
     public void send(String message, String errorCode) {
 
         try {
-            Optional<SettingEntity> settingMobileSForAlertOptional = Optional.ofNullable(settingService.getSetting(MOBILE_FOR_GOT_ALERT));
-            Optional<SettingEntity> settingSendSmsOptional = Optional.ofNullable(settingService.getSetting(SMS_SEND_ALERT));
+            Optional<SettingGeneralEntity> settingMobileSForAlertOptional = Optional.ofNullable(settingGeneralService.getSetting(MOBILE_FOR_GOT_ALERT));
+            Optional<SettingGeneralEntity> settingSendSmsOptional = Optional.ofNullable(settingGeneralService.getSetting(SMS_SEND_ALERT));
 
             if (settingSendSmsOptional.isEmpty()) {
                 log.info("there is no setting with name ({})", SMS_SEND_ALERT);

@@ -10,6 +10,7 @@ public interface ResourceService {
     String WALLET_ACTIVE = "WALLET_ACTIVE";
     String GENERATE_UNIQUE_IDENTIFIER = "GENERATE_UNIQUE_IDENTIFIER";
     String CASH_IN = "CASH_IN";
+    String PURCHASE = "PURCHASE";
 
     ResourceEntity getRequestType(String name);
 

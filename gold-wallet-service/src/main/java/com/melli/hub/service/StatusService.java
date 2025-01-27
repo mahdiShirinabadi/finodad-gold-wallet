@@ -39,6 +39,17 @@ public interface StatusService {
     int UUID_NOT_FOUND = 31;
     int DUPLICATE_UUID = 32;
     int REF_NUMBER_USED_BEFORE = 33;
+    int WALLET_IS_NOT_ACTIVE = 34;
+    int WALLET_ACCOUNT_NOT_FOUND = 35;
+    int WALLET_ACCOUNT_IS_NOT_ACTIVE = 36;
+    int AMOUNT_LESS_THAN_MIN = 37;
+    int SETTING_NOT_FOUND = 38;
+    int ACCOUNT_DONT_PERMISSION_FOR_CASH_IN = 39;
+    int AMOUNT_BIGGER_THAN_MAX = 40;
+    int BALANCE_MORE_THAN_STANDARD = 41;
+    int WALLET_EXCEEDED_AMOUNT_LIMITATION = 42;
+    int BALANCE_IS_NOT_ENOUGH = 43;
+    int RECORD_NOT_FOUND = 44;
 
     int REFRESH_TOKEN_NOT_BELONG_TO_PROFILE = 898;
     int REFRESH_TOKEN_NOT_FOUND = 899;
@@ -46,6 +57,7 @@ public interface StatusService {
     int ERROR_IN_LOCK = 988;
     int TIMEOUT = 998;
     int GENERAL_ERROR = 999;
+    int MERCHANT_IS_NOT_EXIST = 45;
 
 
     void init();

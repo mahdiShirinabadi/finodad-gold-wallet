@@ -1,8 +1,10 @@
 package com.melli.hub.utils;
 
+import com.melli.hub.domain.enumaration.WalletStatusEnum;
 import com.melli.hub.domain.master.entity.*;
 import com.melli.hub.domain.response.base.BaseResponse;
 import com.melli.hub.domain.response.base.ErrorDetail;
+import com.melli.hub.domain.response.cash.CashInResponse;
 import com.melli.hub.domain.response.cash.CashInTrackResponse;
 import com.melli.hub.domain.response.login.*;
 import com.melli.hub.domain.response.channel.ChannelObject;
@@ -11,7 +13,9 @@ import com.melli.hub.domain.response.wallet.WalletAccountObject;
 import com.melli.hub.exception.InternalServiceException;
 import com.melli.hub.service.StatusService;
 import com.melli.hub.service.WalletAccountService;
+import com.melli.hub.service.WalletService;
 import com.melli.hub.util.StringUtils;
+import com.melli.hub.util.Utility;
 import com.melli.hub.util.date.DateUtils;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.ObjectUtils;
@@ -81,6 +85,10 @@ public class Helper {
         return response;
     }
 
+    public CashInResponse fillCashInResponse(String nationalCode,  String uuid, long balance, String accountNumber) {
+       return new CashInResponse(nationalCode, String.valueOf(balance), uuid, accountNumber);
+    }
+
     public CreateWalletResponse fillCreateWalletResponse(WalletEntity walletEntity, List<WalletAccountEntity> walletAccountEntityList, WalletAccountService walletAccountService) {
         CreateWalletResponse response = new CreateWalletResponse();
         List<WalletAccountObject> walletAccountObjectList = new ArrayList<>();
@@ -121,6 +129,41 @@ public class Helper {
         response.setMaskMobileNumber(mobileNumber.replaceAll(".(?=.{4})", "*"));
         response.setRegisterHash(registerHash);
         return response;
+    }
+
+    public WalletAccountEntity checkWalletAndWalletAccount(WalletService walletService, String nationalCode, WalletAccountService walletAccountService, String accountNumber, WalletTypeEntity walletTypeEntity) throws InternalServiceException {
+
+        WalletEntity walletEntity = checkWallet(walletService, nationalCode, walletTypeEntity);
+
+        WalletAccountEntity walletAccount = walletAccountService.findByWalletAndAccount(walletEntity, accountNumber);
+
+        if (walletAccount == null) {
+            log.error("error find walletAccount for account ({})", accountNumber);
+            throw new InternalServiceException("walletAccount for nationalCode (" + nationalCode + ") is not found!!", StatusService.WALLET_ACCOUNT_NOT_FOUND, HttpStatus.OK);
+        }
+
+        if (!walletAccount.getStatus().getText().equalsIgnoreCase(WalletStatusEnum.ACTIVE.getText())) {
+            log.error("wallet account {} is disable", walletAccount.getAccountNumber());
+            throw new InternalServiceException("walletAccount for nationalCode (" + nationalCode + ") is not found!!", StatusService.WALLET_ACCOUNT_IS_NOT_ACTIVE, HttpStatus.OK);
+        }
+
+        return walletAccount;
+    }
+
+    public WalletEntity checkWallet(WalletService walletService, String nationalCode, WalletTypeEntity walletTypeEntity) throws InternalServiceException {
+
+        WalletEntity walletEntity = walletService.findByNationalCodeAndWalletTypeId(nationalCode, walletTypeEntity.getId());
+
+        if (walletEntity == null) {
+            log.error("wallet for nationalCode ({}) is not found!", nationalCode);
+            throw new InternalServiceException("wallet for nationalCode (" + nationalCode + ") is not found!!", StatusService.WALLET_NOT_FOUND, HttpStatus.OK);
+        }
+
+        if (walletEntity.getStatus().getText() != WalletStatusEnum.ACTIVE.getText()) {
+            log.error("wallet for nationalCode {} is not active and status is ({})!!!", nationalCode, walletEntity.getStatus().getText());
+            throw new InternalServiceException("wallet for nationalCode (" + nationalCode + ") is not active!!", StatusService.WALLET_IS_NOT_ACTIVE, HttpStatus.OK);
+        }
+        return walletEntity;
     }
 
     public ForgetPasswordCheckOtpResponse fillForgetPasswordCheckOtpResponse(String nationalcode) {

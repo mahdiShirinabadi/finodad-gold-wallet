@@ -32,11 +32,11 @@ public class PurchaseRequestEntity extends RequestEntity {
 
 	@ManyToOne
 	@JoinColumn(name = "rrn_id", nullable = false)
-	private RrnEntity rrn;
+	private RrnEntity rrnEntity;
 
 	@ManyToOne
 	@JoinColumn(name = "merchant_id", nullable = false)
-	private MerchantEntity merchant;
+	private MerchantEntity merchantEntity;
 
 	@Column(name = "national_code", length = 100)
 	private String nationalCode;

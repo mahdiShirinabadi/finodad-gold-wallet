@@ -66,6 +66,9 @@ public class ChannelEntity extends BaseEntityAudit implements Serializable, User
     @Column(name = "account")
     private String account;
 
+    @Column(name = "national_code")
+    private String nationalCode;
+
     @Column(name = "balance_limitation")
     private Long balanceLimitation;
 

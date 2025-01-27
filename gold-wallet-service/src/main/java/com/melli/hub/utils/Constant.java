@@ -12,4 +12,6 @@ public class Constant {
     public static final String WALLET_ACCOUNT_TYPE_CACHE = "gold_wallet_account_type";
     public static final String WALLET_TYPE_CACHE = "gold_wallet_type";
     public static final String WALLET_LEVEL_CACHE = "gold_wallet_level";
+    public static final String WALLET_TEMPLATE = "gold_template";
+    public static final String WALLET_MERCHANT = "gold_merchant";
 }

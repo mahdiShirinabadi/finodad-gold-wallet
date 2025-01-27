@@ -40,5 +40,5 @@ public class TransactionEntity extends BaseEntityAudit implements Serializable {
 	private String additionalData;
 
 	@Column(name = "request_type_id", nullable = true)
-	private Integer requestTypeId;
+	private Long requestTypeId;
 }

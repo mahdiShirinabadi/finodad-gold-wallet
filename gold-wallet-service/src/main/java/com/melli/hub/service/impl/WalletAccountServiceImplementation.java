@@ -14,7 +14,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -34,7 +33,7 @@ public class WalletAccountServiceImplementation implements WalletAccountService 
 
     private final WalletAccountRepository walletAccountRepository;
 
-    private final SettingService settingService;
+    private final SettingGeneralService settingGeneralService;
     private final RedisLockService redisLockService;
     private final Helper helper;
     private final WalletService walletService;
@@ -77,6 +76,11 @@ public class WalletAccountServiceImplementation implements WalletAccountService 
     @Override
     public WalletAccountEntity findByWalletAndAccount(WalletEntity wallet, String account) {
         return walletAccountRepository.findByWalletEntityAndAccountNumberAndEndTimeIsNull(wallet, account);
+    }
+
+    @Override
+    public WalletAccountEntity findByWalletAndWalletAccountCurrencyId(WalletEntity walletEntity, long walletAccountCurrencyId) {
+        return walletAccountRepository.findTopByWalletEntityAndWalletAccountCurrencyEntityId(walletEntity, walletAccountCurrencyId);
     }
 
     @Override

@@ -1,8 +1,8 @@
 package com.melli.hub.service.impl;
 
-import com.melli.hub.domain.master.entity.SettingEntity;
-import com.melli.hub.domain.master.persistence.SettingRepository;
-import com.melli.hub.service.SettingService;
+import com.melli.hub.domain.master.entity.SettingGeneralEntity;
+import com.melli.hub.domain.master.persistence.SettingGeneralRepository;
+import com.melli.hub.service.SettingGeneralService;
 import com.melli.hub.utils.Helper;
 import com.melli.hub.utils.RedisLockService;
 import lombok.RequiredArgsConstructor;
@@ -13,25 +13,23 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.redis.cache.RedisCacheManager;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
-
 import static com.melli.hub.utils.Constant.SETTING_NAME_CACHE;
 
 @Service
 @CacheConfig(cacheNames = SETTING_NAME_CACHE)
 @Log4j2
 @RequiredArgsConstructor
-public class SettingServiceImplementation implements SettingService {
+public class SettingGeneralServiceImplementation implements SettingGeneralService {
 
-    private final SettingRepository settingRepository;
+    private final SettingGeneralRepository settingGeneralRepository;
     private final Helper helper;
     private final RedisLockService redisLockService;
     private final RedisCacheManager cacheManager;
 
     @Override
     @Cacheable(key = "{#name}", unless = "#result == null")
-    public SettingEntity getSetting(String name) {
-        return settingRepository.findByNameAndEndTimeIsNull(name);
+    public SettingGeneralEntity getSetting(String name) {
+        return settingGeneralRepository.findByNameAndEndTimeIsNull(name);
     }
 
     @CacheEvict(allEntries = true)
@@ -41,7 +39,7 @@ public class SettingServiceImplementation implements SettingService {
     }
 
     @Override
-    public void save(SettingEntity setting) {
-        settingRepository.save(setting);
+    public void save(SettingGeneralEntity setting) {
+        settingGeneralRepository.save(setting);
     }
 }

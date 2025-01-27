@@ -31,6 +31,8 @@ public interface WalletAccountService {
 
     WalletAccountEntity findByWalletAndAccount(WalletEntity walletEntity, String account);
 
+    WalletAccountEntity findByWalletAndWalletAccountCurrencyId(WalletEntity walletEntity, long walletAccountCurrencyId);
+
     WalletAccountEntity findByAccountNumber(String account);
 
     long getBalance(long walletAccountId);

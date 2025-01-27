@@ -3,11 +3,10 @@ package com.melli.hub.service.impl;
 import com.melli.hub.domain.master.entity.StatusEntity;
 import com.melli.hub.domain.master.persistence.StatusRepository;
 import com.melli.hub.exception.InternalServiceException;
-import com.melli.hub.service.SettingService;
+import com.melli.hub.service.SettingGeneralService;
 import com.melli.hub.service.StatusService;
 import com.melli.hub.util.StringUtils;
 import com.melli.hub.utils.Constant;
-import com.melli.hub.utils.Helper;
 import com.melli.hub.utils.RedisLockService;
 import jakarta.annotation.PostConstruct;
 import jakarta.persistence.criteria.CriteriaBuilder;
@@ -33,7 +32,7 @@ import java.util.*;
 public class StatusServiceImplementation implements StatusService {
 
     private final StatusRepository statusRepository;
-    private final SettingService settingService;
+    private final SettingGeneralService settingGeneralService;
     private final RedisLockService redisLockService;
 
 

@@ -27,8 +27,8 @@ public class EscrowWalletAccountEntity extends BaseEntityAudit implements Serial
     @Column(name = "wallet_account_number")
     private String walletAccountNumber;
 
-    @Column(name = "wallet_account_type_id")
-    private int walletAccountTypeId;
+    @Column(name = "wallet_account_currency_id")
+    private int walletAccountCurrencyId;
 
     @Column(name = "wallet_id")
     private int walletId;

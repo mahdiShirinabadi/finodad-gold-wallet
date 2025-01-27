@@ -18,6 +18,7 @@ create table if not exists channel
     iban               varchar(13)   default null,
     wallet_id          bigint        default null,
     account            varchar(13)   default null,
+    national_code      char(10)   default null,
     balance_limitation bigint        default 2000000,
     check_shahkar      int           default 0,
     wage_iban          varchar(50)   default null,
@@ -224,7 +225,7 @@ create table if not exists escrow_wallet_account
     wallet_id              int
 );
 
-CREATE TABLE if not exists setting
+CREATE TABLE if not exists setting_general
 (
     id              BIGSERIAL PRIMARY KEY,
     created_by      VARCHAR(200)                NOT NULL,
@@ -465,43 +466,60 @@ CREATE TABLE if not exists cash_out_request
     additional_data   VARCHAR(500)
 );
 
+CREATE TABLE if not exists setting_general_custom
+(
+    id                         BIGSERIAL PRIMARY KEY,
+    created_by                 VARCHAR(200)                NOT NULL,
+    updated_by                 VARCHAR(200),
+    created_at                 TIMESTAMP WITHOUT TIME ZONE NOT NULL,
+    updated_at                 TIMESTAMP WITHOUT TIME ZONE,
+    setting_general_id         BIGINT                      not null references setting_general,
+    wallet_level_id            BIGINT                      not null references wallet_level,
+    wallet_account_type_id     BIGINT                      not null references wallet_account_type,
+    wallet_account_currency_id BIGINT                      not null references wallet_account_currency,
+    wallet_type_id             BIGINT                      not null references wallet_type,
+    value                      VARCHAR(100),
+    additional_data            VARCHAR(200),
+    end_time                   TIMESTAMP WITHOUT TIME ZONE
+);
+
 insert into role_ (created_by, created_at, name, persian_description, additional_data)
 values ('admin', now(), 'WEB_PROFILE', 'کاربر وب', '')
 on conflict do nothing;
 
-INSERT INTO setting(created_by, created_at, name, value, additional_data)
+INSERT INTO setting_general(created_by, created_at, name, value, additional_data)
 VALUES ('System', now(), 'MAX_WRONG_PASSWORD_FOR_PROFILE', '5', 'حداکثر تعداد رمز نادرست')
 on conflict do nothing;
 
-INSERT INTO setting(created_by, created_at, name, value, additional_data)
+INSERT INTO setting_general(created_by, created_at, name, value, additional_data)
 VALUES ('System', now(), 'DURATION_ACCESS_TOKEN_PROFILE', '600', 'زمان توکن پروفایل')
 on conflict do nothing;
 
-INSERT INTO setting(created_by, created_at, name, value, additional_data)
+INSERT INTO setting_general(created_by, created_at, name, value, additional_data)
 VALUES ('System', now(), 'DURATION_REFRESH_TOKEN_PROFILE', '86400', 'زمان توکن پروفایل')
 on conflict do nothing;
 
-INSERT INTO setting(created_by, created_at, name, value, additional_data)
+INSERT INTO setting_general(created_by, created_at, name, value, additional_data)
 VALUES ('System', now(), 'MAX_OTP_EXPIRE_TIME_MINUTES', '3', 'حداکثر زمان otp')
 on conflict do nothing;
 
-INSERT INTO setting(created_by, created_at, name, value, additional_data)
+INSERT INTO setting_general(created_by, created_at, name, value, additional_data)
 VALUES ('System', now(), 'LENGTH_OTP', '5', 'طول رمز')
 on conflict do nothing;
 
-INSERT INTO setting(created_by, created_at, name, value, additional_data)
+INSERT INTO setting_general(created_by, created_at, name, value, additional_data)
 VALUES ('System', now(), 'SMS_OTP_TEMPLATE', ' رمز عبور یکبار مصرف: %s', 'الگو پیام رمز')
 on conflict do nothing;
 
-INSERT INTO setting(created_by, created_at, name, value, additional_data)
+INSERT INTO setting_general(created_by, created_at, name, value, additional_data)
 VALUES ('System', now(), 'MOBILE_FOR_GOT_ALERT', '09124162337', 'شماره همراه دریافت خطا')
 on conflict do nothing;
 
-INSERT INTO setting(created_by, created_at, name, value, additional_data)
+INSERT INTO setting_general(created_by, created_at, name, value, additional_data)
 VALUES ('System', now(), 'SMS_SEND_ALERT', 'false', 'ارسال پیام کوتاه در مانبتورینگ')
 on conflict do nothing;
 
-INSERT INTO setting(created_by, created_at, name, value, additional_data)
+INSERT INTO setting_general(created_by, created_at, name, value, additional_data)
 VALUES ('System', now(), 'MAX_REGISTER_EXPIRE_TIME_MINUTES', '5', 'حداکثر زمان مجاز ثبت نام')
 on conflict do nothing;
 

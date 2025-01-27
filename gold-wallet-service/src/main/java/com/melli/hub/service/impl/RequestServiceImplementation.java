@@ -2,6 +2,7 @@ package com.melli.hub.service.impl;
 
 import com.melli.hub.domain.master.entity.*;
 import com.melli.hub.domain.master.persistence.CashInRequestRepository;
+import com.melli.hub.domain.master.persistence.PurchaseRequestRepository;
 import com.melli.hub.domain.response.cash.CashInTrackResponse;
 import com.melli.hub.exception.InternalServiceException;
 import com.melli.hub.service.RequestService;
@@ -10,6 +11,7 @@ import com.melli.hub.service.StatusService;
 import com.melli.hub.utils.Helper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.boot.actuate.autoconfigure.observation.ObservationProperties;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -28,20 +30,20 @@ public class RequestServiceImplementation implements RequestService {
 
 
     private final CashInRequestRepository cashInRequestRepository;
+    private final PurchaseRequestRepository purchaseRequestRepository;
     private final RrnService rrnService;
     private final Helper helper;
     private final StatusService statusService;
 
 
-
     @Override
     public void save(RequestEntity requestEntity) throws InternalServiceException {
         log.info("start save object request ===> {}", requestEntity);
-        if(requestEntity instanceof CashInRequestEntity){
+        if (requestEntity instanceof CashInRequestEntity) {
             cashInRequestRepository.save((CashInRequestEntity) requestEntity);
-        } else if (requestEntity instanceof CashOutRequestEntity) {
-
-        } else{
+        } else if (requestEntity instanceof PurchaseRequestEntity) {
+            purchaseRequestRepository.save((PurchaseRequestEntity) requestEntity);
+        } else {
             log.error("requestEntity is not instanceof");
             throw new InternalServiceException("error in save request, instance not define", StatusService.GENERAL_ERROR, HttpStatus.OK);
         }
@@ -59,8 +61,10 @@ public class RequestServiceImplementation implements RequestService {
 
         RequestEntity resultRequest = new RequestEntity();
 
-        if(requestEntity instanceof CashInRequestEntity){
-            resultRequest =  cashInRequestRepository.findByRrnEntityId(traceId);
+        if (requestEntity instanceof CashInRequestEntity) {
+            resultRequest = cashInRequestRepository.findByRrnEntityId(traceId);
+        } else if (requestEntity instanceof PurchaseRequestEntity) {
+            resultRequest = purchaseRequestRepository.findByRrnEntityId(traceId);
         }
 
         if (resultRequest != null) {
@@ -137,8 +141,11 @@ public class RequestServiceImplementation implements RequestService {
     }
 
     @Override
-    public CashInRequestEntity findCashInWithRrnId(long rrnId) {
-        return cashInRequestRepository.findByRrnEntityId(rrnId);
+    public CashInRequestEntity findCashInWithRrnId(long rrnId) throws InternalServiceException {
+        return cashInRequestRepository.findOptionalByRrnEntityId(rrnId).orElseThrow(() -> {
+            log.error("cashInRequest with id ({}) not found", rrnId);
+            return new InternalServiceException("cashIn not found", StatusService.RECORD_NOT_FOUND, HttpStatus.OK);
+        });
     }
 
     @Override
@@ -148,14 +155,14 @@ public class RequestServiceImplementation implements RequestService {
 
     @Override
     public CashInTrackResponse cashInTrack(String uid, String channelIp) throws InternalServiceException {
-        log.info("star to cashInTrack with uid ( {} ) and channelIp ( {} )", uid,channelIp);
+        log.info("star to cashInTrack with uid ( {} ) and channelIp ( {} )", uid, channelIp);
         RrnEntity rrnEntity = rrnService.findByUid(uid);
-        if(rrnEntity==null){
+        if (rrnEntity == null) {
             log.error("rrn with uid ( {} ) not found", uid);
-            throw new InternalServiceException("can not find rrn with uid ( "+uid+" )", StatusService.UUID_NOT_FOUND, HttpStatus.OK);
+            throw new InternalServiceException("can not find rrn with uid ( " + uid + " )", StatusService.UUID_NOT_FOUND, HttpStatus.OK);
         }
         log.info("start tracking cashIn  with traceId ( {} ) ...", rrnEntity.getUuid());
-        CashInRequestEntity cashInRequest=cashInRequestRepository.findByRrnEntity(rrnEntity);
+        CashInRequestEntity cashInRequest = cashInRequestRepository.findByRrnEntity(rrnEntity);
         return helper.fillCashInTrackResponse(cashInRequest, statusService);
     }
 }

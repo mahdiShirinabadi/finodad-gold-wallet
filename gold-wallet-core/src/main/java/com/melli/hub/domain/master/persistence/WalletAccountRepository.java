@@ -1,6 +1,7 @@
 package com.melli.hub.domain.master.persistence;
 
 import com.melli.hub.domain.dto.BalanceObjectDTO;
+import com.melli.hub.domain.master.entity.WalletAccountCurrencyEntity;
 import com.melli.hub.domain.master.entity.WalletAccountEntity;
 import com.melli.hub.domain.master.entity.WalletEntity;
 import org.springframework.data.domain.Pageable;
@@ -17,6 +18,8 @@ import java.util.List;
 public interface WalletAccountRepository extends CrudRepository<WalletAccountEntity, Long> {
 
     List<WalletAccountEntity> findByWalletEntity(WalletEntity wallet);
+
+    WalletAccountEntity findTopByWalletEntityAndWalletAccountCurrencyEntityId(WalletEntity wallet, long walletAccountCurrencyId);
 
     List<WalletAccountEntity> findByWalletEntity(WalletEntity wallet, Pageable pageable);
 
