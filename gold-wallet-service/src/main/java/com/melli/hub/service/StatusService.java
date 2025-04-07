@@ -11,7 +11,7 @@ public interface StatusService {
     int INPUT_PARAMETER_NOT_VALID = 1;
     int PASSWORD_NOT_MATCH = 2;
     int ROLE_NAME_NOT_FOUND = 3;
-    int FUND_NOT_FOUND = 4;
+    int REQUEST_TYPE_NOT_FOUND = 4;
     int NATIONAL_CODE_NOT_FOUND = 5;
     int NATIONAL_CODE_EXIT = 6;
     int INVALID_USERNAME_PASSWORD = 7;
@@ -50,6 +50,7 @@ public interface StatusService {
     int WALLET_EXCEEDED_AMOUNT_LIMITATION = 42;
     int BALANCE_IS_NOT_ENOUGH = 43;
     int RECORD_NOT_FOUND = 44;
+    int MERCHANT_IS_NOT_EXIST = 45;
 
     int REFRESH_TOKEN_NOT_BELONG_TO_PROFILE = 898;
     int REFRESH_TOKEN_NOT_FOUND = 899;
@@ -57,7 +58,6 @@ public interface StatusService {
     int ERROR_IN_LOCK = 988;
     int TIMEOUT = 998;
     int GENERAL_ERROR = 999;
-    int MERCHANT_IS_NOT_EXIST = 45;
 
 
     void init();

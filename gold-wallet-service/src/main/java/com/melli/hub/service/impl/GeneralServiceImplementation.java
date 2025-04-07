@@ -1,6 +1,7 @@
 package com.melli.hub.service.impl;
 
 import com.melli.hub.domain.master.entity.ChannelEntity;
+import com.melli.hub.domain.master.entity.RrnEntity;
 import com.melli.hub.domain.master.persistence.ChannelRepository;
 import com.melli.hub.domain.response.UuidResponse;
 import com.melli.hub.exception.InternalServiceException;
@@ -28,9 +29,9 @@ public class GeneralServiceImplementation implements GeneralService {
     public UuidResponse generateUuid(ChannelEntity channelEntity, String nationalCode) throws InternalServiceException {
         try {
             log.info("start generate traceId, username ===> ({}), nationalCode ({})", channelEntity.getUsername(), nationalCode);
-            String uuid = rrnService.generateTraceId(nationalCode, channelEntity);
-            log.info("finish traceId ===> {}, username ({}), nationalCode ({})", uuid, channelEntity.getUsername(), nationalCode);
-            return new UuidResponse(uuid);
+            RrnEntity rrnEntity = rrnService.generateTraceId(nationalCode, channelEntity);
+            log.info("finish traceId ===> {}, username ({}), nationalCode ({})", rrnEntity.getUuid(), channelEntity.getUsername(), nationalCode);
+            return new UuidResponse(rrnEntity.getUuid());
         } catch (InternalServiceException e) {
             log.error("error in generate traceId with info ===> username ({}), nationalCode ({}) error ===> ({})", channelEntity.getUsername(), nationalCode, e.getMessage());
             throw e;

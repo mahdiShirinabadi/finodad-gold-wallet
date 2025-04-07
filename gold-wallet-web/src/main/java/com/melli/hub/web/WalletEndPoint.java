@@ -39,7 +39,7 @@ public class WalletEndPoint extends WebEndPoint {
 
 	@Timed(description = "Time taken to create wallet")
 	@PostMapping(path = "/create", produces = {MediaType.APPLICATION_JSON_VALUE})
-	@Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "ایجاد کیف پول بدون دریافت پیغام تایید")
+	@Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "ایجاد کیف پول")
 	@PreAuthorize("hasAuthority(\""+ ResourceService.WALLET_CREATE +"\")")
 	public ResponseEntity<BaseResponse<CreateWalletResponse>> createWallet(@RequestBody CreateWalletRequestJson requestJson) throws InternalServiceException {
 		String channelIp = requestContext.getClientIp();
@@ -81,8 +81,8 @@ public class WalletEndPoint extends WebEndPoint {
 	@Timed(description = "Time taken to delete wallet")
 	@GetMapping(path = "/get/{nationalCode}", produces = {MediaType.APPLICATION_JSON_VALUE})
 	@Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "دریافت اطلاعات کیف پول ")
-	@PreAuthorize("hasAuthority(\""+ ResourceService.WALLET_DELETE +"\")")
-	public ResponseEntity<BaseResponse<CreateWalletResponse>> deleteWallet(@PathVariable String nationalCode) throws InternalServiceException {
+	@PreAuthorize("hasAuthority(\""+ ResourceService.WALLET_INFO +"\")")
+	public ResponseEntity<BaseResponse<CreateWalletResponse>> getBalance(@PathVariable String nationalCode) throws InternalServiceException {
 		String channelIp = requestContext.getClientIp();
 		log.info("start get wallet with nationalCode ==> {}, from Ip ({})", nationalCode, channelIp);
 		CreateWalletResponse response = walletOperationalService.get(requestContext.getChannelEntity() ,nationalCode);

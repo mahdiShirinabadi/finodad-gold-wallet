@@ -6,7 +6,7 @@ import com.melli.hub.exception.InternalServiceException;
 
 public interface RrnService {
 
-    String generateTraceId(String nationalCode, ChannelEntity channelEntity) throws InternalServiceException;
+    RrnEntity generateTraceId(String nationalCode, ChannelEntity channelEntity) throws InternalServiceException;
 
     RrnEntity findByUid(String uid) throws InternalServiceException;
 

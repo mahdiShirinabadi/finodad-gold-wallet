@@ -42,7 +42,7 @@ import java.util.Map;
  */
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/v1/authentication")
+@RequestMapping("/api/v1/auth")
 @Validated
 @Log4j2
 public class AuthenticationEndPoint extends WebEndPoint {
@@ -84,7 +84,7 @@ public class AuthenticationEndPoint extends WebEndPoint {
 
     @Timed(description = "time taken to checkShahkar profile")
     @Operation(summary = "تولید دوباره accessToken")
-    @PostMapping(value = "/refreshToken", produces = {MediaType.APPLICATION_JSON_VALUE})
+    @PostMapping(value = "/refresh", produces = {MediaType.APPLICATION_JSON_VALUE})
     public ResponseEntity<BaseResponse<LoginResponse>> refreshToken(@Valid @RequestBody RefreshTokenRequestJson requestJson, HttpServletRequest httpRequest) throws InternalServiceException {
         log.info("start refreshToken with data ({})", requestJson.toString());
         boolean isAfter = checkExpiration(channelService.findByUsername(requestJson.getUsername()));

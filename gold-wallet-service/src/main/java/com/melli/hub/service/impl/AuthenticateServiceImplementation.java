@@ -97,9 +97,7 @@ public class AuthenticateServiceImplementation implements AuthenticateService {
         channelAccessTokenEntity.setAccessTokenExpireTime(new Date(Long.parseLong(accessTokenMap.get("expireTime"))));
         channelAccessTokenEntity.setRefreshToken(refreshTokenMap.get("refreshToken"));
         channelAccessTokenEntity.setRefreshTokenExpireTime(new Date(Long.parseLong(refreshTokenMap.get("expireTime"))));
-        channelAccessTokenEntity.setDeviceName("");
         channelAccessTokenEntity.setIp(ip);
-        channelAccessTokenEntity.setAdditionalData("");
         channelAccessTokenService.save(channelAccessTokenEntity);
         log.info("success generate token for username ({}), Ip ({})", channelEntity.getUsername(), ip);
         return channelAccessTokenEntity;

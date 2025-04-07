@@ -29,12 +29,6 @@ public class ChannelAccessTokenEntity extends BaseEntityAudit {
     @Column(name = "ip", nullable = false, unique = true)
     private String ip;
 
-    @Column(name = "device_name", nullable = false, unique = true)
-    private String deviceName;
-
-    @Column(name = "additional_data", nullable = false, unique = true)
-    private String additionalData;
-
     @Column(name = "access_token_expire_time")
     @Temporal(TemporalType.TIMESTAMP)
     private Date accessTokenExpireTime;

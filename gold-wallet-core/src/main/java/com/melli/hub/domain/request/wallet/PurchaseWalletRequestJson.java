@@ -29,6 +29,21 @@ public class PurchaseWalletRequestJson {
     @JsonProperty("price")
     private String price;
 
+    @NationalCodeValidation(label = "کد ملی")
+    @Schema(name = "nationalCode", description = "کدملی")
+    @JsonProperty("nationalCode")
+    private String nationalCode;
+
+    @NationalCodeValidation(label = "شماره پیگیری")
+    @Schema(name = "referenceNumber", description = "شماره پیگیری")
+    @JsonProperty("referenceNumber")
+    private String referenceNumber;
+
+
+    @Schema(name = "merchantId" , description = "شناسه پذیرنده")
+    @JsonProperty("merchantId")
+    private String merchantId;
+
     @Schema(name = "accountNumber", description = "شماره حساب")
     @JsonProperty("accountNumber")
     private String accountNumber;
@@ -37,14 +52,9 @@ public class PurchaseWalletRequestJson {
     @JsonProperty("additionalData")
     private String additionalData;
 
-    @NationalCodeValidation(label = "کد ملی")
-    @Schema(name = "nationalCode", description = "کدملی")
-    @JsonProperty("nationalCode")
-    private String nationalCode;
 
-    @Schema(name = "merchantId" , description = "شناسه پذیرنده")
-    @JsonProperty("merchantId")
-    private String merchantId;
+
+
 
     @Schema(name = "purchaseType" , description = "SELL/BUY")
     @JsonProperty("purchaseType")

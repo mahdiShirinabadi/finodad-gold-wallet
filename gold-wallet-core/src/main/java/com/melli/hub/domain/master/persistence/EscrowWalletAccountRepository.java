@@ -1,7 +1,6 @@
 package com.melli.hub.domain.master.persistence;
 
 import com.melli.hub.domain.master.entity.EscrowWalletAccountEntity;
-import com.tara.wallet.master.domain.EscrowWalletAccount;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Component;
 

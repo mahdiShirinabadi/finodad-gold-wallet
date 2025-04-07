@@ -18,7 +18,7 @@ create table if not exists channel
     iban               varchar(13)   default null,
     wallet_id          bigint        default null,
     account            varchar(13)   default null,
-    national_code      char(10)   default null,
+    national_code      char(10)      default null,
     balance_limitation bigint        default 2000000,
     check_shahkar      int           default 0,
     wage_iban          varchar(50)   default null,
@@ -475,6 +475,7 @@ CREATE TABLE if not exists setting_general_custom
     updated_at                 TIMESTAMP WITHOUT TIME ZONE,
     setting_general_id         BIGINT                      not null references setting_general,
     wallet_level_id            BIGINT                      not null references wallet_level,
+    channel_id                 BIGINT                      not null references channel,
     wallet_account_type_id     BIGINT                      not null references wallet_account_type,
     wallet_account_currency_id BIGINT                      not null references wallet_account_currency,
     wallet_type_id             BIGINT                      not null references wallet_type,
@@ -482,6 +483,36 @@ CREATE TABLE if not exists setting_general_custom
     additional_data            VARCHAR(200),
     end_time                   TIMESTAMP WITHOUT TIME ZONE
 );
+
+CREATE TABLE if not exists template
+(
+    id         BIGSERIAL PRIMARY KEY,
+    created_by VARCHAR(200)                NOT NULL,
+    updated_by VARCHAR(200),
+    created_at TIMESTAMP WITHOUT TIME ZONE NOT NULL,
+    updated_at TIMESTAMP WITHOUT TIME ZONE,
+    name  varchar(100),
+    value text
+);
+
+CREATE TABLE if not exists transaction_part
+(
+    id         BIGSERIAL,
+    created_by VARCHAR(200)                NOT NULL,
+    updated_by VARCHAR(200),
+    created_at TIMESTAMP WITHOUT TIME ZONE NOT NULL,
+    updated_at TIMESTAMP WITHOUT TIME ZONE,
+    wallet_account_id int                         not null references wallet_account (id),
+    request_type_id   int,
+    amount            bigint                      not null,
+    type              varchar(1)                  not null,
+    balance           bigint                      not null,
+    description       varchar(200) default null,
+    additional_data   varchar(300) default null,
+    primary key (id, wallet_account_id)
+) PARTITION BY RANGE (wallet_account_id);
+ALTER TABLE transaction_part ADD CONSTRAINT transaction_part_pkey PRIMARY KEY (id, wallet_account_id);
+
 
 insert into role_ (created_by, created_at, name, persian_description, additional_data)
 values ('admin', now(), 'WEB_PROFILE', 'کاربر وب', '')
@@ -522,6 +553,32 @@ on conflict do nothing;
 INSERT INTO setting_general(created_by, created_at, name, value, additional_data)
 VALUES ('System', now(), 'MAX_REGISTER_EXPIRE_TIME_MINUTES', '5', 'حداکثر زمان مجاز ثبت نام')
 on conflict do nothing;
+
+INSERT INTO setting_general(created_by, created_at, name, value, additional_data)
+VALUES ('System', now(), 'ENABLE_CASH_IN', 'false', 'قابلیت شارژ حساب')
+on conflict do nothing;
+
+INSERT INTO setting_general(created_by, created_at, name, value, additional_data)
+VALUES ('System', now(), 'MIN_AMOUNT_CASH_IN', '1000', 'حداقل مبلغ شارژ کیف پول')
+on conflict do nothing;
+
+INSERT INTO setting_general(created_by, created_at, name, value, additional_data)
+VALUES ('System', now(), 'MAX_AMOUNT_CASH_IN', '1000000', 'حداکثر مبلغ شارژ کیف پول')
+on conflict do nothing;
+
+INSERT INTO setting_general(created_by, created_at, name, value, additional_data)
+VALUES ('System', now(), 'MAX_WALLET_BALANCE', '1000000', 'حداکثر مانده کیف پول')
+on conflict do nothing;
+
+INSERT into request_type(created_by, created_at, name, fa_name, display)
+VALUES ('System', now(),'cash_in','شارژ کیف پول',1);
+
+INSERT into request_type(created_by, created_at, name, fa_name, display)
+VALUES ('System', now(),'cash_out','برداشت وجه',1);
+
+INSERT into request_type(created_by, created_at, name, fa_name, display)
+VALUES ('System', now(),'purchase','خرید',1);
+
 
 CREATE INDEX ON channel_access_token (channel_id);
 CREATE INDEX ON channel_block (channel_id);

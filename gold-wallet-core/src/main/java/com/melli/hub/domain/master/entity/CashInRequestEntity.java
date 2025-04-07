@@ -32,23 +32,8 @@ public class CashInRequestEntity extends RequestEntity {
 	@JoinColumn(name = "rrn_id", nullable = false)
 	private RrnEntity rrnEntity;
 
-	@Column(name = "ref_number_status")
-	private String refNumberStatus;
-
-	@Column(name = "psp_token")
-	private String channelToken;
-
 	@Column(name = "additional_data")
 	private String additionalData;
-
-	@Column(name = "psp_response")
-	private String channelResponse;
-
-	@Column(name = "psp_request_time")
-	private Date channelRequestTime;
-
-	@Column(name = "psp_response_time")
-	private Date channelResponseTime;
 
 	@Enumerated(EnumType.STRING) // Store the enum as a string in the database
 	@Column(name = "cash_in_payment_type", nullable = false, length = 50)

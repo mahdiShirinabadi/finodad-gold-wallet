@@ -59,6 +59,8 @@ public class CashServiceImplementation implements CashService {
             rrnService.checkRrn(uniqueIdentifier, channelEntity);
             log.info("finish checking existence of traceId({})", uniqueIdentifier);
 
+            requestService.findSuccessCashInByRefNumber(refNumber);
+
             Optional<WalletTypeEntity> walletTypeEntity = walletTypeService.getAll().stream().filter(x -> x.getName().equals(WalletTypeService.NORMAL_USER)).findFirst();
             WalletAccountEntity walletAccountEntity = helper.checkWalletAndWalletAccount(walletService, rrnEntity.getNationalCode(), walletAccountService, accountNumber, walletTypeEntity.get());
             walletLimitationService.checkCashInLimitation(channelEntity, walletAccountEntity.getWalletEntity(), Long.parseLong(amount), walletAccountEntity);
@@ -68,7 +70,6 @@ public class CashServiceImplementation implements CashService {
             cashInRequestEntity.setRefNumber(refNumber);
             cashInRequestEntity.setWalletAccount(walletAccountEntity);
             cashInRequestEntity.setRrnEntity(rrnEntity);
-            cashInRequestEntity.setRefNumberStatus(null);
             cashInRequestEntity.setAdditionalData(additionalData);
             cashInRequestEntity.setChannel(channelEntity);
             cashInRequestEntity.setResult(StatusService.CREATE);
@@ -77,16 +78,9 @@ public class CashServiceImplementation implements CashService {
             cashInRequestEntity.setCreatedBy(channelEntity.getUsername());
             cashInRequestEntity.setCreatedAt(new Date());
             requestService.save(cashInRequestEntity);
-
-            cashInRequestEntity.setChannelRequestTime(new Date());
             cashInRequestEntity.setRefNumber(refNumber);
-
-
-            cashInRequestEntity.setChannelResponseTime(new Date());
             cashInRequestEntity.setResult(StatusService.SUCCESSFUL);
-            cashInRequestEntity.setRefNumberStatus(CashInRequestEntity.REF_NUMBER_USED);
             cashInRequestEntity.setAdditionalData(additionalData);
-
             TransactionEntity transaction = new TransactionEntity();
             transaction.setAmount(Long.parseLong(amount));
             transaction.setWalletAccountEntity(walletAccountEntity);

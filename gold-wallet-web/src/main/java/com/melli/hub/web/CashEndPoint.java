@@ -40,7 +40,7 @@ public class CashEndPoint extends WebEndPoint{
     @PostMapping(path = "/cashIn", produces = {MediaType.APPLICATION_JSON_VALUE})
     @Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "افزایش موجودی کیف پول")
     @PreAuthorize("hasAuthority(\""+ ResourceService.CASH_IN +"\")")
-    public ResponseEntity<BaseResponse<CashInResponse>> createWallet(@RequestBody CashInWalletRequestJson requestJson) throws InternalServiceException {
+    public ResponseEntity<BaseResponse<CashInResponse>> charge(@RequestBody CashInWalletRequestJson requestJson) throws InternalServiceException {
         String channelIp = requestContext.getClientIp();
         String username = requestContext.getChannelEntity().getUsername();
         log.info("start call create wallet in username ===> {}, nationalCode ===> {}, from ip ===> {}", username, requestJson.getNationalCode(), channelIp);
@@ -53,7 +53,7 @@ public class CashEndPoint extends WebEndPoint{
     @GetMapping(path = "/track/cashIn/{uniqueIdentifier}", produces = {MediaType.APPLICATION_JSON_VALUE})
     @Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "پیگیری افزایش موجودی کیف پول")
     @PreAuthorize("hasAuthority(\""+ ResourceService.CASH_IN +"\")")
-    public ResponseEntity<BaseResponse<CashInTrackResponse>> createWallet(@PathVariable("uniqueIdentifier") String uniqueIdentifier) throws InternalServiceException {
+    public ResponseEntity<BaseResponse<CashInTrackResponse>> inquiryCharge(@PathVariable("uniqueIdentifier") String uniqueIdentifier) throws InternalServiceException {
         String channelIp = requestContext.getClientIp();
         String username = requestContext.getChannelEntity().getUsername();
         log.info("start call cashIn in username ===> {}, nationalCode ===> {}, from ip ===> {}", username, uniqueIdentifier, channelIp);

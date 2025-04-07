@@ -4,10 +4,6 @@ import com.melli.hub.domain.master.entity.EscrowWalletAccountEntity;
 import com.melli.hub.domain.master.entity.WalletAccountEntity;
 import com.melli.hub.domain.master.entity.WalletEntity;
 import com.melli.hub.exception.InternalServiceException;
-import com.tara.wallet.exception.ServiceException;
-import com.tara.wallet.master.domain.EscrowWalletAccount;
-import com.tara.wallet.master.domain.Wallet;
-import com.tara.wallet.master.domain.WalletAccount;
 
 import java.util.List;
 

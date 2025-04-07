@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.melli.hub.annotation.national_code.NationalCodeValidation;
 import com.melli.hub.annotation.number.NumberValidation;
 import com.melli.hub.annotation.string.StringValidation;
+import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
@@ -15,12 +16,12 @@ import lombok.ToString;
 public class CashInWalletRequestJson {
 
     @StringValidation
-    @Schema(name = "شناسه یکتا")
+    @Schema(name="uniqueIdentifier", description = "شناسه یکتا")
     @JsonProperty("uniqueIdentifier")
     private String uniqueIdentifier;
 
     @StringValidation
-    @Schema(name = "شماره مرجع")
+    @Schema(name="referenceNumber",description = "شماره مرجع")
     @JsonProperty("referenceNumber")
     private String referenceNumber;
 
@@ -43,10 +44,11 @@ public class CashInWalletRequestJson {
     private String accountNumber;
 
 
-    @Schema(name = "sign", description = "کدملی")
+    @Schema(name = "sign", description = "امضا دیجیتال")
     @JsonProperty("sign")
     private String sign;
 
+    @Hidden
     public String getDataString() {
         return uniqueIdentifier + "|" + referenceNumber + "|" + amount + "|" + nationalCode;
     }

@@ -2,6 +2,7 @@ package com.melli.hub.service.impl;
 
 import com.melli.hub.domain.master.entity.*;
 import com.melli.hub.domain.response.purchase.PurchaseResponse;
+import com.melli.hub.domain.response.purchase.PurchaseTrackResponse;
 import com.melli.hub.exception.InternalServiceException;
 import com.melli.hub.service.*;
 import com.melli.hub.utils.Helper;
@@ -70,7 +71,7 @@ public class PurchaseServiceImplementation implements PurchaseService {
             purchaseRequestEntity.setPrice(Long.parseLong(price));
             purchaseRequestEntity.setAmount(new BigDecimal(amount));
             purchaseRequestEntity.setWalletAccount(walletAccountEntity);
-            purchaseRequestEntity.setEscrowWalletAccount();
+            /*purchaseRequestEntity.setEscrowWalletAccount();
             purchaseRequestEntity.setRrnEntity();
             purchaseRequestEntity.setMerchantEntity();
             purchaseRequestEntity.setNationalCode();
@@ -94,15 +95,9 @@ public class PurchaseServiceImplementation implements PurchaseService {
             purchaseRequestEntity.setCustomerIp();
             purchaseRequestEntity.setRequestTypeEntity();
             purchaseRequestEntity.setCreatedBy();
-            purchaseRequestEntity.setUpdatedBy();
             purchaseRequestEntity.setCreatedAt();
-            purchaseRequestEntity.setUpdatedAt();
-            purchaseRequestEntity.setId();
-            
-
-
-
-
+            purchaseRequestEntity.setId();*/
+            return null;
         }, uniqueIdentifier);
     }
 
@@ -138,12 +133,11 @@ public class PurchaseServiceImplementation implements PurchaseService {
             throw new InternalServiceException("wallet for channel with mobile (" + channel.getNationalCode() + ") not found!!", StatusService.GENERAL_ERROR, HttpStatus.OK);
         }
 
-        WalletAccountEntity walletAccount = escrowWalletAccountService.findEscrowWalletAccountBySourceWallet(userWalletAccountEntity, walletChannel);
+        WalletAccountEntity walletAccount = escrowWalletAccountService.findEscrowWalletAccountBySourceWallet(userWalletAccountEntity, userWalletAccountEntity.getWalletEntity());
 
         if (walletAccount == null) {
-            log.error("walletAccount for wallet with Id ({}) not found!!", walletChannel.getId());
-            alertService.send("walletAccount for wallet with Id (" + walletChannel.getId() + ") not found!!");
-            throw new ServiceException("walletAccount for wallet with Id (" + walletChannel.getId() + ") not found!!", RequestService.GENERAL_ERROR);
+            log.error("walletAccount for wallet with Id ({}) not found!!", userWalletAccountEntity.getId());
+            throw new InternalServiceException("walletAccount for wallet with Id (" + userWalletAccountEntity.getId() + ") not found!!", StatusService.GENERAL_ERROR, HttpStatus.OK);
         }
 
         return walletAccount;

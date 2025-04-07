@@ -10,10 +10,9 @@ import java.util.Optional;
 @Repository
 public interface CashInRequestRepository extends CrudRepository<CashInRequestEntity, Long> {
 
-    CashInRequestEntity findByRefNumberAndRefNumberStatus(String refNumber, String refNumberStatus);
+    CashInRequestEntity findByRefNumber(String refNumber);
     CashInRequestEntity findByRrnEntityId(long traceId);
     Optional<CashInRequestEntity> findOptionalByRrnEntityId(long traceId);
     CashInRequestEntity findByRrnEntity(RrnEntity rrn);
     CashInRequestEntity findById(long requestId);
-    CashInRequestEntity findByChannelToken(String token);
 }

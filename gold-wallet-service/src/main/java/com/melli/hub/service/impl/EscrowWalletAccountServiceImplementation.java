@@ -35,9 +35,8 @@ public class EscrowWalletAccountServiceImplementation implements EscrowWalletAcc
         log.info("count find escrow wallet account for channel ({}) is: ({}) with accountType ({})", walletEntity.getOwner().getUsername(), escrowWalletAccountEntityList.size(), walletAccountCurrencyId);
 
         if (CollectionUtils.isEmpty(escrowWalletAccountEntityList)) {
-            return walletAccountService.fin(walletChannel, accountTypeId);
+            return walletAccountService.findByWalletAndWalletAccountCurrencyId(walletEntity, userWalletAccount.getWalletAccountCurrencyEntity().getId());
         }
-
         return null;
     }
 

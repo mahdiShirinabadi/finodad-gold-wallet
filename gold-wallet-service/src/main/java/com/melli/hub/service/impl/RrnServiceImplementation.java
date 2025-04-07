@@ -26,7 +26,7 @@ public class RrnServiceImplementation implements RrnService {
     private final RrnRepository rrnRepository;
 
     @Override
-    public String generateTraceId(String nationalCode, ChannelEntity channelEntity) throws InternalServiceException {
+    public RrnEntity generateTraceId(String nationalCode, ChannelEntity channelEntity) throws InternalServiceException {
 
         log.info("start generate traceId ===> mobile({}), channel({})", nationalCode, channelEntity.getUsername() );
         try{
@@ -36,7 +36,8 @@ public class RrnServiceImplementation implements RrnService {
             rrnEntity.setCreatedAt(new Date());
             rrnEntity.setCreatedBy(channelEntity.getUsername());
             rrnEntity = rrnRepository.save(rrnEntity);
-            return rrnEntity.getUuid();
+            RrnEntity rrnEntityUuid = rrnRepository.findById(rrnEntity.getId());
+            return rrnEntityUuid;
         }catch (Exception e){
             log.error("error in save traceId, and get error ===> ({})", e.getMessage());
             throw new InternalServiceException("error in generate traceId ===> " + e.getMessage(), StatusService.GENERAL_ERROR, HttpStatus.OK);

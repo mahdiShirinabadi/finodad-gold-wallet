@@ -77,8 +77,7 @@ public class RequestServiceImplementation implements RequestService {
 
     @Override
     public void findSuccessCashInByRefNumber(String refNumber) throws InternalServiceException {
-        CashInRequestEntity cashInRequest = cashInRequestRepository.findByRefNumberAndRefNumberStatus(refNumber, CashInRequestEntity.REF_NUMBER_USED);
-
+        CashInRequestEntity cashInRequest = cashInRequestRepository.findByRefNumber(refNumber);
         if (cashInRequest != null) {
             log.error("refNumber ({}), used before !!! ", refNumber);
             throw new InternalServiceException("cashIn: refNumber (" + refNumber + ") used before !!!", StatusService.REF_NUMBER_USED_BEFORE, HttpStatus.OK);
