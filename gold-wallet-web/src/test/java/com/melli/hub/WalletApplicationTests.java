@@ -1,8 +1,13 @@
 package com.melli.hub;
 
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.melli.hub.config.FlywayConfig;
+import com.melli.hub.domain.request.login.LoginRequestJson;
+import com.melli.hub.domain.response.base.BaseResponse;
+import com.melli.hub.domain.response.login.LoginResponse;
 import com.melli.hub.service.StatusService;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.StringUtils;
@@ -38,7 +43,19 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ExtendWith(SpringExtension.class)
 public class WalletApplicationTests {
 
+    private static final String LOGIN_PATH = "/api/v1/auth/login";
+
+    public static final String USERNAME_CORRECT = "admin";
+    public static final String USERNAME_INCORRECT = "admin12";
+    public static final String PASSWORD_CORRECT = "admin";
+
+    private static MockMvc mockMvc;
+
     public static final ObjectMapper objectMapper = new ObjectMapper();
+
+    public String mapToJson(Object object) throws JsonProcessingException {
+        return objectMapper.writeValueAsString(object);
+    }
 
     @Autowired
     private FlywayConfig flywayConfig;
@@ -106,7 +123,7 @@ public class WalletApplicationTests {
 
     public boolean setupDB() {
         if (emptyDB) {
-            log.info("start setting initial values in test DB");
+            log.info("start cleaning initial values in test DB");
             flywayConfig.clean();
             emptyDB = false;
         }
@@ -125,6 +142,18 @@ public class WalletApplicationTests {
         String response = mvcResult.getResponse().getContentAsString(StandardCharsets.UTF_8);
         log.info("finish with response({})", response);
         return response;
+    }
+
+    public BaseResponse<LoginResponse> login(String username, String password, HttpStatus httpStatus, int errorCode,
+                                              boolean success) throws Exception {
+        LoginRequestJson requestJson = new LoginRequestJson();
+        requestJson.setUsername(username);
+        requestJson.setPassword(password);
+        MockHttpServletRequestBuilder postRequest = buildPostRequest("", LOGIN_PATH, mapToJson(requestJson));
+        String response = performTest(mockMvc, postRequest, httpStatus, success, errorCode);
+        TypeReference<BaseResponse<LoginResponse>> typeReference = new TypeReference<>() {
+        };
+        return objectMapper.readValue(response, typeReference);
     }
 
 }

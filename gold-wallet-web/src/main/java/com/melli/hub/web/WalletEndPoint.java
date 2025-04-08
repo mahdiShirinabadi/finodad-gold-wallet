@@ -92,7 +92,7 @@ public class WalletEndPoint extends WebEndPoint {
 
 
 	@Timed(description = "Time taken to active wallet")
-	@PostMapping(path = "/activatedWallet", produces = {MediaType.APPLICATION_JSON_VALUE})
+	@PostMapping(path = "/activate", produces = {MediaType.APPLICATION_JSON_VALUE})
 	@Operation(security = { @SecurityRequirement(name = "bearer-key") },summary =" فعال کردن کیف پول")
 	@PreAuthorize("hasAuthority(\""+ ResourceService.WALLET_ACTIVE +"\")")
 	public ResponseEntity<BaseResponse<ObjectUtils.Null>> activeWallet(@RequestBody ActiveWalletRequestJson requestJson) throws InternalServiceException {
