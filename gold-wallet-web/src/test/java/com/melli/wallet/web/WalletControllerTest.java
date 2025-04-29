@@ -325,7 +325,7 @@ public class WalletControllerTest extends WalletApplicationTests {
 
     //duplicate refnumber
     @Test
-    @Order(32)
+    @Order(33)
     @DisplayName("cashInFail-duplicate rrn")
     void cashInFailDuplicateRrn() throws Exception {
         String refNumber = new Date().getTime() + "";
