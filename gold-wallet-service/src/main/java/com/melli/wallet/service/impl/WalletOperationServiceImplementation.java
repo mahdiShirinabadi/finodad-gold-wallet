@@ -79,7 +79,7 @@ public class WalletOperationServiceImplementation implements WalletOperationalSe
             walletEntity.setOwner(channelEntity);
             walletEntity.setWalletTypeEntity(walletTypeEntity.get());
             walletEntity.setStatus(WalletStatusEnum.ACTIVE);
-            walletEntity.setWalletLEvelEntity(walletLevelService.getAll().stream().filter(x -> x.getName().equals(WalletLevelService.BRONZE)).findFirst().get());
+            walletEntity.setWalletLevelEntity(walletLevelService.getAll().stream().filter(x -> x.getName().equals(WalletLevelService.BRONZE)).findFirst().get());
             walletEntity.setCreatedBy(nationalCode);
             walletEntity.setCreatedAt(new Date());
             walletService.save(walletEntity);

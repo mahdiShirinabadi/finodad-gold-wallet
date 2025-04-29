@@ -165,9 +165,9 @@ CREATE TABLE if not exists wallet_account_type
     description     VARCHAR(100)
 );
 insert into wallet_account_type(created_by, created_at, name, additional_data, description)
-VALUES ('System',now(), 'NORMAL','ریال','NORMAL');
+VALUES ('System',now(), 'NORMAL','عادی','NORMAL');
 insert into wallet_account_type(created_by, created_at, name, additional_data, description)
-VALUES ('System',now(), 'WAGE','ریال','WAGE');
+VALUES ('System',now(), 'WAGE','کارمزد','WAGE');
 
 CREATE TABLE if not exists wallet_level
 (
@@ -239,6 +239,20 @@ CREATE TABLE if not exists wallet_iban
 );
 
 CREATE TABLE if not exists setting_general
+(
+    id              BIGSERIAL PRIMARY KEY,
+    created_by      VARCHAR(200)                NOT NULL,
+    updated_by      VARCHAR(200),
+    created_at      TIMESTAMP WITHOUT TIME ZONE NOT NULL,
+    updated_at      TIMESTAMP WITHOUT TIME ZONE,
+    name            VARCHAR(100)                NOT NULL UNIQUE,
+    value           VARCHAR(100),
+    pattern         VARCHAR(100),
+    additional_data VARCHAR(100),
+    end_time        TIMESTAMP WITHOUT TIME ZONE
+);
+
+CREATE TABLE if not exists limitation_general
 (
     id              BIGSERIAL PRIMARY KEY,
     created_by      VARCHAR(200)                NOT NULL,
@@ -379,6 +393,7 @@ CREATE TABLE if not exists purchase_request
     ref_number                  VARCHAR(500),
     commission           NUMERIC(10, 5)
 );
+create unique index rrn_id_purchase_request_unique_idx on purchase_request (rrn_id);
 
 CREATE TABLE if not exists p_2_p_request
 (
@@ -388,6 +403,7 @@ CREATE TABLE if not exists p_2_p_request
     src_wallet_account_id  BIGINT NOT NULL REFERENCES wallet_account,
     dest_wallet_account_id BIGINT NOT NULL REFERENCES wallet_account
 );
+create unique index rrn_id_p_2_p_request_unique_idx on p_2_p_request (rrn_id);
 
 CREATE TABLE if not exists cash_in_request
 (
@@ -403,6 +419,8 @@ CREATE TABLE if not exists cash_in_request
     psp_request_time     TIMESTAMP WITHOUT TIME ZONE,
     psp_response_time    TIMESTAMP WITHOUT TIME ZONE
 );
+create unique index payment_id_cash_in_request_unique_idx on cash_in_request (ref_number);
+create unique index rrn_id_cash_in_request_unique_idx on cash_in_request (rrn_id);
 
 CREATE TABLE if not exists cash_in_history_request
 (
@@ -431,6 +449,8 @@ CREATE TABLE if not exists cash_in_special_request
     rrn_id            BIGINT NOT NULL REFERENCES rrn,
     additional_data   VARCHAR(500)
 );
+create unique index payment_id_cash_in_special_request_unique_idx on cash_in_special_request (ref_number);
+create unique index rrn_id_cash_in_special_request_unique_idx on cash_in_special_request (rrn_id);
 
 CREATE TABLE if not exists cash_out_request
 (
@@ -441,15 +461,16 @@ CREATE TABLE if not exists cash_out_request
     rrn_id            BIGINT NOT NULL REFERENCES rrn,
     additional_data   VARCHAR(500)
 );
+create unique index rrn_id_cash_out_request_unique_idx on cash_out_request (rrn_id);
 
-CREATE TABLE if not exists setting_general_custom
+CREATE TABLE if not exists limitation_general_custom
 (
     id                         BIGSERIAL PRIMARY KEY,
     created_by                 VARCHAR(200)                NOT NULL,
     updated_by                 VARCHAR(200),
     created_at                 TIMESTAMP WITHOUT TIME ZONE NOT NULL,
     updated_at                 TIMESTAMP WITHOUT TIME ZONE,
-    setting_general_id         BIGINT                      not null references setting_general,
+    limitation_general_id         BIGINT                      not null references limitation_general,
     wallet_level_id            BIGINT                      not null references wallet_level,
     channel_id                 BIGINT                      not null references channel,
     wallet_account_type_id     BIGINT                      not null references wallet_account_type,
@@ -485,6 +506,7 @@ CREATE TABLE if not exists transaction_part
     balance           bigint                      not null,
     description       varchar(200) default null,
     additional_data   varchar(300) default null,
+    rrn_id            bigint,
     primary key (id, wallet_account_id)
 ) PARTITION BY RANGE (wallet_account_id);
 
@@ -529,19 +551,23 @@ INSERT INTO setting_general(created_by, created_at, name, value, additional_data
 VALUES ('System', now(), 'MAX_REGISTER_EXPIRE_TIME_MINUTES', '5', 'حداکثر زمان مجاز ثبت نام')
 on conflict do nothing;
 
-INSERT INTO setting_general(created_by, created_at, name, value, additional_data)
+INSERT INTO limitation_general(created_by, created_at, name, value, additional_data)
 VALUES ('System', now(), 'ENABLE_CASH_IN', 'false', 'قابلیت شارژ حساب')
 on conflict do nothing;
 
-INSERT INTO setting_general(created_by, created_at, name, value, additional_data)
+INSERT INTO limitation_general(created_by, created_at, name, value, additional_data)
 VALUES ('System', now(), 'MIN_AMOUNT_CASH_IN', '1000', 'حداقل مبلغ شارژ کیف پول')
 on conflict do nothing;
 
-INSERT INTO setting_general(created_by, created_at, name, value, additional_data)
+INSERT INTO limitation_general(created_by, created_at, name, value, additional_data)
 VALUES ('System', now(), 'MAX_AMOUNT_CASH_IN', '1000000', 'حداکثر مبلغ شارژ کیف پول')
 on conflict do nothing;
 
-INSERT INTO setting_general(created_by, created_at, name, value, additional_data)
+INSERT INTO limitation_general(created_by, created_at, name, value, additional_data)
+VALUES ('System', now(), 'MAX_WALLET_AMOUNT_DAILY_CASH_IN', '10000000', 'حداکثر مبالغ شارژ کیف پول در روز')
+on conflict do nothing;
+
+INSERT INTO limitation_general(created_by, created_at, name, value, additional_data)
 VALUES ('System', now(), 'MAX_WALLET_BALANCE', '1000000', 'حداکثر مانده کیف پول')
 on conflict do nothing;
 

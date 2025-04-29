@@ -10,5 +10,6 @@ import java.util.List;
 @Repository
 public interface WalletTypeRepository extends CrudRepository<WalletTypeEntity, Long> {
    WalletTypeEntity findById(long id);
+   WalletTypeEntity findByName(String name);
    List<WalletTypeEntity> findAll();
 }

@@ -1,0 +1,193 @@
+package com.melli.wallet.service.impl;
+
+import com.melli.wallet.domain.dto.LimitationGeneralCustomDTO;
+import com.melli.wallet.domain.master.entity.*;
+import com.melli.wallet.domain.master.persistence.LimitationGeneralCustomRepository;
+import com.melli.wallet.exception.InternalServiceException;
+import com.melli.wallet.service.LimitationGeneralCustomService;
+import com.melli.wallet.service.LimitationGeneralService;
+import com.melli.wallet.service.SettingGeneralService;
+import com.melli.wallet.service.StatusService;
+import com.melli.wallet.util.StringUtils;
+import com.melli.wallet.utils.Helper;
+import jakarta.persistence.criteria.Predicate;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
+
+import java.util.*;
+
+/**
+ * Class Name: SettingGeneralCustomServiceImplementation
+ * Author: Mahdi Shirinabadi
+ * Date: 1/26/2025
+ */
+@Service
+@Log4j2
+@RequiredArgsConstructor
+public class LimitationGeneralCustomServiceImplementation implements LimitationGeneralCustomService {
+
+    private final LimitationGeneralCustomRepository limitationGeneralCustomRepository;
+    private final LimitationGeneralService limitationGeneralService;
+    private final Helper helper;
+    private final SettingGeneralService settingGeneralService;
+
+    @Override
+    public String getSetting(ChannelEntity channelEntity, String settingGeneralName, WalletLevelEntity walletLevelEntity, WalletAccountTypeEntity walletAccountTypeEntity, WalletAccountCurrencyEntity walletAccountCurrencyEntity, WalletTypeEntity walletTypeEntity) throws InternalServiceException {
+
+        LimitationGeneralEntity limitationGeneralEntity = limitationGeneralService.getSetting(settingGeneralName);
+
+
+        if (limitationGeneralEntity == null) {
+            log.error("limitationGeneralEntity with name ({}) not exist", settingGeneralName);
+            throw new InternalServiceException("limitationGeneralEntity with name not exist", StatusService.LIMITATION_NOT_FOUND, HttpStatus.OK);
+        }
+
+        LimitationGeneralCustomDTO limitationGeneralCustomDTO = LimitationGeneralCustomDTO.builder().
+                settingGeneralEntityId(String.valueOf(limitationGeneralEntity.getId()))
+                .channelEntityId(String.valueOf(channelEntity.getId()))
+                .walletLevelEntityId(String.valueOf(walletLevelEntity.getId()))
+                .walletAccountTypeEntityId(String.valueOf(walletAccountTypeEntity.getId()))
+                .walletAccountCurrencyEntityId(String.valueOf(walletAccountCurrencyEntity.getId()))
+                .walletTypeEntityId(String.valueOf(walletTypeEntity.getId()))
+                .build();
+
+        List<LimitationGeneralCustomEntity> settingGeneralCustomEntityList = getSetting(limitationGeneralCustomDTO);
+        if(CollectionUtils.isEmpty(settingGeneralCustomEntityList)){
+            log.info("settingGeneralCustomEntityList is empty and return general setting value for setting ({}) is ({})", settingGeneralName, limitationGeneralEntity.getValue());
+            return limitationGeneralEntity.getValue();
+        }else if(settingGeneralCustomEntityList.size() == 1){
+            log.info("settingGeneralCustomEntityList is exist and return value for setting ({}) is ({}), id for record table ({})", settingGeneralName, settingGeneralCustomEntityList.getFirst().getValue(), settingGeneralCustomEntityList.getFirst().getId());
+            return settingGeneralCustomEntityList.getFirst().getValue();
+        }else{
+            log.error("there are multi setting for parameter ({}) and count row ({})", limitationGeneralCustomDTO, settingGeneralCustomEntityList.size());
+            throw new InternalServiceException("customSetting is more than one record", StatusService.SETTING_MORE_THAN_ONE_RECORD, HttpStatus.OK);
+        }
+    }
+
+    //TODO test a lot
+    @Override
+    public void create(ChannelEntity channelEntity, String settingGeneralName, WalletLevelEntity walletLevelEntity, WalletAccountTypeEntity walletAccountTypeEntity, WalletAccountCurrencyEntity walletAccountCurrencyEntity, WalletTypeEntity walletTypeEntity, String value, String additionalData) throws InternalServiceException {
+
+        LimitationGeneralEntity limitationGeneralEntity = limitationGeneralService.getSetting(settingGeneralName);
+
+
+        if (limitationGeneralEntity == null) {
+            log.error("settingGeneralEntity with name ({}) not exist", settingGeneralName);
+            throw new InternalServiceException("settingGeneralEntity with name not exist", StatusService.SETTING_NOT_FOUND, HttpStatus.OK);
+        }
+
+        LimitationGeneralCustomDTO limitationGeneralCustomDTO = LimitationGeneralCustomDTO.builder().
+                settingGeneralEntityId(String.valueOf(limitationGeneralEntity.getId()))
+                .channelEntityId(String.valueOf(channelEntity.getId()))
+                .walletLevelEntityId(String.valueOf(walletLevelEntity.getId()))
+                .walletAccountTypeEntityId(String.valueOf(walletAccountTypeEntity.getId()))
+                .walletAccountCurrencyEntityId(String.valueOf(walletAccountCurrencyEntity.getId()))
+                .walletTypeEntityId(String.valueOf(walletTypeEntity.getId()))
+                .build();
+
+        List<LimitationGeneralCustomEntity> settingGeneralCustomEntityList = getSetting(limitationGeneralCustomDTO);
+
+        if(CollectionUtils.isEmpty(settingGeneralCustomEntityList)){
+            log.info("settingGeneralCustomEntityList is empty and generate setting value for setting ({}) is ({})", settingGeneralName, limitationGeneralEntity.getValue());
+            LimitationGeneralCustomEntity settingGeneralCustomEntity = new LimitationGeneralCustomEntity();
+            settingGeneralCustomEntity.setLimitationGeneralEntity(limitationGeneralEntity);
+            settingGeneralCustomEntity.setWalletLevelEntity(walletLevelEntity);
+            settingGeneralCustomEntity.setWalletAccountTypeEntity(walletAccountTypeEntity);
+            settingGeneralCustomEntity.setWalletAccountCurrencyEntity(walletAccountCurrencyEntity);
+            settingGeneralCustomEntity.setWalletTypeEntity(walletTypeEntity);
+            settingGeneralCustomEntity.setChannelEntity(channelEntity);
+            settingGeneralCustomEntity.setValue(value);
+            settingGeneralCustomEntity.setAdditionalData(additionalData);
+            settingGeneralCustomEntity.setCreatedBy(channelEntity.getUsername());
+            settingGeneralCustomEntity.setCreatedAt(new Date());
+            limitationGeneralCustomRepository.save(settingGeneralCustomEntity);
+        }else{
+            log.error("there are multi setting for parameter ({}) and count row ({})", limitationGeneralCustomDTO, settingGeneralCustomEntityList.size());
+            for(LimitationGeneralCustomEntity row: settingGeneralCustomEntityList){
+                row.setUpdatedAt(new Date());
+                row.setUpdatedBy(channelEntity.getUsername());
+                row.setEndTime(new Date());
+                limitationGeneralCustomRepository.save(row);
+            }
+
+            LimitationGeneralCustomEntity settingGeneralCustomEntity = new LimitationGeneralCustomEntity();
+            settingGeneralCustomEntity.setLimitationGeneralEntity(limitationGeneralEntity);
+            settingGeneralCustomEntity.setWalletLevelEntity(walletLevelEntity);
+            settingGeneralCustomEntity.setWalletAccountTypeEntity(walletAccountTypeEntity);
+            settingGeneralCustomEntity.setWalletAccountCurrencyEntity(walletAccountCurrencyEntity);
+            settingGeneralCustomEntity.setWalletTypeEntity(walletTypeEntity);
+            settingGeneralCustomEntity.setChannelEntity(channelEntity);
+            settingGeneralCustomEntity.setValue(value);
+            settingGeneralCustomEntity.setAdditionalData(additionalData);
+            settingGeneralCustomEntity.setCreatedBy(channelEntity.getUsername());
+            settingGeneralCustomEntity.setCreatedAt(new Date());
+            limitationGeneralCustomRepository.save(settingGeneralCustomEntity);
+
+        }
+    }
+
+    public List<LimitationGeneralCustomEntity> getSetting(LimitationGeneralCustomDTO limitationGeneralCustomDTO) {
+        Pageable pageRequest = helper.getPageableConfig(settingGeneralService, 0,2);
+        log.info("start find settingCustomDTO with data ({})", limitationGeneralCustomDTO);
+        List<LimitationGeneralCustomEntity> settingGeneralCustomEntityList = limitationGeneralCustomRepository.findAll(predict(limitationGeneralCustomDTO), pageRequest).getContent();
+        log.info("end find settingCustomDTO with data ({}) and countRecord ({})", limitationGeneralCustomDTO, settingGeneralCustomEntityList.size());
+        return settingGeneralCustomEntityList;
+    }
+
+
+    private Specification<LimitationGeneralCustomEntity> predict(LimitationGeneralCustomDTO limitationGeneralCustomDTO){
+
+        return (root, query, criteriaBuilder) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            predicates.add(criteriaBuilder.equal(root.get("limitationGeneralEntity").get("id"), limitationGeneralCustomDTO.getSettingGeneralEntityId()));
+            predicates.add(criteriaBuilder.isNull(root.get("endTime")));
+
+            if(StringUtils.hasText(limitationGeneralCustomDTO.getChannelEntityId())){
+                predicates.add(criteriaBuilder.equal(root.get("channelEntity").get("id"), limitationGeneralCustomDTO.getChannelEntityId()));
+            }else{
+                predicates.add(criteriaBuilder.isNull(root.get("channelEntity")));
+            }
+
+            if(StringUtils.hasText(limitationGeneralCustomDTO.getWalletLevelEntityId())){
+                predicates.add(criteriaBuilder.equal(root.get("walletLevelEntity").get("id"), limitationGeneralCustomDTO.getWalletLevelEntityId()));
+            }else{
+                predicates.add(criteriaBuilder.isNull(root.get("walletLevelEntity")));
+            }
+
+            if(StringUtils.hasText(limitationGeneralCustomDTO.getWalletAccountTypeEntityId())){
+                predicates.add(criteriaBuilder.equal(root.get("walletAccountTypeEntity").get("id"), limitationGeneralCustomDTO.getWalletAccountTypeEntityId()));
+            }else{
+                predicates.add(criteriaBuilder.isNull(root.get("walletAccountTypeEntity")));
+            }
+
+            if(StringUtils.hasText(limitationGeneralCustomDTO.getWalletAccountCurrencyEntityId())){
+                predicates.add(criteriaBuilder.equal(root.get("walletAccountCurrencyEntity").get("id"), limitationGeneralCustomDTO.getWalletAccountCurrencyEntityId()));
+            }else{
+                predicates.add(criteriaBuilder.isNull(root.get("walletAccountCurrencyEntity")));
+            }
+
+            if(StringUtils.hasText(limitationGeneralCustomDTO.getWalletTypeEntityId())){
+                predicates.add(criteriaBuilder.equal(root.get("walletTypeEntity").get("id"), limitationGeneralCustomDTO.getWalletTypeEntityId()));
+            }else{
+                predicates.add(criteriaBuilder.isNull(root.get("walletTypeEntity")));
+            }
+
+
+            query.orderBy(criteriaBuilder.desc(root.get("id")));
+
+
+            return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
+        };
+    }
+
+    @Override
+    public List<LimitationGeneralCustomEntity> getSetting(LimitationGeneralEntity limitationGeneralEntity) {
+        return limitationGeneralCustomRepository.findByLimitationGeneralEntityAndEndTimeIsNull(limitationGeneralEntity);
+    }
+}

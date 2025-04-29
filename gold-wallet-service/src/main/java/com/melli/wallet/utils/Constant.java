@@ -15,4 +15,5 @@ public class Constant {
     public static final String WALLET_TEMPLATE = "wallet_template";
     public static final String WALLET_MERCHANT = "wallet_merchant";
     public static final String WALLET_REQUEST_TYPE = "wallet_request_type";
+    public static final String WALLET_GENERAL_LIMITATION = "wallet_general_limitation";
 }

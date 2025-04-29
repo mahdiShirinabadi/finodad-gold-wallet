@@ -12,12 +12,12 @@ import java.util.Date;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-@Table(name = "setting_general_custom")
-public class SettingGeneralCustomEntity extends BaseEntityAudit implements Serializable {
+@Table(name = "limitation_general_custom")
+public class LimitationGeneralCustomEntity extends BaseEntityAudit implements Serializable {
 
 	@ManyToOne(fetch = FetchType.EAGER)
-	@JoinColumn(name = "setting_general_id", nullable = false)
-	private SettingGeneralEntity settingGeneralEntity;
+	@JoinColumn(name = "limitation_general_id", nullable = false)
+	private LimitationGeneralEntity limitationGeneralEntity;
 
 	@ManyToOne(fetch = FetchType.EAGER)
 	@JoinColumn(name = "wallet_level_id", nullable = true)

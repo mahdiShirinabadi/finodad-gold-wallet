@@ -1,6 +1,8 @@
 package com.melli.wallet.service.impl;
 
 import com.melli.wallet.domain.master.entity.*;
+import com.melli.wallet.domain.master.persistence.RefnumberRepository;
+import com.melli.wallet.domain.redis.RefNumberRedis;
 import com.melli.wallet.domain.response.cash.CashInResponse;
 import com.melli.wallet.domain.response.cash.CashInTrackResponse;
 import com.melli.wallet.exception.InternalServiceException;
@@ -10,6 +12,8 @@ import com.melli.wallet.utils.Helper;
 import com.melli.wallet.utils.RedisLockService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.http.HttpStatus;
+import org.springframework.integration.redis.util.RedisLockRegistry;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,6 +22,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Lock;
 
 /**
  * Class Name: CashServiceImplementation
@@ -44,23 +50,48 @@ public class CashServiceImplementation implements CashService {
     private final TransactionService transactionService;
     private final MessageResolverService messageResolverService;
     private final StatusService statusService;
+    private final RefnumberRepository refnumberRepository;
+    private final RedisLockRegistry redisLockRegistry;
 
 
     @Override
     @Transactional(propagation = Propagation.REQUIRED, rollbackFor = Exception.class)
     public CashInResponse cashIn(ChannelEntity channelEntity, String nationalCode, String uniqueIdentifier, String amount, String refNumber, String signData, String dataForCheckInVerify, String accountNumber, String additionalData, String ip) throws InternalServiceException {
         RrnEntity rrnEntity = rrnService.findByUid(uniqueIdentifier);
+        securityService.checkSign(channelEntity, signData, dataForCheckInVerify);
 
-        return redisLockService.runAfterLock(uniqueIdentifier, this.getClass(), ()->{
-            log.info("cashIn: Start checking uniqueness of traceId({}) ...", rrnEntity.getId());
-            requestService.checkTraceIdIsUnique(rrnEntity.getId(), new CashInRequestEntity());
-            log.info("cashIn: Checking uniqueness of traceId({}), is finished.", rrnEntity.getId());
-
-            securityService.checkSign(channelEntity, signData, dataForCheckInVerify);
-
+        return redisLockService.runAfterLock(uniqueIdentifier, this.getClass(), () -> {
             log.info("start checking existence of traceId({}) ...", uniqueIdentifier);
             rrnService.checkRrn(uniqueIdentifier, channelEntity);
             log.info("finish checking existence of traceId({})", uniqueIdentifier);
+
+            Lock refNumberLock = redisLockRegistry.obtain(refNumber);
+            boolean lockSuccess = false;
+            try {
+                lockSuccess = refNumberLock.tryLock(5, TimeUnit.SECONDS);
+                if (!lockSuccess) {
+                    log.error("Failed to acquire lock for ref_number: {}", refNumber);
+                    throw new InternalServiceException("Unable to acquire lock for ref_number", StatusService.GENERAL_ERROR, HttpStatus.OK);
+                }
+
+                Optional<RefNumberRedis> refnumberCheck = refnumberRepository.findById(refNumber);
+                if (refnumberCheck.isPresent()) {
+                    log.error("ref number ({}) is duplicated", refNumber);
+                    throw new InternalServiceException("rer number is duplicate", StatusService.REF_NUMBER_USED_BEFORE, HttpStatus.OK);
+                } else {
+                    RefNumberRedis refNumberRedis = new RefNumberRedis();
+                    refNumberRedis.setId(refNumber);
+                    refnumberRepository.save(refNumberRedis);
+                }
+
+            } catch (Exception ex) {
+                log.error("ref number ({}) is duplicated or system can not be lock", refNumber);
+                throw new InternalServiceException("ref number is duplicate", StatusService.REF_NUMBER_USED_BEFORE, HttpStatus.OK);
+            } finally {
+                if (lockSuccess) {
+                    refNumberLock.unlock();
+                }
+            }
 
             requestService.findSuccessCashInByRefNumber(refNumber);
 
@@ -80,8 +111,14 @@ public class CashServiceImplementation implements CashService {
             cashInRequestEntity.setRequestTypeEntity(requestTypeService.getRequestType(RequestTypeService.CASH_IN));
             cashInRequestEntity.setCreatedBy(channelEntity.getUsername());
             cashInRequestEntity.setCreatedAt(new Date());
-            requestService.save(cashInRequestEntity);
             cashInRequestEntity.setRefNumber(refNumber);
+            try {
+                requestService.save(cashInRequestEntity);
+            } catch (Exception ex) {
+                refnumberRepository.deleteById(refNumber);
+                log.error("error in save cashIn with message ({})", ex.getMessage());
+                throw new InternalServiceException("error in save cashIn", StatusService.GENERAL_ERROR, HttpStatus.OK);
+            }
             cashInRequestEntity.setResult(StatusService.SUCCESSFUL);
             cashInRequestEntity.setAdditionalData(additionalData);
 

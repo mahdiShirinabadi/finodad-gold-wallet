@@ -12,7 +12,7 @@ import com.melli.wallet.exception.InternalServiceException;
  */
 
 public interface PurchaseService {
-    PurchaseResponse buy(ChannelEntity channel, String uniqueIdentifier, String amount, String price, String walletAccountNumber, String signData, String dataForCheckInVerify, String additionalData, String merchantId, String nationalCode, String commission, String currency, String ip) throws InternalServiceException;
-    PurchaseResponse sell(ChannelEntity channel, String uniqueIdentifier, String amount, String price, String walletAccountNumber, String signData, String dataForCheckInVerify, String additionalData, String merchantId, String nationalCode, String commission, String currency, String ip) throws InternalServiceException;
+    PurchaseResponse buy(ChannelEntity channel, String uniqueIdentifier, String amount, String price, String walletAccountNumber, String signData, String dataForCheckInVerify, String additionalData, String merchantId, String nationalCode, String commission, String currency, String ip, String commissionCurrency) throws InternalServiceException;
+    PurchaseResponse sell(ChannelEntity channel, String uniqueIdentifier, String amount, String price, String walletAccountNumber, String signData, String dataForCheckInVerify, String additionalData, String merchantId, String nationalCode, String commission, String currency, String ip, String commissionCurrency) throws InternalServiceException;
     PurchaseTrackResponse purchaseTrack(ChannelEntity channel, String uniqueIdentifier, String channelIp) throws InternalServiceException;
 }

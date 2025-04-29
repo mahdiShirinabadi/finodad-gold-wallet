@@ -13,6 +13,8 @@ public interface ResourceService {
     String CASH_IN = "CASH_IN";
     String BUY = "BUY";
     String SELL = "SELL";
+    String SETTING_LIST = "SETTING_LIST";
+    String LIMITATION_LIST = "LIMITATION_LIST";
 
     ResourceEntity getRequestType(String name);
 

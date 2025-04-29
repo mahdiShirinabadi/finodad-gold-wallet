@@ -10,8 +10,8 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface SettingGeneralCustomRepository extends CrudRepository<SettingGeneralCustomEntity, Long> {
+public interface LimitationGeneralCustomRepository extends CrudRepository<LimitationGeneralCustomEntity, Long> {
 
-    List<SettingGeneralCustomEntity> findBySettingGeneralEntityAndEndTimeIsNull(SettingGeneralEntity settingGeneralEntity);
-    Page<SettingGeneralCustomEntity> findAll(Specification<SettingGeneralCustomEntity> spec, Pageable pageable);
+    List<LimitationGeneralCustomEntity> findByLimitationGeneralEntityAndEndTimeIsNull(LimitationGeneralEntity limitationGeneralEntity);
+    Page<LimitationGeneralCustomEntity> findAll(Specification<LimitationGeneralCustomEntity> spec, Pageable pageable);
 }

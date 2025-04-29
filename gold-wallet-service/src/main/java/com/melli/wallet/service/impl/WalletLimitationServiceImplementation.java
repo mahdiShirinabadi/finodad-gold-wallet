@@ -29,7 +29,7 @@ import java.util.Date;
 public class WalletLimitationServiceImplementation implements WalletLimitationService {
 
     private final SettingGeneralService settingGeneralService;
-    private final SettingGeneralCustomService settingGeneralCustomService;
+    private final LimitationGeneralCustomService limitationGeneralCustomService;
     private final WalletLimitationRepository walletLimitationRepository;
     private final WalletMonthlyLimitationRepository walletMonthlyLimitationRepository;
     private final WalletAccountService walletAccountService;
@@ -38,10 +38,6 @@ public class WalletLimitationServiceImplementation implements WalletLimitationSe
 
     private WalletLimitationRedis findById(String id) {
         return walletLimitationRepository.findById(id).orElse(null);
-    }
-
-    private WalletMonthlyLimitationRedis findMonthlyById(String id) {
-        return walletMonthlyLimitationRepository.findById(id).orElse(null);
     }
 
     @Override
@@ -66,28 +62,22 @@ public class WalletLimitationServiceImplementation implements WalletLimitationSe
     public void checkCashInLimitation(ChannelEntity channel, WalletEntity wallet, long amount, WalletAccountEntity walletAccount) throws InternalServiceException {
         log.info("checking CashInLimitation for nationalCode({}) ...", wallet.getNationalCode());
 
-        WalletLevelEntity walletLevelEntity = wallet.getWalletLEvelEntity();
+        WalletLevelEntity walletLevelEntity = wallet.getWalletLevelEntity();
         WalletAccountTypeEntity walletAccountTypeEntity = walletAccount.getWalletAccountTypeEntity();
         WalletAccountCurrencyEntity walletAccountCurrencyEntity = walletAccount.getWalletAccountCurrencyEntity();
         WalletTypeEntity walletTypeEntity = wallet.getWalletTypeEntity();
 
-        Boolean enableCashIn = Boolean.parseBoolean(settingGeneralCustomService.getSetting(channel, SettingGeneralService.ENABLE_CASH_IN, walletLevelEntity, walletAccountTypeEntity, walletAccountCurrencyEntity, walletTypeEntity));
+        Boolean enableCashIn = Boolean.parseBoolean(limitationGeneralCustomService.getSetting(channel, LimitationGeneralService.ENABLE_CASH_IN, walletLevelEntity, walletAccountTypeEntity, walletAccountCurrencyEntity, walletTypeEntity));
 
         if (Boolean.FALSE.equals(enableCashIn)) {
             log.error("checkCashInLimitation: cash in for channel {}, walletAccountCurrencyEntity ({}) and walletAccountTypeEntity ({}) walletTypeEntity ({}) is not permission !!!", channel, walletAccountCurrencyEntity.getName(), walletAccountTypeEntity.getName(), walletTypeEntity.getName());
             throw new InternalServiceException("account (" + walletAccount.getAccountNumber() + ") dont permission to cashIn", StatusService.ACCOUNT_DONT_PERMISSION_FOR_CASH_IN, HttpStatus.OK);
         }
 
-        BigDecimal minAmount = new BigDecimal(settingGeneralCustomService.getSetting(channel, SettingGeneralService.MIN_AMOUNT_CASH_IN, walletLevelEntity, walletAccountTypeEntity, walletAccountCurrencyEntity, walletTypeEntity));
-        BigDecimal maxAmount = new BigDecimal(settingGeneralCustomService.getSetting(channel, SettingGeneralService.MAX_AMOUNT_CASH_IN, walletLevelEntity, walletAccountTypeEntity, walletAccountCurrencyEntity, walletTypeEntity));
-
-        BigDecimal maxBalance;
-        BigDecimal maxCashInDaily;
-
-
-        log.info("checking CashInLimitation in second level for wallet({}) ...", wallet.getMobile());
-        maxBalance = new BigDecimal(settingGeneralCustomService.getSetting(channel, SettingGeneralService.MAX_WALLET_BALANCE, walletLevelEntity, walletAccountTypeEntity, walletAccountCurrencyEntity, walletTypeEntity));
-        maxCashInDaily = maxBalance;
+        BigDecimal minAmount = new BigDecimal(limitationGeneralCustomService.getSetting(channel, LimitationGeneralService.MIN_AMOUNT_CASH_IN, walletLevelEntity, walletAccountTypeEntity, walletAccountCurrencyEntity, walletTypeEntity));
+        BigDecimal maxAmount = new BigDecimal(limitationGeneralCustomService.getSetting(channel, LimitationGeneralService.MAX_AMOUNT_CASH_IN, walletLevelEntity, walletAccountTypeEntity, walletAccountCurrencyEntity, walletTypeEntity));
+        BigDecimal maxBalance = new BigDecimal(limitationGeneralCustomService.getSetting(channel, LimitationGeneralService.MAX_WALLET_BALANCE, walletLevelEntity, walletAccountTypeEntity, walletAccountCurrencyEntity, walletTypeEntity));
+        BigDecimal maxCashInDaily = new BigDecimal(limitationGeneralCustomService.getSetting(channel, LimitationGeneralService.MAX_WALLET_AMOUNT_DAILY_CASH_IN, walletLevelEntity, walletAccountTypeEntity, walletAccountCurrencyEntity, walletTypeEntity));
 
 
         String key = walletAccount.getAccountNumber();
@@ -95,23 +85,23 @@ public class WalletLimitationServiceImplementation implements WalletLimitationSe
         redisLockService.runAfterLock(key, this.getClass(), () -> {
 
             if(amount > maxAmount.longValue()){
-                log.error("checkCashInLimitation: CashIn's amount({}) for wallet({}), is bigger than maxCashIn({}) !!!", amount, wallet.getMobile(), maxAmount);
+                log.error("checkCashInLimitation: CashIn's amount({}) for wallet({}), is bigger than maxCashIn({}) !!!", amount, wallet.getNationalCode(), maxAmount);
                 throw new InternalServiceException("CashIn's amount is bigger than minCashIn", StatusService.AMOUNT_BIGGER_THAN_MAX, HttpStatus.OK);
             }
 
             if (amount < minAmount.longValue()) {
-                log.error("checkCashInLimitation: CashIn's amount({}) for wallet({}), is less than minCashIn({}) !!!", amount, wallet.getMobile(), minAmount);
+                log.error("checkCashInLimitation: CashIn's amount({}) for wallet({}), is less than minCashIn({}) !!!", amount, wallet.getNationalCode(), minAmount);
                 throw new InternalServiceException("CashIn's amount is less than minCashIn", StatusService.AMOUNT_LESS_THAN_MIN, HttpStatus.OK);
             }
 
             long balance = walletAccountService.getBalance(walletAccount.getId());
 
             if (balance + amount > maxBalance.longValue()) {
-                log.error("cashIn's amount({}) for wallet({}) with balance ({}), is more than maxBalance({}) !!!", amount, wallet.getMobile(), balance, maxBalance.longValue());
+                log.error("cashIn's amount({}) for wallet({}) with balance ({}), is more than maxBalance({}) !!!", amount, wallet.getNationalCode(), balance, maxBalance.longValue());
                 throw new InternalServiceException("cashIn's amount is more than maxBalance", StatusService.BALANCE_MORE_THAN_STANDARD, HttpStatus.OK);
             }
 
-            log.info("Start checking daily cashIn limitation for wallet({}) ...", wallet.getMobile());
+            log.info("Start checking daily cashIn limitation for wallet({}) ...", wallet.getNationalCode());
 
             String currentDate = DateUtils.getLocaleDate(DateUtils.ENGLISH_LOCALE, new Date(), "MMdd", false);
             String walletLimitationId = walletAccount.getId() + "-" + currentDate;
@@ -119,13 +109,14 @@ public class WalletLimitationServiceImplementation implements WalletLimitationSe
             WalletLimitationRedis walletLimitation = findById(walletLimitationId);
 
             if (walletLimitation == null) {
+                log.info("wallet with nationalCode ({}) dont have any cashIn in date({})", wallet.getNationalCode(), currentDate);
                 return null;
             }
 
-            log.info("SumCashInAmount for wallet({}) in date: ({}) is: {}", wallet.getMobile(), currentDate, walletLimitation.getCashInDailyAmount());
+            log.info("SumCashInAmount for wallet({}) in date: ({}) is: {}", wallet.getNationalCode(), currentDate, walletLimitation.getCashInDailyAmount());
 
             if ((walletLimitation.getCashInDailyAmount() + amount) > maxCashInDaily.longValue()) {
-                log.error("wallet({}) on channel ({}) , exceeded amount limitation in cashIn!!! SumCashInAmount is: {}", wallet.getMobile(), wallet.getOwner().getId(), walletLimitation.getCashInDailyAmount());
+                log.error("wallet({}) on channel ({}) , exceeded amount limitation in cashIn!!! SumCashInAmount is: {}", wallet.getNationalCode(), wallet.getOwner().getId(), walletLimitation.getCashInDailyAmount());
                 throw new InternalServiceException("wallet exceeded the limitation !!!", StatusService.WALLET_EXCEEDED_AMOUNT_LIMITATION, HttpStatus.OK);
             }
             return null;
@@ -171,7 +162,6 @@ public class WalletLimitationServiceImplementation implements WalletLimitationSe
                 walletLimitation.setId(walletLimitationId);
                 walletLimitation.setCashInDailyCount(1);
                 walletLimitation.setCashInDailyAmount(amount);
-
             } else {
                 walletLimitation.setCashInDailyCount(walletLimitation.getCashInDailyCount() + 1);
                 walletLimitation.setCashInDailyAmount(walletLimitation.getCashInDailyAmount() + amount);

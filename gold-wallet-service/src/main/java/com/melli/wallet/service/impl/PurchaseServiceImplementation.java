@@ -51,7 +51,7 @@ public class PurchaseServiceImplementation implements PurchaseService {
     public PurchaseResponse sell(ChannelEntity channel, String uniqueIdentifier, String amount, String price,
                                  String walletAccountNumber, String signData, String dataForCheckInVerify,
                                  String additionalData, String merchantId,
-                                 String nationalCode, String commission, String currency, String ip) throws InternalServiceException {
+                                 String nationalCode, String commission, String currency, String ip, String commissionCurrency) throws InternalServiceException {
 // Validate and retrieve currencies
         WalletAccountCurrencyEntity currencyEntity = walletAccountCurrencyService.findCurrency(currency);
         WalletAccountCurrencyEntity rialCurrencyEntity = walletAccountCurrencyService.findCurrency(WalletAccountCurrencyService.RIAL);
@@ -100,7 +100,7 @@ public class PurchaseServiceImplementation implements PurchaseService {
     @Override
     @Transactional(propagation = Propagation.REQUIRED, rollbackFor = Exception.class)
     public PurchaseResponse buy(ChannelEntity channel, String uniqueIdentifier, String amount, String price, String walletAccountNumber,
-                                String signData, String dataForCheckInVerify, String additionalData, String merchantId, String nationalCode, String commission, String currency, String ip) throws InternalServiceException {
+                                String signData, String dataForCheckInVerify, String additionalData, String merchantId, String nationalCode, String commission, String currency, String ip, String commissionCurrency) throws InternalServiceException {
         // Validate and retrieve currencies
         WalletAccountCurrencyEntity currencyEntity = walletAccountCurrencyService.findCurrency(currency);
         WalletAccountCurrencyEntity rialCurrencyEntity = walletAccountCurrencyService.findCurrency(WalletAccountCurrencyService.RIAL);

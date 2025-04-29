@@ -9,6 +9,7 @@ import com.melli.wallet.domain.response.base.BaseResponse;
 import com.melli.wallet.domain.response.cash.CashInResponse;
 import com.melli.wallet.domain.response.cash.CashInTrackResponse;
 import com.melli.wallet.domain.response.login.LoginResponse;
+import com.melli.wallet.domain.response.purchase.PurchaseResponse;
 import com.melli.wallet.domain.response.wallet.CreateWalletResponse;
 import com.melli.wallet.domain.response.wallet.WalletAccountObject;
 import com.melli.wallet.service.*;
@@ -23,6 +24,7 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -44,6 +46,9 @@ public class WalletEndPointTest extends WalletApplicationTests {
     private static final String DEACTIVATED_WALLET_PATH = "/api/v1/wallet/deactivate";
     private static final String DELETE_WALLET_PATH = "/api/v1/wallet/delete";
     private static final String GENERATE_UUID_PATH = "/api/v1/general/generate/uuid";
+    private static final String BUY_IN_PATH = "/api/v1/purchase/buy";
+    private static final String CELL_IN_PATH = "/api/v1/purchase/cell";
+    private static final String PURCHASE_INQUIRY_IN_PATH = "/api/v1/purchase/inquiry";
     private static final String CASH_IN_PATH = "/api/v1/cash/cashIn";
     private static final String CASH_IN_INQUIRY_PATH = "/api/v1/cash/track/cashIn/";
 
@@ -65,7 +70,7 @@ public class WalletEndPointTest extends WalletApplicationTests {
     @Autowired
     private WalletTypeService walletTypeService;
     @Autowired
-    private SettingGeneralCustomService settingGeneralCustomService;
+    private LimitationGeneralCustomService limitationGeneralCustomService;
     @Autowired
     private SettingGeneralService settingGeneralService;
 
@@ -140,57 +145,108 @@ public class WalletEndPointTest extends WalletApplicationTests {
 
     @Test
     @Order(26)
-    @DisplayName("cashIn success")
+    @DisplayName("cashInFailNotPermission")
     void cashInFailNotPermission() throws Exception {
         String refNumber = "123456";
         String amount = "1000000";
-
-        log.info("start get wallet data ...");
-        BaseResponse<CreateWalletResponse> createWalletResponseBaseResponse = balance(ACCESS_TOKEN, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusService.SUCCESSFUL, true);
-        List<WalletAccountObject> walletAccountObjectList = createWalletResponseBaseResponse.getData().getWalletAccountObjectList();
-        Optional<WalletAccountObject> walletAccountObject = walletAccountObjectList.stream().filter(x -> x.getWalletAccountTypeObject().getName().equalsIgnoreCase(WalletAccountTypeService.NORMAL) && x.getWalletAccountCurrencyObject().getName().equalsIgnoreCase(WalletAccountCurrencyService.RIAL)).findFirst();
-        if (walletAccountObject.isEmpty()) {
-            log.error("wallet account rial not found for nationalCode ({})", NATIONAL_CODE_CORRECT);
-            throw new Exception("wallet account rial not found for nationalCode ({})");
-        }
-
-        log.info("start get unique identifier for nationalCode ({})", NATIONAL_CODE_CORRECT);
-        BaseResponse<UuidResponse> responseUuid = generateUniqueIdentifier(ACCESS_TOKEN, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusService.SUCCESSFUL, true);
-        log.info("start get account number for nationalCode ({})", NATIONAL_CODE_CORRECT);
-        String uuid = responseUuid.getData().getUniqueIdentifier();
+        Optional<WalletAccountObject> walletAccountObjectOptional = getAccountNumber(NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.RIAL);
+        String uuid = generateUuid(NATIONAL_CODE_CORRECT);
         log.info("start get balance test");
-        cashIn(ACCESS_TOKEN, uuid, refNumber, amount, NATIONAL_CODE_CORRECT, walletAccountObject.get().getAccountNumber(), "", "", HttpStatus.OK, StatusService.ACCOUNT_DONT_PERMISSION_FOR_CASH_IN, false);
+        cashIn(ACCESS_TOKEN, uuid, refNumber, amount, NATIONAL_CODE_CORRECT, walletAccountObjectOptional.get().getAccountNumber(), "", "", HttpStatus.OK, StatusService.ACCOUNT_DONT_PERMISSION_FOR_CASH_IN, false);
+    }
+
+
+    //cashInFail minAmount
+    @Test
+    @Order(28)
+    @DisplayName("cashInFail-min amount")
+    void cashInFailMinAmount() throws Exception {
+        String refNumber = "123456";
+        String amount = "1000";
+        Optional<WalletAccountObject> walletAccountObjectOptional = getAccountNumber(NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.RIAL);
+        String uuid = generateUuid(NATIONAL_CODE_CORRECT);
+        log.info("start get balance test");
+        cashIn(ACCESS_TOKEN, uuid, refNumber, amount, NATIONAL_CODE_CORRECT, walletAccountObjectOptional.get().getAccountNumber(), "", "", HttpStatus.OK, StatusService.AMOUNT_LESS_THAN_MIN, false);
+    }
+
+    //cashInFail MaxAmount
+    @Test
+    @Order(29)
+    @DisplayName("cashInFail-max amount")
+    void cashInFailMaxAmount() throws Exception {
+        String refNumber = "123456";
+        String amount = "1000000";
+
+        Optional<WalletAccountObject> walletAccountObjectOptional = getAccountNumber(NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.RIAL);
+        String uuid = generateUuid(NATIONAL_CODE_CORRECT);
+        log.info("start get balance test");
+        cashIn(ACCESS_TOKEN, uuid, refNumber, amount, NATIONAL_CODE_CORRECT, walletAccountObjectOptional.get().getAccountNumber(), "", "", HttpStatus.OK, StatusService.AMOUNT_BIGGER_THAN_MAX, false);
+    }
+
+    //cashInFail MaxBalance
+    @Test
+    @Order(30)
+    @DisplayName("cashInFail-max balance")
+    void cashInFailMaxBalance() throws Exception {
+        String refNumber = new Date().getTime() + "";
+        String amount = "1000000";
+        Optional<WalletAccountObject> walletAccountObjectOptional = getAccountNumber(NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.RIAL);
+        String uuid = generateUuid(NATIONAL_CODE_CORRECT);
+        log.info("start get balance test");
+        cashIn(ACCESS_TOKEN, uuid, refNumber, amount, NATIONAL_CODE_CORRECT, walletAccountObjectOptional.get().getAccountNumber(), "", "", HttpStatus.OK, StatusService.BALANCE_MORE_THAN_STANDARD, false);
+    }
+
+    //CashInFail MaxBalanceDaily
+    @Test
+    @Order(31)
+    @DisplayName("cashInFail-max balance daily")
+    void cashInFailMaxBalanceDaily() throws Exception {
+        String refNumber = new Date().getTime() + "";
+        String amount = "1000000";
+        Optional<WalletAccountObject> walletAccountObjectOptional = getAccountNumber(NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.RIAL);
+        String uuid = generateUuid(NATIONAL_CODE_CORRECT);
+        cashIn(ACCESS_TOKEN, uuid, refNumber, amount, NATIONAL_CODE_CORRECT, walletAccountObjectOptional.get().getAccountNumber(), "", "", HttpStatus.OK, StatusService.WALLET_EXCEEDED_AMOUNT_LIMITATION, false);
+    }
+
+
+    //duplicate refnumber
+    @Test
+    @Order(32)
+    @DisplayName("cashInFail-duplicate refNumber")
+    void cashInFailDuplicateRefnumber() throws Exception {
+        String refNumber = new Date().getTime() + "";
+        String amount = "1000000";
+        Optional<WalletAccountObject> walletAccountObjectOptional = getAccountNumber(NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.RIAL);
+        String uuid1 = generateUuid(NATIONAL_CODE_CORRECT);
+        String uuid2 = generateUuid(NATIONAL_CODE_CORRECT);
+        cashIn(ACCESS_TOKEN, uuid1, refNumber, amount, NATIONAL_CODE_CORRECT, walletAccountObjectOptional.get().getAccountNumber(), "", "", HttpStatus.OK, StatusService.SUCCESSFUL, true);
+        cashIn(ACCESS_TOKEN, uuid2, refNumber, amount, NATIONAL_CODE_CORRECT, walletAccountObjectOptional.get().getAccountNumber(), "", "", HttpStatus.OK, StatusService.REF_NUMBER_USED_BEFORE, false);
+    }
+
+    //duplicate refnumber
+    @Test
+    @Order(32)
+    @DisplayName("cashInFail-duplicate rrn")
+    void cashInFailDuplicateRrn() throws Exception {
+        String refNumber = new Date().getTime() + "";
+        String amount = "1000000";
+        Optional<WalletAccountObject> walletAccountObjectOptional = getAccountNumber(NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.RIAL);
+        String uuid = generateUuid(NATIONAL_CODE_CORRECT);
+        cashIn(ACCESS_TOKEN, uuid, refNumber, amount, NATIONAL_CODE_CORRECT, walletAccountObjectOptional.get().getAccountNumber(), "", "", HttpStatus.OK, StatusService.WALLET_EXCEEDED_AMOUNT_LIMITATION, false);
     }
 
     @Test
-    @Order(27)
+    @Order(40)
     @DisplayName("cashIn success")
     void cashInSuccess() throws Exception {
         String refNumber = "123456";
         String amount = "1000000";
-
-        log.info("start get wallet data ...");
-        BaseResponse<CreateWalletResponse> createWalletResponseBaseResponse = balance(ACCESS_TOKEN, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusService.SUCCESSFUL, true);
-        List<WalletAccountObject> walletAccountObjectList = createWalletResponseBaseResponse.getData().getWalletAccountObjectList();
-        Optional<WalletAccountObject> walletAccountObject = walletAccountObjectList.stream().filter(x -> x.getWalletAccountTypeObject().getName().equalsIgnoreCase(WalletAccountTypeService.NORMAL) && x.getWalletAccountCurrencyObject().getName().equalsIgnoreCase(WalletAccountCurrencyService.RIAL)).findFirst();
-        if (walletAccountObject.isEmpty()) {
-            log.error("wallet account rial not found for nationalCode ({})", NATIONAL_CODE_CORRECT);
-            throw new Exception("wallet account rial not found for nationalCode ({})");
-        }
-
-        log.info("start get unique identifier for nationalCode ({})", NATIONAL_CODE_CORRECT);
-        BaseResponse<UuidResponse> responseUuid = generateUniqueIdentifier(ACCESS_TOKEN, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusService.SUCCESSFUL, true);
-        log.info("start get account number for nationalCode ({})", NATIONAL_CODE_CORRECT);
-        String uuid = responseUuid.getData().getUniqueIdentifier();
+        Optional<WalletAccountObject> walletAccountObjectOptional = getAccountNumber(NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.RIAL);
+        String uuid = generateUuid(NATIONAL_CODE_CORRECT);
         log.info("start get balance test");
-        cashIn(ACCESS_TOKEN, uuid, refNumber, amount, NATIONAL_CODE_CORRECT, walletAccountObject.get().getAccountNumber(), "", "", HttpStatus.OK, StatusService.ACCOUNT_DONT_PERMISSION_FOR_CASH_IN, false);
+        cashIn(ACCESS_TOKEN, uuid, refNumber, amount, NATIONAL_CODE_CORRECT, walletAccountObjectOptional.get().getAccountNumber(), "", "", HttpStatus.OK, StatusService.SUCCESSFUL, true);
     }
 
-    private void changeGeneralSetting(String settingName) {
-        SettingGeneralEntity settingGeneralEntity = settingGeneralService.getSetting(settingName);
-        SettingGeneralCustomEntity settingGeneralCustomEntity = settingGeneralCustomService.getSetting(settingGeneralEntity);
-
-    }
 
     BaseResponse<CreateWalletResponse> balance(String token, String nationalCode, HttpStatus httpStatus, int errorCode, boolean success) throws Exception {
         MockHttpServletRequestBuilder postRequest = buildGetRequest(token, GET_DATA_WALLET_PATH + "/" + nationalCode);
@@ -200,6 +256,27 @@ public class WalletEndPointTest extends WalletApplicationTests {
         return objectMapper.readValue(response, typeReference);
     }
 
+    private Optional<WalletAccountObject> getAccountNumber(String nationalCode, String walletAccountType, String walletAccountCurrency) throws Exception {
+        log.info("start get wallet data ...");
+        BaseResponse<CreateWalletResponse> createWalletResponseBaseResponse = balance(ACCESS_TOKEN, nationalCode, HttpStatus.OK, StatusService.SUCCESSFUL, true);
+        List<WalletAccountObject> walletAccountObjectList = createWalletResponseBaseResponse.getData().getWalletAccountObjectList();
+        Optional<WalletAccountObject> walletAccountObjectOptional = walletAccountObjectList.stream().filter(x -> x.getWalletAccountTypeObject().getName().equalsIgnoreCase(walletAccountType)
+                        && x.getWalletAccountCurrencyObject().getName().equalsIgnoreCase(walletAccountCurrency))
+                .findFirst();
+        if (walletAccountObjectOptional.isEmpty()) {
+            log.error("wallet account rial not found for nationalCode ({})", NATIONAL_CODE_CORRECT);
+            throw new Exception("wallet account rial not found for nationalCode ({})");
+        }
+        return walletAccountObjectOptional;
+    }
+
+    private String generateUuid(String nationalCode) throws Exception {
+        log.info("start get unique identifier for nationalCode ({})", nationalCode);
+        BaseResponse<UuidResponse> responseUuid = generateUniqueIdentifier(ACCESS_TOKEN, nationalCode, HttpStatus.OK, StatusService.SUCCESSFUL, true);
+        log.info("start get account number for nationalCode ({})", nationalCode);
+        return responseUuid.getData().getUniqueIdentifier();
+    }
+
 
     BaseResponse<CreateWalletResponse> createWallet(String token, String nationalCode, String mobile, HttpStatus httpStatus, int errorCode, boolean success) throws Exception {
         CreateWalletRequestJson createWalletRequestJson = new CreateWalletRequestJson();
@@ -207,8 +284,7 @@ public class WalletEndPointTest extends WalletApplicationTests {
         createWalletRequestJson.setNationalCode(nationalCode);
         MockHttpServletRequestBuilder postRequest = buildPostRequest(token, CREATE_WALLET_PATH, mapToJson(createWalletRequestJson));
         String response = performTest(mockMvc, postRequest, httpStatus, success, errorCode);
-        TypeReference<BaseResponse<CreateWalletResponse>> typeReference = new TypeReference<>() {
-        };
+        TypeReference<BaseResponse<CreateWalletResponse>> typeReference = new TypeReference<>() {};
         return objectMapper.readValue(response, typeReference);
     }
 
@@ -217,8 +293,7 @@ public class WalletEndPointTest extends WalletApplicationTests {
         requestJson.setId(id);
         MockHttpServletRequestBuilder postRequest = buildPostRequest(token, DEACTIVATED_WALLET_PATH, mapToJson(requestJson));
         String response = performTest(mockMvc, postRequest, httpStatus, success, errorCode);
-        TypeReference<BaseResponse<ObjectUtils.Null>> typeReference = new TypeReference<>() {
-        };
+        TypeReference<BaseResponse<ObjectUtils.Null>> typeReference = new TypeReference<>() {};
         return objectMapper.readValue(response, typeReference);
     }
 
@@ -227,8 +302,7 @@ public class WalletEndPointTest extends WalletApplicationTests {
         requestJson.setId(id);
         MockHttpServletRequestBuilder postRequest = buildPostRequest(token, ACTIVE_WALLET_PATH, mapToJson(requestJson));
         String response = performTest(mockMvc, postRequest, httpStatus, success, errorCode);
-        TypeReference<BaseResponse<ObjectUtils.Null>> typeReference = new TypeReference<>() {
-        };
+        TypeReference<BaseResponse<ObjectUtils.Null>> typeReference = new TypeReference<>() {};
         return objectMapper.readValue(response, typeReference);
     }
 
@@ -237,8 +311,7 @@ public class WalletEndPointTest extends WalletApplicationTests {
         requestJson.setId(id);
         MockHttpServletRequestBuilder postRequest = buildPostRequest(token, DELETE_WALLET_PATH, mapToJson(requestJson));
         String response = performTest(mockMvc, postRequest, httpStatus, success, errorCode);
-        TypeReference<BaseResponse<ObjectUtils.Null>> typeReference = new TypeReference<>() {
-        };
+        TypeReference<BaseResponse<ObjectUtils.Null>> typeReference = new TypeReference<>() {};
         return objectMapper.readValue(response, typeReference);
     }
 
@@ -247,8 +320,7 @@ public class WalletEndPointTest extends WalletApplicationTests {
         requestJson.setNationalCode(nationalCode);
         MockHttpServletRequestBuilder postRequest = buildPostRequest(token, GENERATE_UUID_PATH, mapToJson(requestJson));
         String response = performTest(mockMvc, postRequest, httpStatus, success, errorCode);
-        TypeReference<BaseResponse<UuidResponse>> typeReference = new TypeReference<>() {
-        };
+        TypeReference<BaseResponse<UuidResponse>> typeReference = new TypeReference<>() {};
         return objectMapper.readValue(response, typeReference);
     }
 
@@ -264,16 +336,57 @@ public class WalletEndPointTest extends WalletApplicationTests {
         requestJson.setNationalCode(nationalCode);
         MockHttpServletRequestBuilder postRequest = buildPostRequest(token, CASH_IN_PATH, mapToJson(requestJson));
         String response = performTest(mockMvc, postRequest, httpStatus, success, errorCode);
-        TypeReference<BaseResponse<CashInResponse>> typeReference = new TypeReference<>() {
-        };
+        TypeReference<BaseResponse<CashInResponse>> typeReference = new TypeReference<>() {};
+        return objectMapper.readValue(response, typeReference);
+    }
+
+    BaseResponse<PurchaseResponse> buy(String token, String uniqueIdentifier, String amount, String price, String commissionCurrency, String commission, String nationalCode, String currency, String merchantId, String walletAccountNumber, String sign, String additionalData, HttpStatus httpStatus, int errorCode, boolean success) throws Exception {
+        BuyWalletRequestJson requestJson = new BuyWalletRequestJson();
+        requestJson.setUniqueIdentifier(uniqueIdentifier);
+        requestJson.setAmount(amount);
+        requestJson.setPrice(price);
+        requestJson.setCommissionObject(new CommissionObject(commissionCurrency, commission));
+        requestJson.setNationalCode(nationalCode);
+        requestJson.setCurrency(currency);
+        requestJson.setMerchantId(merchantId);
+        requestJson.setWalletAccountNumber(walletAccountNumber);
+        requestJson.setAdditionalData(additionalData);
+        requestJson.setSign(sign);
+        MockHttpServletRequestBuilder postRequest = buildPostRequest(token, BUY_IN_PATH, mapToJson(requestJson));
+        String response = performTest(mockMvc, postRequest, httpStatus, success, errorCode);
+        TypeReference<BaseResponse<PurchaseResponse>> typeReference = new TypeReference<>() {};
+        return objectMapper.readValue(response, typeReference);
+    }
+
+    BaseResponse<PurchaseResponse> cell(String token, String uniqueIdentifier,String amount, String price, String commissionCurrency, String commission,  String nationalCode, String currency, String merchantId, String walletAccountNumber, String sign, String additionalData, HttpStatus httpStatus, int errorCode, boolean success) throws Exception {
+        SellWalletRequestJson requestJson = new SellWalletRequestJson();
+        requestJson.setUniqueIdentifier(uniqueIdentifier);
+        requestJson.setAmount(amount);
+        requestJson.setPrice(price);
+        requestJson.setCommissionObject(new CommissionObject(commissionCurrency, commission));
+        requestJson.setNationalCode(nationalCode);
+        requestJson.setCurrency(currency);
+        requestJson.setMerchantId(merchantId);
+        requestJson.setWalletAccountNumber(walletAccountNumber);
+        requestJson.setAdditionalData(additionalData);
+        requestJson.setSign(sign);
+        MockHttpServletRequestBuilder postRequest = buildPostRequest(token, CELL_IN_PATH, mapToJson(requestJson));
+        String response = performTest(mockMvc, postRequest, httpStatus, success, errorCode);
+        TypeReference<BaseResponse<PurchaseResponse>> typeReference = new TypeReference<>() {};
         return objectMapper.readValue(response, typeReference);
     }
 
     BaseResponse<CashInTrackResponse> inquiryCashIn(String token, String uniqueIdentifier, HttpStatus httpStatus, int errorCode, boolean success) throws Exception {
         MockHttpServletRequestBuilder postRequest = buildGetRequest(token, CASH_IN_INQUIRY_PATH + "/" + uniqueIdentifier);
         String response = performTest(mockMvc, postRequest, httpStatus, success, errorCode);
-        TypeReference<BaseResponse<CashInTrackResponse>> typeReference = new TypeReference<>() {
-        };
+        TypeReference<BaseResponse<CashInTrackResponse>> typeReference = new TypeReference<>() {};
+        return objectMapper.readValue(response, typeReference);
+    }
+
+    BaseResponse<CashInTrackResponse> inquiryPurchase(String token, String uniqueIdentifier, HttpStatus httpStatus, int errorCode, boolean success) throws Exception {
+        MockHttpServletRequestBuilder postRequest = buildGetRequest(token, PURCHASE_INQUIRY_IN_PATH + "/" + uniqueIdentifier);
+        String response = performTest(mockMvc, postRequest, httpStatus, success, errorCode);
+        TypeReference<BaseResponse<CashInTrackResponse>> typeReference = new TypeReference<>() {};
         return objectMapper.readValue(response, typeReference);
     }
 

@@ -16,4 +16,5 @@ public interface WalletAccountTypeService {
 
     List<WalletAccountTypeEntity> getAll();
     void clearCache();
+    WalletAccountTypeEntity findByName(String name);
 }

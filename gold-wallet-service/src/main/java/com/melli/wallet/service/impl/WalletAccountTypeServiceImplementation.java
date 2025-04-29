@@ -1,5 +1,6 @@
 package com.melli.wallet.service.impl;
 
+import com.melli.wallet.domain.master.entity.StatusEntity;
 import com.melli.wallet.domain.master.entity.WalletAccountTypeEntity;
 import com.melli.wallet.domain.master.persistence.WalletAccountTypeRepository;
 import com.melli.wallet.service.WalletAccountTypeService;
@@ -29,6 +30,13 @@ public class WalletAccountTypeServiceImplementation implements WalletAccountType
     @Cacheable(unless = "#result == null")
     public List<WalletAccountTypeEntity> getAll() {
         return walletAccountTypeRepository.findAll();
+    }
+
+    @Override
+    @Cacheable(key = "{#name}", unless = "#result == null")
+    public WalletAccountTypeEntity findByName(String name) {
+        log.info("Starting retrieval of Status by code: {}", name);
+        return walletAccountTypeRepository.findByName(name);
     }
 
     @Override

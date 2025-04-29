@@ -17,4 +17,5 @@ public interface WalletTypeService {
 
     List<WalletTypeEntity> getAll();
     void clearCache();
+    WalletTypeEntity getByName(String name);
 }

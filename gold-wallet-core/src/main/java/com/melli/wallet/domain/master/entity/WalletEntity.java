@@ -42,7 +42,7 @@ public class WalletEntity extends BaseEntityAudit implements Serializable {
 
 	@ManyToOne(fetch = FetchType.EAGER)
 	@JoinColumn(name = "wallet_level_id", nullable = false)
-	private WalletLevelEntity walletLEvelEntity;
+	private WalletLevelEntity walletLevelEntity;
 
 	@Column(name = "status")
 	@Enumerated(EnumType.STRING)

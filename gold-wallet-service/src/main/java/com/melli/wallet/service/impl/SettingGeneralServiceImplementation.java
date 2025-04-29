@@ -24,11 +24,11 @@ public class SettingGeneralServiceImplementation implements SettingGeneralServic
     private final SettingGeneralRepository settingGeneralRepository;
     private final Helper helper;
     private final RedisLockService redisLockService;
-    private final RedisCacheManager cacheManager;
 
     @Override
     @Cacheable(key = "{#name}", unless = "#result == null")
     public SettingGeneralEntity getSetting(String name) {
+        log.info("general setting with name ({}) read from database", name);
         return settingGeneralRepository.findByNameAndEndTimeIsNull(name);
     }
 

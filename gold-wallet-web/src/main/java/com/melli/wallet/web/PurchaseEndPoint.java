@@ -59,7 +59,7 @@ public class PurchaseEndPoint extends WebEndPoint{
         log.info("start call purchase in username ===> {}, nationalCode ===> {}, from ip ===> {}", username, requestJson.getNationalCode(), channelIp);
         PurchaseResponse cashInResponse = purchaseService.buy(requestContext.getChannelEntity(), requestJson.getUniqueIdentifier(), requestJson.getAmount(),
                 requestJson.getPrice(), requestJson.getWalletAccountNumber(), requestJson.getSign(),  requestJson.getDataString(),requestJson.getAdditionalData(), requestJson.getMerchantId(),
-                requestJson.getNationalCode(), requestJson.getCommission(), requestJson.getCurrency(), channelIp);
+                requestJson.getNationalCode(), requestJson.getCommissionObject().getAmount(), requestJson.getCurrency(), channelIp, requestJson.getCommissionObject().getCurrency());
         return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse<>(true,cashInResponse));
     }
 
@@ -73,7 +73,7 @@ public class PurchaseEndPoint extends WebEndPoint{
         log.info("start call purchase in username ===> {}, nationalCode ===> {}, from ip ===> {}", username, requestJson.getNationalCode(), channelIp);
         PurchaseResponse cashInResponse = purchaseService.sell(requestContext.getChannelEntity(), requestJson.getUniqueIdentifier(), requestJson.getAmount(),
                 requestJson.getPrice(), requestJson.getWalletAccountNumber(), requestJson.getSign(),  requestJson.getDataString(),requestJson.getAdditionalData(), requestJson.getMerchantId(),
-                requestJson.getNationalCode(), requestJson.getCommission(),requestJson.getCurrency(), channelIp);
+                requestJson.getNationalCode(), requestJson.getCommissionObject().getAmount(),requestJson.getCurrency(), channelIp, requestJson.getCommissionObject().getCurrency());
         return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse<>(true,cashInResponse));
     }
 }

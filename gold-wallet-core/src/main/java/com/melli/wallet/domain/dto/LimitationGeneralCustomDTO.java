@@ -1,13 +1,9 @@
 package com.melli.wallet.domain.dto;
 
-import com.melli.wallet.domain.master.entity.*;
-import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-
-import java.util.Date;
 
 /**
  * Class Name: SettingGeneralCustomDTOP
@@ -18,7 +14,7 @@ import java.util.Date;
 @Getter
 @Builder
 @ToString
-public class SettingGeneralCustomDTO {
+public class LimitationGeneralCustomDTO {
     private String id;
     private String settingGeneralEntityId;
     private String walletLevelEntityId;

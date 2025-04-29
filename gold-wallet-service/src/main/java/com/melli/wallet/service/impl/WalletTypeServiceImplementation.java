@@ -35,4 +35,10 @@ public class WalletTypeServiceImplementation implements WalletTypeService {
     public void clearCache() {
         log.info("clear cache ({})", Constant.WALLET_TYPE_CACHE);
     }
+
+    @Override
+    @Cacheable(key = "{#name}", unless = "#result == null")
+    public WalletTypeEntity getByName(String name) {
+        return walletTypeRepository.findByName(name);
+    }
 }

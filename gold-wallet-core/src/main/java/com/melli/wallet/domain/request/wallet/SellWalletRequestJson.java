@@ -5,6 +5,8 @@ import com.melli.wallet.annotation.national_code.NationalCodeValidation;
 import com.melli.wallet.annotation.number.NumberValidation;
 import com.melli.wallet.annotation.string.StringValidation;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -29,10 +31,12 @@ public class SellWalletRequestJson {
     @JsonProperty("price")
     private String price;
 
-    @NumberValidation
-    @Schema(name = "commission", description = "کارمزد فروش به ریال", example = "1000")
-    @JsonProperty("commission")
-    private String commission;
+
+    @NotNull
+    @NotEmpty
+    @Schema(name = "commissionObject", description = "کارمزد")
+    @JsonProperty("commissionObject")
+    private CommissionObject commissionObject;
 
     @NationalCodeValidation(label = "کد ملی")
     @Schema(name = "nationalCode", description = "کدملی")

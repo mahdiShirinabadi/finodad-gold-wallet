@@ -6,6 +6,8 @@ import com.melli.wallet.domain.response.base.BaseResponse;
 import com.melli.wallet.domain.response.base.ErrorDetail;
 import com.melli.wallet.domain.response.cash.CashInResponse;
 import com.melli.wallet.domain.response.cash.CashInTrackResponse;
+import com.melli.wallet.domain.response.limitation.LimitationListResponse;
+import com.melli.wallet.domain.response.limitation.LimitationObject;
 import com.melli.wallet.domain.response.login.*;
 import com.melli.wallet.domain.response.channel.ChannelObject;
 import com.melli.wallet.domain.response.purchase.PurchaseResponse;
@@ -117,11 +119,14 @@ public class Helper {
         return response;
     }
 
-    public SendShahkarRegisterResponse fillShahkarRegisterResponse(String nationalCode, String tempUuid) {
-        SendShahkarRegisterResponse response = new SendShahkarRegisterResponse();
-        response.setNationalCode(nationalCode);
-        response.setTempUuid(tempUuid);
+    public LimitationListResponse fillLimitationListResponse(List<LimitationGeneralEntity> limitationGeneralEntityList){
+        LimitationListResponse response = new LimitationListResponse();
+        response.setLimitationObjectList(limitationGeneralEntityList.stream().map(this::fillLimitationObject).toList());
         return response;
+    }
+
+    public LimitationObject fillLimitationObject(LimitationGeneralEntity limitationGeneralEntity) {
+        return new LimitationObject(limitationGeneralEntity.getName(), limitationGeneralEntity.getAdditionalData());
     }
 
     public CashInResponse fillCashInResponse(String nationalCode,  String uuid, long balance, String accountNumber) {

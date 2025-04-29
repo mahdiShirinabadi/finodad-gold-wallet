@@ -29,10 +29,9 @@ public class BuyWalletRequestJson {
     @JsonProperty("price")
     private String price;
 
-    @NumberValidation
-    @Schema(name = "commission", description = "کارمزد خرید به ریال", example = "1000")
-    @JsonProperty("commission")
-    private String commission;
+    @Schema(name = "commissionObject", description = "کارمزد")
+    @JsonProperty("commissionObject")
+    private CommissionObject commissionObject;
 
     @NationalCodeValidation(label = "کد ملی")
     @Schema(name = "nationalCode", description = "کدملی")
@@ -40,7 +39,7 @@ public class BuyWalletRequestJson {
     private String nationalCode;
 
     @StringValidation(label = "نوع ارز")
-    @Schema(name = "currency", description = "نوع ارز (مثال: GOLD, SILVER, PLATINUM)", example = "GOLD")
+    @Schema(name = "currency", description = "نوع ارز (مثال: GOLD,RIAL, SILVER, PLATINUM)", example = "GOLD")
     @JsonProperty("currency")
     private String currency;
 
