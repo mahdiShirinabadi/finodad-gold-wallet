@@ -46,6 +46,8 @@ public interface RequestService {
 
     CashInRequestEntity findCashInWithRrnId(long rrnId) throws InternalServiceException;
 
+    CashInRequestEntity findCashInDuplicateWithRrnId(long rrnId) throws InternalServiceException;
+
     List<Long> findPurchaseIdsByTerminalId(String likeStr, Integer[] results, Date fromDate, Date toDate, WalletAccountTypeEntity walletAccountTypeEntity);
 
     CashInTrackResponse cashInTrack(String uid, String channelIp) throws InternalServiceException;

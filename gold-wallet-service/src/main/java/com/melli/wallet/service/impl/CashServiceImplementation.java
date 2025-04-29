@@ -65,6 +65,8 @@ public class CashServiceImplementation implements CashService {
             rrnService.checkRrn(uniqueIdentifier, channelEntity);
             log.info("finish checking existence of traceId({})", uniqueIdentifier);
 
+            requestService.findCashInDuplicateWithRrnId(rrnEntity.getId());
+
             Lock refNumberLock = redisLockRegistry.obtain(refNumber);
             boolean lockSuccess = false;
             try {

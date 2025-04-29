@@ -31,7 +31,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/v1/purchase")
 @Validated
 @Log4j2
-public class PurchaseEndPoint extends WebEndPoint{
+public class PurchaseController extends WebController {
 
     private final RequestContext requestContext;
     private final PurchaseService purchaseService;

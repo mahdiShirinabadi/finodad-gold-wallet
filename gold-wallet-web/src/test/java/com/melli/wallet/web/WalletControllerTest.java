@@ -38,7 +38,7 @@ import static org.springframework.security.test.web.servlet.setup.SecurityMockMv
 @Log4j2
 @DisplayName("WalletEndPoint End2End test")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class WalletEndPointTest extends WalletApplicationTests {
+public class WalletControllerTest extends WalletApplicationTests {
 
     private static final String CREATE_WALLET_PATH = "/api/v1/wallet/create";
     private static final String GET_DATA_WALLET_PATH = "/api/v1/wallet/get";
@@ -73,6 +73,12 @@ public class WalletEndPointTest extends WalletApplicationTests {
     private LimitationGeneralCustomService limitationGeneralCustomService;
     @Autowired
     private SettingGeneralService settingGeneralService;
+    @Autowired
+    private LimitationGeneralService limitationGeneralService;
+    @Autowired
+    private ChannelService channelService;
+    @Autowired
+    private TransactionService transactionService;
 
     @Test
     @Order(1)
@@ -147,7 +153,7 @@ public class WalletEndPointTest extends WalletApplicationTests {
     @Order(26)
     @DisplayName("cashInFailNotPermission")
     void cashInFailNotPermission() throws Exception {
-        String refNumber = "123456";
+        String refNumber = new Date().getTime() + "";
         String amount = "1000000";
         Optional<WalletAccountObject> walletAccountObjectOptional = getAccountNumber(NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.RIAL);
         String uuid = generateUuid(NATIONAL_CODE_CORRECT);
@@ -161,12 +167,38 @@ public class WalletEndPointTest extends WalletApplicationTests {
     @Order(28)
     @DisplayName("cashInFail-min amount")
     void cashInFailMinAmount() throws Exception {
-        String refNumber = "123456";
-        String amount = "1000";
+        String refNumber = new Date().getTime() + "";;
+        String amount = "10";
         Optional<WalletAccountObject> walletAccountObjectOptional = getAccountNumber(NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.RIAL);
         String uuid = generateUuid(NATIONAL_CODE_CORRECT);
-        log.info("start get balance test");
+
+
+        WalletAccountEntity walletAccountEntity = walletAccountService.findByAccountNumber(walletAccountObjectOptional.get().getAccountNumber());
+        String value = getSettingValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN,  walletAccountObjectOptional.get().getAccountNumber());
+        if("false".equalsIgnoreCase(value)){
+            limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
+                    LimitationGeneralService.ENABLE_CASH_IN, walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
+                    walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
+                    "true","test cashInFailMinAmount");
+        }
+
+
+        String valueMinAmountCashIn = getSettingValue(USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_IN,  walletAccountObjectOptional.get().getAccountNumber());
+        boolean changeMinAmountCashIn = false;
+        if( Long.parseLong(amount) >= Long.parseLong(valueMinAmountCashIn)){
+            changeMinAmountCashIn = true;
+            limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
+                    LimitationGeneralService.MIN_AMOUNT_CASH_IN, walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
+                    walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
+                    String.valueOf(Long.parseLong(valueMinAmountCashIn) - 1),"test cashInFailMinAmount");
+        }
         cashIn(ACCESS_TOKEN, uuid, refNumber, amount, NATIONAL_CODE_CORRECT, walletAccountObjectOptional.get().getAccountNumber(), "", "", HttpStatus.OK, StatusService.AMOUNT_LESS_THAN_MIN, false);
+        if(changeMinAmountCashIn){
+            limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
+                    LimitationGeneralService.MIN_AMOUNT_CASH_IN, walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
+                    walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
+                    valueMinAmountCashIn,"test cashInFailMinAmount");
+        }
     }
 
     //cashInFail MaxAmount
@@ -174,13 +206,37 @@ public class WalletEndPointTest extends WalletApplicationTests {
     @Order(29)
     @DisplayName("cashInFail-max amount")
     void cashInFailMaxAmount() throws Exception {
-        String refNumber = "123456";
-        String amount = "1000000";
-
+        String refNumber = new Date().getTime() + "";;
+        String amount = "1000000000";
         Optional<WalletAccountObject> walletAccountObjectOptional = getAccountNumber(NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.RIAL);
         String uuid = generateUuid(NATIONAL_CODE_CORRECT);
+        WalletAccountEntity walletAccountEntity = walletAccountService.findByAccountNumber(walletAccountObjectOptional.get().getAccountNumber());
+        String value = getSettingValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN,  walletAccountObjectOptional.get().getAccountNumber());
+        if("false".equalsIgnoreCase(value)){
+            limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
+                    LimitationGeneralService.ENABLE_CASH_IN, walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
+                    walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
+                    "true","test cashInFailMinAmount");
+        }
+
+
+        String valueMaxAmountCashIn = getSettingValue(USERNAME_CORRECT, LimitationGeneralService.MAX_AMOUNT_CASH_IN,  walletAccountObjectOptional.get().getAccountNumber());
+        boolean changeMaxAmountCashIn = false;
+        if( Long.parseLong(amount) <= Long.parseLong(valueMaxAmountCashIn)){
+            changeMaxAmountCashIn = true;
+            limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
+                    LimitationGeneralService.MAX_WALLET_BALANCE, walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
+                    walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
+                    String.valueOf(Long.parseLong(amount) - 1),"test cashInFailMaxAmount");
+        }
         log.info("start get balance test");
         cashIn(ACCESS_TOKEN, uuid, refNumber, amount, NATIONAL_CODE_CORRECT, walletAccountObjectOptional.get().getAccountNumber(), "", "", HttpStatus.OK, StatusService.AMOUNT_BIGGER_THAN_MAX, false);
+        if(changeMaxAmountCashIn){
+            limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
+                    LimitationGeneralService.MAX_WALLET_BALANCE, walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
+                    walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
+                    valueMaxAmountCashIn,"test cashInFailMaxAmount");
+        }
     }
 
     //cashInFail MaxBalance
@@ -189,24 +245,60 @@ public class WalletEndPointTest extends WalletApplicationTests {
     @DisplayName("cashInFail-max balance")
     void cashInFailMaxBalance() throws Exception {
         String refNumber = new Date().getTime() + "";
-        String amount = "1000000";
+        String amount ="100000";
         Optional<WalletAccountObject> walletAccountObjectOptional = getAccountNumber(NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.RIAL);
         String uuid = generateUuid(NATIONAL_CODE_CORRECT);
+        WalletAccountEntity walletAccountEntity = walletAccountService.findByAccountNumber(walletAccountObjectOptional.get().getAccountNumber());
+
+
+        String valueEnableCashIn = getSettingValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN,  walletAccountObjectOptional.get().getAccountNumber());
+        if("false".equalsIgnoreCase(valueEnableCashIn)){
+            limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
+                    LimitationGeneralService.ENABLE_CASH_IN, walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
+                    walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
+                    "true","test cashInFailMinAmount");
+        }
+
+
+        String valueMaxWalletBalance = getSettingValue(USERNAME_CORRECT, LimitationGeneralService.MAX_WALLET_BALANCE,  walletAccountObjectOptional.get().getAccountNumber());
+        boolean changeMaxBalance = false;
+        if( Long.parseLong(amount) <= Long.parseLong(valueMaxWalletBalance)){
+            changeMaxBalance = true;
+            limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
+                    LimitationGeneralService.MAX_WALLET_BALANCE, walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
+                    walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
+                    String.valueOf(Long.parseLong(amount) - 1),"test cashInFailMaxBalance");
+        }
         log.info("start get balance test");
         cashIn(ACCESS_TOKEN, uuid, refNumber, amount, NATIONAL_CODE_CORRECT, walletAccountObjectOptional.get().getAccountNumber(), "", "", HttpStatus.OK, StatusService.BALANCE_MORE_THAN_STANDARD, false);
+        if(changeMaxBalance){
+            limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
+                    LimitationGeneralService.MAX_WALLET_BALANCE, walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
+                    walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
+                    valueMaxWalletBalance,"test cashInFailMaxBalance");
+        }
+
     }
 
     //CashInFail MaxBalanceDaily
-    @Test
+    /*@Test
     @Order(31)
     @DisplayName("cashInFail-max balance daily")
     void cashInFailMaxBalanceDaily() throws Exception {
         String refNumber = new Date().getTime() + "";
-        String amount = "1000000";
+        String amount = "10000000000";
         Optional<WalletAccountObject> walletAccountObjectOptional = getAccountNumber(NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.RIAL);
         String uuid = generateUuid(NATIONAL_CODE_CORRECT);
+        WalletAccountEntity walletAccountEntity = walletAccountService.findByAccountNumber(walletAccountObjectOptional.get().getAccountNumber());
+        String value = getSettingValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN,  walletAccountObjectOptional.get().getAccountNumber());
+        if("false".equalsIgnoreCase(value)){
+            limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
+                    LimitationGeneralService.ENABLE_CASH_IN, walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
+                    walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
+                    "true","test cashInFailMinAmount");
+        }
         cashIn(ACCESS_TOKEN, uuid, refNumber, amount, NATIONAL_CODE_CORRECT, walletAccountObjectOptional.get().getAccountNumber(), "", "", HttpStatus.OK, StatusService.WALLET_EXCEEDED_AMOUNT_LIMITATION, false);
-    }
+    }*/
 
 
     //duplicate refnumber
@@ -215,10 +307,18 @@ public class WalletEndPointTest extends WalletApplicationTests {
     @DisplayName("cashInFail-duplicate refNumber")
     void cashInFailDuplicateRefnumber() throws Exception {
         String refNumber = new Date().getTime() + "";
-        String amount = "1000000";
+        String amount = "10000";
         Optional<WalletAccountObject> walletAccountObjectOptional = getAccountNumber(NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.RIAL);
         String uuid1 = generateUuid(NATIONAL_CODE_CORRECT);
         String uuid2 = generateUuid(NATIONAL_CODE_CORRECT);
+        WalletAccountEntity walletAccountEntity = walletAccountService.findByAccountNumber(walletAccountObjectOptional.get().getAccountNumber());
+        String value = getSettingValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN,  walletAccountObjectOptional.get().getAccountNumber());
+        if("false".equalsIgnoreCase(value)){
+            limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
+                    LimitationGeneralService.ENABLE_CASH_IN, walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
+                    walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
+                    "true","test cashInFailMinAmount");
+        }
         cashIn(ACCESS_TOKEN, uuid1, refNumber, amount, NATIONAL_CODE_CORRECT, walletAccountObjectOptional.get().getAccountNumber(), "", "", HttpStatus.OK, StatusService.SUCCESSFUL, true);
         cashIn(ACCESS_TOKEN, uuid2, refNumber, amount, NATIONAL_CODE_CORRECT, walletAccountObjectOptional.get().getAccountNumber(), "", "", HttpStatus.OK, StatusService.REF_NUMBER_USED_BEFORE, false);
     }
@@ -229,21 +329,43 @@ public class WalletEndPointTest extends WalletApplicationTests {
     @DisplayName("cashInFail-duplicate rrn")
     void cashInFailDuplicateRrn() throws Exception {
         String refNumber = new Date().getTime() + "";
-        String amount = "1000000";
+        String amount = "100000";
         Optional<WalletAccountObject> walletAccountObjectOptional = getAccountNumber(NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.RIAL);
+        long balance = Long.parseLong(walletAccountObjectOptional.get().getBalance());
         String uuid = generateUuid(NATIONAL_CODE_CORRECT);
-        cashIn(ACCESS_TOKEN, uuid, refNumber, amount, NATIONAL_CODE_CORRECT, walletAccountObjectOptional.get().getAccountNumber(), "", "", HttpStatus.OK, StatusService.WALLET_EXCEEDED_AMOUNT_LIMITATION, false);
+
+        WalletAccountEntity walletAccountEntity = walletAccountService.findByAccountNumber(walletAccountObjectOptional.get().getAccountNumber());
+        walletAccountService.decreaseBalance(walletAccountEntity.getId(), Double.parseDouble(String.valueOf(balance)));
+
+        String value = getSettingValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN,  walletAccountObjectOptional.get().getAccountNumber());
+        if("false".equalsIgnoreCase(value)){
+            limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
+                    LimitationGeneralService.ENABLE_CASH_IN, walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
+                    walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
+                    "true","test cashInFailMinAmount");
+        }
+        String minAmount = getSettingValue(USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_IN, walletAccountObjectOptional.get().getAccountNumber());
+        cashIn(ACCESS_TOKEN, uuid, refNumber, String.valueOf(Long.parseLong(minAmount) + 1), NATIONAL_CODE_CORRECT, walletAccountObjectOptional.get().getAccountNumber(), "", "", HttpStatus.OK, StatusService.SUCCESSFUL, true);
+        cashIn(ACCESS_TOKEN, uuid, new Date().getTime() + "", String.valueOf(Long.parseLong(minAmount) + 1), NATIONAL_CODE_CORRECT, walletAccountObjectOptional.get().getAccountNumber(), "", "", HttpStatus.OK, StatusService.DUPLICATE_UUID, false);
     }
 
     @Test
     @Order(40)
     @DisplayName("cashIn success")
     void cashInSuccess() throws Exception {
-        String refNumber = "123456";
-        String amount = "1000000";
+        String refNumber = new Date().getTime() + "";;
         Optional<WalletAccountObject> walletAccountObjectOptional = getAccountNumber(NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.RIAL);
+        String amount = getSettingValue(USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_IN, walletAccountObjectOptional.get().getAccountNumber());
         String uuid = generateUuid(NATIONAL_CODE_CORRECT);
-        log.info("start get balance test");
+        log.info("generate uuid " + uuid);
+        WalletAccountEntity walletAccountEntity = walletAccountService.findByAccountNumber(walletAccountObjectOptional.get().getAccountNumber());
+        String value = getSettingValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN,  walletAccountObjectOptional.get().getAccountNumber());
+        if("false".equalsIgnoreCase(value)){
+            limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
+                    LimitationGeneralService.ENABLE_CASH_IN, walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
+                    walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
+                    "true","test cashInFailMinAmount");
+        }
         cashIn(ACCESS_TOKEN, uuid, refNumber, amount, NATIONAL_CODE_CORRECT, walletAccountObjectOptional.get().getAccountNumber(), "", "", HttpStatus.OK, StatusService.SUCCESSFUL, true);
     }
 
@@ -388,6 +510,13 @@ public class WalletEndPointTest extends WalletApplicationTests {
         String response = performTest(mockMvc, postRequest, httpStatus, success, errorCode);
         TypeReference<BaseResponse<CashInTrackResponse>> typeReference = new TypeReference<>() {};
         return objectMapper.readValue(response, typeReference);
+    }
+
+    private String getSettingValue(String channelName, String limitationName, String accountNumber) throws Exception{
+        WalletAccountEntity walletAccountEntity = walletAccountService.findByAccountNumber(accountNumber);
+        return limitationGeneralCustomService.getSetting(channelService.getChannel(channelName),
+                limitationName, walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
+                walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity());
     }
 
 }

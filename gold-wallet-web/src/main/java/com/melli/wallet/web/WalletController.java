@@ -32,7 +32,7 @@ import java.util.List;
 @RequestMapping("/api/v1/wallet")
 @Validated
 @Log4j2
-public class WalletEndPoint extends WebEndPoint {
+public class WalletController extends WebController {
 
 	private final WalletOperationalService walletOperationalService;
 	private final RequestContext requestContext;

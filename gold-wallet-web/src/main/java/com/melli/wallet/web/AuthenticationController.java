@@ -45,7 +45,7 @@ import java.util.Map;
 @RequestMapping("/api/v1/auth")
 @Validated
 @Log4j2
-public class AuthenticationEndPoint extends WebEndPoint {
+public class AuthenticationController extends WebController {
 
     private final RequestContext context;
     private final AuthenticationManager authenticationManager;

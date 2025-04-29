@@ -31,7 +31,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1/general")
 @Validated
 @Log4j2
-public class GeneralEndPoint extends WebEndPoint{
+public class GeneralController extends WebController {
 
     private final RequestContext requestContext;
     private final GeneralService generalService;

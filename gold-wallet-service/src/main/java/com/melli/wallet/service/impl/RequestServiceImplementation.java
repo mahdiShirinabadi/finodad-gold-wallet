@@ -147,6 +147,16 @@ public class RequestServiceImplementation implements RequestService {
     }
 
     @Override
+    public CashInRequestEntity findCashInDuplicateWithRrnId(long rrnId) throws InternalServiceException {
+       CashInRequestEntity cashInRequestEntity = cashInRequestRepository.findByRrnEntityId(rrnId);
+       if(cashInRequestEntity != null) {
+           log.error("cashInDuplicateWithRrnId ({}) found", rrnId);
+           throw new InternalServiceException("cashInDuplicateWithRrnId", StatusService.DUPLICATE_UUID, HttpStatus.OK);
+       }
+       return cashInRequestEntity;
+    }
+
+    @Override
     public List<Long> findPurchaseIdsByTerminalId(String likeStr, Integer[] results, Date fromDate, Date toDate, WalletAccountTypeEntity walletAccountTypeEntity) {
         return List.of();
     }

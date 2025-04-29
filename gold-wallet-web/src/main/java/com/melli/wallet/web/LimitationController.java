@@ -1,7 +1,6 @@
 package com.melli.wallet.web;
 
 import com.melli.wallet.domain.response.base.BaseResponse;
-import com.melli.wallet.domain.response.cash.CashInTrackResponse;
 import com.melli.wallet.domain.response.limitation.LimitationCustomResponse;
 import com.melli.wallet.domain.response.limitation.LimitationListResponse;
 import com.melli.wallet.exception.InternalServiceException;
@@ -30,7 +29,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping(value = {"/api/v1/limitation"})
 @Validated
 @Log4j2
-public class LimitationEndPoint extends WebEndPoint{
+public class LimitationController extends WebController {
 
     private final RequestContext requestContext;
     private final LimitationOperationService limitationOperationService;
