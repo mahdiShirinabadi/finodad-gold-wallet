@@ -16,10 +16,7 @@ import com.melli.wallet.domain.response.purchase.PurchaseTrackResponse;
 import com.melli.wallet.domain.response.wallet.CreateWalletResponse;
 import com.melli.wallet.domain.response.wallet.WalletAccountObject;
 import com.melli.wallet.exception.InternalServiceException;
-import com.melli.wallet.service.SettingGeneralService;
-import com.melli.wallet.service.StatusService;
-import com.melli.wallet.service.WalletAccountService;
-import com.melli.wallet.service.WalletService;
+import com.melli.wallet.service.*;
 import com.melli.wallet.util.StringUtils;
 import com.melli.wallet.util.date.DateUtils;
 import lombok.extern.log4j.Log4j2;
@@ -42,10 +39,16 @@ import java.util.*;
 @Log4j2
 public class Helper {
 
+    private final WalletTypeService walletTypeService;
+
     public static final String FORMAT_DATE_RESPONSE = "yyyy/MM/dd HH:mm:ss";
 
     private static String SALT_UPDATE_PASSWORD = "108bc591f8d9e09327133e02fd64d23f67f8f52439374bb6c56510b8ad453f7d9c87860126b5811879d9a9628650a6a5";
     public static int WALLET_ACCOUNT_LENGTH = 8;
+
+    public Helper(WalletTypeService walletTypeService) {
+        this.walletTypeService = walletTypeService;
+    }
 
     public BaseResponse<ObjectUtils.Null> fillBaseResponse(boolean result, ErrorDetail errorDetail) {
         BaseResponse<ObjectUtils.Null> response = new BaseResponse<>(result, errorDetail);
@@ -105,7 +108,7 @@ public class Helper {
         response.setCreateTimeTimestamp(purchaseRequestEntity.getCreatedAt().getTime());
         response.setChannelName(purchaseRequestEntity.getChannel().getUsername());
         response.setPrice(String.valueOf(purchaseRequestEntity.getPrice()));
-        response.setType(purchaseRequestEntity.getTransactionType().name());
+        response.setType(purchaseRequestEntity.getRequestTypeEntity().getName());
         return new PurchaseTrackResponse(List.of(response));
     }
 
@@ -115,7 +118,7 @@ public class Helper {
         response.setAmount(String.valueOf(purchaseRequestEntity.getAmount()));
         response.setUniqueIdentifier(purchaseRequestEntity.getRrnEntity().getUuid());
         response.setPrice(String.valueOf(purchaseRequestEntity.getPrice()));
-        response.setType(purchaseRequestEntity.getTransactionType().name());
+        response.setType(purchaseRequestEntity.getRequestTypeEntity().getName());
         return response;
     }
 
@@ -186,6 +189,28 @@ public class Helper {
             throw new InternalServiceException("walletAccount for nationalCode (" + nationalCode + ") is not found!!", StatusService.WALLET_ACCOUNT_NOT_FOUND, HttpStatus.OK);
         }
 
+        if (!walletAccount.getStatus().getText().equalsIgnoreCase(WalletStatusEnum.ACTIVE.getText())) {
+            log.error("wallet account {} is disable", walletAccount.getAccountNumber());
+            throw new InternalServiceException("walletAccount for nationalCode (" + nationalCode + ") is not found!!", StatusService.WALLET_ACCOUNT_IS_NOT_ACTIVE, HttpStatus.OK);
+        }
+
+        return walletAccount;
+    }
+
+
+    public WalletAccountEntity checkWalletAndWalletAccountForNormalUser(WalletService walletService, String nationalCode, WalletAccountService walletAccountService, String accountNumber) throws InternalServiceException {
+
+        WalletTypeEntity walletTypeEntity = walletTypeService.getAll().stream().filter(x -> x.getName().equals(WalletTypeService.NORMAL_USER)).findFirst().orElseThrow(()->{
+            log.error("wallet type for ({}) not found", WalletTypeService.NORMAL_USER);
+            return new InternalServiceException("wallet type not found", StatusService.WALLET_TYPE_NOT_FOUND, HttpStatus.OK);
+        });
+
+        WalletEntity walletEntity = checkWallet(walletService, nationalCode, walletTypeEntity);
+        WalletAccountEntity walletAccount = walletAccountService.findByWalletAndAccount(walletEntity, accountNumber);
+        if (walletAccount == null) {
+            log.error("error find walletAccount for account ({})", accountNumber);
+            throw new InternalServiceException("walletAccount for nationalCode (" + nationalCode + ") is not found!!", StatusService.WALLET_ACCOUNT_NOT_FOUND, HttpStatus.OK);
+        }
         if (!walletAccount.getStatus().getText().equalsIgnoreCase(WalletStatusEnum.ACTIVE.getText())) {
             log.error("wallet account {} is disable", walletAccount.getAccountNumber());
             throw new InternalServiceException("walletAccount for nationalCode (" + nationalCode + ") is not found!!", StatusService.WALLET_ACCOUNT_IS_NOT_ACTIVE, HttpStatus.OK);

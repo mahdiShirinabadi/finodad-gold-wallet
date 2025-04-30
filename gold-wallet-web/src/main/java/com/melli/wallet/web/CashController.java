@@ -1,6 +1,9 @@
 package com.melli.wallet.web;
 
+import com.melli.wallet.domain.request.wallet.CashInGenerateUuidRequestJson;
 import com.melli.wallet.domain.request.wallet.CashInWalletRequestJson;
+import com.melli.wallet.domain.request.wallet.GenerateUuidRequestJson;
+import com.melli.wallet.domain.response.UuidResponse;
 import com.melli.wallet.domain.response.base.BaseResponse;
 import com.melli.wallet.domain.response.cash.CashInResponse;
 import com.melli.wallet.domain.response.cash.CashInTrackResponse;
@@ -33,6 +36,16 @@ public class CashController extends WebController {
 
     private final RequestContext requestContext;
     private final CashService cashService;
+
+    @Timed(description = "Time taken to create wallet")
+    @PostMapping(path = "generate/uuid", produces = {MediaType.APPLICATION_JSON_VALUE})
+    @Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "ایجاد شناسه یکتا")
+    @PreAuthorize("hasAuthority(\""+ ResourceService.CASH_IN +"\")")
+    public ResponseEntity<BaseResponse<UuidResponse>> generateUuid(@RequestBody CashInGenerateUuidRequestJson requestJson) throws InternalServiceException {
+        log.info("start call uuid nationalCode ===> {}", requestJson.getNationalCode());
+        UuidResponse response = cashService.generateUuid(requestContext.getChannelEntity(), requestJson.getNationalCode(), requestJson.getAmount(), requestJson.getAccountNumber());
+        return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse<>(true,response));
+    }
 
     @Timed(description = "CashEndPoint.cashIn")
     @PostMapping(path = "/cashIn", produces = {MediaType.APPLICATION_JSON_VALUE})

@@ -13,11 +13,11 @@ import static java.lang.annotation.ElementType.*;
 @Target( { FIELD, PARAMETER, TYPE })
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-@Constraint(validatedBy = FundTypeValidator.class)
-public @interface FundTypeValidation {
+@Constraint(validatedBy = PurchaseTypeValidator.class)
+public @interface PurchaseTypeValidation {
 
     //error message
-    String message() default "مقدار مجاز برای فیلد ({label}) عبارتند از [ETF,NonETF]";
+    String message() default "مقدار مجاز برای فیلد ({label}) عبارتند از [BUY,SELL]";
 
     String label() default "";
 

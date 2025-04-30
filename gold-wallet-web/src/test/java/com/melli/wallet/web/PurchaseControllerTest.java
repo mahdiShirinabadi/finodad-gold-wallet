@@ -3,7 +3,9 @@ package com.melli.wallet.web;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.melli.wallet.WalletApplicationTests;
 import com.melli.wallet.domain.enumaration.WalletStatusEnum;
-import com.melli.wallet.domain.master.entity.*;
+import com.melli.wallet.domain.master.entity.WalletAccountEntity;
+import com.melli.wallet.domain.master.entity.WalletEntity;
+import com.melli.wallet.domain.master.entity.WalletTypeEntity;
 import com.melli.wallet.domain.request.wallet.*;
 import com.melli.wallet.domain.response.UuidResponse;
 import com.melli.wallet.domain.response.base.BaseResponse;
@@ -39,7 +41,7 @@ import static org.springframework.security.test.web.servlet.setup.SecurityMockMv
 @Log4j2
 @DisplayName("WalletEndPoint End2End test")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-class WalletControllerTest extends WalletApplicationTests {
+class PurchaseControllerTest extends WalletApplicationTests {
 
     private static final String CREATE_WALLET_PATH = "/api/v1/wallet/create";
     private static final String GET_DATA_WALLET_PATH = "/api/v1/wallet/get";
@@ -50,7 +52,7 @@ class WalletControllerTest extends WalletApplicationTests {
     private static final String CASH_IN_GENERATE_UUID_PATH = "/api/v1/cash/generate/uuid";
     private static final String PURCHASE_GENERATE_UUID_PATH = "/api/v1/purchase/generate/uuid";
     private static final String BUY_IN_PATH = "/api/v1/purchase/buy";
-    private static final String SELL_IN_PATH = "/api/v1/purchase/sell";
+    private static final String CELL_IN_PATH = "/api/v1/purchase/cell";
     private static final String PURCHASE_INQUIRY_IN_PATH = "/api/v1/purchase/inquiry";
     private static final String CASH_IN_PATH = "/api/v1/cash/cashIn";
     private static final String CASH_IN_INQUIRY_PATH = "/api/v1/cash/track/cashIn/";
@@ -639,7 +641,7 @@ class WalletControllerTest extends WalletApplicationTests {
         requestJson.setWalletAccountNumber(walletAccountNumber);
         requestJson.setAdditionalData(additionalData);
         requestJson.setSign(sign);
-        MockHttpServletRequestBuilder postRequest = buildPostRequest(token, SELL_IN_PATH, mapToJson(requestJson));
+        MockHttpServletRequestBuilder postRequest = buildPostRequest(token, CELL_IN_PATH, mapToJson(requestJson));
         String response = performTest(mockMvc, postRequest, httpStatus, success, errorCode);
         TypeReference<BaseResponse<PurchaseResponse>> typeReference = new TypeReference<>() {};
         return objectMapper.readValue(response, typeReference);

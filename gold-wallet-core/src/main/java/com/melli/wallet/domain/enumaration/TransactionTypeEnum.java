@@ -7,7 +7,7 @@ package com.melli.wallet.domain.enumaration;
  */
 public enum TransactionTypeEnum {
 
-    CUSTOMER_BUY("CUSTOMER_BUY"),
+    CUSTOMER_BUY("BUY"),
     CUSTOMER_SELL("CUSTOMER_SELL");
 
     private final String text;

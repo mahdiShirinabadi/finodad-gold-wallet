@@ -3,6 +3,7 @@ package com.melli.wallet.service.impl;
 import com.melli.wallet.domain.master.entity.*;
 import com.melli.wallet.domain.master.persistence.RefnumberRepository;
 import com.melli.wallet.domain.redis.RefNumberRedis;
+import com.melli.wallet.domain.response.UuidResponse;
 import com.melli.wallet.domain.response.cash.CashInResponse;
 import com.melli.wallet.domain.response.cash.CashInTrackResponse;
 import com.melli.wallet.exception.InternalServiceException;
@@ -55,14 +56,33 @@ public class CashServiceImplementation implements CashService {
 
 
     @Override
+    public UuidResponse generateUuid(ChannelEntity channelEntity, String nationalCode, String amount, String accountNumber) throws InternalServiceException {
+        try {
+
+            WalletAccountEntity walletAccountEntity = helper.checkWalletAndWalletAccountForNormalUser(walletService,nationalCode, walletAccountService, accountNumber);
+            walletLimitationService.checkCashInLimitation(channelEntity, walletAccountEntity.getWalletEntity(), Long.parseLong(amount), walletAccountEntity);
+            log.info("start generate traceId, username ===> ({}), nationalCode ({})", channelEntity.getUsername(), nationalCode);
+            RrnEntity rrnEntity = rrnService.generateTraceId(nationalCode, channelEntity, requestTypeService.getRequestType(RequestTypeService.CASH_IN), accountNumber, amount);
+            log.info("finish traceId ===> {}, username ({}), nationalCode ({})", rrnEntity.getUuid(), channelEntity.getUsername(), nationalCode);
+            return new UuidResponse(rrnEntity.getUuid());
+        } catch (InternalServiceException e) {
+            log.error("error in generate traceId with info ===> username ({}), nationalCode ({}) error ===> ({})", channelEntity.getUsername(), nationalCode, e.getMessage());
+            throw e;
+        }
+    }
+
+    @Override
     @Transactional(propagation = Propagation.REQUIRED, rollbackFor = Exception.class)
     public CashInResponse cashIn(ChannelEntity channelEntity, String nationalCode, String uniqueIdentifier, String amount, String refNumber, String signData, String dataForCheckInVerify, String accountNumber, String additionalData, String ip) throws InternalServiceException {
+
+        RequestTypeEntity requestTypeEntity = requestTypeService.getRequestType(RequestTypeService.CASH_IN);
+
         RrnEntity rrnEntity = rrnService.findByUid(uniqueIdentifier);
         securityService.checkSign(channelEntity, signData, dataForCheckInVerify);
 
         return redisLockService.runAfterLock(uniqueIdentifier, this.getClass(), () -> {
             log.info("start checking existence of traceId({}) ...", uniqueIdentifier);
-            rrnService.checkRrn(uniqueIdentifier, channelEntity);
+            rrnService.checkRrn(uniqueIdentifier, channelEntity, requestTypeEntity, amount, accountNumber);
             log.info("finish checking existence of traceId({})", uniqueIdentifier);
 
             requestService.findCashInDuplicateWithRrnId(rrnEntity.getId());
@@ -97,8 +117,7 @@ public class CashServiceImplementation implements CashService {
 
             requestService.findSuccessCashInByRefNumber(refNumber);
 
-            Optional<WalletTypeEntity> walletTypeEntity = walletTypeService.getAll().stream().filter(x -> x.getName().equals(WalletTypeService.NORMAL_USER)).findFirst();
-            WalletAccountEntity walletAccountEntity = helper.checkWalletAndWalletAccount(walletService, rrnEntity.getNationalCode(), walletAccountService, accountNumber, walletTypeEntity.get());
+            WalletAccountEntity walletAccountEntity = helper.checkWalletAndWalletAccountForNormalUser(walletService, rrnEntity.getNationalCode(), walletAccountService, accountNumber);
             walletLimitationService.checkCashInLimitation(channelEntity, walletAccountEntity.getWalletEntity(), Long.parseLong(amount), walletAccountEntity);
 
             CashInRequestEntity cashInRequestEntity = new CashInRequestEntity();
@@ -110,7 +129,7 @@ public class CashServiceImplementation implements CashService {
             cashInRequestEntity.setChannel(channelEntity);
             cashInRequestEntity.setResult(StatusService.CREATE);
             cashInRequestEntity.setChannelIp(ip);
-            cashInRequestEntity.setRequestTypeEntity(requestTypeService.getRequestType(RequestTypeService.CASH_IN));
+            cashInRequestEntity.setRequestTypeEntity(requestTypeEntity);
             cashInRequestEntity.setCreatedBy(channelEntity.getUsername());
             cashInRequestEntity.setCreatedAt(new Date());
             cashInRequestEntity.setRefNumber(refNumber);
@@ -153,8 +172,9 @@ public class CashServiceImplementation implements CashService {
 
     @Override
     public CashInTrackResponse cashInTrack(ChannelEntity channelEntity, String uuid, String channelIp) throws InternalServiceException {
+        RequestTypeEntity requestTypeEntity = requestTypeService.getRequestType(RequestTypeService.CASH_IN);
         RrnEntity rrnEntity = rrnService.findByUid(uuid);
-        rrnService.checkRrn(uuid, channelEntity);
+        rrnService.checkRrn(uuid, channelEntity, requestTypeEntity,"","");
         CashInRequestEntity cashInRequestEntity = requestService.findCashInWithRrnId(rrnEntity.getId());
         return helper.fillCashInTrackResponse(cashInRequestEntity, statusService);
     }

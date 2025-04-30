@@ -316,6 +316,8 @@ CREATE TABLE if not exists rrn
     updated_at    TIMESTAMP WITHOUT TIME ZONE,
     national_code VARCHAR(10)                 NOT NULL,
     channel_id    BIGINT                      NOT NULL REFERENCES channel,
+    request_type_id BIGINT                      NOT NULL REFERENCES request_type,
+    extra_data    text,
     uuid          VARCHAR(100) default gen_random_uuid() || '-' || EXTRACT(EPOCH FROM NOW())
 );
 CREATE UNIQUE INDEX idx_unique_uuid_rrn ON rrn (uuid);
@@ -575,10 +577,14 @@ INSERT into request_type(created_by, created_at, name, fa_name, display)
 VALUES ('System', now(),'cash_in','شارژ کیف پول',1);
 
 INSERT into request_type(created_by, created_at, name, fa_name, display)
-VALUES ('System', now(),'cash_out','برداشت وجه',1);
+VALUES ('System', now(),'cash_out','برداشت',1);
 
 INSERT into request_type(created_by, created_at, name, fa_name, display)
-VALUES ('System', now(),'purchase','خرید',1);
+VALUES ('System', now(),'buy','خرید',1);
+
+INSERT into request_type(created_by, created_at, name, fa_name, display)
+VALUES ('System', now(),'sell','فروش',1);
+
 
 
 CREATE INDEX ON channel_access_token (channel_id);

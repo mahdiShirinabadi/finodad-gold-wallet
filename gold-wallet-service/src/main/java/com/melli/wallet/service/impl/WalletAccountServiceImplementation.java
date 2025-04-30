@@ -112,6 +112,7 @@ public class WalletAccountServiceImplementation implements WalletAccountService 
         walletAccountRepository.unblockAmount(walletAccountId, amount);
     }
 
+    @Transactional
     @Override
     @CacheEvict(key = "{#walletAccount?.accountNumber}")
     public void save(WalletAccountEntity walletAccount) {

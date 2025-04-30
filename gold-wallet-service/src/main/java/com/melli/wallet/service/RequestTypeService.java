@@ -10,7 +10,8 @@ public interface RequestTypeService {
 	String TRACE_ID = "trace_id";
 	String CASH_IN = "cash_in";
 	String CASH_OUT = "cash_out";
-	String PURCHASE = "purchase";
+	String BUY = "buy";
+	String SELL = "sell";
 	RequestTypeEntity getRequestType(String name);
 	void clearCache (long id)throws InternalServiceException;
 	void clearCacheAllData();

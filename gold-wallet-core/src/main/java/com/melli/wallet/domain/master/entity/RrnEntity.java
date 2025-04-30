@@ -1,6 +1,8 @@
 package com.melli.wallet.domain.master.entity;
 
 
+import com.melli.wallet.domain.master.RrnExtraData;
+import com.melli.wallet.domain.master.RrnExtraDataConvertor;
 import jakarta.persistence.*;
 import lombok.*;
 import java.io.Serializable;
@@ -27,4 +29,13 @@ public class RrnEntity extends BaseEntityAudit implements Serializable {
 
 	@Column(name = "uuid", insertable = false, updatable = false)
 	private String uuid;
+
+	@ManyToOne(fetch = FetchType.EAGER)
+	@JoinColumn(name = "request_type_id", nullable = false)
+	private RequestTypeEntity requestTypeEntity;
+
+	@Convert(converter = RrnExtraDataConvertor.class)
+	@Column(name = "extra_data")
+	private RrnExtraData extraData;
+
 }

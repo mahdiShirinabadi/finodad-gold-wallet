@@ -3,13 +3,13 @@ package com.melli.wallet.domain.enumaration;
 import lombok.Getter;
 
 @Getter
-public enum FundTypeEnum {
-    ETF("ETF"),
-    NonETF("NonETF");
+public enum PurchaseTypeEnum {
+    BUY("BUY"),
+    SELL("SELL");
 
     private final String text;
 
-    FundTypeEnum(final String text) {
+    PurchaseTypeEnum(final String text) {
         this.text = text;
     }
 

@@ -1,5 +1,6 @@
 package com.melli.wallet.domain.master.entity;
 
+import com.melli.wallet.domain.enumaration.PurchaseTypeEnum;
 import com.melli.wallet.domain.enumaration.TransactionTypeEnum;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -48,10 +49,6 @@ public class PurchaseRequestEntity extends RequestEntity {
 
 	@Column(name = "commission", length = 500)
 	private String commission;
-
-	@Enumerated(EnumType.STRING) // Store the enum as a string in the database
-	@Column(name = "transaction_type", nullable = false, length = 50)
-	private TransactionTypeEnum transactionType;
 
 	@Transient
 	private long totalAmount;

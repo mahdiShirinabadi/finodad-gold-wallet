@@ -45,7 +45,7 @@ public interface WalletAccountService {
 
     void unblockAmount(long walletAccountId, long amount);
 
-    void save(WalletAccountEntity walletAccount);
+    void save(WalletAccountEntity walletAccount) throws InternalServiceException;
 
     void clearCache(String accountNumber);
 

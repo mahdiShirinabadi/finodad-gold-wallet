@@ -2,6 +2,7 @@ package com.melli.wallet.service.impl;
 
 import com.melli.wallet.domain.enumaration.TransactionTypeEnum;
 import com.melli.wallet.domain.master.entity.*;
+import com.melli.wallet.domain.response.UuidResponse;
 import com.melli.wallet.domain.response.purchase.PurchaseResponse;
 import com.melli.wallet.domain.response.purchase.PurchaseTrackResponse;
 import com.melli.wallet.exception.InternalServiceException;
@@ -45,6 +46,20 @@ public class PurchaseServiceImplementation implements PurchaseService {
     private final StatusService statusService;
     private final WalletAccountTypeService walletAccountTypeService;
     private final WalletAccountCurrencyService walletAccountCurrencyService;
+    private final RequestTypeService requestTypeService;
+
+    @Override
+    public UuidResponse generateUuid(ChannelEntity channelEntity, String nationalCode, String amount, String accountNumber, String type) throws InternalServiceException {
+        try {
+            log.info("start generate traceId, username ===> ({}), nationalCode ({})", channelEntity.getUsername(), nationalCode);
+            RrnEntity rrnEntity = rrnService.generateTraceId(nationalCode, channelEntity, requestTypeService.getRequestType(type), accountNumber, amount);
+            log.info("finish traceId ===> {}, username ({}), nationalCode ({})", rrnEntity.getUuid(), channelEntity.getUsername(), nationalCode);
+            return new UuidResponse(rrnEntity.getUuid());
+        } catch (InternalServiceException e) {
+            log.error("error in generate traceId with info ===> username ({}), nationalCode ({}) error ===> ({})", channelEntity.getUsername(), nationalCode, e.getMessage());
+            throw e;
+        }
+    }
 
     @Override
     @Transactional(propagation = Propagation.REQUIRED, rollbackFor = Exception.class)
@@ -91,8 +106,8 @@ public class PurchaseServiceImplementation implements PurchaseService {
     }
 
     @Override
-    public PurchaseTrackResponse purchaseTrack(ChannelEntity channel, String uid, String channelIp) throws InternalServiceException {
-        RrnEntity rrnEntity = rrnService.checkRrn(uid, channel);
+    public PurchaseTrackResponse purchaseTrack(ChannelEntity channel, String uid, String channelIp, String type) throws InternalServiceException {
+        RrnEntity rrnEntity = rrnService.checkRrn(uid, channel, requestTypeService.getRequestType(type),"","");
         PurchaseRequestEntity purchaseRequestEntity = requestService.findPurchaseRequestByRrnId(rrnEntity.getId());
         return helper.fillPurchaseTrackResponse(purchaseRequestEntity, statusService);
     }
@@ -253,12 +268,12 @@ public class PurchaseServiceImplementation implements PurchaseService {
         log.info("Starting purchase for uniqueIdentifier {}, nationalCode {}", uniqueIdentifier, nationalCode);
 
         // Validate transaction
-        RrnEntity rrn = validateTransaction(channel, uniqueIdentifier, signData, dataForCheckInVerify);
+        RrnEntity rrn = validateTransaction(channel, uniqueIdentifier, signData, dataForCheckInVerify, requestTypeService.getRequestType(RequestTypeService.BUY), price, userRialAccount.getAccountNumber());
         walletLimitationService.checkPurchaseLimitation(channel, userWallet, Long.parseLong(amount), userRialAccount, merchant);
 
         // Create purchase request
         PurchaseRequestEntity purchaseRequest = createPurchaseRequest(
-                channel, rrn, merchant, userRialAccount, amount,price, commission,additionalData, nationalCode, TransactionTypeEnum.CUSTOMER_BUY);
+                channel, rrn, merchant, userRialAccount, amount,price, commission,additionalData, nationalCode, requestTypeService.getRequestType(RequestTypeService.BUY));
 
         // Process transactions
         buyProcessTransactions(
@@ -284,12 +299,12 @@ public class PurchaseServiceImplementation implements PurchaseService {
         log.info("Starting sell for uniqueIdentifier {}, nationalCode {}", uniqueIdentifier, nationalCode);
 
         // Validate transaction
-        RrnEntity rrn = validateTransaction(channel, uniqueIdentifier, signData, dataForCheckInVerify);
+        RrnEntity rrn = validateTransaction(channel, uniqueIdentifier, signData, dataForCheckInVerify, requestTypeService.getRequestType(RequestTypeService.SELL), price, userRialAccount.getAccountNumber());
         walletLimitationService.checkPurchaseLimitation(channel, userWallet, Long.parseLong(amount), userRialAccount, merchant);
 
         // Create purchase request
         PurchaseRequestEntity purchaseRequest = createPurchaseRequest(
-                channel, rrn, merchant, userRialAccount, amount,price, commission,additionalData, nationalCode, TransactionTypeEnum.CUSTOMER_SELL);
+                channel, rrn, merchant, userRialAccount, amount,price, commission,additionalData, nationalCode, requestTypeService.getRequestType(RequestTypeService.SELL));
 
         // Process transactions
         sellProcessTransactions(
@@ -305,9 +320,9 @@ public class PurchaseServiceImplementation implements PurchaseService {
     }
 
     private RrnEntity validateTransaction(
-            ChannelEntity channel, String uniqueIdentifier, String signData, String dataForCheckInVerify) throws InternalServiceException {
+            ChannelEntity channel, String uniqueIdentifier, String signData, String dataForCheckInVerify, RequestTypeEntity requestTypeEntity, String amount, String accountNumber) throws InternalServiceException {
         log.info("Checking uniqueIdentifier {}", uniqueIdentifier);
-        RrnEntity rrn = rrnService.checkRrn(uniqueIdentifier, channel);
+        RrnEntity rrn = rrnService.checkRrn(uniqueIdentifier, channel, requestTypeEntity,  amount, accountNumber);
         log.info("Checking traceId {}", rrn.getId());
         requestService.checkTraceIdIsUnique(rrn.getId(), new PurchaseRequestEntity());
         securityService.checkSign(channel, signData, dataForCheckInVerify);
@@ -316,7 +331,8 @@ public class PurchaseServiceImplementation implements PurchaseService {
 
     private PurchaseRequestEntity createPurchaseRequest(
             ChannelEntity channel, RrnEntity rrn, MerchantEntity merchant, WalletAccountEntity userRialAccount,
-            String amount, String price, String commission, String additionalData, String nationalCode, TransactionTypeEnum transactionTypeEnum
+            String amount, String price, String commission, String additionalData, String nationalCode, RequestTypeEntity requestTypeEntity
+
     ) throws InternalServiceException {
         PurchaseRequestEntity request = new PurchaseRequestEntity();
         request.setCreatedAt(new Date());
@@ -329,7 +345,7 @@ public class PurchaseServiceImplementation implements PurchaseService {
         request.setRrnEntity(rrn);
         request.setChannel(channel);
         request.setAdditionalData(additionalData);
-        request.setTransactionType(transactionTypeEnum);
+        request.setRequestTypeEntity(requestTypeEntity);
         request.setCommission(commission);
         requestService.save(request);
         return request;
