@@ -125,31 +125,31 @@ public class SecurityServiceImplementation implements SecurityService {
     }
 
     @Override
-    public void checkSign(ChannelEntity profileEntity, String sign, String data) throws InternalServiceException {
-        log.info("start check sign for channel ({}), sign ({})...", profileEntity.getUsername(), sign);
+    public void checkSign(ChannelEntity channelEntity, String sign, String data) throws InternalServiceException {
+        log.info("start check sign for channel ({}), sign ({})...", channelEntity.getUsername(), sign);
         // channel not use sign
-        if (profileEntity.getSign() == ChannelService.FALSE) {
-            log.info("success check sign for channel ({}), set in data base no need for check sign !!!!, and we return true", profileEntity.getUsername());
+        if (channelEntity.getSign() == ChannelService.FALSE) {
+            log.info("success check sign for channel ({}), set in data base no need for check sign !!!!, and we return true", channelEntity.getUsername());
             return;
         }
         // fetch public key from dataBase
-        String publicKey = profileEntity.getPublicKey();
+        String publicKey = channelEntity.getPublicKey();
         if ((publicKey == null) || (publicKey.isEmpty())) {
-            log.error("failed check sign for channel ({}), public key is empty !!!! ", profileEntity.getUsername());
+            log.error("failed check sign for channel ({}), public key is empty !!!! ", channelEntity.getUsername());
             throw new InternalServiceException(INVALID_SIGN, StatusService.INVALID_SIGN, HttpStatus.OK);
         }
         try {
-            log.info("start verify signature for channel ({})...", profileEntity.getUsername());
+            log.info("start verify signature for channel ({})...", channelEntity.getUsername());
             boolean resultSign = verifySignature(data.getBytes(), sign.getBytes(), publicKey);
             if (resultSign) {
-                log.info("success verify signature for channel ({})...", profileEntity.getUsername());
+                log.info("success verify signature for channel ({})...", channelEntity.getUsername());
                 return;
             }
-            log.error("failed verify signature for channel ({}), result is false", profileEntity.getUsername());
+            log.error("failed verify signature for channel ({}), result is false", channelEntity.getUsername());
         } catch (Exception e) {
-            log.error("failed verify signature for channel ({}), error is ({}) ", profileEntity.getUsername(), e.getMessage());
+            log.error("failed verify signature for channel ({}), error is ({}) ", channelEntity.getUsername(), e.getMessage());
         }
-        log.info("failed check sign for channel ({})", profileEntity.getUsername());
+        log.info("failed check sign for channel ({})", channelEntity.getUsername());
         throw new InternalServiceException(INVALID_SIGN, StatusService.INVALID_SIGN, HttpStatus.OK);
     }
 }

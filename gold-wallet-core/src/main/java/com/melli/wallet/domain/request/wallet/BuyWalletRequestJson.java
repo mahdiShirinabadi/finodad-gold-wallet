@@ -14,8 +14,8 @@ import lombok.ToString;
 @ToString
 public class BuyWalletRequestJson {
 
-    @StringValidation
-    @Schema(name = "شناسه یکتا")
+    @StringValidation(label = "شناسه یکتا")
+    @Schema(name = "uniqueIdentifier", description = "شناسه یکتا")
     @JsonProperty("uniqueIdentifier")
     private String uniqueIdentifier;
 

@@ -5,7 +5,7 @@ import lombok.Setter;
 
 @Setter
 @Getter
-public class CashInTrackResponse {
+public class CashOutTrackResponse {
     private long  id;
     private String nationalCode;
     private String refNumber;

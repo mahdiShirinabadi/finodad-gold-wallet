@@ -2,6 +2,7 @@ package com.melli.wallet.service.impl;
 
 import com.melli.wallet.domain.master.entity.*;
 import com.melli.wallet.domain.master.persistence.CashInRequestRepository;
+import com.melli.wallet.domain.master.persistence.CashOutRequestRepository;
 import com.melli.wallet.domain.master.persistence.PurchaseRequestRepository;
 import com.melli.wallet.domain.response.cash.CashInTrackResponse;
 import com.melli.wallet.exception.InternalServiceException;
@@ -33,6 +34,7 @@ public class RequestServiceImplementation implements RequestService {
     private final RrnService rrnService;
     private final Helper helper;
     private final StatusService statusService;
+    private final CashOutRequestRepository cashOutRequestRepository;
 
 
     @Override
@@ -141,6 +143,14 @@ public class RequestServiceImplementation implements RequestService {
     @Override
     public CashInRequestEntity findCashInWithRrnId(long rrnId) throws InternalServiceException {
         return cashInRequestRepository.findOptionalByRrnEntityId(rrnId).orElseThrow(() -> {
+            log.error("cashInRequest with id ({}) not found", rrnId);
+            return new InternalServiceException("cashIn not found", StatusService.RECORD_NOT_FOUND, HttpStatus.OK);
+        });
+    }
+
+    @Override
+    public CashOutRequestEntity findCashOutWithRrnId(long rrnId) throws InternalServiceException {
+        return cashOutRequestRepository.findOptionalByRrnEntityId(rrnId).orElseThrow(() -> {
             log.error("cashInRequest with id ({}) not found", rrnId);
             return new InternalServiceException("cashIn not found", StatusService.RECORD_NOT_FOUND, HttpStatus.OK);
         });

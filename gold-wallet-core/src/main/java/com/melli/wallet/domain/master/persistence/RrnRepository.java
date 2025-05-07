@@ -9,7 +9,8 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface RrnRepository extends CrudRepository<RrnEntity, Long> {
 
-    RrnEntity findById(long id);
+    @Query(value = "select r from RrnEntity r where r.id=:id")
+    RrnEntity findById(@Param("id") long id);
 
     @Query(value="select uid from {h-schema}rrn where id = :id", nativeQuery= true)
     String findUidById(@Param("id") long id);

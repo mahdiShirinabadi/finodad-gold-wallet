@@ -17,7 +17,7 @@ import lombok.ToString;
 public class SellWalletRequestJson {
 
     @StringValidation
-    @Schema(name = "شناسه یکتا")
+    @Schema(name = "uniqueIdentifier", description = "شناسه یکتا")
     @JsonProperty("uniqueIdentifier")
     private String uniqueIdentifier;
 
@@ -30,7 +30,6 @@ public class SellWalletRequestJson {
     @Schema(name = "price", description = "مبلغ با کارمزد به ریال", example = "1000")
     @JsonProperty("price")
     private String price;
-
 
     @NotNull
     @NotEmpty

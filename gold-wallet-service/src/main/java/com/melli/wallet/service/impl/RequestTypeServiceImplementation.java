@@ -30,7 +30,7 @@ public class RequestTypeServiceImplementation implements RequestTypeService {
     @Cacheable(unless = "#result == null")
     public RequestTypeEntity getRequestType(String name) {
         log.info("start get RequestType for name ==> ({})", name);
-        return requestTypeDAO.findByName(name);
+        return requestTypeDAO.findByName(name.toLowerCase());
     }
 
 

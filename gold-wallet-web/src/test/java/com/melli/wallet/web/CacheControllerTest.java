@@ -2,6 +2,8 @@ package com.melli.wallet.web;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.melli.wallet.WalletApplicationTests;
+import com.melli.wallet.config.CacheClearService;
+import com.melli.wallet.config.FlywayConfig;
 import com.melli.wallet.domain.enumaration.WalletStatusEnum;
 import com.melli.wallet.domain.master.entity.*;
 import com.melli.wallet.domain.request.wallet.*;
@@ -16,10 +18,12 @@ import com.melli.wallet.domain.response.wallet.WalletAccountObject;
 import com.melli.wallet.service.*;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.ObjectUtils;
+import org.flywaydb.core.Flyway;
 import org.junit.Assert;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -37,9 +41,10 @@ import static org.springframework.security.test.web.servlet.setup.SecurityMockMv
  * Date: 4/7/2025
  */
 @Log4j2
-@DisplayName("WalletEndPoint End2End test")
+@DisplayName("CacheControllerTest End2End test")
+@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_CLASS)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-class WalletControllerTest extends WalletApplicationTests {
+class CacheControllerTest extends WalletApplicationTests {
 
     private static final String CREATE_WALLET_PATH = "/api/v1/wallet/create";
     private static final String GET_DATA_WALLET_PATH = "/api/v1/wallet/get";
@@ -47,13 +52,14 @@ class WalletControllerTest extends WalletApplicationTests {
     private static final String DEACTIVATED_WALLET_PATH = "/api/v1/wallet/deactivate";
     private static final String DELETE_WALLET_PATH = "/api/v1/wallet/delete";
     private static final String GENERATE_UUID_PATH = "/api/v1/general/generate/uuid";
-    private static final String CASH_IN_GENERATE_UUID_PATH = "/api/v1/cash/generate/uuid";
     private static final String PURCHASE_GENERATE_UUID_PATH = "/api/v1/purchase/generate/uuid";
     private static final String BUY_IN_PATH = "/api/v1/purchase/buy";
     private static final String SELL_IN_PATH = "/api/v1/purchase/sell";
     private static final String PURCHASE_INQUIRY_IN_PATH = "/api/v1/purchase/inquiry";
-    private static final String CASH_IN_PATH = "/api/v1/cash/cashIn";
-    private static final String CASH_IN_INQUIRY_PATH = "/api/v1/cash/track/cashIn/";
+
+    private static final String CASH_IN_GENERATE_UUID_PATH = "/api/v1/cash/charge/generate/uuid";
+    private static final String CASH_IN_PATH = "/api/v1/cash/charge";
+    private static final String CASH_IN_INQUIRY_PATH = "/api/v1/cash/charge/inquiry";
 
     private static final String NATIONAL_CODE_CORRECT = "0077847660";
     private static final String NATIONAL_CODE_INCORRECT = "0077847661";
@@ -77,6 +83,10 @@ class WalletControllerTest extends WalletApplicationTests {
     private LimitationGeneralCustomService limitationGeneralCustomService;
     @Autowired
     private ChannelService channelService;
+    @Autowired
+    private CacheClearService cacheClearService;
+    @Autowired
+    private Flyway flyway;
 
 
     @Test
@@ -85,9 +95,10 @@ class WalletControllerTest extends WalletApplicationTests {
     void initial() {
         mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).apply(springSecurity()).build();
         Assert.assertNotNull(mockMvc);
-
-        boolean success = setupDB();
-        Assert.assertTrue(success);
+        log.info("start cleaning initial values in test DB");
+        flyway.clean();
+        flyway.migrate();
+        cacheClearService.clearCache();
     }
 
     @Test
@@ -184,8 +195,6 @@ class WalletControllerTest extends WalletApplicationTests {
         String refNumber = new Date().getTime() + "";
         String amount = "10";
         WalletAccountObject walletAccountObjectOptional = getAccountNumber(NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.RIAL);
-
-
         WalletAccountEntity walletAccountEntity = walletAccountService.findByAccountNumber(walletAccountObjectOptional.getAccountNumber());
         String value = getSettingValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN,  walletAccountObjectOptional.getAccountNumber());
         if("false".equalsIgnoreCase(value)){
@@ -289,27 +298,6 @@ class WalletControllerTest extends WalletApplicationTests {
         }
 
     }
-
-    //CashInFail MaxBalanceDaily
-    /*@Test
-    @Order(31)
-    @DisplayName("cashInFail-max balance daily")
-    void cashInFailMaxBalanceDaily() throws Exception {
-        String refNumber = new Date().getTime() + "";
-        String amount = "10000000000";
-        Optional<WalletAccountObject> walletAccountObjectOptional = getAccountNumber(NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.RIAL);
-        String uuid = generateUuid(NATIONAL_CODE_CORRECT);
-        WalletAccountEntity walletAccountEntity = walletAccountService.findByAccountNumber(walletAccountObjectOptional.get().getAccountNumber());
-        String value = getSettingValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN,  walletAccountObjectOptional.get().getAccountNumber());
-        if("false".equalsIgnoreCase(value)){
-            limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
-                    LimitationGeneralService.ENABLE_CASH_IN, walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
-                    walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
-                    "true","test cashInFailMinAmount");
-        }
-        cashIn(ACCESS_TOKEN, uuid, refNumber, amount, NATIONAL_CODE_CORRECT, walletAccountObjectOptional.get().getAccountNumber(), "", "", HttpStatus.OK, StatusService.WALLET_EXCEEDED_AMOUNT_LIMITATION, false);
-    }*/
-
 
     //duplicate refnumber
     @Test
@@ -584,7 +572,7 @@ class WalletControllerTest extends WalletApplicationTests {
     BaseResponse<UuidResponse> generatePurchaseUniqueIdentifier(String token, String nationalCode, String amount, String accountNumber, String type, HttpStatus httpStatus, int errorCode, boolean success) throws Exception {
         PurchaseGenerateUuidRequestJson requestJson = new PurchaseGenerateUuidRequestJson();
         requestJson.setNationalCode(nationalCode);
-        requestJson.setAmount(amount);
+        requestJson.setPrice(amount);
         requestJson.setAccountNumber(accountNumber);
         requestJson.setPurchaseType(type);
         MockHttpServletRequestBuilder postRequest = buildPostRequest(token, PURCHASE_GENERATE_UUID_PATH, mapToJson(requestJson));

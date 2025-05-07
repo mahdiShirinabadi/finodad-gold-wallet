@@ -8,13 +8,15 @@ import com.melli.wallet.domain.redis.WalletLimitationRedis;
 import com.melli.wallet.domain.redis.WalletMonthlyLimitationRedis;
 import com.melli.wallet.exception.InternalServiceException;
 
+import java.math.BigDecimal;
+
 public interface WalletLimitationService {
 
 	void save(WalletLimitationRedis walletLimitation);
 
 	void saveMonthly(WalletMonthlyLimitationRedis walletMonthlyLimitation);
 
-	void checkPurchaseLimitation(ChannelEntity channel, WalletEntity wallet, long amount, WalletAccountEntity walletAccount, MerchantEntity merchant) throws InternalServiceException;
+	void checkPurchaseLimitation(ChannelEntity channel, WalletEntity wallet, BigDecimal amount, WalletAccountEntity walletAccount, MerchantEntity merchant) throws InternalServiceException;
 
 	void checkCashInLimitation(ChannelEntity channel, WalletEntity wallet, long amount, WalletAccountEntity walletAccount) throws InternalServiceException;
 

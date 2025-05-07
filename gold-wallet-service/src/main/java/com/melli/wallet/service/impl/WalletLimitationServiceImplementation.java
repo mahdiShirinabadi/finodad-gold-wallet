@@ -51,7 +51,7 @@ public class WalletLimitationServiceImplementation implements WalletLimitationSe
     }
 
     @Override
-    public void checkPurchaseLimitation(ChannelEntity channel, WalletEntity wallet, long amount, WalletAccountEntity walletAccount, MerchantEntity merchant) throws InternalServiceException {
+    public void checkPurchaseLimitation(ChannelEntity channel, WalletEntity wallet, BigDecimal price, WalletAccountEntity walletAccount, MerchantEntity merchant) throws InternalServiceException {
 
         //check balance wallet account Rial for profile
 

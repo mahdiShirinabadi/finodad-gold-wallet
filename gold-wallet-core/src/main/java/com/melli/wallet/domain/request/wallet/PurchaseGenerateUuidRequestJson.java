@@ -17,12 +17,12 @@ public class PurchaseGenerateUuidRequestJson {
     private String nationalCode;
 
     @NumberValidation
-    @Schema(name = "amount", description = "مبلغ به ریال", example = "1000")
-    @JsonProperty("amount")
-    private String amount;
+    @Schema(name = "price", description = "مبلغ به ریال", example = "1000")
+    @JsonProperty("price")
+    private String price;
 
-    @Schema(name = "accountNumber", description = "شماره حساب")
-    @JsonProperty("accountNumber")
+    @Schema(name = "walletAccountNumber", description = "شماره حساب")
+    @JsonProperty("walletAccountNumber")
     private String accountNumber;
 
     @PurchaseTypeValidation(label = "نوع تراکنش")

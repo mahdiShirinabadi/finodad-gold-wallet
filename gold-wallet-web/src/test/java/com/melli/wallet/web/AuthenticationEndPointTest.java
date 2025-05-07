@@ -2,6 +2,8 @@ package com.melli.wallet.web;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.melli.wallet.WalletApplicationTests;
+import com.melli.wallet.config.CacheClearService;
+import com.melli.wallet.config.FlywayConfig;
 import com.melli.wallet.domain.master.entity.ChannelEntity;
 import com.melli.wallet.domain.request.login.RefreshTokenRequestJson;
 import com.melli.wallet.domain.response.base.BaseResponse;
@@ -10,10 +12,12 @@ import com.melli.wallet.service.ChannelService;
 import com.melli.wallet.service.StatusService;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.ObjectUtils;
+import org.flywaydb.core.Flyway;
 import org.junit.Assert;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -33,6 +37,10 @@ public class AuthenticationEndPointTest extends WalletApplicationTests {
 
     @Autowired
     private ChannelService channelService;
+    @Autowired
+    private CacheClearService cacheClearService;
+    @Autowired
+    private Flyway flyway;
 
 
     private static final String REFRESHTOKEN_PATH = "/api/v1/auth/refresh";
@@ -52,9 +60,9 @@ public class AuthenticationEndPointTest extends WalletApplicationTests {
     void initial() {
         mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).apply(springSecurity()).build();
         Assert.assertNotNull(mockMvc);
-
-        boolean success = setupDB();
-        Assert.assertTrue(success);
+        flyway.clean();
+        flyway.migrate();
+        cacheClearService.clearCache();
     }
 
     @Test

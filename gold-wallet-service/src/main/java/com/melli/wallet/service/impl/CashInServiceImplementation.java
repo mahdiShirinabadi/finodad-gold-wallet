@@ -1,5 +1,6 @@
 package com.melli.wallet.service.impl;
 
+import com.melli.wallet.domain.dto.ChargeObjectDTO;
 import com.melli.wallet.domain.master.entity.*;
 import com.melli.wallet.domain.master.persistence.RefnumberRepository;
 import com.melli.wallet.domain.redis.RefNumberRedis;
@@ -34,17 +35,14 @@ import java.util.concurrent.locks.Lock;
 @Service
 @Log4j2
 @RequiredArgsConstructor
-public class CashServiceImplementation implements CashService {
-
+public class CashInServiceImplementation implements CashInService {
 
     private final RedisLockService redisLockService;
     private final RrnService rrnService;
     private final RequestService requestService;
-    private final SecurityService securityService;
     private final Helper helper;
     private final WalletService walletService;
     private final WalletAccountService walletAccountService;
-    private final WalletTypeService walletTypeService;
     private final WalletLimitationService walletLimitationService;
     private final RequestTypeService requestTypeService;
     private final TemplateService templateService;
@@ -73,41 +71,38 @@ public class CashServiceImplementation implements CashService {
 
     @Override
     @Transactional(propagation = Propagation.REQUIRED, rollbackFor = Exception.class)
-    public CashInResponse cashIn(ChannelEntity channelEntity, String nationalCode, String uniqueIdentifier, String amount, String refNumber, String signData, String dataForCheckInVerify, String accountNumber, String additionalData, String ip) throws InternalServiceException {
+    public CashInResponse charge(ChargeObjectDTO chargeObjectDTO) throws InternalServiceException {
 
         RequestTypeEntity requestTypeEntity = requestTypeService.getRequestType(RequestTypeService.CASH_IN);
+        RrnEntity rrnEntity = rrnService.findByUid(chargeObjectDTO.getUniqueIdentifier());
 
-        RrnEntity rrnEntity = rrnService.findByUid(uniqueIdentifier);
-        securityService.checkSign(channelEntity, signData, dataForCheckInVerify);
-
-        return redisLockService.runAfterLock(uniqueIdentifier, this.getClass(), () -> {
-            log.info("start checking existence of traceId({}) ...", uniqueIdentifier);
-            rrnService.checkRrn(uniqueIdentifier, channelEntity, requestTypeEntity, amount, accountNumber);
-            log.info("finish checking existence of traceId({})", uniqueIdentifier);
+        return redisLockService.runAfterLock(chargeObjectDTO.getUniqueIdentifier(), this.getClass(), () -> {
+            log.info("start checking existence of traceId({}) ...", chargeObjectDTO.getUniqueIdentifier());
+            rrnService.checkRrn(chargeObjectDTO.getUniqueIdentifier(), chargeObjectDTO.getChannel(), requestTypeEntity, String.valueOf(chargeObjectDTO.getAmount()), chargeObjectDTO.getAccountNumber());
+            log.info("finish checking existence of traceId({})", chargeObjectDTO.getUniqueIdentifier());
 
             requestService.findCashInDuplicateWithRrnId(rrnEntity.getId());
 
-            Lock refNumberLock = redisLockRegistry.obtain(refNumber);
+            Lock refNumberLock = redisLockRegistry.obtain(chargeObjectDTO.getRefNumber());
             boolean lockSuccess = false;
             try {
                 lockSuccess = refNumberLock.tryLock(5, TimeUnit.SECONDS);
                 if (!lockSuccess) {
-                    log.error("Failed to acquire lock for ref_number: {}", refNumber);
+                    log.error("Failed to acquire lock for ref_number: {}", chargeObjectDTO.getRefNumber());
                     throw new InternalServiceException("Unable to acquire lock for ref_number", StatusService.GENERAL_ERROR, HttpStatus.OK);
                 }
 
-                Optional<RefNumberRedis> refnumberCheck = refnumberRepository.findById(refNumber);
+                Optional<RefNumberRedis> refnumberCheck = refnumberRepository.findById(chargeObjectDTO.getRefNumber());
                 if (refnumberCheck.isPresent()) {
-                    log.error("ref number ({}) is duplicated", refNumber);
+                    log.error("ref number ({}) is duplicated", chargeObjectDTO.getRefNumber());
                     throw new InternalServiceException("rer number is duplicate", StatusService.REF_NUMBER_USED_BEFORE, HttpStatus.OK);
                 } else {
                     RefNumberRedis refNumberRedis = new RefNumberRedis();
-                    refNumberRedis.setId(refNumber);
+                    refNumberRedis.setId(chargeObjectDTO.getRefNumber());
                     refnumberRepository.save(refNumberRedis);
                 }
-
             } catch (Exception ex) {
-                log.error("ref number ({}) is duplicated or system can not be lock", refNumber);
+                log.error("ref number ({}) is duplicated or system can not be lock", chargeObjectDTO.getRefNumber());
                 throw new InternalServiceException("ref number is duplicate", StatusService.REF_NUMBER_USED_BEFORE, HttpStatus.OK);
             } finally {
                 if (lockSuccess) {
@@ -115,44 +110,44 @@ public class CashServiceImplementation implements CashService {
                 }
             }
 
-            requestService.findSuccessCashInByRefNumber(refNumber);
+            requestService.findSuccessCashInByRefNumber(chargeObjectDTO.getRefNumber());
 
-            WalletAccountEntity walletAccountEntity = helper.checkWalletAndWalletAccountForNormalUser(walletService, rrnEntity.getNationalCode(), walletAccountService, accountNumber);
-            walletLimitationService.checkCashInLimitation(channelEntity, walletAccountEntity.getWalletEntity(), Long.parseLong(amount), walletAccountEntity);
+            WalletAccountEntity walletAccountEntity = helper.checkWalletAndWalletAccountForNormalUser(walletService, rrnEntity.getNationalCode(), walletAccountService, chargeObjectDTO.getAccountNumber());
+            walletLimitationService.checkCashInLimitation(chargeObjectDTO.getChannel(), walletAccountEntity.getWalletEntity(), Long.parseLong(chargeObjectDTO.getAmount()), walletAccountEntity);
 
             CashInRequestEntity cashInRequestEntity = new CashInRequestEntity();
-            cashInRequestEntity.setAmount(Long.parseLong(amount));
-            cashInRequestEntity.setRefNumber(refNumber);
+            cashInRequestEntity.setAmount(Long.parseLong(chargeObjectDTO.getAmount()));
+            cashInRequestEntity.setRefNumber(chargeObjectDTO.getRefNumber());
             cashInRequestEntity.setWalletAccount(walletAccountEntity);
             cashInRequestEntity.setRrnEntity(rrnEntity);
-            cashInRequestEntity.setAdditionalData(additionalData);
-            cashInRequestEntity.setChannel(channelEntity);
+            cashInRequestEntity.setAdditionalData(chargeObjectDTO.getAdditionalData());
+            cashInRequestEntity.setChannel(chargeObjectDTO.getChannel());
             cashInRequestEntity.setResult(StatusService.CREATE);
-            cashInRequestEntity.setChannelIp(ip);
+            cashInRequestEntity.setChannelIp(chargeObjectDTO.getIp());
             cashInRequestEntity.setRequestTypeEntity(requestTypeEntity);
-            cashInRequestEntity.setCreatedBy(channelEntity.getUsername());
+            cashInRequestEntity.setCreatedBy(chargeObjectDTO.getChannel().getUsername());
             cashInRequestEntity.setCreatedAt(new Date());
-            cashInRequestEntity.setRefNumber(refNumber);
+            cashInRequestEntity.setRefNumber(chargeObjectDTO.getRefNumber());
             try {
                 requestService.save(cashInRequestEntity);
             } catch (Exception ex) {
-                refnumberRepository.deleteById(refNumber);
+                refnumberRepository.deleteById(chargeObjectDTO.getRefNumber());
                 log.error("error in save cashIn with message ({})", ex.getMessage());
                 throw new InternalServiceException("error in save cashIn", StatusService.GENERAL_ERROR, HttpStatus.OK);
             }
             cashInRequestEntity.setResult(StatusService.SUCCESSFUL);
-            cashInRequestEntity.setAdditionalData(additionalData);
+            cashInRequestEntity.setAdditionalData(chargeObjectDTO.getAdditionalData());
 
             TransactionEntity transaction = new TransactionEntity();
-            transaction.setAmount(Long.parseLong(amount));
+            transaction.setAmount(Long.parseLong(chargeObjectDTO.getAmount()));
             transaction.setWalletAccountEntity(walletAccountEntity);
-            transaction.setAdditionalData(additionalData);
+            transaction.setAdditionalData(chargeObjectDTO.getAdditionalData());
             transaction.setRequestTypeId(cashInRequestEntity.getRequestTypeEntity().getId());
 
             Map<String, Object> model = new HashMap<>();
-            model.put("amount", Utility.addComma(Long.parseLong(amount)));
+            model.put("amount", Utility.addComma(Long.parseLong(chargeObjectDTO.getAmount())));
             model.put("traceId", String.valueOf(rrnEntity.getId()));
-            model.put("additionalData", additionalData);
+            model.put("additionalData", chargeObjectDTO.getAdditionalData());
             String templateMessage = templateService.getTemplate(TemplateService.CASH_IN);
             transaction.setDescription(messageResolverService.resolve(templateMessage, model));
             transactionService.insertDeposit(transaction);
@@ -161,17 +156,17 @@ public class CashServiceImplementation implements CashService {
             requestService.save(cashInRequestEntity);
 
             log.info("Start updating CashInLimitation for walletAccount ({})", walletAccountEntity.getAccountNumber());
-            walletLimitationService.updateCashInLimitation(walletAccountEntity, Long.parseLong(amount));
+            walletLimitationService.updateCashInLimitation(walletAccountEntity, Long.parseLong(chargeObjectDTO.getAmount()));
             log.info("updating CashInLimitation for walletAccount ({}) is finished.", walletAccountEntity.getAccountNumber());
 
             long walletAccountServiceBalance = walletAccountService.getBalance(walletAccountEntity.getId());
 
-            return helper.fillCashInResponse(nationalCode, rrnEntity.getUuid(), walletAccountServiceBalance, walletAccountEntity.getAccountNumber());
-        }, uniqueIdentifier);
+            return helper.fillCashInResponse(chargeObjectDTO.getNationalCode(), rrnEntity.getUuid(), walletAccountServiceBalance, walletAccountEntity.getAccountNumber());
+        }, chargeObjectDTO.getUniqueIdentifier());
     }
 
     @Override
-    public CashInTrackResponse cashInTrack(ChannelEntity channelEntity, String uuid, String channelIp) throws InternalServiceException {
+    public CashInTrackResponse inquiry(ChannelEntity channelEntity, String uuid, String channelIp) throws InternalServiceException {
         RequestTypeEntity requestTypeEntity = requestTypeService.getRequestType(RequestTypeService.CASH_IN);
         RrnEntity rrnEntity = rrnService.findByUid(uuid);
         rrnService.checkRrn(uuid, channelEntity, requestTypeEntity,"","");

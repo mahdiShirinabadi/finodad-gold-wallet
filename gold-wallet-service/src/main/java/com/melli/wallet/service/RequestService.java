@@ -45,6 +45,7 @@ public interface RequestService {
     CashInRequestEntity findCashInWithId(long requestId);
 
     CashInRequestEntity findCashInWithRrnId(long rrnId) throws InternalServiceException;
+    CashOutRequestEntity findCashOutWithRrnId(long rrnId) throws InternalServiceException;
 
     CashInRequestEntity findCashInDuplicateWithRrnId(long rrnId) throws InternalServiceException;
 

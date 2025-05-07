@@ -6,6 +6,7 @@ import com.melli.wallet.domain.response.base.BaseResponse;
 import com.melli.wallet.domain.response.base.ErrorDetail;
 import com.melli.wallet.domain.response.cash.CashInResponse;
 import com.melli.wallet.domain.response.cash.CashInTrackResponse;
+import com.melli.wallet.domain.response.cash.CashOutTrackResponse;
 import com.melli.wallet.domain.response.limitation.LimitationListResponse;
 import com.melli.wallet.domain.response.limitation.LimitationObject;
 import com.melli.wallet.domain.response.login.*;
@@ -20,7 +21,6 @@ import com.melli.wallet.service.*;
 import com.melli.wallet.util.StringUtils;
 import com.melli.wallet.util.date.DateUtils;
 import lombok.extern.log4j.Log4j2;
-import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -88,9 +88,26 @@ public class Helper {
         response.setUniqueIdentifier(cashInRequestEntity.getRrnEntity().getUuid());
         response.setResult(cashInRequestEntity.getResult());
         response.setDescription(statusEntity != null ? statusEntity.getPersianDescription() : "");
-        response.setAccountNumber(cashInRequestEntity.getWalletAccount().getAccountNumber());
+        response.setWalletAccountNumber(cashInRequestEntity.getWalletAccount().getAccountNumber());
         response.setCreateTime(DateUtils.getLocaleDate(DateUtils.FARSI_LOCALE, cashInRequestEntity.getCreatedAt(), FORMAT_DATE_RESPONSE, false));
         response.setCreateTimeTimestamp(cashInRequestEntity.getCreatedAt().getTime());
+
+        return response;
+    }
+
+
+    public CashOutTrackResponse fillCashOutTrackResponse(CashOutRequestEntity cashOutRequestEntity, StatusService statusService) {
+        StatusEntity statusEntity = statusService.findByCode(String.valueOf(cashOutRequestEntity.getResult()));
+        CashOutTrackResponse response = new CashOutTrackResponse();
+        response.setId(cashOutRequestEntity.getId());
+        response.setNationalCode(cashOutRequestEntity.getWalletAccountEntity().getWalletEntity().getNationalCode());
+        response.setAmount(cashOutRequestEntity.getAmount());
+        response.setUniqueIdentifier(cashOutRequestEntity.getRrnEntity().getUuid());
+        response.setResult(cashOutRequestEntity.getResult());
+        response.setDescription(statusEntity != null ? statusEntity.getPersianDescription() : "");
+        response.setWalletAccountNumber(cashOutRequestEntity.getWalletAccountEntity().getAccountNumber());
+        response.setCreateTime(DateUtils.getLocaleDate(DateUtils.FARSI_LOCALE, cashOutRequestEntity.getCreatedAt(), FORMAT_DATE_RESPONSE, false));
+        response.setCreateTimeTimestamp(cashOutRequestEntity.getCreatedAt().getTime());
 
         return response;
     }

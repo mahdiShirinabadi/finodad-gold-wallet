@@ -26,6 +26,8 @@ public @interface NumberValidation {
 
     boolean allowNegative() default false;
 
+    boolean allowDecimal() default false;
+
     //represents group of constraints
     Class<?>[] groups() default {};
 

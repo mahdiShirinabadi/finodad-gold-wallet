@@ -1,5 +1,7 @@
 package com.melli.wallet.service;
 
+import com.melli.wallet.domain.dto.BuyRequestDTO;
+import com.melli.wallet.domain.dto.SellRequestDTO;
 import com.melli.wallet.domain.master.entity.ChannelEntity;
 import com.melli.wallet.domain.response.UuidResponse;
 import com.melli.wallet.domain.response.purchase.PurchaseResponse;
@@ -13,8 +15,8 @@ import com.melli.wallet.exception.InternalServiceException;
  */
 
 public interface PurchaseService {
-    UuidResponse generateUuid(ChannelEntity channelEntity, String nationalCode, String amount, String accountNumber, String type) throws InternalServiceException;
-    PurchaseResponse buy(ChannelEntity channel, String uniqueIdentifier, String amount, String price, String walletAccountNumber, String signData, String dataForCheckInVerify, String additionalData, String merchantId, String nationalCode, String commission, String currency, String ip, String commissionCurrency) throws InternalServiceException;
-    PurchaseResponse sell(ChannelEntity channel, String uniqueIdentifier, String amount, String price, String walletAccountNumber, String signData, String dataForCheckInVerify, String additionalData, String merchantId, String nationalCode, String commission, String currency, String ip, String commissionCurrency) throws InternalServiceException;
+    UuidResponse generateUuid(ChannelEntity channelEntity, String nationalCode, String price, String accountNumber, String type) throws InternalServiceException;
+    PurchaseResponse buy(BuyRequestDTO buyRequestDTO) throws InternalServiceException;
+    PurchaseResponse sell(SellRequestDTO sellRequestDTO) throws InternalServiceException;
     PurchaseTrackResponse purchaseTrack(ChannelEntity channel, String uniqueIdentifier, String type, String channelIp) throws InternalServiceException;
 }

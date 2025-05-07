@@ -594,7 +594,7 @@ insert into channel(created_by, created_at, firstname, lastname, username, mobil
                     ip, status, account, check_shahkar)
 values ('Systen', now(), 'Mahdi', 'admin', 'admin', '09124162337',
         '$2a$10$U5lecEunX.HBU.MBVLUV8OvwCrgGDJtaKVgGA5hzgwfsfTV8GD8TK', 1, 0, '', '0.0.0.0/0', 1,
-        '1234567890', '1232131313');
+        '1234567890', '0');
 
 insert into resource(created_by, created_at, name, fa_name, display)
 values ('system', 'now()', 'WALLET_CREATE', 'ایجاد کیف پول', 1);

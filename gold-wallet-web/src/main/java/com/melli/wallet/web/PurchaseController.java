@@ -1,8 +1,9 @@
 package com.melli.wallet.web;
 
 import com.melli.wallet.annotation.fund_type.PurchaseTypeValidation;
+import com.melli.wallet.domain.dto.BuyRequestDTO;
+import com.melli.wallet.domain.dto.SellRequestDTO;
 import com.melli.wallet.domain.request.wallet.BuyWalletRequestJson;
-import com.melli.wallet.domain.request.wallet.CashInGenerateUuidRequestJson;
 import com.melli.wallet.domain.request.wallet.PurchaseGenerateUuidRequestJson;
 import com.melli.wallet.domain.request.wallet.SellWalletRequestJson;
 import com.melli.wallet.domain.response.UuidResponse;
@@ -13,6 +14,7 @@ import com.melli.wallet.exception.InternalServiceException;
 import com.melli.wallet.security.RequestContext;
 import com.melli.wallet.service.PurchaseService;
 import com.melli.wallet.service.ResourceService;
+import com.melli.wallet.service.SecurityService;
 import io.micrometer.core.annotation.Timed;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -24,6 +26,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+
+import java.math.BigDecimal;
 
 /**
  * Class Name: CashEndPoint
@@ -39,6 +43,7 @@ public class PurchaseController extends WebController {
 
     private final RequestContext requestContext;
     private final PurchaseService purchaseService;
+    private final SecurityService securityService;
 
     @Timed(description = "Time taken to create wallet")
     @PostMapping(path = "generate/uuid", produces = {MediaType.APPLICATION_JSON_VALUE})
@@ -46,7 +51,7 @@ public class PurchaseController extends WebController {
     @PreAuthorize("hasAuthority(\""+ ResourceService.CASH_IN +"\")")
     public ResponseEntity<BaseResponse<UuidResponse>> generateUuid(@RequestBody PurchaseGenerateUuidRequestJson requestJson) throws InternalServiceException {
         log.info("start call uuid nationalCode ===> {}", requestJson.getNationalCode());
-        UuidResponse response = purchaseService.generateUuid(requestContext.getChannelEntity(), requestJson.getNationalCode(), requestJson.getAmount(), requestJson.getAccountNumber(), requestJson.getPurchaseType());
+        UuidResponse response = purchaseService.generateUuid(requestContext.getChannelEntity(), requestJson.getNationalCode(), requestJson.getPrice(), requestJson.getAccountNumber(), requestJson.getPurchaseType());
         return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse<>(true,response));
     }
 
@@ -69,10 +74,14 @@ public class PurchaseController extends WebController {
     public ResponseEntity<BaseResponse<PurchaseResponse>> buy(@RequestBody BuyWalletRequestJson requestJson) throws InternalServiceException {
         String channelIp = requestContext.getClientIp();
         String username = requestContext.getChannelEntity().getUsername();
-        log.info("start call purchase in username ===> {}, nationalCode ===> {}, from ip ===> {}", username, requestJson.getNationalCode(), channelIp);
-        PurchaseResponse cashInResponse = purchaseService.buy(requestContext.getChannelEntity(), requestJson.getUniqueIdentifier(), requestJson.getAmount(),
-                requestJson.getPrice(), requestJson.getWalletAccountNumber(), requestJson.getSign(),  requestJson.getDataString(),requestJson.getAdditionalData(), requestJson.getMerchantId(),
-                requestJson.getNationalCode(), requestJson.getCommissionObject().getAmount(), requestJson.getCurrency(), channelIp, requestJson.getCommissionObject().getCurrency());
+
+        log.info("start call buy in username ===> {}, nationalCode ===> {}, from ip ===> {}", username, requestJson.getNationalCode(), channelIp);
+        securityService.checkSign(requestContext.getChannelEntity(), requestJson.getSign(), requestJson.getDataString());
+
+        PurchaseResponse cashInResponse = purchaseService.buy(new BuyRequestDTO(requestContext.getChannelEntity(), requestJson.getUniqueIdentifier(), BigDecimal.valueOf(Float.parseFloat(requestJson.getAmount())),
+                Long.parseLong(requestJson.getPrice()), requestJson.getWalletAccountNumber(), requestJson.getAdditionalData(), requestJson.getMerchantId(),
+                requestJson.getNationalCode(), BigDecimal.valueOf(Float.parseFloat(requestJson.getCommissionObject().getAmount())), requestJson.getCurrency(), channelIp, requestJson.getCommissionObject().getCurrency()));
+
         return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse<>(true,cashInResponse));
     }
 
@@ -81,12 +90,17 @@ public class PurchaseController extends WebController {
     @Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "فروش")
     @PreAuthorize("hasAuthority(\""+ ResourceService.SELL +"\")")
     public ResponseEntity<BaseResponse<PurchaseResponse>> sell(@RequestBody SellWalletRequestJson requestJson) throws InternalServiceException {
+
         String channelIp = requestContext.getClientIp();
         String username = requestContext.getChannelEntity().getUsername();
-        log.info("start call purchase in username ===> {}, nationalCode ===> {}, from ip ===> {}", username, requestJson.getNationalCode(), channelIp);
-        PurchaseResponse cashInResponse = purchaseService.sell(requestContext.getChannelEntity(), requestJson.getUniqueIdentifier(), requestJson.getAmount(),
-                requestJson.getPrice(), requestJson.getWalletAccountNumber(), requestJson.getSign(),  requestJson.getDataString(),requestJson.getAdditionalData(), requestJson.getMerchantId(),
-                requestJson.getNationalCode(), requestJson.getCommissionObject().getAmount(),requestJson.getCurrency(), channelIp, requestJson.getCommissionObject().getCurrency());
+
+        log.info("start call sell in username ===> {}, nationalCode ===> {}, from ip ===> {}", username, requestJson.getNationalCode(), channelIp);
+        securityService.checkSign(requestContext.getChannelEntity(), requestJson.getSign(), requestJson.getDataString());
+
+        PurchaseResponse cashInResponse = purchaseService.sell(new SellRequestDTO(requestContext.getChannelEntity(), requestJson.getUniqueIdentifier(), Float.parseFloat(requestJson.getAmount()),
+                Long.parseLong(requestJson.getPrice()), requestJson.getWalletAccountNumber(), requestJson.getAdditionalData(), requestJson.getMerchantId(),
+                requestJson.getNationalCode(), Float.parseFloat(requestJson.getCommissionObject().getAmount()),requestJson.getCurrency(), channelIp, requestJson.getCommissionObject().getCurrency()));
+
         return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse<>(true,cashInResponse));
     }
 }

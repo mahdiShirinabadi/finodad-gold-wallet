@@ -7,7 +7,7 @@ import lombok.*;
 @ToString
 @AllArgsConstructor
 @NoArgsConstructor
-public class CashInResponse {
+public class CashOutResponse {
 
     private String nationalCode;
     private String balance;
