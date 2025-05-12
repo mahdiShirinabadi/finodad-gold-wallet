@@ -116,7 +116,7 @@ public class Helper {
         StatusEntity statusEntity = statusService.findByCode(String.valueOf(purchaseRequestEntity.getResult()));
         PurchaseTrackObject response = new PurchaseTrackObject();
         response.setNationalCode(purchaseRequestEntity.getWalletAccount().getWalletEntity().getNationalCode());
-        response.setAmount(String.valueOf(purchaseRequestEntity.getAmount()));
+        response.setAmount(String.valueOf(purchaseRequestEntity.getQuantity()));
         response.setUniqueIdentifier(purchaseRequestEntity.getRrnEntity().getUuid());
         response.setResult(String.valueOf(purchaseRequestEntity.getResult()));
         response.setDescription(statusEntity != null ? statusEntity.getPersianDescription() : "");
@@ -132,7 +132,7 @@ public class Helper {
     public PurchaseResponse fillPurchaseResponse(PurchaseRequestEntity purchaseRequestEntity) {
         PurchaseResponse response = new PurchaseResponse();
         response.setNationalCode(purchaseRequestEntity.getWalletAccount().getWalletEntity().getNationalCode());
-        response.setAmount(String.valueOf(purchaseRequestEntity.getAmount()));
+        response.setAmount(String.valueOf(purchaseRequestEntity.getQuantity()));
         response.setUniqueIdentifier(purchaseRequestEntity.getRrnEntity().getUuid());
         response.setPrice(String.valueOf(purchaseRequestEntity.getPrice()));
         response.setType(purchaseRequestEntity.getRequestTypeEntity().getName());
@@ -234,6 +234,11 @@ public class Helper {
         }
 
         return walletAccount;
+    }
+
+    public  int convertDateToMonth(Date dateInput){
+        String persianDate = DateUtils.getLocaleDate(DateUtils.FARSI_LOCALE, dateInput, "MM", false);
+        return Integer.parseInt(persianDate);
     }
 
     public WalletEntity checkWallet(WalletService walletService, String nationalCode, WalletTypeEntity walletTypeEntity) throws InternalServiceException {

@@ -1,6 +1,5 @@
 package com.melli.wallet.domain.master.entity;
 
-import com.melli.wallet.domain.enumaration.PurchaseTypeEnum;
 import com.melli.wallet.domain.enumaration.TransactionTypeEnum;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -20,8 +19,8 @@ public class PurchaseRequestEntity extends RequestEntity {
 	@Column(name = "price")
 	private Long price; // Purchased quantity price
 
-	@Column(name = "amount", precision = 10, scale = 5)
-	private BigDecimal amount; // Purchased quantity
+	@Column(name = "quantity", precision = 10, scale = 5)
+	private BigDecimal quantity; // Purchased quantity
 
 	@ManyToOne
 	@JoinColumn(name = "wallet_account_id", nullable = false)
@@ -49,6 +48,10 @@ public class PurchaseRequestEntity extends RequestEntity {
 
 	@Column(name = "commission", length = 500)
 	private String commission;
+
+	@Enumerated(EnumType.STRING)
+	@Column(name = "transaction_type")
+	private TransactionTypeEnum transactionTypeEnum;
 
 	@Transient
 	private long totalAmount;

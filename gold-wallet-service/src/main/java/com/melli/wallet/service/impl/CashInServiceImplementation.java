@@ -43,7 +43,7 @@ public class CashInServiceImplementation implements CashInService {
     private final Helper helper;
     private final WalletService walletService;
     private final WalletAccountService walletAccountService;
-    private final WalletLimitationService walletLimitationService;
+    private final WalletCashLimitationService walletCashLimitationService;
     private final RequestTypeService requestTypeService;
     private final TemplateService templateService;
     private final TransactionService transactionService;
@@ -58,7 +58,7 @@ public class CashInServiceImplementation implements CashInService {
         try {
 
             WalletAccountEntity walletAccountEntity = helper.checkWalletAndWalletAccountForNormalUser(walletService,nationalCode, walletAccountService, accountNumber);
-            walletLimitationService.checkCashInLimitation(channelEntity, walletAccountEntity.getWalletEntity(), Long.parseLong(amount), walletAccountEntity);
+            walletCashLimitationService.checkCashInLimitation(channelEntity, walletAccountEntity.getWalletEntity(), Long.parseLong(amount), walletAccountEntity);
             log.info("start generate traceId, username ===> ({}), nationalCode ({})", channelEntity.getUsername(), nationalCode);
             RrnEntity rrnEntity = rrnService.generateTraceId(nationalCode, channelEntity, requestTypeService.getRequestType(RequestTypeService.CASH_IN), accountNumber, amount);
             log.info("finish traceId ===> {}, username ({}), nationalCode ({})", rrnEntity.getUuid(), channelEntity.getUsername(), nationalCode);
@@ -113,7 +113,7 @@ public class CashInServiceImplementation implements CashInService {
             requestService.findSuccessCashInByRefNumber(chargeObjectDTO.getRefNumber());
 
             WalletAccountEntity walletAccountEntity = helper.checkWalletAndWalletAccountForNormalUser(walletService, rrnEntity.getNationalCode(), walletAccountService, chargeObjectDTO.getAccountNumber());
-            walletLimitationService.checkCashInLimitation(chargeObjectDTO.getChannel(), walletAccountEntity.getWalletEntity(), Long.parseLong(chargeObjectDTO.getAmount()), walletAccountEntity);
+            walletCashLimitationService.checkCashInLimitation(chargeObjectDTO.getChannel(), walletAccountEntity.getWalletEntity(), Long.parseLong(chargeObjectDTO.getAmount()), walletAccountEntity);
 
             CashInRequestEntity cashInRequestEntity = new CashInRequestEntity();
             cashInRequestEntity.setAmount(Long.parseLong(chargeObjectDTO.getAmount()));
@@ -156,7 +156,7 @@ public class CashInServiceImplementation implements CashInService {
             requestService.save(cashInRequestEntity);
 
             log.info("Start updating CashInLimitation for walletAccount ({})", walletAccountEntity.getAccountNumber());
-            walletLimitationService.updateCashInLimitation(walletAccountEntity, Long.parseLong(chargeObjectDTO.getAmount()));
+            walletCashLimitationService.updateCashInLimitation(walletAccountEntity, Long.parseLong(chargeObjectDTO.getAmount()));
             log.info("updating CashInLimitation for walletAccount ({}) is finished.", walletAccountEntity.getAccountNumber());
 
             long walletAccountServiceBalance = walletAccountService.getBalance(walletAccountEntity.getId());

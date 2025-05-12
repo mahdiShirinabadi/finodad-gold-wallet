@@ -1,8 +1,11 @@
 package com.melli.wallet.service;
 
+import com.melli.wallet.domain.dto.AggregationPurchaseDTO;
 import com.melli.wallet.domain.master.entity.*;
 import com.melli.wallet.domain.response.cash.CashInTrackResponse;
 import com.melli.wallet.exception.InternalServiceException;
+import org.springframework.data.repository.query.Param;
+
 import java.util.Date;
 import java.util.List;
 
@@ -52,6 +55,8 @@ public interface RequestService {
     List<Long> findPurchaseIdsByTerminalId(String likeStr, Integer[] results, Date fromDate, Date toDate, WalletAccountTypeEntity walletAccountTypeEntity);
 
     CashInTrackResponse cashInTrack(String uid, String channelIp) throws InternalServiceException;
+
+    AggregationPurchaseDTO findSumAmountByTransactionTypeBetweenDate(@Param("walletAccountId") long[] walletAccountId, String transactionType, Date fromDate, Date toDate);
 
 //    DechargeTrackResponse deChargeTrack(String uid, String channelIp) throws ServiceException;
 //    DedicateDechargeRequest findDedicateDechargeByCashInRequestId(long requestId) throws ServiceException;

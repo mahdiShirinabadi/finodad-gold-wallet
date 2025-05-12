@@ -14,6 +14,21 @@ public interface LimitationGeneralService {
     String MAX_WALLET_BALANCE = "MAX_WALLET_BALANCE";
     String MAX_WALLET_AMOUNT_DAILY_CASH_IN = "MAX_WALLET_AMOUNT_DAILY_CASH_IN";
 
+    String MAX_DAILY_AMOUNT_BUY = "MAX_DAILY_AMOUNT_BUY";
+    String MAX_DAILY_COUNT_BUY = "MAX_DAILY_COUNT_BUY";
+
+    String MAX_MONTHLY_AMOUNT_BUY = "MAX_MONTHLY_AMOUNT_BUY";
+    String MAX_MONTHLY_COUNT_BUY = "MAX_MONTHLY_COUNT_BUY";
+
+
+    String MAX_AMOUNT_DAILY_SELL = "MAX_AMOUNT_DAILY_SELL";
+    String MAX_AMOUNT_MONTHLY_SELL = "MAX_AMOUNT_MONTHLY_SELL";
+
+    String MIN_AMOUNT_BUY = "MIN_AMOUNT_BUY";
+    String MAX_AMOUNT_BUY = "MIN_AMOUNT_BUY";
+    String MIN_AMOUNT_SELL = "MIN_AMOUNT_SELL";
+    String MAX_AMOUNT_SELL = "MIN_AMOUNT_SELL";
+
     List<LimitationGeneralEntity> getLimitationGeneralEntities() throws InternalServiceException;
     LimitationGeneralEntity getSetting(String name);
     public void clearCache();

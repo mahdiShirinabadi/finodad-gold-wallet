@@ -40,7 +40,7 @@ public class PurchaseServiceImplementation implements PurchaseService {
     private final WalletService walletService;
     private final WalletAccountService walletAccountService;
     private final WalletTypeService walletTypeService;
-    private final WalletLimitationService walletLimitationService;
+    private final WalletCashLimitationService walletCashLimitationService;
     private final TransactionService transactionService;
     private final MessageResolverService messageResolverService;
     private final TemplateService templateService;
@@ -262,7 +262,7 @@ public class PurchaseServiceImplementation implements PurchaseService {
 
         // Validate transaction
         RrnEntity rrn = validateTransaction(purchaseObjectDto.getChannel(), purchaseObjectDto.getUniqueIdentifier(), requestTypeService.getRequestType(RequestTypeService.BUY), purchaseObjectDto.getPrice(), purchaseObjectDto.getUserCurrencyAccount().getAccountNumber());
-        walletLimitationService.checkPurchaseLimitation(purchaseObjectDto.getChannel(), purchaseObjectDto.getUserWallet(), purchaseObjectDto.getPrice(), purchaseObjectDto.getUserRialAccount(), purchaseObjectDto.getMerchant());
+        walletCashLimitationService.checkPurchaseLimitation(purchaseObjectDto.getChannel(), purchaseObjectDto.getUserWallet(), purchaseObjectDto.getPrice(), purchaseObjectDto.getUserRialAccount(), purchaseObjectDto.getMerchant());
 
         // Create purchase request
         PurchaseRequestEntity purchaseRequest = createPurchaseRequest(
@@ -287,7 +287,7 @@ public class PurchaseServiceImplementation implements PurchaseService {
 
         // Validate transaction
         RrnEntity rrn = validateTransaction(purchaseObjectDto.getChannel(), purchaseObjectDto.getUniqueIdentifier(), requestTypeService.getRequestType(RequestTypeService.SELL), purchaseObjectDto.getPrice(), purchaseObjectDto.getUserRialAccount().getAccountNumber());
-        walletLimitationService.checkPurchaseLimitation(purchaseObjectDto.getChannel(), purchaseObjectDto.getUserWallet(), purchaseObjectDto.getAmount(), purchaseObjectDto.getUserRialAccount(), purchaseObjectDto.getMerchant());
+        walletCashLimitationService.checkPurchaseLimitation(purchaseObjectDto.getChannel(), purchaseObjectDto.getUserWallet(), purchaseObjectDto.getAmount(), purchaseObjectDto.getUserRialAccount(), purchaseObjectDto.getMerchant());
 
         // Create purchase request
         PurchaseRequestEntity purchaseRequest = createPurchaseRequest(
@@ -323,7 +323,7 @@ public class PurchaseServiceImplementation implements PurchaseService {
         request.setCreatedAt(new Date());
         request.setCreatedBy(purchaseObjectDto.getChannel().getUsername());
         request.setPrice(purchaseObjectDto.getPrice().longValue());
-        request.setAmount(BigDecimal.valueOf(purchaseObjectDto.getAmount().longValue()));
+        request.setQuantity(BigDecimal.valueOf(purchaseObjectDto.getAmount().longValue()));
         request.setWalletAccount(purchaseObjectDto.getUserRialAccount());
         request.setMerchantEntity(purchaseObjectDto.getMerchant());
         request.setNationalCode(purchaseObjectDto.getNationalCode());
@@ -348,7 +348,7 @@ public class PurchaseServiceImplementation implements PurchaseService {
         Map<String, Object> model = new HashMap<>();
         model.put("traceId", String.valueOf(purchaseRequest.getRrnEntity().getId()));
         model.put("additionalData", purchaseRequest.getAdditionalData());
-        model.put("amount", purchaseRequest.getAmount());
+        model.put("amount", purchaseRequest.getQuantity());
         model.put("price", purchaseRequest.getPrice());
         model.put("merchant", purchaseRequest.getMerchantEntity().getName());
         model.put("nationalCode", purchaseRequest.getNationalCode());
@@ -374,7 +374,7 @@ public class PurchaseServiceImplementation implements PurchaseService {
 
         // Merchant withdrawal (currency)
         TransactionEntity merchantWithdrawal = createTransaction(
-                merchantCurrencyAccount, Double.parseDouble(String.valueOf(purchaseRequest.getAmount())),
+                merchantCurrencyAccount, Double.parseDouble(String.valueOf(purchaseRequest.getQuantity())),
                 messageResolverService.resolve(withdrawalTemplate, model),
                 purchaseRequest.getAdditionalData(), purchaseRequest, purchaseRequest.getRrnEntity()
         );
@@ -383,7 +383,7 @@ public class PurchaseServiceImplementation implements PurchaseService {
         // User deposit (currency)
         TransactionEntity userDeposit = createTransaction(
                 userCurrencyAccount,
-                Double.parseDouble(String.valueOf(purchaseRequest.getAmount())), messageResolverService.resolve(depositTemplate, model), purchaseRequest.getAdditionalData(), purchaseRequest, purchaseRequest.getRrnEntity()
+                Double.parseDouble(String.valueOf(purchaseRequest.getQuantity())), messageResolverService.resolve(depositTemplate, model), purchaseRequest.getAdditionalData(), purchaseRequest, purchaseRequest.getRrnEntity()
         );
         transactionService.insertDeposit(userDeposit);
     }
@@ -413,7 +413,7 @@ public class PurchaseServiceImplementation implements PurchaseService {
         Map<String, Object> model = new HashMap<>();
         model.put("traceId", String.valueOf(purchaseRequest.getRrnEntity().getId()));
         model.put("additionalData", purchaseRequest.getAdditionalData());
-        model.put("amount", purchaseRequest.getAmount());
+        model.put("amount", purchaseRequest.getQuantity());
         model.put("price", purchaseRequest.getPrice());
         model.put("merchant", purchaseRequest.getMerchantEntity().getName());
         model.put("nationalCode", purchaseRequest.getNationalCode());
@@ -438,12 +438,12 @@ public class PurchaseServiceImplementation implements PurchaseService {
         transactionService.insertDeposit(userRialDeposit);
 
         // merchant withdrawal (currency)
-        TransactionEntity merchantCurrencyWithdrawal = createTransaction(userCurrencyAccount, Double.parseDouble(String.valueOf(purchaseRequest.getAmount())),
+        TransactionEntity merchantCurrencyWithdrawal = createTransaction(userCurrencyAccount, Double.parseDouble(String.valueOf(purchaseRequest.getQuantity())),
                 messageResolverService.resolve(withdrawalTemplate, model), purchaseRequest.getAdditionalData(), purchaseRequest, purchaseRequest.getRrnEntity());
         transactionService.insertWithdraw(merchantCurrencyWithdrawal);
 
         // user deposit (currency)
-        TransactionEntity userCurrencyDeposit = createTransaction(merchantCurrencyAccount, Double.parseDouble(String.valueOf(purchaseRequest.getAmount())),
+        TransactionEntity userCurrencyDeposit = createTransaction(merchantCurrencyAccount, Double.parseDouble(String.valueOf(purchaseRequest.getQuantity())),
                 messageResolverService.resolve(depositTemplate, model), purchaseRequest.getAdditionalData(), purchaseRequest, purchaseRequest.getRrnEntity());
         transactionService.insertDeposit(userCurrencyDeposit);
     }

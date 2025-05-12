@@ -383,9 +383,9 @@ CREATE TABLE if not exists create_wallet_request
 CREATE TABLE if not exists purchase_request
 (
     request_id                  BIGINT primary key NOT NULL REFERENCES request,
-    transaction_type            VARCHAR(50)        NOT NULL CHECK (transaction_type IN ('CUSTOMER_BUY', 'CUSTOMER_SELL')),
+    transaction_type            VARCHAR(50)        NOT NULL CHECK (transaction_type IN ('BUY', 'SELL')),
     price                       BIGINT,         -- Purchased quantity price
-    amount                      NUMERIC(10, 5), -- Purchased quantity
+    quantity                    NUMERIC(10, 5), -- Purchased quantity
     wallet_account_id           BIGINT             NOT NULL REFERENCES wallet_account,
     rrn_id                      BIGINT             NOT NULL REFERENCES rrn,
     merchant_id                 BIGINT             NOT NULL REFERENCES merchant,

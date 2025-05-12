@@ -4,7 +4,6 @@ import com.melli.wallet.domain.master.entity.*;
 import com.melli.wallet.domain.master.persistence.RefnumberRepository;
 import com.melli.wallet.domain.response.UuidResponse;
 import com.melli.wallet.domain.response.cash.CashInResponse;
-import com.melli.wallet.domain.response.cash.CashInTrackResponse;
 import com.melli.wallet.domain.response.cash.CashOutTrackResponse;
 import com.melli.wallet.exception.InternalServiceException;
 import com.melli.wallet.service.*;
@@ -32,7 +31,7 @@ public class CashOutServiceImplementation implements CashOutService {
     private final Helper helper;
     private final WalletService walletService;
     private final WalletAccountService walletAccountService;
-    private final WalletLimitationService walletLimitationService;
+    private final WalletCashLimitationService walletCashLimitationService;
     private final RequestTypeService requestTypeService;
     private final TemplateService templateService;
     private final TransactionService transactionService;

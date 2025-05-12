@@ -43,9 +43,6 @@ public class AuthenticationEndPointTest extends WalletApplicationTests {
     private Flyway flyway;
 
 
-    private static final String REFRESHTOKEN_PATH = "/api/v1/auth/refresh";
-    private static final String LOGOUT_PATH = "/api/v1/auth/logout";
-
 
     private static MockMvc mockMvc;
     private static String ACCESS_TOKEN;
@@ -128,21 +125,4 @@ public class AuthenticationEndPointTest extends WalletApplicationTests {
         refresh("123i29312190381290312039823", USERNAME_CORRECT, HttpStatus.UNAUTHORIZED, StatusService.REFRESH_TOKEN_NOT_FOUND, false);
     }
 
-
-    BaseResponse<ObjectUtils.Null> logout(HttpStatus httpStatus, int errorCode, boolean success) throws Exception {
-        MockHttpServletRequestBuilder postRequest = buildPostRequest(ACCESS_TOKEN, LOGOUT_PATH);
-        String response = performTest(mockMvc, postRequest, httpStatus, success, errorCode);
-        TypeReference<BaseResponse<ObjectUtils.Null>> typeReference = new TypeReference<>() {};
-        return objectMapper.readValue(response, typeReference);
-    }
-
-    BaseResponse<LoginResponse> refresh(String refreshToken, String username, HttpStatus httpStatus, int errorCode, boolean success) throws Exception {
-        RefreshTokenRequestJson refreshTokenRequestJson = new RefreshTokenRequestJson();
-        refreshTokenRequestJson.setRefreshToken(refreshToken);
-        refreshTokenRequestJson.setUsername(username);
-        MockHttpServletRequestBuilder postRequest = buildPostRequest(null, REFRESHTOKEN_PATH, mapToJson(refreshTokenRequestJson));
-        String response = performTest(mockMvc, postRequest, httpStatus, success, errorCode);
-        TypeReference<BaseResponse<LoginResponse>> typeReference = new TypeReference<>() {};
-        return objectMapper.readValue(response, typeReference);
-    }
 }
