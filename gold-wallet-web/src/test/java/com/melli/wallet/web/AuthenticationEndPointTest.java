@@ -1,25 +1,19 @@
 package com.melli.wallet.web;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.melli.wallet.WalletApplicationTests;
 import com.melli.wallet.config.CacheClearService;
-import com.melli.wallet.config.FlywayConfig;
 import com.melli.wallet.domain.master.entity.ChannelEntity;
-import com.melli.wallet.domain.request.login.RefreshTokenRequestJson;
 import com.melli.wallet.domain.response.base.BaseResponse;
 import com.melli.wallet.domain.response.login.LoginResponse;
 import com.melli.wallet.service.ChannelService;
 import com.melli.wallet.service.StatusService;
 import lombok.extern.log4j.Log4j2;
-import org.apache.commons.lang3.ObjectUtils;
 import org.flywaydb.core.Flyway;
 import org.junit.Assert;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
@@ -60,6 +54,7 @@ public class AuthenticationEndPointTest extends WalletApplicationTests {
         flyway.clean();
         flyway.migrate();
         cacheClearService.clearCache();
+        mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).apply(springSecurity()).build();
     }
 
     @Test
@@ -111,7 +106,7 @@ public class AuthenticationEndPointTest extends WalletApplicationTests {
                 StatusService.SUCCESSFUL, true);
         ACCESS_TOKEN = response.getData().getAccessTokenObject().getToken();
         REFRESH_TOKEN = response.getData().getRefreshTokenObject().getToken();
-        BaseResponse<LoginResponse> loginResponse = refresh(REFRESH_TOKEN, USERNAME_CORRECT, HttpStatus.OK, StatusService.SUCCESSFUL, true);
+        BaseResponse<LoginResponse> loginResponse = refresh(mockMvc, REFRESH_TOKEN, USERNAME_CORRECT, HttpStatus.OK, StatusService.SUCCESSFUL, true);
         log.info("success refresh token " + REFRESH_TOKEN + "and new refreshToken is ({})", loginResponse.getData().getRefreshTokenObject().getToken());
         ACCESS_TOKEN = loginResponse.getData().getAccessTokenObject().getToken();
         REFRESH_TOKEN = loginResponse.getData().getRefreshTokenObject().getToken();
@@ -122,7 +117,7 @@ public class AuthenticationEndPointTest extends WalletApplicationTests {
     @DisplayName("Channel refresh fail- refreshtoken not found")
     void refresh_fail_not_found() throws Exception {
         log.info("start login for username ({})", USERNAME_CORRECT);
-        refresh("123i29312190381290312039823", USERNAME_CORRECT, HttpStatus.UNAUTHORIZED, StatusService.REFRESH_TOKEN_NOT_FOUND, false);
+        refresh(mockMvc, "123i29312190381290312039823", USERNAME_CORRECT, HttpStatus.UNAUTHORIZED, StatusService.REFRESH_TOKEN_NOT_FOUND, false);
     }
 
 }
