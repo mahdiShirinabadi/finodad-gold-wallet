@@ -77,9 +77,9 @@ public class RrnServiceImplementation implements RrnService {
         if(StringUtils.hasText(amount)){
             String storedAmount = rrn.getExtraData().getAmount();
             if(!amount.equals(storedAmount)){
-                String errorMessage = String.format("amount: (%s) mismatch for RRN UUID: %s with amount (%s)", amount, uuid, storedAmount);
+                String errorMessage = String.format("price: (%s) mismatch for RRN UUID: %s with amount (%s)", amount, uuid, storedAmount);
                 log.error(errorMessage);
-                throw new InternalServiceException(errorMessage, StatusService.AMOUNT_NOT_SAME_WITH_UUID, HttpStatus.OK);
+                throw new InternalServiceException(errorMessage, StatusService.PRICE_NOT_SAME_WITH_UUID, HttpStatus.OK);
             }
         }
 

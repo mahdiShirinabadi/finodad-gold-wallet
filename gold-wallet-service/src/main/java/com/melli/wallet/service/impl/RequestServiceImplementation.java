@@ -1,5 +1,7 @@
 package com.melli.wallet.service.impl;
 
+import com.melli.wallet.domain.dto.AggregationCashInDTO;
+import com.melli.wallet.domain.dto.AggregationPurchaseDTO;
 import com.melli.wallet.domain.master.entity.*;
 import com.melli.wallet.domain.master.persistence.CashInRequestRepository;
 import com.melli.wallet.domain.master.persistence.CashOutRequestRepository;
@@ -182,5 +184,15 @@ public class RequestServiceImplementation implements RequestService {
         log.info("start tracking cashIn  with traceId ( {} ) ...", rrnEntity.getUuid());
         CashInRequestEntity cashInRequest = cashInRequestRepository.findByRrnEntity(rrnEntity);
         return helper.fillCashInTrackResponse(cashInRequest, statusService);
+    }
+
+    @Override
+    public AggregationPurchaseDTO findSumAmountByTransactionTypeBetweenDate(long[] walletAccountId, String transactionType, Date fromDate, Date toDate) {
+        return purchaseRequestRepository.findSumAmountByTransactionTypeBetweenDate(walletAccountId, transactionType, fromDate, toDate);
+    }
+
+    @Override
+    public AggregationCashInDTO findSumAmountCashInBetweenDate(long[] walletAccountId, Date fromDate, Date toDate) {
+        return cashInRequestRepository.findSumAmountBetweenDate(walletAccountId, fromDate, toDate);
     }
 }

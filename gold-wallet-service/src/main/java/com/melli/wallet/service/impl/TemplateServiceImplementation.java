@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
-import static com.melli.wallet.utils.Constant.WALLET_TEMPLATE;
+import static com.melli.wallet.ConstantRedisName.WALLET_TEMPLATE;
 
 /**
  * Class Name: TemplateServiceImplementation

@@ -6,6 +6,8 @@ import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 import lombok.extern.log4j.Log4j2;
 
+import java.math.BigDecimal;
+
 @Log4j2
 public class NumberValidator implements ConstraintValidator<NumberValidation, String> {
 
@@ -16,12 +18,14 @@ public class NumberValidator implements ConstraintValidator<NumberValidation, St
     private boolean allowEmpty;
     private boolean allowNegative;
     private boolean allowDecimal;
+    private String minDecimalValue;
 
     @Override
     public void initialize(NumberValidation constraintAnnotation) {
         this.allowEmpty = constraintAnnotation.allowEmpty();
         this.allowNegative = constraintAnnotation.allowNegative();
         this.allowDecimal = constraintAnnotation.allowDecimal();
+        this.minDecimalValue = constraintAnnotation.minDecimalValue();
     }
 
     @Override
@@ -49,6 +53,14 @@ public class NumberValidator implements ConstraintValidator<NumberValidation, St
         // Additional negative check if negative numbers are not allowed
         if (!allowNegative && number.startsWith("-")) {
             log.error("Negative numbers are not allowed for value: {}", number);
+            return false;
+        }
+
+        //check minDecimal
+        BigDecimal minBigDecimal = new BigDecimal(minDecimalValue);
+        BigDecimal numberBigDecimal = new BigDecimal(number);
+        if(numberBigDecimal.compareTo(minBigDecimal) < 0) {
+            log.error("number ({}) isn't bigger than ({})", number, minBigDecimal);
             return false;
         }
 

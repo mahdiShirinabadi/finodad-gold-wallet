@@ -1,11 +1,11 @@
 package com.melli.wallet.service.impl;
 
+import com.melli.wallet.ConstantRedisName;
 import com.melli.wallet.domain.master.entity.RequestTypeEntity;
 import com.melli.wallet.domain.master.persistence.RequestTypeRepository;
 import com.melli.wallet.exception.InternalServiceException;
 import com.melli.wallet.service.RequestTypeService;
 import com.melli.wallet.service.StatusService;
-import com.melli.wallet.utils.Constant;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.cache.annotation.CacheConfig;
@@ -21,7 +21,7 @@ import java.util.Optional;
 @Service
 @Log4j2
 @RequiredArgsConstructor
-@CacheConfig(cacheNames = Constant.WALLET_REQUEST_TYPE)
+@CacheConfig(cacheNames = ConstantRedisName.WALLET_REQUEST_TYPE)
 public class RequestTypeServiceImplementation implements RequestTypeService {
 
     private final RequestTypeRepository requestTypeDAO;

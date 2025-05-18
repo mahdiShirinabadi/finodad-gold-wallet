@@ -1,6 +1,7 @@
 package com.melli.wallet.domain.request.wallet;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.melli.wallet.NamingProperty;
 import com.melli.wallet.annotation.national_code.NationalCodeValidation;
 import com.melli.wallet.annotation.number.NumberValidation;
 import com.melli.wallet.annotation.string.StringValidation;
@@ -16,36 +17,37 @@ import lombok.ToString;
 public class CashInWalletRequestJson {
 
     @StringValidation
-    @Schema(name="uniqueIdentifier", description = "شناسه یکتا")
-    @JsonProperty("uniqueIdentifier")
+    @Schema(name = NamingProperty.UNIQUE_IDENTIFIER, description = "شناسه یکتا")
+    @JsonProperty(NamingProperty.UNIQUE_IDENTIFIER)
     private String uniqueIdentifier;
 
     @StringValidation
-    @Schema(name="referenceNumber",description = "شماره مرجع")
-    @JsonProperty("referenceNumber")
+    @Schema(name = NamingProperty.REFERENCE_NUMBER, description = "شماره مرجع")
+    @JsonProperty(NamingProperty.REFERENCE_NUMBER)
     private String referenceNumber;
 
     @NumberValidation
-    @Schema(name = "amount", description = "مبلغ به ریال", example = "1000")
-    @JsonProperty("amount")
+    @Schema(name = NamingProperty.QUANTITY, description = "مبلغ به ریال", example = "1000")
+    @JsonProperty(NamingProperty.QUANTITY)
     private String amount;
 
     @NationalCodeValidation(label = "کد ملی")
-    @Schema(name = "nationalCode", description = "کدملی")
-    @JsonProperty("nationalCode")
+    @Schema(name = NamingProperty.NATIONAL_CODE, description = "کدملی")
+    @JsonProperty(NamingProperty.NATIONAL_CODE)
     private String nationalCode;
 
-    @Schema(name = "additionalData", description = "اطلاعات تکمیلی")
-    @JsonProperty("additionalData")
+    @Schema(name = NamingProperty.ADDITIONAL_DATA, description = "اطلاعات تکمیلی")
+    @JsonProperty(NamingProperty.ADDITIONAL_DATA)
     private String additionalData;
 
-    @Schema(name = "accountNumber", description = "شماره حساب")
-    @JsonProperty("accountNumber")
+    @NumberValidation(label = "شماره حساب")
+    @Schema(name = NamingProperty.WALLET_ACCOUNT_NUMBER, description = "شماره حساب")
+    @JsonProperty(NamingProperty.WALLET_ACCOUNT_NUMBER)
     private String accountNumber;
 
 
-    @Schema(name = "sign", description = "امضا دیجیتال")
-    @JsonProperty("sign")
+    @Schema(name = NamingProperty.SIGN, description = "امضا دیجیتال")
+    @JsonProperty(NamingProperty.SIGN)
     private String sign;
 
     @Hidden

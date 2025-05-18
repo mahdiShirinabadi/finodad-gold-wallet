@@ -1,5 +1,6 @@
 package com.melli.wallet.service.impl;
 
+import com.melli.wallet.ConstantRedisName;
 import com.melli.wallet.domain.dto.BalanceObjectDTO;
 import com.melli.wallet.domain.enumaration.WalletStatusEnum;
 import com.melli.wallet.domain.master.entity.*;
@@ -7,9 +8,7 @@ import com.melli.wallet.domain.master.persistence.WalletAccountRepository;
 import com.melli.wallet.exception.InternalServiceException;
 import com.melli.wallet.service.*;
 import com.melli.wallet.util.Validator;
-import com.melli.wallet.utils.Constant;
 import com.melli.wallet.utils.Helper;
-import com.melli.wallet.utils.RedisLockService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.cache.annotation.CacheConfig;
@@ -19,6 +18,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -27,16 +27,10 @@ import java.util.Optional;
 @Service
 @Log4j2
 @RequiredArgsConstructor
-@CacheConfig(cacheNames = Constant.WALLET_ACCOUNT_NAME_CACHE)
+@CacheConfig(cacheNames = ConstantRedisName.WALLET_ACCOUNT_NAME_CACHE)
 public class WalletAccountServiceImplementation implements WalletAccountService {
 
-
     private final WalletAccountRepository walletAccountRepository;
-
-    private final SettingGeneralService settingGeneralService;
-    private final RedisLockService redisLockService;
-    private final Helper helper;
-    private final WalletService walletService;
     private final WalletAccountCurrencyService walletAccountCurrencyService;
     private final WalletAccountTypeService walletAccountTypeService;
 
@@ -63,15 +57,6 @@ public class WalletAccountServiceImplementation implements WalletAccountService 
         return walletAccountRepository.findByWalletEntity(wallet, pageable);
     }
 
-    @Override
-    public List<WalletAccountEntity> findByPartnerId(int partnerId) {
-        return walletAccountRepository.findByPartnerId(partnerId);
-    }
-
-    @Override
-    public WalletAccountEntity findByWalletAndPartnerId(WalletEntity wallet, int partnerId) {
-        return walletAccountRepository.findByWalletEntityAndPartnerId(wallet, partnerId);
-    }
 
     @Override
     public WalletAccountEntity findByWalletAndAccount(WalletEntity wallet, String account) {
@@ -84,19 +69,19 @@ public class WalletAccountServiceImplementation implements WalletAccountService 
     }
 
     @Override
-    public long getBalance(long walletAccountId) {
+    public BigDecimal getBalance(long walletAccountId) {
         return walletAccountRepository.getBalance(walletAccountId);
     }
 
     @Transactional
     @Override
-    public void increaseBalance(long walletAccountId, double amount) {
+    public void increaseBalance(long walletAccountId, BigDecimal amount) {
         walletAccountRepository.increaseBalance(walletAccountId, amount);
     }
 
     @Transactional
     @Override
-    public int decreaseBalance(long walletAccountId, double amount) {
+    public int decreaseBalance(long walletAccountId, BigDecimal amount) {
         return walletAccountRepository.decreaseBalance(walletAccountId, amount);
     }
 

@@ -1,6 +1,8 @@
 package com.melli.wallet.domain.response.wallet;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.melli.wallet.NamingProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -10,21 +12,27 @@ import lombok.ToString;
 @ToString
 public class WalletAccountObject {
 
-    @JsonProperty("walletAccountTypeObject")
+    @Schema(name = NamingProperty.WALLET_ACCOUNT_TYPE_OBJECT)
+    @JsonProperty(NamingProperty.WALLET_ACCOUNT_TYPE_OBJECT)
     private WalletAccountTypeObject walletAccountTypeObject;
 
-    @JsonProperty("walletAccountCurrencyObject")
+    @Schema(name = NamingProperty.WALLET_ACCOUNT_CURRENCY_OBJECT)
+    @JsonProperty(NamingProperty.WALLET_ACCOUNT_CURRENCY_OBJECT)
     private WalletAccountCurrencyObject walletAccountCurrencyObject;
 
-    @JsonProperty("accountNumber")
+    @Schema(name = NamingProperty.WALLET_ACCOUNT_NUMBER)
+    @JsonProperty(NamingProperty.WALLET_ACCOUNT_NUMBER)
     private String accountNumber;
 
-    @JsonProperty("balance")
+    @Schema(name = NamingProperty.BALANCE)
+    @JsonProperty(NamingProperty.BALANCE)
     private String balance;
 
-    @JsonProperty("status")
+    @Schema(name = NamingProperty.STATUS)
+    @JsonProperty(NamingProperty.STATUS)
     private String status;
 
-    @JsonProperty("statusDescription")
+    @Schema(name = NamingProperty.STATUS_DESCRIPTION)
+    @JsonProperty(NamingProperty.STATUS_DESCRIPTION)
     private String statusDescription;
 }

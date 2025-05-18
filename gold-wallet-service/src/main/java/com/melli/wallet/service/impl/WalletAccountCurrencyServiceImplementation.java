@@ -1,11 +1,11 @@
 package com.melli.wallet.service.impl;
 
+import com.melli.wallet.ConstantRedisName;
 import com.melli.wallet.domain.master.entity.WalletAccountCurrencyEntity;
 import com.melli.wallet.domain.master.persistence.WalletAccountCurrencyRepository;
 import com.melli.wallet.exception.InternalServiceException;
 import com.melli.wallet.service.StatusService;
 import com.melli.wallet.service.WalletAccountCurrencyService;
-import com.melli.wallet.utils.Constant;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.cache.annotation.CacheConfig;
@@ -24,7 +24,7 @@ import java.util.List;
 @Service
 @Log4j2
 @RequiredArgsConstructor
-@CacheConfig(cacheNames = Constant.WALLET_ACCOUNT_CURRENCY_CACHE)
+@CacheConfig(cacheNames = com.melli.wallet.ConstantRedisName.WALLET_ACCOUNT_CURRENCY_CACHE)
 public class WalletAccountCurrencyServiceImplementation implements WalletAccountCurrencyService {
 
 
@@ -49,6 +49,6 @@ public class WalletAccountCurrencyServiceImplementation implements WalletAccount
     @Override
     @CacheEvict(allEntries = true)
     public void clearCache() {
-        log.info("clear cache ({})", Constant.WALLET_ACCOUNT_CURRENCY_CACHE);
+        log.info("clear cache ({})", ConstantRedisName.WALLET_ACCOUNT_CURRENCY_CACHE);
     }
 }

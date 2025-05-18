@@ -4,16 +4,14 @@ import com.melli.wallet.domain.enumaration.TransactionTypeEnum;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
-import lombok.ToString;
 
 import java.math.BigDecimal;
 
 @Entity
 @Table(name = "purchase_request")
-@PrimaryKeyJoinColumn(name = "request_id", referencedColumnName = "id")
 @Setter
 @Getter
-@ToString
+@PrimaryKeyJoinColumn(name = "request_id", referencedColumnName = "id")
 public class PurchaseRequestEntity extends RequestEntity {
 
 	@Column(name = "price")
@@ -38,7 +36,7 @@ public class PurchaseRequestEntity extends RequestEntity {
 	private String nationalCode;
 
 	@Column(name = "terminal_amount", length = 100)
-	private String terminalAmount;
+	private BigDecimal terminalAmount;
 
 	@Column(name = "additional_data", length = 500)
 	private String additionalData;
@@ -47,15 +45,11 @@ public class PurchaseRequestEntity extends RequestEntity {
 	private String refNumber;
 
 	@Column(name = "commission", length = 500)
-	private String commission;
+	private BigDecimal commission;
 
 	@Enumerated(EnumType.STRING)
 	@Column(name = "transaction_type")
 	private TransactionTypeEnum transactionTypeEnum;
-
-	@Transient
-	private long totalAmount;
-
-	@Transient
-	private long terminalId;
 }
+
+

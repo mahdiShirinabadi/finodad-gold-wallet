@@ -1,21 +1,21 @@
-package com.melli.wallet.domain.response.wallet;
+package com.melli.wallet.domain.response.purchase;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.melli.wallet.NamingProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
 
 /**
- * Class Name: WalletLevelObject
+ * Class Name: MerchantResponse
  * Author: Mahdi Shirinabadi
- * Date: 4/19/2025
+ * Date: 5/14/2025
  */
 @Setter
 @Getter
 @ToString
-public class WalletLevelObject {
+@AllArgsConstructor
+@NoArgsConstructor
+public class MerchantObject {
 
     @Schema(name = NamingProperty.ID)
     @JsonProperty(NamingProperty.ID)
@@ -25,7 +25,7 @@ public class WalletLevelObject {
     @JsonProperty(NamingProperty.NAME)
     private String name;
 
-    @Schema(name = NamingProperty.ADDITIONAL_DATA)
-    @JsonProperty(NamingProperty.ADDITIONAL_DATA)
-    private String additionalData;
+    @Schema(name = NamingProperty.LOGO)
+    @JsonProperty(NamingProperty.LOGO)
+    private String logo;
 }

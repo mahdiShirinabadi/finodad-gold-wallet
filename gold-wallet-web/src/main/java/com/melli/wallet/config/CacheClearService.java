@@ -1,16 +1,14 @@
 package com.melli.wallet.config;
 
-import com.melli.wallet.utils.Constant;
+import com.melli.wallet.ConstantRedisName;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Service;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
@@ -30,7 +28,7 @@ public class CacheClearService {
         List<String> constantValues = new ArrayList<>();
 
         // Get the Class object for the Constant class
-        Class<Constant> constantClass = Constant.class;
+        Class<com.melli.wallet.ConstantRedisName> constantClass = ConstantRedisName.class;
         // Get all declared fields in the Constant class
         Field[] fields = constantClass.getDeclaredFields();
 

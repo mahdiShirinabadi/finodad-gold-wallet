@@ -10,10 +10,9 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.data.redis.cache.RedisCacheManager;
 import org.springframework.stereotype.Service;
 
-import static com.melli.wallet.utils.Constant.SETTING_NAME_CACHE;
+import static com.melli.wallet.ConstantRedisName.SETTING_NAME_CACHE;
 
 @Service
 @CacheConfig(cacheNames = SETTING_NAME_CACHE)

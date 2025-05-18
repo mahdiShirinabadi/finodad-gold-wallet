@@ -783,9 +783,19 @@ public class DateUtils {
         }
     }
 
+    public static Date findFirstDateOfPersianMonth(Date date) {
+        log.info("in findFirstDateOfMonth -> date {}", date);
+        String persianDate = DateUtils.getLocaleDate(DateUtils.FARSI_LOCALE, date, "yyyyMMdd", false);
+        log.info("in findFirstDateOfMonth persianDate -> date {}", persianDate);
+        Date gDate = DateUtils.parse(persianDate.substring(0,6)+"01", "yyyyMMdd", true, DateUtils.FARSI_LOCALE);
+        log.info("gregorian first Date from Persian Date {} is {}", persianDate,gDate);
+
+        return gDate;
+    }
+
     public static void main(String[] args) {
 
-        String currentDate = DateUtils.getLocaleDate(DateUtils.FARSI_LOCALE, new Date(), "yyyyMMdd", false);
+        /*String currentDate = DateUtils.getLocaleDate(DateUtils.FARSI_LOCALE, new Date(), "yyyyMMdd", false);
         String lastDateOfpreviousMonth = DateUtils.getlastDateOfpreviousMonth();
         String firstDateOfpreviousMonth = DateUtils.getFirstDateOfpreviousMonth();
 
@@ -797,7 +807,13 @@ public class DateUtils {
         LocalDate today = LocalDate.now();
 
         DayOfWeek dayOfWeek = today.getDayOfWeek();
-        System.out.printf("" + dayOfWeek.getValue());
+        System.out.printf("" + dayOfWeek.getValue());*/
+
+
+        Date date = new Date();
+        long value = LocalDate.ofEpochDay(date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate().toEpochDay() - date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate().getDayOfMonth() + 1).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli();
+        System.out.println(new Date(value));
+
 
         // System.out.println(DateUtils.getFirstDateOfMonth("139712"));
         // System.out.println(DateUtils.getLastDateOfMonth("139712"));

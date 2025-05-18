@@ -18,8 +18,10 @@ public interface PurchaseRequestRepository extends CrudRepository<PurchaseReques
     Optional<PurchaseRequestEntity> findOptionalByRrnEntityId(long traceId);
     PurchaseRequestEntity findByRrnEntity(RrnEntity rrn);
     PurchaseRequestEntity findById(long requestId);
-    @Query(value = "select COALESCE(SUM(p.price), 0) as sumPrice, count(*) as countRecord from purchase_request p inner join request r on p.request_id = r.id  where p.wallet_account_id in :walletAccountId" +
-            " and date(p.transaction_time) BETWEEN date(:fromDate) AND  date(:toDate) and r.result=0 and p.transaction_type = :transactionType", nativeQuery = true)
+
+    //TODO move to report class
+    @Query(value = "select COALESCE(SUM(p.price), 0) as sumPrice, count(*) as countRecord from {h-schema}purchase_request p inner join {h-schema}request r on p.request_id = r.id  where p.wallet_account_id in :walletAccountId" +
+            " and date(r.created_at) BETWEEN date(:fromDate) AND  date(:toDate) and r.result=0 and p.transaction_type = :transactionType", nativeQuery = true)
     AggregationPurchaseDTO findSumAmountByTransactionTypeBetweenDate(@Param("walletAccountId") long[] walletAccountId, @Param("transactionType") String transactionType, @Param("fromDate") Date fromDate, @Param("toDate") Date toDate);
 
 }

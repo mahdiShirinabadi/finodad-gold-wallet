@@ -21,6 +21,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
+import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
 
@@ -306,10 +307,10 @@ class CacheControllerTest extends WalletApplicationTests {
     void cashInFailDuplicateRrn() throws Exception {
         String refNumber = new Date().getTime() + "";
         WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.RIAL);
-        long balance = Long.parseLong(walletAccountObjectOptional.getBalance());
+        BigDecimal balance = BigDecimal.valueOf(Long.parseLong(walletAccountObjectOptional.getBalance()));
 
         WalletAccountEntity walletAccountEntity = walletAccountService.findByAccountNumber(walletAccountObjectOptional.getAccountNumber());
-        walletAccountService.decreaseBalance(walletAccountEntity.getId(), Double.parseDouble(String.valueOf(balance)));
+        walletAccountService.decreaseBalance(walletAccountEntity.getId(), balance);
 
         String value = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService,USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN,  walletAccountObjectOptional.getAccountNumber());
         if("false".equalsIgnoreCase(value)){
@@ -362,7 +363,7 @@ class CacheControllerTest extends WalletApplicationTests {
                     walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
                     "true","test cashInFailMinAmount");
         }
-        cashIn(mockMvc, ACCESS_TOKEN, uniqueIdentifier1.getData().getUniqueIdentifier(), refNumber, String.valueOf(Long.parseLong(amount) + 1), NATIONAL_CODE_CORRECT, walletAccountObjectOptional.getAccountNumber(), "", "", HttpStatus.OK, StatusService.AMOUNT_NOT_SAME_WITH_UUID, false);
+        cashIn(mockMvc, ACCESS_TOKEN, uniqueIdentifier1.getData().getUniqueIdentifier(), refNumber, String.valueOf(Long.parseLong(amount) + 1), NATIONAL_CODE_CORRECT, walletAccountObjectOptional.getAccountNumber(), "", "", HttpStatus.OK, StatusService.PRICE_NOT_SAME_WITH_UUID, false);
     }
 
 
@@ -475,9 +476,33 @@ class CacheControllerTest extends WalletApplicationTests {
     }
 
     //invalid amount
+    @Test
+    @Order(47)
+    @DisplayName("cashInFailInvalidAmount")
+    void cashInFailInvalidAmount() throws Exception {
+        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.RIAL);
+        WalletAccountEntity walletAccountEntity = walletAccountService.findByAccountNumber(walletAccountObjectOptional.getAccountNumber());
+        walletAccountEntity.getWalletEntity().setStatus(WalletStatusEnum.DISABLE);
+        walletService.save(walletAccountEntity.getWalletEntity());
+        walletService.clearAllCache();
+        generateCashInUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, String.valueOf("aa"), walletAccountObjectOptional.getAccountNumber(), HttpStatus.OK, StatusService.INPUT_PARAMETER_NOT_VALID, false);
+    }
 
     //invalid accountNumber
+    @Test
+    @Order(48)
+    @DisplayName("cashInFailInvalidAccountNumber")
+    void cashInFailInvalidAccountNumber() throws Exception {
+        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.RIAL);
+        String amount = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService,USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_IN, walletAccountObjectOptional.getAccountNumber());
+        WalletAccountEntity walletAccountEntity = walletAccountService.findByAccountNumber(walletAccountObjectOptional.getAccountNumber());
+        walletAccountEntity.getWalletEntity().setStatus(WalletStatusEnum.DISABLE);
+        walletService.save(walletAccountEntity.getWalletEntity());
+        walletService.clearAllCache();
+        generateCashInUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, String.valueOf(amount), "546fgdgdfg5", HttpStatus.OK, StatusService.INPUT_PARAMETER_NOT_VALID, false);
+    }
 
+    //
 
 
 

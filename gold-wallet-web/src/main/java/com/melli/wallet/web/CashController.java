@@ -13,6 +13,7 @@ import com.melli.wallet.service.*;
 import io.micrometer.core.annotation.Timed;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.http.HttpStatus;
@@ -42,7 +43,7 @@ public class CashController extends WebController {
     @PostMapping(path = "/charge/generate/uuid", produces = {MediaType.APPLICATION_JSON_VALUE})
     @Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "ایجاد شناسه یکتا")
     @PreAuthorize("hasAuthority(\""+ ResourceService.CASH_IN +"\")")
-    public ResponseEntity<BaseResponse<UuidResponse>> generateUuid(@RequestBody CashInGenerateUuidRequestJson requestJson) throws InternalServiceException {
+    public ResponseEntity<BaseResponse<UuidResponse>> generateUuid(@Valid @RequestBody CashInGenerateUuidRequestJson requestJson) throws InternalServiceException {
         log.info("start call uuid nationalCode ===> {}", requestJson.getNationalCode());
         UuidResponse response = cashInService.generateUuid(requestContext.getChannelEntity(), requestJson.getNationalCode(), requestJson.getAmount(), requestJson.getAccountNumber());
         return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse<>(true,response));
@@ -52,7 +53,7 @@ public class CashController extends WebController {
     @PostMapping(path = "/charge", produces = {MediaType.APPLICATION_JSON_VALUE})
     @Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "افزایش موجودی کیف پول")
     @PreAuthorize("hasAuthority(\""+ ResourceService.CASH_IN +"\")")
-    public ResponseEntity<BaseResponse<CashInResponse>> cashIn(@RequestBody CashInWalletRequestJson requestJson) throws InternalServiceException {
+    public ResponseEntity<BaseResponse<CashInResponse>> cashIn(@Valid @RequestBody CashInWalletRequestJson requestJson) throws InternalServiceException {
         String channelIp = requestContext.getClientIp();
         String username = requestContext.getChannelEntity().getUsername();
 
@@ -65,10 +66,10 @@ public class CashController extends WebController {
     }
 
     @Timed(description = "CashEndPoint.inquiry")
-    @GetMapping(path = "/charge/inquiry/{uniqueIdentifier}", produces = {MediaType.APPLICATION_JSON_VALUE})
+    @GetMapping(path = "/charge/inquiry", produces = {MediaType.APPLICATION_JSON_VALUE})
     @Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "پیگیری افزایش موجودی کیف پول")
     @PreAuthorize("hasAuthority(\""+ ResourceService.CASH_IN +"\")")
-    public ResponseEntity<BaseResponse<CashInTrackResponse>> inquiryCashIn(@PathVariable("uniqueIdentifier") String uniqueIdentifier) throws InternalServiceException {
+    public ResponseEntity<BaseResponse<CashInTrackResponse>> inquiryCashIn(@Valid @RequestParam("uniqueIdentifier") String uniqueIdentifier) throws InternalServiceException {
         String channelIp = requestContext.getClientIp();
         String username = requestContext.getChannelEntity().getUsername();
         log.info("start call inquiry cashIn in username ===> {}, nationalCode ===> {}, from ip ===> {}", username, uniqueIdentifier, channelIp);

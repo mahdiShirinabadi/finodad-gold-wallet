@@ -7,6 +7,7 @@ import lombok.*;
 import org.apache.poi.hpsf.Decimal;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 
 @Entity
 @Table(name = "transaction_part")
@@ -29,13 +30,13 @@ public class TransactionEntity extends BaseEntityAudit implements Serializable {
 	private RrnEntity rrnEntity;
 
 	@Column(name = "amount", nullable = false)
-	private double amount;
+	private BigDecimal amount;
 
 	@Column(name = "type", nullable = false)
 	private String type;
 
 	@Column(name = "balance", nullable = false)
-	private double balance;
+	private BigDecimal balance;
 
 	@Column(name = "description")
 	private String description;

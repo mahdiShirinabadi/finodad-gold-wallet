@@ -7,6 +7,7 @@ import com.melli.wallet.domain.master.entity.WalletEntity;
 import com.melli.wallet.exception.InternalServiceException;
 import org.springframework.data.domain.Pageable;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 public interface WalletAccountService {
@@ -25,21 +26,17 @@ public interface WalletAccountService {
 
     List<WalletAccountEntity> findByWallet(WalletEntity wallet, Pageable pageable);
 
-    List<WalletAccountEntity> findByPartnerId(int partnerId);
-
-    WalletAccountEntity findByWalletAndPartnerId(WalletEntity walletEntity, int partnerId);
-
     WalletAccountEntity findByWalletAndAccount(WalletEntity walletEntity, String account);
 
     WalletAccountEntity findByWalletAndWalletAccountCurrencyId(WalletEntity walletEntity, long walletAccountCurrencyId);
 
     WalletAccountEntity findByAccountNumber(String account);
 
-    long getBalance(long walletAccountId);
+    BigDecimal getBalance(long walletAccountId);
 
-    void increaseBalance(long walletAccountId, double amount);
+    void increaseBalance(long walletAccountId, BigDecimal amount);
 
-    int decreaseBalance(long walletAccountId, double amount);
+    int decreaseBalance(long walletAccountId, BigDecimal amount);
 
     void blockAmount(long walletAccountId, long amount);
 

@@ -10,6 +10,7 @@ import com.melli.wallet.service.ResourceService;
 import io.micrometer.core.annotation.Timed;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.http.HttpStatus;
@@ -38,9 +39,9 @@ public class LimitationController extends WebController {
     @GetMapping(path = "/getValue", produces = {MediaType.APPLICATION_JSON_VALUE})
     @Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "دریافت محدودیتها کلی")
     @PreAuthorize("hasAuthority(\""+ ResourceService.LIMITATION_LIST +"\")")
-    public ResponseEntity<BaseResponse<LimitationCustomResponse>> generalList(@RequestParam(value = "limitationName") String limitationName,
-                                                                              @RequestParam(value ="accountNumber") String accountNumber,
-                                                                              @RequestParam(value ="nationalCode") String nationalCode
+    public ResponseEntity<BaseResponse<LimitationCustomResponse>> generalList(@Valid  @RequestParam(value = "limitationName") String limitationName,
+                                                                              @Valid @RequestParam(value ="accountNumber") String accountNumber,
+                                                                              @Valid @RequestParam(value ="nationalCode") String nationalCode
     ) throws InternalServiceException {
         String channelIp = requestContext.getClientIp();
         String username = requestContext.getChannelEntity().getUsername();

@@ -11,9 +11,7 @@ import com.melli.wallet.domain.response.limitation.LimitationListResponse;
 import com.melli.wallet.domain.response.limitation.LimitationObject;
 import com.melli.wallet.domain.response.login.*;
 import com.melli.wallet.domain.response.channel.ChannelObject;
-import com.melli.wallet.domain.response.purchase.PurchaseResponse;
-import com.melli.wallet.domain.response.purchase.PurchaseTrackObject;
-import com.melli.wallet.domain.response.purchase.PurchaseTrackResponse;
+import com.melli.wallet.domain.response.purchase.*;
 import com.melli.wallet.domain.response.wallet.CreateWalletResponse;
 import com.melli.wallet.domain.response.wallet.WalletAccountObject;
 import com.melli.wallet.exception.InternalServiceException;
@@ -70,14 +68,6 @@ public class Helper {
     }
 
 
-    public SendOtpRegisterResponse fillOtpRegisterResponse(String nationalCode, String tempUuid, Long expireTime) {
-        SendOtpRegisterResponse response = new SendOtpRegisterResponse();
-        response.setNationalCode(nationalCode);
-        response.setTempUuid(tempUuid);
-        response.setOtpExpireTime(expireTime);
-        return response;
-    }
-
     public CashInTrackResponse fillCashInTrackResponse(CashInRequestEntity cashInRequestEntity, StatusService statusService) {
         StatusEntity statusEntity = statusService.findByCode(String.valueOf(cashInRequestEntity.getResult()));
         CashInTrackResponse response = new CashInTrackResponse();
@@ -112,6 +102,16 @@ public class Helper {
         return response;
     }
 
+    public MerchantResponse fillMerchantResponse(List<MerchantEntity> merchantEntityList){
+        MerchantResponse response = new MerchantResponse();
+        response.setMerchantObjectList(merchantEntityList.stream().map(this::convertMerchantEntityToMerchantObject).toList());
+        return response;
+    }
+
+    private MerchantObject convertMerchantEntityToMerchantObject(MerchantEntity merchantEntity) {
+        return new MerchantObject(String.valueOf(merchantEntity.getId()), merchantEntity.getName(), merchantEntity.getLogo());
+    }
+
     public PurchaseTrackResponse fillPurchaseTrackResponse(PurchaseRequestEntity purchaseRequestEntity, StatusService statusService) {
         StatusEntity statusEntity = statusService.findByCode(String.valueOf(purchaseRequestEntity.getResult()));
         PurchaseTrackObject response = new PurchaseTrackObject();
@@ -136,6 +136,9 @@ public class Helper {
         response.setUniqueIdentifier(purchaseRequestEntity.getRrnEntity().getUuid());
         response.setPrice(String.valueOf(purchaseRequestEntity.getPrice()));
         response.setType(purchaseRequestEntity.getRequestTypeEntity().getName());
+        response.setChannelName(purchaseRequestEntity.getChannel().getUsername());
+        response.setCreateTime(DateUtils.getLocaleDate(DateUtils.FARSI_LOCALE, purchaseRequestEntity.getCreatedAt(), FORMAT_DATE_RESPONSE, false));
+        response.setCreateTimeTimestamp(purchaseRequestEntity.getCreatedAt().getTime());
         return response;
     }
 
@@ -149,8 +152,8 @@ public class Helper {
         return new LimitationObject(limitationGeneralEntity.getName(), limitationGeneralEntity.getAdditionalData());
     }
 
-    public CashInResponse fillCashInResponse(String nationalCode,  String uuid, long balance, String accountNumber) {
-       return new CashInResponse(nationalCode, String.valueOf(balance), uuid, accountNumber);
+    public CashInResponse fillCashInResponse(String nationalCode,  String uuid, String balance, String accountNumber) {
+       return new CashInResponse(nationalCode, balance, uuid, accountNumber);
     }
 
     public CreateWalletResponse fillCreateWalletResponse(WalletEntity walletEntity, List<WalletAccountEntity> walletAccountEntityList, WalletAccountService walletAccountService) {
@@ -186,14 +189,6 @@ public class Helper {
         return channelObject;
     }
 
-    public ForgetPasswordProfileResponse fillForgetPasswordProfileResponse(String nationalCode, Long otpExpireTime, String mobileNumber, String registerHash) {
-        ForgetPasswordProfileResponse response = new ForgetPasswordProfileResponse();
-        response.setNationalCode(nationalCode);
-        response.setOtpExpireTime(otpExpireTime);
-        response.setMaskMobileNumber(mobileNumber.replaceAll(".(?=.{4})", "*"));
-        response.setRegisterHash(registerHash);
-        return response;
-    }
 
     public WalletAccountEntity checkWalletAndWalletAccount(WalletService walletService, String nationalCode, WalletAccountService walletAccountService, String accountNumber, WalletTypeEntity walletTypeEntity) throws InternalServiceException {
 
@@ -257,11 +252,6 @@ public class Helper {
         return walletEntity;
     }
 
-    public ForgetPasswordCheckOtpResponse fillForgetPasswordCheckOtpResponse(String nationalcode) {
-        ForgetPasswordCheckOtpResponse response = new ForgetPasswordCheckOtpResponse();
-        response.setRegisterHash(nationalcode);
-        return response;
-    }
 
     public static String findInListMapValueByKey(List<Map<String, String>> listOfMaps, String key) {
         return listOfMaps.stream().filter(map -> map.containsKey(key) && StringUtils.hasText(map.get(key))).map(map -> map.get(key)).findFirst().orElse(null); // Return null if no match is found

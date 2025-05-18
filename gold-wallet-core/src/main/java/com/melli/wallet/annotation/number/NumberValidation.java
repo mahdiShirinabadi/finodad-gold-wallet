@@ -28,6 +28,8 @@ public @interface NumberValidation {
 
     boolean allowDecimal() default false;
 
+    String minDecimalValue() default "0";
+
     //represents group of constraints
     Class<?>[] groups() default {};
 

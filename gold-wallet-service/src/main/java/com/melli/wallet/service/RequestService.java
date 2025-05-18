@@ -1,5 +1,6 @@
 package com.melli.wallet.service;
 
+import com.melli.wallet.domain.dto.AggregationCashInDTO;
 import com.melli.wallet.domain.dto.AggregationPurchaseDTO;
 import com.melli.wallet.domain.master.entity.*;
 import com.melli.wallet.domain.response.cash.CashInTrackResponse;
@@ -57,6 +58,7 @@ public interface RequestService {
     CashInTrackResponse cashInTrack(String uid, String channelIp) throws InternalServiceException;
 
     AggregationPurchaseDTO findSumAmountByTransactionTypeBetweenDate(@Param("walletAccountId") long[] walletAccountId, String transactionType, Date fromDate, Date toDate);
+    AggregationCashInDTO findSumAmountCashInBetweenDate(@Param("walletAccountId") long[] walletAccountId, Date fromDate, Date toDate);
 
 //    DechargeTrackResponse deChargeTrack(String uid, String channelIp) throws ServiceException;
 //    DedicateDechargeRequest findDedicateDechargeByCashInRequestId(long requestId) throws ServiceException;

@@ -1,5 +1,8 @@
 package com.melli.wallet.domain.response.limitation;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.melli.wallet.NamingProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 
 /**
@@ -13,5 +16,8 @@ import lombok.*;
 @NoArgsConstructor
 @ToString
 public class LimitationCustomResponse {
+
+    @Schema(name = NamingProperty.VALUE)
+    @JsonProperty(NamingProperty.VALUE)
     private String value;
 }

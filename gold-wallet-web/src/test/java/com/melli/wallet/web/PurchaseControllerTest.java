@@ -1,40 +1,35 @@
 package com.melli.wallet.web;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.melli.wallet.WalletApplicationTests;
 import com.melli.wallet.config.CacheClearService;
-import com.melli.wallet.config.FlywayConfig;
+import com.melli.wallet.domain.dto.AggregationPurchaseDTO;
+import com.melli.wallet.domain.enumaration.TransactionTypeEnum;
 import com.melli.wallet.domain.enumaration.WalletStatusEnum;
+import com.melli.wallet.domain.master.entity.ChannelEntity;
 import com.melli.wallet.domain.master.entity.WalletAccountEntity;
 import com.melli.wallet.domain.master.entity.WalletEntity;
-import com.melli.wallet.domain.master.entity.WalletTypeEntity;
-import com.melli.wallet.domain.request.wallet.*;
 import com.melli.wallet.domain.response.UuidResponse;
 import com.melli.wallet.domain.response.base.BaseResponse;
-import com.melli.wallet.domain.response.cash.CashInResponse;
-import com.melli.wallet.domain.response.cash.CashInTrackResponse;
 import com.melli.wallet.domain.response.login.LoginResponse;
 import com.melli.wallet.domain.response.purchase.PurchaseResponse;
 import com.melli.wallet.domain.response.wallet.CreateWalletResponse;
 import com.melli.wallet.domain.response.wallet.WalletAccountObject;
+import com.melli.wallet.exception.InternalServiceException;
 import com.melli.wallet.service.*;
+import com.melli.wallet.util.date.DateUtils;
 import lombok.extern.log4j.Log4j2;
-import org.apache.commons.lang3.ObjectUtils;
 import org.flywaydb.core.Flyway;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
+import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
-import java.util.Optional;
 
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 
@@ -51,6 +46,8 @@ class PurchaseControllerTest extends WalletApplicationTests {
 
     private static final String NATIONAL_CODE_CORRECT = "0077847660";
     private static final String MOBILE_CORRECT = "09124162337";
+    private static final String CURRENCY_RIAL = "RIAL";
+    private static final String CURRENCY_GOLD = "GOLD";
 
     private static MockMvc mockMvc;
     private static String ACCESS_TOKEN;
@@ -72,13 +69,20 @@ class PurchaseControllerTest extends WalletApplicationTests {
     private Flyway flyway;
     @Autowired
     private CacheClearService cacheClearService;
-
+    @Autowired
+    private WalletLevelService walletLevelService;
+    @Autowired
+    private WalletAccountCurrencyService walletAccountCurrencyService;
+    @Autowired
+    private WalletBuyLimitationService walletBuyLimitationService;
+    @Autowired
+    private RequestService requestService;
 
 
     @Test
     @Order(2)
     @DisplayName("Initiate cache...")
-    void initial() {
+    void initial() throws Exception {
         mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).apply(springSecurity()).build();
         Assert.assertNotNull(mockMvc);
         log.info("start cleaning initial values in test DB for purchase");
@@ -86,11 +90,32 @@ class PurchaseControllerTest extends WalletApplicationTests {
         flyway.migrate();
         log.info("start cleaning initial values in test DB for purchase");
         cacheClearService.clearCache();
+
+        //create wallet for channel
+        WalletEntity walletEntity = new WalletEntity();
+        walletEntity.setStatus(WalletStatusEnum.ACTIVE);
+        walletEntity.setMobile("9120000000");
+        walletEntity.setNationalCode("0000000000");
+        walletEntity.setDescription("channel wallet");
+        walletEntity.setOwner(channelService.getChannel(USERNAME_CORRECT));
+        walletEntity.setWalletTypeEntity(walletTypeService.getByName(WalletTypeService.CHANNEL));
+        walletEntity.setWalletLevelEntity(walletLevelService.getAll().stream().filter(x -> x.getName().equalsIgnoreCase(WalletLevelService.BRONZE)).findFirst().get());
+        walletEntity.setCreatedBy("admin");
+        walletEntity.setCreatedAt(new Date());
+        walletService.save(walletEntity);
+
+        ChannelEntity channelEntity = channelService.getChannel(USERNAME_CORRECT);
+        channelEntity.setWalletEntity(walletEntity);
+        channelService.save(channelEntity);
+
+        walletAccountService.createAccount(List.of(WalletAccountCurrencyService.RIAL, WalletAccountCurrencyService.GOLD),
+                walletEntity, List.of(WalletAccountTypeService.WAGE), channelEntity);
+
     }
 
     @Test
     @Order(10)
-    @DisplayName("Channel login successfully")
+    @DisplayName("channel login successfully")
     void login_success() throws Exception {
         log.info("start login_success test");
         BaseResponse<LoginResponse> response = login(mockMvc, USERNAME_CORRECT, PASSWORD_CORRECT, HttpStatus.OK,
@@ -103,7 +128,7 @@ class PurchaseControllerTest extends WalletApplicationTests {
     @Order(20)
     @DisplayName("create wallet- success")
     void createWalletSuccess() throws Exception {
-        BaseResponse<CreateWalletResponse> response = createWallet(ACCESS_TOKEN, NATIONAL_CODE_CORRECT, MOBILE_CORRECT, HttpStatus.OK, StatusService.SUCCESSFUL, true);
+        BaseResponse<CreateWalletResponse> response = createWallet(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, MOBILE_CORRECT, HttpStatus.OK, StatusService.SUCCESSFUL, true);
         WalletEntity walletEntity = walletService.findById(Long.parseLong(response.getData().getWalletId()));
         if (!walletEntity.getNationalCode().equalsIgnoreCase(NATIONAL_CODE_CORRECT)) {
             log.error("wallet create not same with national code ({})", NATIONAL_CODE_CORRECT);
@@ -111,51 +136,222 @@ class PurchaseControllerTest extends WalletApplicationTests {
         }
     }
 
+    @Test
+    @Order(25)
+    @DisplayName("create wallet- fail")
+    void buyLessThanMinQuantityFail() throws Exception {
+        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.RIAL);
+        String minAmount = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.MIN_PRICE_BUY, walletAccountObjectOptional.getAccountNumber());
+        BaseResponse<UuidResponse> uuidResponseBaseResponse = generatePurchaseUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, String.valueOf(Long.parseLong(minAmount) + 1), walletAccountObjectOptional.getAccountNumber(), "BUY", HttpStatus.OK, StatusService.SUCCESSFUL, true);
+        buy(mockMvc, ACCESS_TOKEN, uuidResponseBaseResponse.getData().getUniqueIdentifier(), "0.000001", String.valueOf(Long.parseLong(minAmount) + 1), "RIAL", "0.002", NATIONAL_CODE_CORRECT, "GOLD", "1", walletAccountObjectOptional.getAccountNumber(),
+                "", "", HttpStatus.OK, StatusService.INPUT_PARAMETER_NOT_VALID, false);
+    }
 
 
     @Test
     @Order(40)
-    @DisplayName("cashIn success")
-    void cashInSuccess() throws Exception {
-        WalletAccountObject walletAccountObjectOptional = getAccountNumber(ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.RIAL);
-        WalletAccountEntity walletAccountEntity = walletAccountService.findByAccountNumber(walletAccountObjectOptional.getAccountNumber());
-        String refNumber = new Date().getTime() + "";
-
-        String amount = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_IN, walletAccountObjectOptional.getAccountNumber());
-        String value = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, walletAccountObjectOptional.getAccountNumber());
-        if ("false".equalsIgnoreCase(value)) {
-            limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
-                    LimitationGeneralService.ENABLE_CASH_IN, walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
-                    walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
-                    "true", "test cashInFailMinAmount");
-        }
-        BaseResponse<UuidResponse> uniqueIdentifier1 = generateCashInUniqueIdentifier(ACCESS_TOKEN, NATIONAL_CODE_CORRECT, String.valueOf(amount), walletAccountObjectOptional.getAccountNumber(), HttpStatus.OK, StatusService.SUCCESSFUL, true);
-        log.info("generate uuid " + uniqueIdentifier1);
-        cashIn(ACCESS_TOKEN, uniqueIdentifier1.getData().getUniqueIdentifier(), refNumber, amount, NATIONAL_CODE_CORRECT, walletAccountObjectOptional.getAccountNumber(), "", "", HttpStatus.OK, StatusService.SUCCESSFUL, true);
+    @DisplayName("buy fail- less than minPrice")
+    void buyFailMinPrice() throws Exception {
+        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.RIAL);
+        String minAmount = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.MIN_PRICE_BUY, walletAccountObjectOptional.getAccountNumber());
+        generatePurchaseUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, String.valueOf(Long.parseLong(minAmount) - 1), walletAccountObjectOptional.getAccountNumber(), "BUY", HttpStatus.OK, StatusService.AMOUNT_LESS_THAN_MIN, false);
     }
 
     @Test
-    @Order(50)
-    @DisplayName("cashIn success")
-    void buySuccess() throws Exception {
-        WalletAccountObject walletAccountObjectOptional = getAccountNumber(ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.RIAL);
-        WalletAccountEntity walletAccountEntity = walletAccountService.findByAccountNumber(walletAccountObjectOptional.getAccountNumber());
-        String refNumber = new Date().getTime() + "";
+    @Order(41)
+    @DisplayName("buy fail- bigger than maxPrice")
+    void buyFailMaxPrice() throws Exception {
+        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.RIAL);
+        String maxAmount = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.MAX_PRICE_BUY, walletAccountObjectOptional.getAccountNumber());
+        generatePurchaseUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, String.valueOf(Long.parseLong(maxAmount) + 1), walletAccountObjectOptional.getAccountNumber(), "BUY", HttpStatus.OK, StatusService.AMOUNT_BIGGER_THAN_MAX, false);
+    }
 
-        String amount = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_IN, walletAccountObjectOptional.getAccountNumber());
+    @Test
+    @Order(42)
+    @DisplayName("buy fail- invalid type")
+    void buyFailInvalidType() throws Exception {
+        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.RIAL);
+        generatePurchaseUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, String.valueOf(50000), walletAccountObjectOptional.getAccountNumber(), "BUYRRR", HttpStatus.OK, StatusService.INPUT_PARAMETER_NOT_VALID, false);
+    }
+
+    @Test
+    @Order(43)
+    @DisplayName("buy fail- invalid amount")
+    void buyFailInvalidPrice() throws Exception {
+        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.RIAL);
+        generatePurchaseUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, String.valueOf("123edfed"), walletAccountObjectOptional.getAccountNumber(), "BUY", HttpStatus.OK, StatusService.INPUT_PARAMETER_NOT_VALID, false);
+    }
+
+    @Test
+    @Order(44)
+    @DisplayName("generateBuyUuid-Success")
+    void generateBuyUuidSuccess() throws Exception {
+        String price = "100000";
+        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.RIAL);
+        generateUuid(mockMvc, ACCESS_TOKEN, walletAccountObjectOptional.getAccountNumber(), price, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusService.SUCCESSFUL, true);
+    }
+
+    //amount diff uuid and purchase
+    @Test
+    @Order(45)
+    @DisplayName("amountUuidDifferentFromPurchaseAmount-fail")
+    void amountUuidDifferentFromPurchaseAmountFail() throws Exception {
+        String price = "100000";
+        String quantity = "1.07";
+        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.RIAL);
+        BaseResponse<UuidResponse> uuidResponseBaseResponse = generateUuid(mockMvc, ACCESS_TOKEN, walletAccountObjectOptional.getAccountNumber(), price, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusService.SUCCESSFUL, true);
+        buy(mockMvc, ACCESS_TOKEN, uuidResponseBaseResponse.getData().getUniqueIdentifier(), quantity, String.valueOf(Long.parseLong(price) + 1), CURRENCY_RIAL, "2000", NATIONAL_CODE_CORRECT, CURRENCY_GOLD
+                , "1", walletAccountObjectOptional.getAccountNumber(), "", "differentAmount", HttpStatus.OK, StatusService.PRICE_NOT_SAME_WITH_UUID, false);
+    }
+
+    @Test
+    @Order(46)
+    @DisplayName("currencyNotValid-fail")
+    void currencyNotValidFail() throws Exception {
+        String price = "100000";
+        String quantity = "1.07";
+        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.RIAL);
+        BaseResponse<UuidResponse> uuidResponseBaseResponse = generateUuid(mockMvc, ACCESS_TOKEN, walletAccountObjectOptional.getAccountNumber(), price, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusService.SUCCESSFUL, true);
+        BaseResponse<PurchaseResponse> response = buy(mockMvc, ACCESS_TOKEN, uuidResponseBaseResponse.getData().getUniqueIdentifier(), quantity, String.valueOf(Long.parseLong(price)), "RIAL", "2000", NATIONAL_CODE_CORRECT, "SILVER"
+                , "1", walletAccountObjectOptional.getAccountNumber(), "", "differentAmount", HttpStatus.OK, StatusService.WALLET_ACCOUNT_CURRENCY_NOT_FOUND, false);
+        Assert.assertSame(StatusService.WALLET_ACCOUNT_CURRENCY_NOT_FOUND, response.getErrorDetail().getCode());
+    }
+
+    @Test
+    @Order(47)
+    @DisplayName("buy-success")
+    void buySuccess() throws Exception {
+        String price = "100000";
+        String quantity = "1.07";
+        walletBuyLimitationService.deleteAll();
+        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.RIAL);
+        //update balance merchant wallet-account
+        WalletEntity walletMerchantEntity = walletService.findByNationalCodeAndWalletTypeId("1111111111", walletTypeService.getByName(WalletTypeService.MERCHANT).getId());
+        List<WalletAccountEntity> walletAccountEntityList = walletAccountService.findByWallet(walletMerchantEntity);
+
+        //find gold wallet account
+        long id = 0;
+        try {
+            id = walletAccountCurrencyService.findCurrency(WalletAccountCurrencyService.GOLD).getId();
+        } catch (InternalServiceException ex) {
+            log.error("walletAccountCurrencyEntityGold not found", ex);
+        }
+
         String value = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, walletAccountObjectOptional.getAccountNumber());
         if ("false".equalsIgnoreCase(value)) {
+            WalletAccountEntity walletAccountEntity = walletAccountService.findByAccountNumber(walletAccountObjectOptional.getAccountNumber());
             limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
                     LimitationGeneralService.ENABLE_CASH_IN, walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
                     walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
                     "true", "test cashInFailMinAmount");
         }
-        BaseResponse<UuidResponse> uniqueIdentifier1 = generateCashInUniqueIdentifier(ACCESS_TOKEN, NATIONAL_CODE_CORRECT, String.valueOf(amount), walletAccountObjectOptional.getAccountNumber(), HttpStatus.OK, StatusService.SUCCESSFUL, true);
-        log.info("generate uuid " + uniqueIdentifier1);
-        cashIn(ACCESS_TOKEN, uniqueIdentifier1.getData().getUniqueIdentifier(), refNumber, amount, NATIONAL_CODE_CORRECT, walletAccountObjectOptional.getAccountNumber(), "", "", HttpStatus.OK, StatusService.SUCCESSFUL, true);
+
+
+        long finalId = id;
+        WalletAccountEntity walletAccountEntity = walletAccountEntityList.stream().filter(
+                x -> x.getWalletAccountCurrencyEntity().getId() == finalId).findFirst().orElse(null);
+        walletAccountService.increaseBalance(walletAccountEntity.getId(), new BigDecimal("1.07"));
+
+        BaseResponse<UuidResponse> uniqueIdentifierCashIn = generateCashInUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, price, walletAccountObjectOptional.getAccountNumber(), HttpStatus.OK, StatusService.SUCCESSFUL, true);
+        log.info("generate uuid " + uniqueIdentifierCashIn);
+        cashIn(mockMvc, ACCESS_TOKEN, uniqueIdentifierCashIn.getData().getUniqueIdentifier(), String.valueOf(new Date().getTime()), price, NATIONAL_CODE_CORRECT, walletAccountObjectOptional.getAccountNumber(), "", "", HttpStatus.OK, StatusService.SUCCESSFUL, true);
+
+
+        BaseResponse<UuidResponse> uuidResponseBaseResponse = generateUuid(mockMvc, ACCESS_TOKEN, walletAccountObjectOptional.getAccountNumber(), price, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusService.SUCCESSFUL, true);
+        buy(mockMvc, ACCESS_TOKEN, uuidResponseBaseResponse.getData().getUniqueIdentifier(), quantity, String.valueOf(Long.parseLong(price)), "RIAL", "2000", NATIONAL_CODE_CORRECT, CURRENCY_GOLD
+                , "1", walletAccountObjectOptional.getAccountNumber(), "", "differentAmount", HttpStatus.OK, StatusService.SUCCESSFUL, true);
+
+    }
+
+    //check buy daily limitation
+    @Test
+    @Order(48)
+    @DisplayName("buyDailyLimitationFail-success")
+    void buyDailyLimitationFail() throws Exception {
+        String price = "100000";
+        walletBuyLimitationService.deleteAll();
+        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.RIAL);
+        //update balance merchant wallet-account
+
+        WalletAccountEntity walletAccountEntity = walletAccountService.findByAccountNumber(walletAccountObjectOptional.getAccountNumber());
+        String valueMaxDailyCount = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.MAX_DAILY_COUNT_BUY, walletAccountObjectOptional.getAccountNumber());
+        String valueMaxDailyPrice = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.MAX_DAILY_PRICE_BUY, walletAccountObjectOptional.getAccountNumber());
+        AggregationPurchaseDTO aggregationPurchaseDTO = requestService.findSumAmountByTransactionTypeBetweenDate(new long[]{walletAccountEntity.getId()}, TransactionTypeEnum.BUY.name(), new Date(), new Date());
+
+        limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
+                LimitationGeneralService.MAX_DAILY_COUNT_BUY, walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
+                walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
+                aggregationPurchaseDTO.getCountRecord(), "change MAX_DAILY_COUNT_BUY");
+
+        generateUuid(mockMvc, ACCESS_TOKEN, walletAccountObjectOptional.getAccountNumber(), price, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusService.BUY_EXCEEDED_COUNT_DAILY_LIMITATION, false);
+
+        limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
+                LimitationGeneralService.MAX_DAILY_COUNT_BUY, walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
+                walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
+                valueMaxDailyCount, "change MAX_DAILY_COUNT_BUY");
+
+        limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
+                LimitationGeneralService.MAX_DAILY_PRICE_BUY, walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
+                walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
+                aggregationPurchaseDTO.getSumPrice(), "change MAX_DAILY_PRICE_BUY");
+
+        generateUuid(mockMvc, ACCESS_TOKEN, walletAccountObjectOptional.getAccountNumber(), price, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusService.BUY_EXCEEDED_AMOUNT_DAILY_LIMITATION, false);
+
+        limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
+                LimitationGeneralService.MAX_DAILY_PRICE_BUY, walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
+                walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
+                valueMaxDailyPrice, "change MAX_DAILY_PRICE_BUY");
+
     }
 
 
+    @Test
+    @Order(49)
+    @DisplayName("buyMonthlyLimitationFail-success")
+    void buyMonthlyLimitationFail() throws Exception {
+        String price = "100000";
+        walletBuyLimitationService.deleteAll();
+        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.RIAL);
+        //update balance merchant wallet-account
+
+        WalletAccountEntity walletAccountEntity = walletAccountService.findByAccountNumber(walletAccountObjectOptional.getAccountNumber());
+        String valueMaxDailyCount = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.MAX_DAILY_COUNT_BUY, walletAccountObjectOptional.getAccountNumber());
+        String valueMaxDailyPrice = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.MAX_DAILY_PRICE_BUY, walletAccountObjectOptional.getAccountNumber());
+
+        Date fromDate = DateUtils.findFirstDateOfPersianMonth(new Date());
+        Date untilDate = new Date();
+        log.info("found monthly fromTime ({}), until ({})", fromDate, untilDate);
+        AggregationPurchaseDTO aggregationPurchaseDTO = requestService.findSumAmountByTransactionTypeBetweenDate(new long[]{walletAccountEntity.getId()}, TransactionTypeEnum.BUY.name(), fromDate, untilDate);
+
+        limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
+                LimitationGeneralService.MAX_MONTHLY_COUNT_BUY, walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
+                walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
+                aggregationPurchaseDTO.getCountRecord(), "change MAX_MONTHLY_COUNT_BUY");
+
+        generateUuid(mockMvc, ACCESS_TOKEN, walletAccountObjectOptional.getAccountNumber(), price, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusService.BUY_EXCEEDED_COUNT_MONTHLY_LIMITATION, false);
+
+        limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
+                LimitationGeneralService.MAX_MONTHLY_PRICE_BUY, walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
+                walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
+                valueMaxDailyCount, "change MAX_MONTHLY_PRICE_BUY");
+
+        limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
+                LimitationGeneralService.MAX_MONTHLY_COUNT_BUY, walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
+                walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
+                aggregationPurchaseDTO.getSumPrice(), "change MAX_MONTHLY_COUNT_BUY");
+
+        generateUuid(mockMvc, ACCESS_TOKEN, walletAccountObjectOptional.getAccountNumber(), price, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusService.BUY_EXCEEDED_AMOUNT_MONTHLY_LIMITATION, false);
+
+        limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
+                LimitationGeneralService.MAX_MONTHLY_PRICE_BUY, walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
+                walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
+                valueMaxDailyPrice, "change MAX_MONTHLY_PRICE_BUY");
+
+    }
+
+    //check buy monthly limitation
+
+    //
 
 
 }

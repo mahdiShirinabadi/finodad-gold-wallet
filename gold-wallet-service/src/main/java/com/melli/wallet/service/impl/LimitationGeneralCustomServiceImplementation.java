@@ -107,7 +107,7 @@ public class LimitationGeneralCustomServiceImplementation implements LimitationG
             settingGeneralCustomEntity.setCreatedAt(new Date());
             limitationGeneralCustomRepository.save(settingGeneralCustomEntity);
         }else{
-            log.error("there are multi setting for parameter ({}) and count row ({})", limitationGeneralCustomDTO, settingGeneralCustomEntityList.size());
+            log.info("there are multi setting for parameter ({}) and count row ({})", limitationGeneralCustomDTO, settingGeneralCustomEntityList.size());
             for(LimitationGeneralCustomEntity row: settingGeneralCustomEntityList){
                 row.setUpdatedAt(new Date());
                 row.setUpdatedBy(channelEntity.getUsername());

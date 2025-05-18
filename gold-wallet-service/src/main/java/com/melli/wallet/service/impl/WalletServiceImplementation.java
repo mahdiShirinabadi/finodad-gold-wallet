@@ -1,11 +1,11 @@
 package com.melli.wallet.service.impl;
 
+import com.melli.wallet.ConstantRedisName;
 import com.melli.wallet.domain.master.entity.WalletEntity;
 import com.melli.wallet.domain.master.persistence.WalletRepository;
 import com.melli.wallet.exception.InternalServiceException;
 import com.melli.wallet.service.StatusService;
 import com.melli.wallet.service.WalletService;
-import com.melli.wallet.utils.Constant;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.cache.annotation.CacheConfig;
@@ -16,7 +16,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 
-@CacheConfig(cacheNames = Constant.WALLET_NAME_CACHE)
+@CacheConfig(cacheNames = ConstantRedisName.WALLET_NAME_CACHE)
 @Service
 @Log4j2
 @RequiredArgsConstructor

@@ -10,8 +10,8 @@ import java.math.BigDecimal;
 
 public interface WalletBuyLimitationService {
 	void checkBuyGeneral(ChannelEntity channel, WalletEntity wallet, BigDecimal amount, WalletAccountEntity walletAccount, String uniqueIdentifier) throws InternalServiceException;
-	void checkBuyDailyLimitation(ChannelEntity channel, WalletEntity wallet, BigDecimal amount, WalletAccountEntity walletAccount, MerchantEntity merchant, String uniqueIdentifier) throws InternalServiceException;
-	void checkBuyMonthlyLimitation(ChannelEntity channel, WalletEntity wallet, BigDecimal amount, WalletAccountEntity walletAccount, MerchantEntity merchant, String uniqueIdentifier) throws InternalServiceException;
-	void updateBuyDailyLimitation(WalletAccountEntity walletAccount, BigDecimal amount) throws InternalServiceException;
-	void updateBuyMonthlyLimitation(WalletAccountEntity walletAccount, BigDecimal amount) throws InternalServiceException;
+	void checkBuyDailyLimitation(ChannelEntity channel, WalletEntity wallet, BigDecimal amount, WalletAccountEntity walletAccount, String uniqueIdentifier) throws InternalServiceException;
+	void checkBuyMonthlyLimitation(ChannelEntity channel, WalletEntity wallet, BigDecimal amount, WalletAccountEntity walletAccount, String uniqueIdentifier) throws InternalServiceException;
+	void updateBuyLimitation(WalletAccountEntity walletAccount, BigDecimal amount, String uniqueIdentifier) throws InternalServiceException;
+	void deleteAll();
 }

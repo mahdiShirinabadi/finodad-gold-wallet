@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
 import java.util.Properties;
@@ -48,11 +49,11 @@ public class TransactionServiceImplementation implements TransactionService {
     @Transactional(propagation = Propagation.MANDATORY)
     public void insertDeposit(TransactionEntity transaction) throws InternalServiceException {
         log.info("start deposit amount ({}) from walletAccountId ({})", transaction.getAmount(), transaction.getWalletAccountEntity().getId());
-        long walletBalance = walletAccountService.getBalance(transaction.getWalletAccountEntity().getId());
+        BigDecimal walletBalance = walletAccountService.getBalance(transaction.getWalletAccountEntity().getId());
         transaction.setType(TransactionEntity.DEPOSIT);
         transaction.setCreatedAt(new Date());
         transaction.setCreatedBy("System");
-        transaction.setBalance(walletBalance + transaction.getAmount());
+        transaction.setBalance(walletBalance.add(transaction.getAmount()));
         walletAccountService.increaseBalance(transaction.getWalletAccountEntity().getId(), transaction.getAmount());
         transactionRepository.save(transaction);
         log.info("finish deposit amount ( {} ) from walletAccountId ({})", transaction.getAmount(), transaction.getWalletAccountEntity().getId());
@@ -64,15 +65,15 @@ public class TransactionServiceImplementation implements TransactionService {
 
         log.info("start withdraw amount ({}) from walletAccountId ({})", transaction.getAmount(), transaction.getWalletAccountEntity().getId());
         // Get current balance
-        long walletBalance = walletAccountService.getBalance(transaction.getWalletAccountEntity().getId());
+        BigDecimal walletBalance = walletAccountService.getBalance(transaction.getWalletAccountEntity().getId());
 
         // Check for sufficient balance
-        if (walletBalance - transaction.getAmount() < 0) {
+        if (walletBalance.subtract(transaction.getAmount()).compareTo(BigDecimal.valueOf(0L)) < 0) {
             log.error("Balance of wallet({}) now is ({}), is less than withdraw amount({}) !!!", transaction.getWalletAccountEntity().getId(), walletBalance, transaction.getAmount());
             throw new InternalServiceException("Balance of walletAccountId( " + transaction.getWalletAccountEntity().getId() + "), is less than withdraw amount(" + transaction.getAmount() + ") !!!", StatusService.BALANCE_IS_NOT_ENOUGH, HttpStatus.OK);
         }
 
-        transaction.setBalance(walletBalance - transaction.getAmount());
+        transaction.setBalance(walletBalance.subtract(transaction.getAmount()));
         transaction.setType(TransactionEntity.WITHDRAW);
         transaction.setCreatedAt(new Date());
         transaction.setCreatedBy("System");

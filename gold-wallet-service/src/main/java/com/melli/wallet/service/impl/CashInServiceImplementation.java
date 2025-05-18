@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -58,7 +59,7 @@ public class CashInServiceImplementation implements CashInService {
         try {
 
             WalletAccountEntity walletAccountEntity = helper.checkWalletAndWalletAccountForNormalUser(walletService,nationalCode, walletAccountService, accountNumber);
-            walletCashLimitationService.checkCashInLimitation(channelEntity, walletAccountEntity.getWalletEntity(), Long.parseLong(amount), walletAccountEntity);
+            walletCashLimitationService.checkCashInLimitation(channelEntity, walletAccountEntity.getWalletEntity(), BigDecimal.valueOf(Long.parseLong(amount)), walletAccountEntity);
             log.info("start generate traceId, username ===> ({}), nationalCode ({})", channelEntity.getUsername(), nationalCode);
             RrnEntity rrnEntity = rrnService.generateTraceId(nationalCode, channelEntity, requestTypeService.getRequestType(RequestTypeService.CASH_IN), accountNumber, amount);
             log.info("finish traceId ===> {}, username ({}), nationalCode ({})", rrnEntity.getUuid(), channelEntity.getUsername(), nationalCode);
@@ -113,7 +114,7 @@ public class CashInServiceImplementation implements CashInService {
             requestService.findSuccessCashInByRefNumber(chargeObjectDTO.getRefNumber());
 
             WalletAccountEntity walletAccountEntity = helper.checkWalletAndWalletAccountForNormalUser(walletService, rrnEntity.getNationalCode(), walletAccountService, chargeObjectDTO.getAccountNumber());
-            walletCashLimitationService.checkCashInLimitation(chargeObjectDTO.getChannel(), walletAccountEntity.getWalletEntity(), Long.parseLong(chargeObjectDTO.getAmount()), walletAccountEntity);
+            walletCashLimitationService.checkCashInLimitation(chargeObjectDTO.getChannel(), walletAccountEntity.getWalletEntity(),BigDecimal.valueOf(Long.parseLong(chargeObjectDTO.getAmount())), walletAccountEntity);
 
             CashInRequestEntity cashInRequestEntity = new CashInRequestEntity();
             cashInRequestEntity.setAmount(Long.parseLong(chargeObjectDTO.getAmount()));
@@ -139,7 +140,7 @@ public class CashInServiceImplementation implements CashInService {
             cashInRequestEntity.setAdditionalData(chargeObjectDTO.getAdditionalData());
 
             TransactionEntity transaction = new TransactionEntity();
-            transaction.setAmount(Long.parseLong(chargeObjectDTO.getAmount()));
+            transaction.setAmount(BigDecimal.valueOf(Long.parseLong(chargeObjectDTO.getAmount())));
             transaction.setWalletAccountEntity(walletAccountEntity);
             transaction.setAdditionalData(chargeObjectDTO.getAdditionalData());
             transaction.setRequestTypeId(cashInRequestEntity.getRequestTypeEntity().getId());
@@ -156,12 +157,12 @@ public class CashInServiceImplementation implements CashInService {
             requestService.save(cashInRequestEntity);
 
             log.info("Start updating CashInLimitation for walletAccount ({})", walletAccountEntity.getAccountNumber());
-            walletCashLimitationService.updateCashInLimitation(walletAccountEntity, Long.parseLong(chargeObjectDTO.getAmount()));
+            walletCashLimitationService.updateCashInLimitation(walletAccountEntity, BigDecimal.valueOf(Long.parseLong(chargeObjectDTO.getAmount())));
             log.info("updating CashInLimitation for walletAccount ({}) is finished.", walletAccountEntity.getAccountNumber());
 
-            long walletAccountServiceBalance = walletAccountService.getBalance(walletAccountEntity.getId());
+            BigDecimal walletAccountServiceBalance = walletAccountService.getBalance(walletAccountEntity.getId());
 
-            return helper.fillCashInResponse(chargeObjectDTO.getNationalCode(), rrnEntity.getUuid(), walletAccountServiceBalance, walletAccountEntity.getAccountNumber());
+            return helper.fillCashInResponse(chargeObjectDTO.getNationalCode(), rrnEntity.getUuid(), String.valueOf(walletAccountServiceBalance), walletAccountEntity.getAccountNumber());
         }, chargeObjectDTO.getUniqueIdentifier());
     }
 

@@ -3,6 +3,8 @@ package com.melli.wallet.domain.dto;
 import com.melli.wallet.domain.master.entity.ChannelEntity;
 import lombok.*;
 
+import java.math.BigDecimal;
+
 /**
  * Class Name: BuyRequestDTO
  * Author: Mahdi Shirinabadi
@@ -16,13 +18,13 @@ import lombok.*;
 public class SellRequestDTO {
     private ChannelEntity channel;
     private String uniqueIdentifier;
-    private float amount;
+    private BigDecimal amount;
     private long price;
     private String walletAccountNumber;
     private String additionalData;
     private String merchantId;
     private String nationalCode;
-    private float commission;
+    private BigDecimal commission;
     private String currency;
     private String ip;
     private String commissionCurrency;

@@ -1,6 +1,8 @@
 package com.melli.wallet.domain.response.base;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.melli.wallet.NamingProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -10,15 +12,19 @@ import lombok.ToString;
 @ToString
 public class PageResponse {
 
-    @JsonProperty("size")
+    @Schema(name = NamingProperty.SIZE)
+    @JsonProperty(NamingProperty.SIZE)
     private int size;
 
-    @JsonProperty("number")
+    @Schema(name = NamingProperty.NUMBER)
+    @JsonProperty(NamingProperty.NUMBER)
     private int number;
 
-    @JsonProperty("totalPages")
+    @Schema(name = NamingProperty.TOTAL_PAGES)
+    @JsonProperty(NamingProperty.TOTAL_PAGES)
     private long totalPages;
 
-    @JsonProperty("totalElements")
+    @Schema(name = NamingProperty.TOTAL_ELEMENTS)
+    @JsonProperty(NamingProperty.TOTAL_ELEMENTS)
     private long totalElements;
 }

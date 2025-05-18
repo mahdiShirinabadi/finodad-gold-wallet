@@ -42,9 +42,6 @@ public class WalletAccountEntity extends BaseEntityAudit implements Serializable
 	@Column(name = "pin")
 	private String pin;
 
-	@Column(name = "partner_id")
-	private int partnerId;
-
 	@Column(name = "end_time")
 	private Date endTime;
 }

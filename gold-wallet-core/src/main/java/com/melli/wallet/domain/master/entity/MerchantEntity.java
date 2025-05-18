@@ -34,6 +34,9 @@ public class MerchantEntity extends BaseEntityAudit implements Serializable {
 	@Column(name = "economical_code")
 	private String economicalCode;
 
+	@Column(name = "logo")
+	private String logo;
+
 	@OneToOne(fetch = FetchType.EAGER)
 	@JoinColumn(name = "wallet_id", nullable = false)
 	private WalletEntity walletEntity;

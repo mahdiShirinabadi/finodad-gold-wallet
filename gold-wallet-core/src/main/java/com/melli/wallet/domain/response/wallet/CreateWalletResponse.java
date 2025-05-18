@@ -1,6 +1,8 @@
 package com.melli.wallet.domain.response.wallet;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.melli.wallet.NamingProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -12,21 +14,27 @@ import java.util.List;
 @ToString
 public class CreateWalletResponse {
 
-	@JsonProperty("walletId")
+	@Schema(name = NamingProperty.ID)
+	@JsonProperty(NamingProperty.ID)
 	private String walletId;
 
-	@JsonProperty("mobile")
+	@Schema(name = NamingProperty.MOBILE_NUMBER)
+	@JsonProperty(NamingProperty.MOBILE_NUMBER)
 	private String mobile;
 
-	@JsonProperty("nationalCode")
+	@Schema(name = NamingProperty.NATIONAL_CODE)
+	@JsonProperty(NamingProperty.NATIONAL_CODE)
 	private String nationalCode;
 
-	@JsonProperty("status")
+	@Schema(name = NamingProperty.STATUS)
+	@JsonProperty(NamingProperty.STATUS)
 	private String status;
 
-	@JsonProperty("statusDescription")
+	@Schema(name = NamingProperty.STATUS_DESCRIPTION)
+	@JsonProperty(NamingProperty.STATUS_DESCRIPTION)
 	private String statusDescription;
 
-	@JsonProperty("walletAccountObject")
+	@Schema(name = NamingProperty.WALLET_ACCOUNT_OBJECT_LIST)
+	@JsonProperty(NamingProperty.WALLET_ACCOUNT_OBJECT_LIST)
 	private List<WalletAccountObject> walletAccountObjectList;
 }

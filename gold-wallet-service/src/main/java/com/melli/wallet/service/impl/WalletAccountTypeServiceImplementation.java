@@ -1,10 +1,9 @@
 package com.melli.wallet.service.impl;
 
-import com.melli.wallet.domain.master.entity.StatusEntity;
+import com.melli.wallet.ConstantRedisName;
 import com.melli.wallet.domain.master.entity.WalletAccountTypeEntity;
 import com.melli.wallet.domain.master.persistence.WalletAccountTypeRepository;
 import com.melli.wallet.service.WalletAccountTypeService;
-import com.melli.wallet.utils.Constant;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.cache.annotation.CacheConfig;
@@ -21,7 +20,7 @@ import java.util.List;
 @Service
 @Log4j2
 @RequiredArgsConstructor
-@CacheConfig(cacheNames = Constant.WALLET_ACCOUNT_TYPE_CACHE)
+@CacheConfig(cacheNames = com.melli.wallet.ConstantRedisName.WALLET_ACCOUNT_TYPE_CACHE)
 public class WalletAccountTypeServiceImplementation implements WalletAccountTypeService {
 
     private final WalletAccountTypeRepository walletAccountTypeRepository;
@@ -41,6 +40,6 @@ public class WalletAccountTypeServiceImplementation implements WalletAccountType
 
     @Override
     public void clearCache() {
-        log.info("clear cache ({})", Constant.WALLET_ACCOUNT_TYPE_CACHE);
+        log.info("clear cache ({})", ConstantRedisName.WALLET_ACCOUNT_TYPE_CACHE);
     }
 }

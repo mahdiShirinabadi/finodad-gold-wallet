@@ -1,12 +1,12 @@
 package com.melli.wallet.service.impl;
 
+import com.melli.wallet.ConstantRedisName;
 import com.melli.wallet.domain.master.entity.StatusEntity;
 import com.melli.wallet.domain.master.persistence.StatusRepository;
 import com.melli.wallet.exception.InternalServiceException;
 import com.melli.wallet.service.SettingGeneralService;
 import com.melli.wallet.service.StatusService;
 import com.melli.wallet.util.StringUtils;
-import com.melli.wallet.utils.Constant;
 import com.melli.wallet.utils.RedisLockService;
 import jakarta.annotation.PostConstruct;
 import jakarta.persistence.criteria.CriteriaBuilder;
@@ -27,7 +27,7 @@ import java.util.*;
 
 @Service
 @Log4j2
-@CacheConfig(cacheNames = Constant.STATUS_NAME_CACHE)
+@CacheConfig(cacheNames = ConstantRedisName.STATUS_NAME_CACHE)
 @RequiredArgsConstructor
 public class StatusServiceImplementation implements StatusService {
 

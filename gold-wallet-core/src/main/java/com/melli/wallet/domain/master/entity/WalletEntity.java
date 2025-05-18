@@ -48,6 +48,4 @@ public class WalletEntity extends BaseEntityAudit implements Serializable {
 	@Enumerated(EnumType.STRING)
 	private WalletStatusEnum status;
 
-	@Column(name = "level_")
-	private int level;
 }

@@ -27,5 +27,4 @@ public class BuyRequestDTO {
     private BigDecimal commission;
     private String currency;
     private String ip;
-    private String commissionCurrency;
 }

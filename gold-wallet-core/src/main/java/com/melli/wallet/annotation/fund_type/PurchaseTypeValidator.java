@@ -13,7 +13,7 @@ public class PurchaseTypeValidator implements ConstraintValidator<PurchaseTypeVa
     @Override
     public boolean isValid(String value, ConstraintValidatorContext context) {
         if (value == null) {
-            return true;
+            return false;
         }
         return Arrays.stream(PurchaseTypeEnum.values()).map(PurchaseTypeEnum::getText).toList().contains(value);
     }

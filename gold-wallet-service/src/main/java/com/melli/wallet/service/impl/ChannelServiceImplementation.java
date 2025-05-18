@@ -15,7 +15,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import static com.melli.wallet.utils.Constant.CHANNEL_NAME_CACHE;
+import static com.melli.wallet.ConstantRedisName.CHANNEL_NAME_CACHE;
 
 
 @Service

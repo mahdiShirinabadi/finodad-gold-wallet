@@ -1,26 +1,26 @@
 create table if not exists channel
 (
-    id                 serial                      not null primary key,
-    created_by         VARCHAR(200)                NOT NULL,
-    updated_by         VARCHAR(200),
-    created_at         TIMESTAMP WITHOUT TIME ZONE NOT NULL,
-    updated_at         TIMESTAMP WITHOUT TIME ZONE,
-    firstname          varchar(500)  default null,
-    lastname           varchar(500)  default null,
-    username           varchar(50) unique          not null,
-    mobile             varchar(50),
-    password           varchar(500)  default null,
-    trust              int           default 0,
-    sign               int           default 0,
-    public_key         varchar(1000) default null,
-    ip                 varchar(500)  default null,
-    status             varchar(500)  default null,
-    iban               varchar(13)   default null,
-    wallet_id          bigint        default null,
-    account            varchar(13)   default null,
-    national_code      char(10)      default null,
-    check_shahkar      int           default 0,
-    end_time           TIMESTAMP WITHOUT TIME ZONE
+    id            serial                      not null primary key,
+    created_by    VARCHAR(200)                NOT NULL,
+    updated_by    VARCHAR(200),
+    created_at    TIMESTAMP WITHOUT TIME ZONE NOT NULL,
+    updated_at    TIMESTAMP WITHOUT TIME ZONE,
+    firstname     varchar(500)  default null,
+    lastname      varchar(500)  default null,
+    username      varchar(50) unique          not null,
+    mobile        varchar(50),
+    password      varchar(500)  default null,
+    trust         int           default 0,
+    sign          int           default 0,
+    public_key    varchar(1000) default null,
+    ip            varchar(500)  default null,
+    status        varchar(500)  default null,
+    iban          varchar(13)   default null,
+    wallet_id     bigint        default null,
+    account       varchar(13)   default null,
+    national_code char(10)      default null,
+    check_shahkar int           default 0,
+    end_time      TIMESTAMP WITHOUT TIME ZONE
 );
 
 CREATE TABLE if not exists role_
@@ -35,8 +35,8 @@ CREATE TABLE if not exists role_
     additional_data     VARCHAR(100),
     end_time            TIMESTAMP WITHOUT TIME ZONE
 );
-CREATE INDEX idx_role_name ON role_(name);
-CREATE UNIQUE INDEX idx_role_unique_name ON role_(name);
+CREATE INDEX idx_role_name ON role_ (name);
+CREATE UNIQUE INDEX idx_role_unique_name ON role_ (name);
 
 CREATE TABLE if not exists resource
 (
@@ -49,8 +49,8 @@ CREATE TABLE if not exists resource
     fa_name    VARCHAR(100)                NOT NULL,
     display    INTEGER
 );
-CREATE INDEX idx_resource_name ON resource(name);
-CREATE UNIQUE INDEX idx_resource_unique_name ON resource(name);
+CREATE INDEX idx_resource_name ON resource (name);
+CREATE UNIQUE INDEX idx_resource_unique_name ON resource (name);
 
 CREATE TABLE if not exists request_type
 (
@@ -63,8 +63,8 @@ CREATE TABLE if not exists request_type
     fa_name    VARCHAR(100)                NOT NULL,
     display    INTEGER
 );
-CREATE INDEX idx_request_type_name ON request_type(name);
-CREATE UNIQUE INDEX idx_request_type_unique_name ON request_type(name);
+CREATE INDEX idx_request_type_name ON request_type (name);
+CREATE UNIQUE INDEX idx_request_type_unique_name ON request_type (name);
 
 CREATE TABLE if not exists channel_access_token
 (
@@ -130,12 +130,12 @@ CREATE TABLE if not exists wallet_account_currency
     additional_data VARCHAR(300),
     description     VARCHAR(100)
 );
-CREATE INDEX idx_wallet_account_currency_name ON wallet_account_currency(name);
-CREATE UNIQUE INDEX idx_wallet_account_currency_unique_name ON wallet_account_currency(LOWER(name));
+CREATE INDEX idx_wallet_account_currency_name ON wallet_account_currency (name);
+CREATE UNIQUE INDEX idx_wallet_account_currency_unique_name ON wallet_account_currency (LOWER(name));
 insert into wallet_account_currency(created_by, created_at, name, suffix, additional_data, description)
-VALUES ('System',now(), 'GOLD','گرم','','طلا');
+VALUES ('System', now(), 'GOLD', 'گرم', '', 'طلا');
 insert into wallet_account_currency(created_by, created_at, name, suffix, additional_data, description)
-VALUES ('System',now(), 'RIAL','ریال','','ریال');
+VALUES ('System', now(), 'RIAL', 'ریال', '', 'ریال');
 
 CREATE TABLE if not exists wallet_type
 (
@@ -146,11 +146,14 @@ CREATE TABLE if not exists wallet_type
     updated_at TIMESTAMP WITHOUT TIME ZONE,
     name       VARCHAR(100)
 );
-CREATE INDEX idx_wallet_type_name ON wallet_type(name);
-CREATE UNIQUE INDEX idx_wallet_type_unique_name ON wallet_type(LOWER(name));
-insert into wallet_type(created_by, created_at, name) values ('System',now(),'NORMAL_USER');
-insert into wallet_type(created_by, created_at, name) values ('System',now(),'CHANNEL');
-insert into wallet_type(created_by, created_at, name) values ('System',now(),'MERCHANT');
+CREATE INDEX idx_wallet_type_name ON wallet_type (name);
+CREATE UNIQUE INDEX idx_wallet_type_unique_name ON wallet_type (LOWER(name));
+insert into wallet_type(created_by, created_at, name)
+values ('System', now(), 'NORMAL_USER');
+insert into wallet_type(created_by, created_at, name)
+values ('System', now(), 'CHANNEL');
+insert into wallet_type(created_by, created_at, name)
+values ('System', now(), 'MERCHANT');
 
 
 CREATE TABLE if not exists wallet_account_type
@@ -165,9 +168,9 @@ CREATE TABLE if not exists wallet_account_type
     description     VARCHAR(100)
 );
 insert into wallet_account_type(created_by, created_at, name, additional_data, description)
-VALUES ('System',now(), 'NORMAL','عادی','NORMAL');
+VALUES ('System', now(), 'NORMAL', 'عادی', 'NORMAL');
 insert into wallet_account_type(created_by, created_at, name, additional_data, description)
-VALUES ('System',now(), 'WAGE','کارمزد','WAGE');
+VALUES ('System', now(), 'WAGE', 'کارمزد', 'WAGE');
 
 CREATE TABLE if not exists wallet_level
 (
@@ -179,10 +182,14 @@ CREATE TABLE if not exists wallet_level
     name       VARCHAR(100)
 );
 
-insert into wallet_level(created_by, created_at, name) values ('System',now(),'BRONZE');
-insert into wallet_level(created_by, created_at, name) values ('System',now(),'SILVER');
-insert into wallet_level(created_by, created_at, name) values ('System',now(),'GOLD');
-insert into wallet_level(created_by, created_at, name) values ('System',now(),'PLATINUM');
+insert into wallet_level(created_by, created_at, name)
+values ('System', now(), 'BRONZE');
+insert into wallet_level(created_by, created_at, name)
+values ('System', now(), 'SILVER');
+insert into wallet_level(created_by, created_at, name)
+values ('System', now(), 'GOLD');
+insert into wallet_level(created_by, created_at, name)
+values ('System', now(), 'PLATINUM');
 
 CREATE TABLE if not exists wallet
 (
@@ -195,7 +202,6 @@ CREATE TABLE if not exists wallet
     national_code    VARCHAR(100),
     description      VARCHAR(100),
     identifier       VARCHAR(100),
-    level_           INTEGER,
     status           VARCHAR(100),
     owner_channel_id BIGINT                      NOT NULL REFERENCES channel,
     wallet_type_id   BIGINT                      NOT NULL REFERENCES wallet_type,
@@ -217,8 +223,7 @@ CREATE TABLE if not exists wallet_account
     status                     VARCHAR(100),
     version                    BIGINT,
     pin                        VARCHAR(100),
-    partner_id                 INTEGER,
-    balance                    BIGINT default 0,
+    balance                    NUMERIC(15, 5) default 0,
     end_time                   TIMESTAMP WITHOUT TIME ZONE
 );
 
@@ -309,16 +314,16 @@ CREATE TABLE if not exists shahkar_info
 
 CREATE TABLE if not exists rrn
 (
-    id            BIGSERIAL PRIMARY KEY,
-    created_by    VARCHAR(200)                NOT NULL,
-    updated_by    VARCHAR(200),
-    created_at    TIMESTAMP WITHOUT TIME ZONE NOT NULL,
-    updated_at    TIMESTAMP WITHOUT TIME ZONE,
-    national_code VARCHAR(10)                 NOT NULL,
-    channel_id    BIGINT                      NOT NULL REFERENCES channel,
+    id              BIGSERIAL PRIMARY KEY,
+    created_by      VARCHAR(200)                NOT NULL,
+    updated_by      VARCHAR(200),
+    created_at      TIMESTAMP WITHOUT TIME ZONE NOT NULL,
+    updated_at      TIMESTAMP WITHOUT TIME ZONE,
+    national_code   VARCHAR(10)                 NOT NULL,
+    channel_id      BIGINT                      NOT NULL REFERENCES channel,
     request_type_id BIGINT                      NOT NULL REFERENCES request_type,
-    extra_data    text,
-    uuid          VARCHAR(100) default gen_random_uuid() || '-' || EXTRACT(EPOCH FROM NOW())
+    extra_data      text,
+    uuid            VARCHAR(100) default gen_random_uuid() || '-' || EXTRACT(EPOCH FROM NOW())
 );
 CREATE UNIQUE INDEX idx_unique_uuid_rrn ON rrn (uuid);
 
@@ -347,8 +352,10 @@ CREATE TABLE if not exists merchant
     mobile          VARCHAR(200)                NOT NULL,
     national_code   VARCHAR(200)                NOT NULL,
     economical_code VARCHAR(200)                NOT NULL,
-    pay_id          VARCHAR(200)                NOT NULL,
-    wallet_id       BIGINT                      NOT NULL REFERENCES wallet,
+    description            TEXT,
+    logo            TEXT,
+    pay_id          VARCHAR(200),
+    wallet_id       BIGINT                      NOT NULL UNIQUE REFERENCES wallet,
     settlement_type INTEGER,
     status          INTEGER,
     end_time        TIMESTAMP WITHOUT TIME ZONE
@@ -382,18 +389,18 @@ CREATE TABLE if not exists create_wallet_request
 
 CREATE TABLE if not exists purchase_request
 (
-    request_id                  BIGINT primary key NOT NULL REFERENCES request,
-    transaction_type            VARCHAR(50)        NOT NULL CHECK (transaction_type IN ('BUY', 'SELL')),
-    price                       BIGINT,         -- Purchased quantity price
-    quantity                    NUMERIC(10, 5), -- Purchased quantity
-    wallet_account_id           BIGINT             NOT NULL REFERENCES wallet_account,
-    rrn_id                      BIGINT             NOT NULL REFERENCES rrn,
-    merchant_id                 BIGINT             NOT NULL REFERENCES merchant,
-    national_code               VARCHAR(100),
-    terminal_amount             VARCHAR(100),
-    additional_data             VARCHAR(500),
-    ref_number                  VARCHAR(500),
-    commission           NUMERIC(10, 5)
+    request_id        BIGINT primary key NOT NULL REFERENCES request,
+    transaction_type  VARCHAR(50)        NOT NULL CHECK (transaction_type IN ('BUY', 'SELL')),
+    price       BIGINT,         -- Purchased quantity price
+    quantity          NUMERIC(15, 5), -- Purchased quantity
+    wallet_account_id BIGINT             NOT NULL REFERENCES wallet_account,
+    rrn_id            BIGINT             NOT NULL REFERENCES rrn,
+    merchant_id       BIGINT             NOT NULL REFERENCES merchant,
+    national_code     VARCHAR(100),
+    terminal_amount   NUMERIC(15, 5),
+    additional_data   VARCHAR(500),
+    ref_number        VARCHAR(500),
+    commission        NUMERIC(15, 5)
 );
 create unique index rrn_id_purchase_request_unique_idx on purchase_request (rrn_id);
 
@@ -401,7 +408,7 @@ CREATE TABLE if not exists p_2_p_request
 (
     request_id             BIGINT NOT NULL REFERENCES request,
     rrn_id                 BIGINT NOT NULL REFERENCES rrn,
-    amount                 NUMERIC(10, 5),
+    amount                 NUMERIC(15, 5),
     src_wallet_account_id  BIGINT NOT NULL REFERENCES wallet_account,
     dest_wallet_account_id BIGINT NOT NULL REFERENCES wallet_account
 );
@@ -472,7 +479,7 @@ CREATE TABLE if not exists limitation_general_custom
     updated_by                 VARCHAR(200),
     created_at                 TIMESTAMP WITHOUT TIME ZONE NOT NULL,
     updated_at                 TIMESTAMP WITHOUT TIME ZONE,
-    limitation_general_id         BIGINT                      not null references limitation_general,
+    limitation_general_id      BIGINT                      not null references limitation_general,
     wallet_level_id            BIGINT                      not null references wallet_level,
     channel_id                 BIGINT                      not null references channel,
     wallet_account_type_id     BIGINT                      not null references wallet_account_type,
@@ -490,22 +497,33 @@ CREATE TABLE if not exists template
     updated_by VARCHAR(200),
     created_at TIMESTAMP WITHOUT TIME ZONE NOT NULL,
     updated_at TIMESTAMP WITHOUT TIME ZONE,
-    name  varchar(100),
-    value text
+    name       varchar(100),
+    value      text
 );
 
-CREATE TABLE if not exists transaction_part
+CREATE TABLE if not exists merchant_wallet_account_currency
 (
-    id         BIGSERIAL,
+    id         BIGSERIAL PRIMARY KEY,
     created_by VARCHAR(200)                NOT NULL,
     updated_by VARCHAR(200),
     created_at TIMESTAMP WITHOUT TIME ZONE NOT NULL,
     updated_at TIMESTAMP WITHOUT TIME ZONE,
+    merchant_id   BIGINT             NOT NULL REFERENCES merchant,
+    wallet_account_currency_id       BIGINT   NOT NULL REFERENCES wallet_account_currency
+);
+
+CREATE TABLE if not exists transaction_part
+(
+    id                BIGSERIAL,
+    created_by        VARCHAR(200)                NOT NULL,
+    updated_by        VARCHAR(200),
+    created_at        TIMESTAMP WITHOUT TIME ZONE NOT NULL,
+    updated_at        TIMESTAMP WITHOUT TIME ZONE,
     wallet_account_id int                         not null references wallet_account (id),
     request_type_id   int,
-    amount            bigint                      not null,
+    amount            NUMERIC(15, 5)             not null,
     type              varchar(1)                  not null,
-    balance           bigint                      not null,
+    balance           NUMERIC(15, 5)              not null,
     description       varchar(200) default null,
     additional_data   varchar(300) default null,
     rrn_id            bigint,
@@ -573,17 +591,57 @@ INSERT INTO limitation_general(created_by, created_at, name, value, additional_d
 VALUES ('System', now(), 'MAX_WALLET_BALANCE', '1000000', 'حداکثر مانده کیف پول')
 on conflict do nothing;
 
-INSERT into request_type(created_by, created_at, name, fa_name, display)
-VALUES ('System', now(),'cash_in','شارژ کیف پول',1);
+INSERT INTO limitation_general(created_by, created_at, name, value, additional_data)
+VALUES ('System', now(), 'MAX_WALLET_BALANCE', '1000000', 'حداکثر مانده کیف پول')
+on conflict do nothing;
+
+INSERT INTO limitation_general(created_by, created_at, name, value, additional_data)
+VALUES ('System', now(), 'MAX_WALLET_BALANCE', '1000000', 'حداکثر مانده کیف پول')
+on conflict do nothing;
+
+INSERT INTO limitation_general(created_by, created_at, name, value, additional_data)
+VALUES ('System', now(), 'MAX_WALLET_BALANCE', '1000000', 'حداکثر مانده کیف پول')
+on conflict do nothing;
+
+INSERT INTO limitation_general(created_by, created_at, name, value, additional_data)
+VALUES ('System', now(), 'ENABLE_CASH_IN', 'false', 'قابلیت شارژ حساب')
+on conflict do nothing;
+
+INSERT INTO limitation_general(created_by, created_at, name, value, additional_data)
+VALUES ('System', now(), 'MAX_DAILY_PRICE_BUY', '2000000000', 'حداکثر مبالغ خرید در روز')
+on conflict do nothing;
+
+INSERT INTO limitation_general(created_by, created_at, name, value, additional_data)
+VALUES ('System', now(), 'MAX_DAILY_COUNT_BUY', '90', 'حداکثر تعداد خرید در روز')
+on conflict do nothing;
+
+INSERT INTO limitation_general(created_by, created_at, name, value, additional_data)
+VALUES ('System', now(), 'MAX_MONTHLY_PRICE_BUY', '10000000000', 'حداکثر مبالغ خرید در ماه')
+on conflict do nothing;
+
+INSERT INTO limitation_general(created_by, created_at, name, value, additional_data)
+VALUES ('System', now(), 'MAX_MONTHLY_COUNT_BUY', '10', 'حداکثر تعداد خرید در ماه')
+on conflict do nothing;
+
+INSERT INTO limitation_general(created_by, created_at, name, value, additional_data)
+VALUES ('System', now(), 'MAX_PRICE_BUY', '20000000', 'حداکثر مبلغ خرید')
+on conflict do nothing;
+
+INSERT INTO limitation_general(created_by, created_at, name, value, additional_data)
+VALUES ('System', now(), 'MIN_PRICE_BUY', '50000', 'حداقل مبلغ خرید')
+on conflict do nothing;
 
 INSERT into request_type(created_by, created_at, name, fa_name, display)
-VALUES ('System', now(),'cash_out','برداشت',1);
+VALUES ('System', now(), 'cash_in', 'شارژ کیف پول', 1);
 
 INSERT into request_type(created_by, created_at, name, fa_name, display)
-VALUES ('System', now(),'buy','خرید',1);
+VALUES ('System', now(), 'cash_out', 'برداشت', 1);
 
 INSERT into request_type(created_by, created_at, name, fa_name, display)
-VALUES ('System', now(),'sell','فروش',1);
+VALUES ('System', now(), 'buy', 'خرید', 1);
+
+INSERT into request_type(created_by, created_at, name, fa_name, display)
+VALUES ('System', now(), 'sell', 'فروش', 1);
 
 
 
@@ -616,3 +674,9 @@ insert into resource(created_by, created_at, name, fa_name, display)
 values ('system', 'now()', 'SELL', 'فروش', 1);
 insert into resource(created_by, created_at, name, fa_name, display)
 values ('system', 'now()', 'LOGOUT', 'خروج', 1);
+insert into resource(created_by, created_at, name, fa_name, display)
+values ('system', 'now()', 'GENERATE_PURCHASE_UNIQUE_IDENTIFIER', 'کد یکتا خرید', 1);
+insert into resource(created_by, created_at, name, fa_name, display)
+values ('system', 'now()', 'GENERATE_CASH_IN_UNIQUE_IDENTIFIER', 'کد یکتا شارژ', 1);
+insert into resource(created_by, created_at, name, fa_name, display)
+values ('system', 'now()', 'MERCHANT_LIST', 'لیست پذیرنده ها', 1);

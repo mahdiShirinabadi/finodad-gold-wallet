@@ -1,6 +1,6 @@
-package com.melli.wallet.utils;
+package com.melli.wallet;
 
-public class Constant {
+public class ConstantRedisName {
 
     public static final String SETTING_NAME_CACHE = "wallet_setting";
     public static final String VERSION_NAME_CACHE = "wallet_version";
@@ -16,4 +16,7 @@ public class Constant {
     public static final String WALLET_MERCHANT = "wallet_merchant";
     public static final String WALLET_REQUEST_TYPE = "wallet_request_type";
     public static final String WALLET_GENERAL_LIMITATION = "wallet_general_limitation";
+    public static final String WALLET_BUY_MONTHLY_LIMITATION = "wallet_buy_monthly_limitation";
+    public static final String WALLET_BUY_DAILY_LIMITATION = "wallet_buy_daily_limitation";
+    public static final String WALLET_CASH_IN_LIMITATION = "wallet_cash_in_limitation";
 }
