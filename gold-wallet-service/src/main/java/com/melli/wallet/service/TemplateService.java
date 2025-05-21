@@ -8,8 +8,11 @@ import java.util.List;
 public interface TemplateService {
 
 	String CASH_IN = "cash_in";
-	String PURCHASE_WITHDRAWAL = "purchase_withdrawal";
-	String PURCHASE_DEPOSIT = "purchase_deposit";
+	String BUY_WITHDRAWAL = "BUY_WITHDRAWAL";
+	String BUY_DEPOSIT = "BUY_DEPOSIT";
+
+	String SELL_WITHDRAWAL = "SELL_WITHDRAWAL";
+	String SELL_DEPOSIT = "SELL_DEPOSIT";
 
 	String getTemplate(String name);
 

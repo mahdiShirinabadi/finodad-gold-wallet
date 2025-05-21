@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.melli.wallet.NamingProperty;
 import com.melli.wallet.annotation.fund_type.PurchaseTypeValidation;
 import com.melli.wallet.annotation.number.NumberValidation;
+import com.melli.wallet.annotation.string.StringValidation;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
@@ -12,22 +13,23 @@ import lombok.ToString;
 @Setter
 @Getter
 @ToString
-public class PurchaseGenerateUuidRequestJson {
+public class SellGenerateUuidRequestJson {
     @Schema(name = NamingProperty.NATIONAL_CODE, description = "کدملی", example = "0063360993")
     @JsonProperty(NamingProperty.NATIONAL_CODE)
     private String nationalCode;
 
-    @NumberValidation
-    @Schema(name = NamingProperty.PRICE, description = "مبلغ به ریال", example = "1000")
-    @JsonProperty(NamingProperty.PRICE)
-    private String price;
+    @NumberValidation(allowDecimal = true, minDecimalValue = "0.00001")
+    @Schema(name = NamingProperty.QUANTITY
+            , description = "تعداد", example = "1.1")
+    @JsonProperty(NamingProperty.QUANTITY)
+    private String quantity;
 
     @Schema(name = NamingProperty.WALLET_ACCOUNT_NUMBER, description = "شماره حساب")
     @JsonProperty(NamingProperty.WALLET_ACCOUNT_NUMBER)
     private String accountNumber;
 
-    @PurchaseTypeValidation(label = "نوع تراکنش")
-    @Schema(name = NamingProperty.PURCHASE_TYPE, description = "نوع تراکنش", allowableValues = {"SELL","BUY"})
-    @JsonProperty(NamingProperty.PURCHASE_TYPE)
-    private String purchaseType;
+    @StringValidation(label = "نوع واحد فروش")
+    @Schema(name = NamingProperty.CURRENCY, description = "نوع واحد فروش", allowableValues = {"GOLD","SILVER"})
+    @JsonProperty(NamingProperty.CURRENCY)
+    private String currency;
 }

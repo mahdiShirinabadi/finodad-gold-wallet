@@ -59,8 +59,8 @@ public class WalletBuyLimitationServiceImplementation implements WalletBuyLimita
     }
 
     @Override
-    public void checkBuyGeneral(ChannelEntity channel, WalletEntity wallet, BigDecimal amount, WalletAccountEntity walletAccount, String uniqueIdentifier) throws InternalServiceException {
-        log.info("checking CashInLimitation for nationalCode({}) ...", wallet.getNationalCode());
+    public void checkGeneral(ChannelEntity channel, WalletEntity wallet, BigDecimal amount, WalletAccountEntity walletAccount, String uniqueIdentifier) throws InternalServiceException {
+        log.info("checking checkBuyGeneral for nationalCode({}) ...", wallet.getNationalCode());
 
         WalletLevelEntity walletLevelEntity = wallet.getWalletLevelEntity();
         WalletAccountTypeEntity walletAccountTypeEntity = walletAccount.getWalletAccountTypeEntity();
@@ -68,27 +68,27 @@ public class WalletBuyLimitationServiceImplementation implements WalletBuyLimita
         WalletTypeEntity walletTypeEntity = wallet.getWalletTypeEntity();
 
 
-        BigDecimal minAmount = new BigDecimal(limitationGeneralCustomService.getSetting(channel, LimitationGeneralService.MIN_PRICE_BUY, walletLevelEntity, walletAccountTypeEntity, walletAccountCurrencyEntity, walletTypeEntity));
-        BigDecimal maxAmount = new BigDecimal(limitationGeneralCustomService.getSetting(channel, LimitationGeneralService.MAX_PRICE_BUY, walletLevelEntity, walletAccountTypeEntity, walletAccountCurrencyEntity, walletTypeEntity));
+        BigDecimal minPrice = new BigDecimal(limitationGeneralCustomService.getSetting(channel, LimitationGeneralService.MIN_PRICE_BUY, walletLevelEntity, walletAccountTypeEntity, walletAccountCurrencyEntity, walletTypeEntity));
+        BigDecimal maxPrice = new BigDecimal(limitationGeneralCustomService.getSetting(channel, LimitationGeneralService.MAX_PRICE_BUY, walletLevelEntity, walletAccountTypeEntity, walletAccountCurrencyEntity, walletTypeEntity));
 
 
         String key = walletAccount.getAccountNumber();
 
         redisLockService.runAfterLock(key, this.getClass(), () -> {
 
-            if (amount.longValue() > maxAmount.longValue()) {
-                log.error("checkBuyGeneral: buy amount({}) for wallet({}), is bigger than maxCashIn({}) !!!", amount, wallet.getNationalCode(), maxAmount);
+            if (amount.longValue() > maxPrice.longValue()) {
+                log.error("checkBuyGeneral: buy amount({}) for wallet({}), is bigger than maxPrice({}) !!!", amount, wallet.getNationalCode(), maxPrice);
                 throw new InternalServiceException("buy amount is bigger than maxBuy", StatusService.AMOUNT_BIGGER_THAN_MAX, HttpStatus.OK, Map.ofEntries(
                         entry("1", Utility.addComma(amount.longValue())),
-                        entry("2", Utility.addComma((maxAmount.longValue())))
+                        entry("2", Utility.addComma((maxPrice.longValue())))
                 ));
             }
 
-            if (amount.longValue() < minAmount.longValue()) {
-                log.error("checkBuyGeneral: buy amount({}) for wallet({}), is less than minCashIn({}) !!!", amount, wallet.getNationalCode(), minAmount);
+            if (amount.longValue() < minPrice.longValue()) {
+                log.error("checkBuyGeneral: buy amount({}) for wallet({}), is less than minPrice({}) !!!", amount, wallet.getNationalCode(), minPrice);
                 throw new InternalServiceException("buy amount is less than minBuy", StatusService.AMOUNT_LESS_THAN_MIN, HttpStatus.OK, Map.ofEntries(
                         entry("1", Utility.addComma(amount.longValue())),
-                        entry("2", Utility.addComma((minAmount.longValue())))
+                        entry("2", Utility.addComma((minPrice.longValue())))
                 ));
             }
             return null;
@@ -96,7 +96,7 @@ public class WalletBuyLimitationServiceImplementation implements WalletBuyLimita
     }
 
     @Override
-    public void checkBuyDailyLimitation(ChannelEntity channel, WalletEntity wallet, BigDecimal amount, WalletAccountEntity walletAccount, String uniqueIdentifier) throws InternalServiceException {
+    public void checkDailyLimitation(ChannelEntity channel, WalletEntity wallet, BigDecimal amount, WalletAccountEntity walletAccount, String uniqueIdentifier) throws InternalServiceException {
 
         WalletLevelEntity walletLevelEntity = wallet.getWalletLevelEntity();
         WalletAccountTypeEntity walletAccountTypeEntity = walletAccount.getWalletAccountTypeEntity();
@@ -146,7 +146,7 @@ public class WalletBuyLimitationServiceImplementation implements WalletBuyLimita
                 log.error("checkPurchaseDailyLimitation: wallet({}) on channel ({}) , exceeded count limitation in purchase!!!SumPurchaseCount is: {}", wallet.getMobile(), wallet.getOwner().getId(), walletDailyBuyLimitationRedis.getCount());
                 throw new InternalServiceException("wallet count buy exceeded the limitation !!!", StatusService.BUY_EXCEEDED_COUNT_DAILY_LIMITATION, HttpStatus.OK, Map.ofEntries(
                         entry("1", Utility.addComma(walletDailyBuyLimitationRedis.getAmount() + amount.longValue())),
-                        entry("2", Utility.addComma((maxAmountDaily.longValue())))
+                        entry("2", Utility.addComma((maxCountDaily.longValue())))
                 ));
             }
 
@@ -155,7 +155,7 @@ public class WalletBuyLimitationServiceImplementation implements WalletBuyLimita
     }
 
     @Override
-    public void checkBuyMonthlyLimitation(ChannelEntity channel, WalletEntity wallet, BigDecimal amount, WalletAccountEntity walletAccount, String uniqueIdentifier) throws InternalServiceException {
+    public void checkMonthlyLimitation(ChannelEntity channel, WalletEntity wallet, BigDecimal amount, WalletAccountEntity walletAccount, String uniqueIdentifier) throws InternalServiceException {
         WalletLevelEntity walletLevelEntity = wallet.getWalletLevelEntity();
         WalletAccountTypeEntity walletAccountTypeEntity = walletAccount.getWalletAccountTypeEntity();
         WalletAccountCurrencyEntity walletAccountCurrencyEntity = walletAccount.getWalletAccountCurrencyEntity();
@@ -254,7 +254,7 @@ public class WalletBuyLimitationServiceImplementation implements WalletBuyLimita
 
     @Override
     @Async("threadPoolExecutor")
-    public void updateBuyLimitation(WalletAccountEntity walletAccount, BigDecimal amount, String uniqueIdentifier) throws InternalServiceException {
+    public void updateLimitation(WalletAccountEntity walletAccount, BigDecimal amount, String uniqueIdentifier) throws InternalServiceException {
         try {
             log.info("start update monthlyLimitation for walletAccount ({}), amount ({})", walletAccount.getAccountNumber(), amount);
             updateBuyMonthlyLimitation(walletAccount, amount, uniqueIdentifier);

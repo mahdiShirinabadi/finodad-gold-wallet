@@ -1,23 +1,12 @@
 package com.melli.wallet.web;
 
-import com.melli.wallet.annotation.fund_type.PurchaseTypeValidation;
 import com.melli.wallet.annotation.string.StringValidation;
-import com.melli.wallet.domain.dto.BuyRequestDTO;
-import com.melli.wallet.domain.dto.SellRequestDTO;
-import com.melli.wallet.domain.request.wallet.BuyWalletRequestJson;
-import com.melli.wallet.domain.request.wallet.PurchaseGenerateUuidRequestJson;
-import com.melli.wallet.domain.request.wallet.SellWalletRequestJson;
-import com.melli.wallet.domain.response.UuidResponse;
 import com.melli.wallet.domain.response.base.BaseResponse;
 import com.melli.wallet.domain.response.purchase.MerchantResponse;
-import com.melli.wallet.domain.response.purchase.PurchaseResponse;
-import com.melli.wallet.domain.response.purchase.PurchaseTrackResponse;
 import com.melli.wallet.exception.InternalServiceException;
 import com.melli.wallet.security.RequestContext;
 import com.melli.wallet.service.MerchantService;
-import com.melli.wallet.service.PurchaseService;
 import com.melli.wallet.service.ResourceService;
-import com.melli.wallet.service.SecurityService;
 import io.micrometer.core.annotation.Timed;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -30,8 +19,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-
-import java.math.BigDecimal;
 
 /**
  * Class Name: CashEndPoint

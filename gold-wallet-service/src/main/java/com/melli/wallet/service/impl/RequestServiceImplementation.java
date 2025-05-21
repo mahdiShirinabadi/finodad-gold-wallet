@@ -53,11 +53,6 @@ public class RequestServiceImplementation implements RequestService {
     }
 
     @Override
-    public void save(RequestEntity requestEntity, List<MerchantEntity> merchantEntityList, WalletAccountTypeEntity walletAccountTypeEntity) {
-
-    }
-
-    @Override
     public void checkTraceIdIsUnique(long traceId, RequestEntity requestEntity) throws InternalServiceException {
 
         log.info("start find request with traceId ===> {}", traceId);
@@ -89,28 +84,14 @@ public class RequestServiceImplementation implements RequestService {
 
     @Override
     public PurchaseRequestEntity findPurchaseRequestByRrnId(long traceId) throws InternalServiceException {
-        return null;
+        return purchaseRequestRepository.findByRrnEntityId(traceId);
     }
 
     @Override
     public PurchaseRequestEntity findPurchaseRequestById(long requestId) {
-        return null;
+        return purchaseRequestRepository.findById(requestId);
     }
 
-    @Override
-    public VerifyRequestEntity findVerifyRequestByRrnId(long traceId) {
-        return null;
-    }
-
-    @Override
-    public ReverseRequestEntity findReverseRequestByRrnId(long traceId) {
-        return null;
-    }
-
-    @Override
-    public List<Long> findReversiblePurchase(Integer[] purchaseChannelResult, Integer[] verifyChannelResult, Integer[] reverseChannelResult, Date fromReverseDate, Date toReverseDate) {
-        return List.of();
-    }
 
     @Override
     public CashOutRequestEntity findCashOutRequest(long id) {

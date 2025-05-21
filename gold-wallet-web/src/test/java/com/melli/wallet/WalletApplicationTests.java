@@ -77,7 +77,8 @@ public class WalletApplicationTests {
     private static final String DEACTIVATED_WALLET_PATH = "/api/v1/wallet/deactivate";
     private static final String DELETE_WALLET_PATH = "/api/v1/wallet/delete";
     private static final String GENERATE_UUID_PATH = "/api/v1/general/generate/uuid";
-    private static final String PURCHASE_GENERATE_UUID_PATH = "/api/v1/purchase/generate/uuid";
+    private static final String BUY_GENERATE_UUID_PATH = "/api/v1/purchase/buy/generate/uuid";
+    private static final String SELL_GENERATE_UUID_PATH = "/api/v1/purchase/sell/generate/uuid";
     private static final String BUY_IN_PATH = "/api/v1/purchase/buy";
     private static final String SELL_IN_PATH = "/api/v1/purchase/sell";
     private static final String PURCHASE_INQUIRY_IN_PATH = "/api/v1/purchase/inquiry";
@@ -286,13 +287,13 @@ public class WalletApplicationTests {
         return objectMapper.readValue(response, typeReference);
     }
 
-    public BaseResponse<UuidResponse> generatePurchaseUniqueIdentifier(MockMvc mockMvc, String token, String nationalCode, String amount, String accountNumber, String type, HttpStatus httpStatus, int errorCode, boolean success) throws Exception {
-        PurchaseGenerateUuidRequestJson requestJson = new PurchaseGenerateUuidRequestJson();
+    public BaseResponse<UuidResponse> generateSellUniqueIdentifier(MockMvc mockMvc, String token, String nationalCode, String amount, String accountNumber, String currency, HttpStatus httpStatus, int errorCode, boolean success) throws Exception {
+        SellGenerateUuidRequestJson requestJson = new SellGenerateUuidRequestJson();
         requestJson.setNationalCode(nationalCode);
-        requestJson.setPrice(amount);
+        requestJson.setQuantity(amount);
         requestJson.setAccountNumber(accountNumber);
-        requestJson.setPurchaseType(type);
-        MockHttpServletRequestBuilder postRequest = buildPostRequest(token, PURCHASE_GENERATE_UUID_PATH, mapToJson(requestJson));
+        requestJson.setCurrency(currency);
+        MockHttpServletRequestBuilder postRequest = buildPostRequest(token, SELL_GENERATE_UUID_PATH, mapToJson(requestJson));
         String response = performTest(mockMvc, postRequest, httpStatus, success, errorCode);
         TypeReference<BaseResponse<UuidResponse>> typeReference = new TypeReference<>() {
         };
@@ -354,13 +355,12 @@ public class WalletApplicationTests {
         return objectMapper.readValue(response, typeReference);
     }
 
-    public  BaseResponse<UuidResponse> generateUuid(MockMvc mockMvc, String token, String accountNumber, String price, String nationalCode, HttpStatus httpStatus, int errorCode, boolean success) throws Exception {
-        PurchaseGenerateUuidRequestJson requestJson = new PurchaseGenerateUuidRequestJson();
+    public  BaseResponse<UuidResponse> generateBuyUuid(MockMvc mockMvc, String token, String accountNumber, String price, String nationalCode, HttpStatus httpStatus, int errorCode, boolean success) throws Exception {
+        BuyGenerateUuidRequestJson requestJson = new BuyGenerateUuidRequestJson();
         requestJson.setPrice(price);
         requestJson.setNationalCode(nationalCode);
         requestJson.setAccountNumber(accountNumber);
-        requestJson.setPurchaseType("BUY");
-        MockHttpServletRequestBuilder postRequest = buildPostRequest(token, PURCHASE_GENERATE_UUID_PATH, mapToJson(requestJson));
+        MockHttpServletRequestBuilder postRequest = buildPostRequest(token, BUY_GENERATE_UUID_PATH, mapToJson(requestJson));
         String response = performTest(mockMvc, postRequest, httpStatus, success, errorCode);
         TypeReference<BaseResponse<UuidResponse>> typeReference = new TypeReference<>() {};
         return objectMapper.readValue(response, typeReference);

@@ -15,7 +15,8 @@ import com.melli.wallet.exception.InternalServiceException;
  */
 
 public interface PurchaseService {
-    UuidResponse generateUuid(ChannelEntity channelEntity, String nationalCode, String price, String accountNumber, String type) throws InternalServiceException;
+    UuidResponse buyGenerateUuid(ChannelEntity channelEntity, String nationalCode, String price, String accountNumber) throws InternalServiceException;
+    UuidResponse sellGenerateUuid(ChannelEntity channelEntity, String nationalCode, String quantity, String accountNumber, String currency) throws InternalServiceException;
     PurchaseResponse buy(BuyRequestDTO buyRequestDTO) throws InternalServiceException;
     PurchaseResponse sell(SellRequestDTO sellRequestDTO) throws InternalServiceException;
     PurchaseTrackResponse purchaseTrack(ChannelEntity channel, String uniqueIdentifier, String type, String channelIp) throws InternalServiceException;

@@ -19,4 +19,6 @@ public class ConstantRedisName {
     public static final String WALLET_BUY_MONTHLY_LIMITATION = "wallet_buy_monthly_limitation";
     public static final String WALLET_BUY_DAILY_LIMITATION = "wallet_buy_daily_limitation";
     public static final String WALLET_CASH_IN_LIMITATION = "wallet_cash_in_limitation";
+    public static final String WALLET_SELL_MONTHLY_LIMITATION = "wallet_sell_monthly_limitation";
+    public static final String WALLET_SELL_DAILY_LIMITATION = "wallet_sell_daily_limitation";
 }

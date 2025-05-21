@@ -21,9 +21,6 @@ public class PurchaseTrackObject {
     @JsonProperty(NamingProperty.NATIONAL_CODE)
     private String nationalCode;
 
-    @Schema(name = NamingProperty.BALANCE)
-    @JsonProperty(NamingProperty.BALANCE)
-    private String balance;
 
     @Schema(name = NamingProperty.QUANTITY)
     @JsonProperty(NamingProperty.QUANTITY)

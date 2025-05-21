@@ -631,6 +631,30 @@ INSERT INTO limitation_general(created_by, created_at, name, value, additional_d
 VALUES ('System', now(), 'MIN_PRICE_BUY', '50000', 'حداقل مبلغ خرید')
 on conflict do nothing;
 
+INSERT INTO limitation_general(created_by, created_at, name, value, additional_data)
+VALUES ('System', now(), 'MAX_DAILY_QUANTITY_SELL', '200', 'حداکثر مقدار فروش در روز')
+on conflict do nothing;
+
+INSERT INTO limitation_general(created_by, created_at, name, value, additional_data)
+VALUES ('System', now(), 'MAX_DAILY_COUNT_SELL', '20', 'حداکثر تعداد فروش در روز')
+on conflict do nothing;
+
+INSERT INTO limitation_general(created_by, created_at, name, value, additional_data)
+VALUES ('System', now(), 'MAX_MONTHLY_QUANTITY_SELL', '1000', 'حداکثر مقدار فروش در ماه')
+on conflict do nothing;
+
+INSERT INTO limitation_general(created_by, created_at, name, value, additional_data)
+VALUES ('System', now(), 'MAX_MONTHLY_COUNT_SELL', '600', 'حداکثر تعداد فروش در ماه')
+on conflict do nothing;
+
+INSERT INTO limitation_general(created_by, created_at, name, value, additional_data)
+VALUES ('System', now(), 'MIN_QUANTITY_SELL', '0.001', 'حداقل مقدار فروش در هر درخواست')
+on conflict do nothing;
+
+INSERT INTO limitation_general(created_by, created_at, name, value, additional_data)
+VALUES ('System', now(), 'MAX_QUANTITY_SELL', '100', 'حداکثر مقدار فروش در هر درخواست')
+on conflict do nothing;
+
 INSERT into request_type(created_by, created_at, name, fa_name, display)
 VALUES ('System', now(), 'cash_in', 'شارژ کیف پول', 1);
 

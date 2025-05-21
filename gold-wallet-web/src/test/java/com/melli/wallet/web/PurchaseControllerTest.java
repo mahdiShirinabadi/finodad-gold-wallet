@@ -142,7 +142,7 @@ class PurchaseControllerTest extends WalletApplicationTests {
     void buyLessThanMinQuantityFail() throws Exception {
         WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.RIAL);
         String minAmount = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.MIN_PRICE_BUY, walletAccountObjectOptional.getAccountNumber());
-        BaseResponse<UuidResponse> uuidResponseBaseResponse = generatePurchaseUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, String.valueOf(Long.parseLong(minAmount) + 1), walletAccountObjectOptional.getAccountNumber(), "BUY", HttpStatus.OK, StatusService.SUCCESSFUL, true);
+        BaseResponse<UuidResponse> uuidResponseBaseResponse = generateBuyUuid(mockMvc, ACCESS_TOKEN, walletAccountObjectOptional.getAccountNumber(), String.valueOf(Long.parseLong(minAmount) + 1), NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusService.SUCCESSFUL, true);
         buy(mockMvc, ACCESS_TOKEN, uuidResponseBaseResponse.getData().getUniqueIdentifier(), "0.000001", String.valueOf(Long.parseLong(minAmount) + 1), "RIAL", "0.002", NATIONAL_CODE_CORRECT, "GOLD", "1", walletAccountObjectOptional.getAccountNumber(),
                 "", "", HttpStatus.OK, StatusService.INPUT_PARAMETER_NOT_VALID, false);
     }
@@ -154,7 +154,7 @@ class PurchaseControllerTest extends WalletApplicationTests {
     void buyFailMinPrice() throws Exception {
         WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.RIAL);
         String minAmount = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.MIN_PRICE_BUY, walletAccountObjectOptional.getAccountNumber());
-        generatePurchaseUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, String.valueOf(Long.parseLong(minAmount) - 1), walletAccountObjectOptional.getAccountNumber(), "BUY", HttpStatus.OK, StatusService.AMOUNT_LESS_THAN_MIN, false);
+        generateBuyUuid(mockMvc, ACCESS_TOKEN, walletAccountObjectOptional.getAccountNumber(), String.valueOf(Long.parseLong(minAmount) - 1), NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusService.AMOUNT_LESS_THAN_MIN, false);
     }
 
     @Test
@@ -163,23 +163,16 @@ class PurchaseControllerTest extends WalletApplicationTests {
     void buyFailMaxPrice() throws Exception {
         WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.RIAL);
         String maxAmount = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.MAX_PRICE_BUY, walletAccountObjectOptional.getAccountNumber());
-        generatePurchaseUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, String.valueOf(Long.parseLong(maxAmount) + 1), walletAccountObjectOptional.getAccountNumber(), "BUY", HttpStatus.OK, StatusService.AMOUNT_BIGGER_THAN_MAX, false);
+        generateBuyUuid(mockMvc, ACCESS_TOKEN, walletAccountObjectOptional.getAccountNumber(), String.valueOf(Long.parseLong(maxAmount) + 1), NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusService.AMOUNT_BIGGER_THAN_MAX, false);
     }
 
-    @Test
-    @Order(42)
-    @DisplayName("buy fail- invalid type")
-    void buyFailInvalidType() throws Exception {
-        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.RIAL);
-        generatePurchaseUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, String.valueOf(50000), walletAccountObjectOptional.getAccountNumber(), "BUYRRR", HttpStatus.OK, StatusService.INPUT_PARAMETER_NOT_VALID, false);
-    }
 
     @Test
     @Order(43)
     @DisplayName("buy fail- invalid amount")
     void buyFailInvalidPrice() throws Exception {
         WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.RIAL);
-        generatePurchaseUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, String.valueOf("123edfed"), walletAccountObjectOptional.getAccountNumber(), "BUY", HttpStatus.OK, StatusService.INPUT_PARAMETER_NOT_VALID, false);
+        generateBuyUuid(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, String.valueOf("123edfed"), walletAccountObjectOptional.getAccountNumber(), HttpStatus.OK, StatusService.INPUT_PARAMETER_NOT_VALID, false);
     }
 
     @Test
@@ -188,7 +181,7 @@ class PurchaseControllerTest extends WalletApplicationTests {
     void generateBuyUuidSuccess() throws Exception {
         String price = "100000";
         WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.RIAL);
-        generateUuid(mockMvc, ACCESS_TOKEN, walletAccountObjectOptional.getAccountNumber(), price, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusService.SUCCESSFUL, true);
+        generateBuyUuid(mockMvc, ACCESS_TOKEN, walletAccountObjectOptional.getAccountNumber(), price, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusService.SUCCESSFUL, true);
     }
 
     //amount diff uuid and purchase
@@ -199,7 +192,7 @@ class PurchaseControllerTest extends WalletApplicationTests {
         String price = "100000";
         String quantity = "1.07";
         WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.RIAL);
-        BaseResponse<UuidResponse> uuidResponseBaseResponse = generateUuid(mockMvc, ACCESS_TOKEN, walletAccountObjectOptional.getAccountNumber(), price, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusService.SUCCESSFUL, true);
+        BaseResponse<UuidResponse> uuidResponseBaseResponse = generateBuyUuid(mockMvc, ACCESS_TOKEN, walletAccountObjectOptional.getAccountNumber(), price, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusService.SUCCESSFUL, true);
         buy(mockMvc, ACCESS_TOKEN, uuidResponseBaseResponse.getData().getUniqueIdentifier(), quantity, String.valueOf(Long.parseLong(price) + 1), CURRENCY_RIAL, "2000", NATIONAL_CODE_CORRECT, CURRENCY_GOLD
                 , "1", walletAccountObjectOptional.getAccountNumber(), "", "differentAmount", HttpStatus.OK, StatusService.PRICE_NOT_SAME_WITH_UUID, false);
     }
@@ -211,7 +204,7 @@ class PurchaseControllerTest extends WalletApplicationTests {
         String price = "100000";
         String quantity = "1.07";
         WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.RIAL);
-        BaseResponse<UuidResponse> uuidResponseBaseResponse = generateUuid(mockMvc, ACCESS_TOKEN, walletAccountObjectOptional.getAccountNumber(), price, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusService.SUCCESSFUL, true);
+        BaseResponse<UuidResponse> uuidResponseBaseResponse = generateBuyUuid(mockMvc, ACCESS_TOKEN, walletAccountObjectOptional.getAccountNumber(), price, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusService.SUCCESSFUL, true);
         BaseResponse<PurchaseResponse> response = buy(mockMvc, ACCESS_TOKEN, uuidResponseBaseResponse.getData().getUniqueIdentifier(), quantity, String.valueOf(Long.parseLong(price)), "RIAL", "2000", NATIONAL_CODE_CORRECT, "SILVER"
                 , "1", walletAccountObjectOptional.getAccountNumber(), "", "differentAmount", HttpStatus.OK, StatusService.WALLET_ACCOUNT_CURRENCY_NOT_FOUND, false);
         Assert.assertSame(StatusService.WALLET_ACCOUNT_CURRENCY_NOT_FOUND, response.getErrorDetail().getCode());
@@ -257,7 +250,7 @@ class PurchaseControllerTest extends WalletApplicationTests {
         cashIn(mockMvc, ACCESS_TOKEN, uniqueIdentifierCashIn.getData().getUniqueIdentifier(), String.valueOf(new Date().getTime()), price, NATIONAL_CODE_CORRECT, walletAccountObjectOptional.getAccountNumber(), "", "", HttpStatus.OK, StatusService.SUCCESSFUL, true);
 
 
-        BaseResponse<UuidResponse> uuidResponseBaseResponse = generateUuid(mockMvc, ACCESS_TOKEN, walletAccountObjectOptional.getAccountNumber(), price, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusService.SUCCESSFUL, true);
+        BaseResponse<UuidResponse> uuidResponseBaseResponse = generateBuyUuid(mockMvc, ACCESS_TOKEN, walletAccountObjectOptional.getAccountNumber(), price, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusService.SUCCESSFUL, true);
         buy(mockMvc, ACCESS_TOKEN, uuidResponseBaseResponse.getData().getUniqueIdentifier(), quantity, String.valueOf(Long.parseLong(price)), "RIAL", "2000", NATIONAL_CODE_CORRECT, CURRENCY_GOLD
                 , "1", walletAccountObjectOptional.getAccountNumber(), "", "differentAmount", HttpStatus.OK, StatusService.SUCCESSFUL, true);
 
@@ -283,7 +276,7 @@ class PurchaseControllerTest extends WalletApplicationTests {
                 walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
                 aggregationPurchaseDTO.getCountRecord(), "change MAX_DAILY_COUNT_BUY");
 
-        generateUuid(mockMvc, ACCESS_TOKEN, walletAccountObjectOptional.getAccountNumber(), price, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusService.BUY_EXCEEDED_COUNT_DAILY_LIMITATION, false);
+        generateBuyUuid(mockMvc, ACCESS_TOKEN, walletAccountObjectOptional.getAccountNumber(), price, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusService.BUY_EXCEEDED_COUNT_DAILY_LIMITATION, false);
 
         limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
                 LimitationGeneralService.MAX_DAILY_COUNT_BUY, walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
@@ -295,7 +288,7 @@ class PurchaseControllerTest extends WalletApplicationTests {
                 walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
                 aggregationPurchaseDTO.getSumPrice(), "change MAX_DAILY_PRICE_BUY");
 
-        generateUuid(mockMvc, ACCESS_TOKEN, walletAccountObjectOptional.getAccountNumber(), price, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusService.BUY_EXCEEDED_AMOUNT_DAILY_LIMITATION, false);
+        generateBuyUuid(mockMvc, ACCESS_TOKEN, walletAccountObjectOptional.getAccountNumber(), price, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusService.BUY_EXCEEDED_AMOUNT_DAILY_LIMITATION, false);
 
         limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
                 LimitationGeneralService.MAX_DAILY_PRICE_BUY, walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
@@ -305,6 +298,7 @@ class PurchaseControllerTest extends WalletApplicationTests {
     }
 
 
+    //check buy monthly limitation
     @Test
     @Order(49)
     @DisplayName("buyMonthlyLimitationFail-success")
@@ -328,7 +322,7 @@ class PurchaseControllerTest extends WalletApplicationTests {
                 walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
                 aggregationPurchaseDTO.getCountRecord(), "change MAX_MONTHLY_COUNT_BUY");
 
-        generateUuid(mockMvc, ACCESS_TOKEN, walletAccountObjectOptional.getAccountNumber(), price, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusService.BUY_EXCEEDED_COUNT_MONTHLY_LIMITATION, false);
+        generateBuyUuid(mockMvc, ACCESS_TOKEN, walletAccountObjectOptional.getAccountNumber(), price, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusService.BUY_EXCEEDED_COUNT_MONTHLY_LIMITATION, false);
 
         limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
                 LimitationGeneralService.MAX_MONTHLY_PRICE_BUY, walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
@@ -340,7 +334,7 @@ class PurchaseControllerTest extends WalletApplicationTests {
                 walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
                 aggregationPurchaseDTO.getSumPrice(), "change MAX_MONTHLY_COUNT_BUY");
 
-        generateUuid(mockMvc, ACCESS_TOKEN, walletAccountObjectOptional.getAccountNumber(), price, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusService.BUY_EXCEEDED_AMOUNT_MONTHLY_LIMITATION, false);
+        generateBuyUuid(mockMvc, ACCESS_TOKEN, walletAccountObjectOptional.getAccountNumber(), price, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusService.BUY_EXCEEDED_AMOUNT_MONTHLY_LIMITATION, false);
 
         limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
                 LimitationGeneralService.MAX_MONTHLY_PRICE_BUY, walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
@@ -348,8 +342,6 @@ class PurchaseControllerTest extends WalletApplicationTests {
                 valueMaxDailyPrice, "change MAX_MONTHLY_PRICE_BUY");
 
     }
-
-    //check buy monthly limitation
 
     //
 

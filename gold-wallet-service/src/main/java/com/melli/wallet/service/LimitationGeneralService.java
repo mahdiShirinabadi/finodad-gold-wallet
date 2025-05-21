@@ -22,10 +22,12 @@ public interface LimitationGeneralService {
     String MAX_PRICE_BUY = "MAX_PRICE_BUY";
 
     //sell
-    String MAX_PRICE_DAILY_SELL = "MAX_PRICE_DAILY_SELL";
-    String MAX_PRICE_MONTHLY_SELL = "MAX_PRICE_MONTHLY_SELL";
-    String MIN_PRICE_SELL = "MIN_PRICE_SELL";
-    String MAX_PRICE_SELL = "MIN_PRICE_SELL";
+    String MAX_DAILY_QUANTITY_SELL = "MAX_DAILY_QUANTITY_SELL";
+    String MAX_DAILY_COUNT_SELL = "MAX_DAILY_COUNT_SELL";
+    String MAX_MONTHLY_QUANTITY_SELL = "MAX_MONTHLY_QUANTITY_SELL";
+    String MAX_MONTHLY_COUNT_SELL = "MAX_MONTHLY_COUNT_SELL";
+    String MIN_QUANTITY_SELL = "MIN_QUANTITY_SELL";
+    String MAX_QUANTITY_SELL = "MAX_QUANTITY_SELL";
 
     List<LimitationGeneralEntity> getLimitationGeneralEntities() throws InternalServiceException;
     LimitationGeneralEntity getSetting(String name);

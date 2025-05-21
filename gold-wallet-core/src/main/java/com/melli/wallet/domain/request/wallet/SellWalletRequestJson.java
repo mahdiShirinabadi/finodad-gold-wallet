@@ -5,6 +5,7 @@ import com.melli.wallet.NamingProperty;
 import com.melli.wallet.annotation.national_code.NationalCodeValidation;
 import com.melli.wallet.annotation.number.NumberValidation;
 import com.melli.wallet.annotation.string.StringValidation;
+import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -33,8 +34,7 @@ SellWalletRequestJson {
     @JsonProperty(NamingProperty.PRICE)
     private String price;
 
-    @NotNull
-    @NotEmpty
+
     @Schema(name = NamingProperty.COMMISSION_OBJECT, description = "کارمزد")
     @JsonProperty(NamingProperty.COMMISSION_OBJECT)
     private CommissionObject commissionObject;
@@ -66,6 +66,7 @@ SellWalletRequestJson {
     @JsonProperty(NamingProperty.SIGN)
     private String sign;
 
+    @Hidden
     public String getDataString() {
         return uniqueIdentifier + "|" + merchantId + "|" + quantity + "|" + nationalCode;
     }

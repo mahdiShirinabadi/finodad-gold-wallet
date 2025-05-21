@@ -15,10 +15,6 @@ public interface RequestService {
 
     void save(RequestEntity requestEntity) throws InternalServiceException;
 
-    public void save(RequestEntity requestEntity, List<MerchantEntity> merchantEntityList, WalletAccountTypeEntity walletAccountTypeEntity);
-
-//    void save(RequestWageHistory requestWageHistory);
-
     void checkTraceIdIsUnique(long traceId, RequestEntity requestEntity) throws InternalServiceException;
 
     void findSuccessCashInByRefNumber(String refNumber) throws InternalServiceException;
@@ -27,14 +23,6 @@ public interface RequestService {
 
 
     PurchaseRequestEntity findPurchaseRequestById(long requestId);
-
-    VerifyRequestEntity findVerifyRequestByRrnId(long traceId);
-
-    ReverseRequestEntity findReverseRequestByRrnId(long traceId);
-
-    List<Long> findReversiblePurchase(Integer[] purchaseChannelResult, Integer[] verifyChannelResult, Integer[] reverseChannelResult, Date fromReverseDate, Date toReverseDate);
-
-//    PurchaseTrackRequest findPurchaseTrackRequest(long traceId);
 
     CashOutRequestEntity findCashOutRequest(long id);
 

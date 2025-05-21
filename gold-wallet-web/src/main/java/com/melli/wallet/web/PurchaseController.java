@@ -3,8 +3,9 @@ package com.melli.wallet.web;
 import com.melli.wallet.annotation.fund_type.PurchaseTypeValidation;
 import com.melli.wallet.domain.dto.BuyRequestDTO;
 import com.melli.wallet.domain.dto.SellRequestDTO;
+import com.melli.wallet.domain.request.wallet.BuyGenerateUuidRequestJson;
 import com.melli.wallet.domain.request.wallet.BuyWalletRequestJson;
-import com.melli.wallet.domain.request.wallet.PurchaseGenerateUuidRequestJson;
+import com.melli.wallet.domain.request.wallet.SellGenerateUuidRequestJson;
 import com.melli.wallet.domain.request.wallet.SellWalletRequestJson;
 import com.melli.wallet.domain.response.UuidResponse;
 import com.melli.wallet.domain.response.base.BaseResponse;
@@ -47,12 +48,22 @@ public class PurchaseController extends WebController {
     private final SecurityService securityService;
 
     @Timed(description = "Time taken to create wallet")
-    @PostMapping(path = "generate/uuid", produces = {MediaType.APPLICATION_JSON_VALUE})
+    @PostMapping(path = "/buy/generate/uuid", produces = {MediaType.APPLICATION_JSON_VALUE})
     @Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "ایجاد شناسه یکتا")
     @PreAuthorize("hasAuthority(\""+ ResourceService.GENERATE_PURCHASE_UNIQUE_IDENTIFIER +"\")")
-    public ResponseEntity<BaseResponse<UuidResponse>> generateUuid(@Valid @RequestBody PurchaseGenerateUuidRequestJson requestJson) throws InternalServiceException {
-        log.info("start call uuid nationalCode ===> {}", requestJson.getNationalCode());
-        UuidResponse response = purchaseService.generateUuid(requestContext.getChannelEntity(), requestJson.getNationalCode(), requestJson.getPrice(), requestJson.getAccountNumber(), requestJson.getPurchaseType());
+    public ResponseEntity<BaseResponse<UuidResponse>> generateBuyUuid(@Valid @RequestBody BuyGenerateUuidRequestJson requestJson) throws InternalServiceException {
+        log.info("start call buy uuid nationalCode ===> {}", requestJson.getNationalCode());
+        UuidResponse response = purchaseService.buyGenerateUuid(requestContext.getChannelEntity(), requestJson.getNationalCode(), requestJson.getPrice(), requestJson.getAccountNumber());
+        return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse<>(true,response));
+    }
+
+    @Timed(description = "Time taken to create wallet")
+    @PostMapping(path = "/sell/generate/uuid", produces = {MediaType.APPLICATION_JSON_VALUE})
+    @Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "ایجاد شناسه یکتا")
+    @PreAuthorize("hasAuthority(\""+ ResourceService.GENERATE_PURCHASE_UNIQUE_IDENTIFIER +"\")")
+    public ResponseEntity<BaseResponse<UuidResponse>> generateSellUuid(@Valid @RequestBody SellGenerateUuidRequestJson requestJson) throws InternalServiceException {
+        log.info("start call sell uuid nationalCode ===> {}", requestJson.getNationalCode());
+        UuidResponse response = purchaseService.sellGenerateUuid(requestContext.getChannelEntity(), requestJson.getNationalCode(), requestJson.getQuantity(), requestJson.getAccountNumber(), requestJson.getCurrency());
         return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse<>(true,response));
     }
 

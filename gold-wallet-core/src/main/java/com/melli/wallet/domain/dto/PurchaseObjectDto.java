@@ -23,7 +23,7 @@ public class PurchaseObjectDto {
 
     private ChannelEntity channel;
     private String uniqueIdentifier;
-    private BigDecimal amount;
+    private BigDecimal quantity;
     private BigDecimal price;
     private BigDecimal commission;
     private String additionalData;
