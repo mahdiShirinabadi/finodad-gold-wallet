@@ -307,7 +307,7 @@ class CacheControllerTest extends WalletApplicationTests {
     void cashInFailDuplicateRrn() throws Exception {
         String refNumber = new Date().getTime() + "";
         WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.RIAL);
-        BigDecimal balance = BigDecimal.valueOf(Long.parseLong(walletAccountObjectOptional.getBalance()));
+        BigDecimal balance = BigDecimal.valueOf(Float.parseFloat(walletAccountObjectOptional.getBalance()));
 
         WalletAccountEntity walletAccountEntity = walletAccountService.findByAccountNumber(walletAccountObjectOptional.getAccountNumber());
         walletAccountService.decreaseBalance(walletAccountEntity.getId(), balance);

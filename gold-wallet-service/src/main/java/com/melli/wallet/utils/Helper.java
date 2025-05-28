@@ -6,6 +6,7 @@ import com.melli.wallet.domain.response.base.BaseResponse;
 import com.melli.wallet.domain.response.base.ErrorDetail;
 import com.melli.wallet.domain.response.cash.CashInResponse;
 import com.melli.wallet.domain.response.cash.CashInTrackResponse;
+import com.melli.wallet.domain.response.cash.CashOutResponse;
 import com.melli.wallet.domain.response.cash.CashOutTrackResponse;
 import com.melli.wallet.domain.response.limitation.LimitationListResponse;
 import com.melli.wallet.domain.response.limitation.LimitationObject;
@@ -85,7 +86,6 @@ public class Helper {
         return response;
     }
 
-
     public CashOutTrackResponse fillCashOutTrackResponse(CashOutRequestEntity cashOutRequestEntity, StatusService statusService) {
         StatusEntity statusEntity = statusService.findByCode(String.valueOf(cashOutRequestEntity.getResult()));
         CashOutTrackResponse response = new CashOutTrackResponse();
@@ -98,7 +98,7 @@ public class Helper {
         response.setWalletAccountNumber(cashOutRequestEntity.getWalletAccountEntity().getAccountNumber());
         response.setCreateTime(DateUtils.getLocaleDate(DateUtils.FARSI_LOCALE, cashOutRequestEntity.getCreatedAt(), FORMAT_DATE_RESPONSE, false));
         response.setCreateTimeTimestamp(cashOutRequestEntity.getCreatedAt().getTime());
-
+        response.setSettlementStatus(cashOutRequestEntity.getSettlementStatus());
         return response;
     }
 
@@ -154,6 +154,10 @@ public class Helper {
 
     public CashInResponse fillCashInResponse(String nationalCode,  String uuid, String balance, String accountNumber) {
        return new CashInResponse(nationalCode, balance, uuid, accountNumber);
+    }
+
+    public CashOutResponse fillCashOutResponse(String nationalCode, String uuid, String balance, String accountNumber) {
+        return new CashOutResponse(nationalCode, balance, uuid, accountNumber);
     }
 
     public CreateWalletResponse fillCreateWalletResponse(WalletEntity walletEntity, List<WalletAccountEntity> walletAccountEntityList, WalletAccountService walletAccountService) {

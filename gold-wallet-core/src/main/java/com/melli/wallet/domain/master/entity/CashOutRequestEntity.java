@@ -32,4 +32,7 @@ public class CashOutRequestEntity extends RequestEntity {
 
 	@Column(name = "settlement_status")
 	private String settlementStatus;
+
+	@Column(name = "additional_data")
+	private String additionalData;
 }

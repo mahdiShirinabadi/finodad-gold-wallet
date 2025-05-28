@@ -1,6 +1,7 @@
 package com.melli.wallet.service.impl;
 
 import com.melli.wallet.domain.dto.AggregationCashInDTO;
+import com.melli.wallet.domain.dto.AggregationCashOutDTO;
 import com.melli.wallet.domain.dto.AggregationPurchaseDTO;
 import com.melli.wallet.domain.master.entity.*;
 import com.melli.wallet.domain.master.persistence.CashInRequestRepository;
@@ -140,13 +141,21 @@ public class RequestServiceImplementation implements RequestService {
     }
 
     @Override
-    public CashInRequestEntity findCashInDuplicateWithRrnId(long rrnId) throws InternalServiceException {
+    public void findCashInDuplicateWithRrnId(long rrnId) throws InternalServiceException {
        CashInRequestEntity cashInRequestEntity = cashInRequestRepository.findByRrnEntityId(rrnId);
        if(cashInRequestEntity != null) {
            log.error("cashInDuplicateWithRrnId ({}) found", rrnId);
            throw new InternalServiceException("cashInDuplicateWithRrnId", StatusService.DUPLICATE_UUID, HttpStatus.OK);
        }
-       return cashInRequestEntity;
+    }
+
+    @Override
+    public void findCashOutDuplicateWithRrnId(long rrnId) throws InternalServiceException {
+        CashOutRequestEntity cashOutRequestEntity = cashOutRequestRepository.findByRrnEntityId(rrnId);
+        if(cashOutRequestEntity != null) {
+            log.error("cashOutDuplicateWithRrnId ({}) found", rrnId);
+            throw new InternalServiceException("cashInDuplicateWithRrnId", StatusService.DUPLICATE_UUID, HttpStatus.OK);
+        }
     }
 
     @Override
@@ -175,5 +184,10 @@ public class RequestServiceImplementation implements RequestService {
     @Override
     public AggregationCashInDTO findSumAmountCashInBetweenDate(long[] walletAccountId, Date fromDate, Date toDate) {
         return cashInRequestRepository.findSumAmountBetweenDate(walletAccountId, fromDate, toDate);
+    }
+
+    @Override
+    public AggregationCashOutDTO findSumAmountCashOutBetweenDate(long[] walletAccountId, Date fromDate, Date toDate) {
+        return cashOutRequestRepository.findSumAmountBetweenDate(walletAccountId, fromDate, toDate);
     }
 }

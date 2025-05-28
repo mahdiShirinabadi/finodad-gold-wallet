@@ -14,7 +14,7 @@ import lombok.ToString;
 @Setter
 @Getter
 @ToString
-public class CashInWalletRequestJson {
+public class CashOutWalletRequestJson {
 
     @StringValidation
     @Schema(name = NamingProperty.UNIQUE_IDENTIFIER, description = "شناسه یکتا")
@@ -22,14 +22,14 @@ public class CashInWalletRequestJson {
     private String uniqueIdentifier;
 
     @StringValidation
-    @Schema(name = NamingProperty.REFERENCE_NUMBER, description = "شماره مرجع")
-    @JsonProperty(NamingProperty.REFERENCE_NUMBER)
-    private String referenceNumber;
-
-    @NumberValidation
-    @Schema(name = NamingProperty.AMOUNT, description = "مبلغ به ریال", example = "1000")
+    @Schema(name = NamingProperty.AMOUNT, description = "مبلغ به ریال")
     @JsonProperty(NamingProperty.AMOUNT)
     private String amount;
+
+    @StringValidation
+    @Schema(name = NamingProperty.IBAN, description = "شماره شبا مقصد", example = "IR000000000000000000000000")
+    @JsonProperty(NamingProperty.IBAN)
+    private String iban;
 
     @NationalCodeValidation(label = "کد ملی")
     @Schema(name = NamingProperty.NATIONAL_CODE, description = "کدملی")
@@ -52,6 +52,6 @@ public class CashInWalletRequestJson {
 
     @Hidden
     public String getDataString() {
-        return uniqueIdentifier + "|" + referenceNumber + "|" + amount + "|" + nationalCode;
+        return uniqueIdentifier + "|" + iban + "|" + amount + "|" + nationalCode;
     }
 }

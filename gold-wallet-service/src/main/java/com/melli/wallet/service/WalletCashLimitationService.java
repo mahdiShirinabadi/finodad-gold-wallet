@@ -11,7 +11,9 @@ import java.math.BigDecimal;
 public interface WalletCashLimitationService {
 
 	void checkCashInLimitation(ChannelEntity channel, WalletEntity wallet, BigDecimal amount, WalletAccountEntity walletAccount) throws InternalServiceException;
+	void checkCashOutLimitation(ChannelEntity channel, WalletEntity wallet, BigDecimal amount, WalletAccountEntity walletAccount) throws InternalServiceException;
 
 	void updateCashInLimitation(WalletAccountEntity wallet, BigDecimal amount) throws InternalServiceException;
+	void updateCashOutLimitation(WalletAccountEntity wallet, BigDecimal amount) throws InternalServiceException;
 
 }

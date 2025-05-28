@@ -8,6 +8,7 @@ import java.util.List;
 public interface TemplateService {
 
 	String CASH_IN = "cash_in";
+	String CASH_OUT = "cash_out";
 	String BUY_WITHDRAWAL = "BUY_WITHDRAWAL";
 	String BUY_DEPOSIT = "BUY_DEPOSIT";
 

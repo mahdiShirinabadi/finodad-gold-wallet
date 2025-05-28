@@ -59,6 +59,9 @@ public class NamingProperty {
     public static final String WALLET_ACCOUNT_CURRENCY_OBJECT = "walletAccountCurrencyObject";
     public static final String MERCHANT_OBJECT_LIST = "merchantObjectList";
     public static final String LOGO = "logo";
+    public static final String IBAN = "iban";
+    public static final String AMOUNT = "amount";
+    public static final String SETTLEMENT_STATUS = "settlement_status";
 
 
     private NamingProperty() {

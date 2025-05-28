@@ -7,12 +7,18 @@ import com.melli.wallet.exception.InternalServiceException;
 import java.util.List;
 
 public interface LimitationGeneralService {
+    //cashIn
     String ENABLE_CASH_IN = "ENABLE_CASH_IN";
     String MIN_AMOUNT_CASH_IN = "MIN_AMOUNT_CASH_IN";
     String MAX_AMOUNT_CASH_IN = "MAX_AMOUNT_CASH_IN";
     String MAX_WALLET_BALANCE = "MAX_WALLET_BALANCE";
     String MAX_WALLET_AMOUNT_DAILY_CASH_IN = "MAX_WALLET_AMOUNT_DAILY_CASH_IN";
 
+    //cashout
+    String ENABLE_CASH_OUT = "ENABLE_CASH_OUT";
+    String MIN_AMOUNT_CASH_OUT = "MIN_AMOUNT_CASH_OUT";
+    String MAX_AMOUNT_CASH_OUT = "MAX_AMOUNT_CASH_OUT";
+    String MAX_WALLET_AMOUNT_DAILY_CASH_OUT = "MAX_WALLET_AMOUNT_DAILY_CASH_OUT";
     //buy
     String MAX_DAILY_PRICE_BUY = "MAX_DAILY_PRICE_BUY";
     String MAX_DAILY_COUNT_BUY = "MAX_DAILY_COUNT_BUY";

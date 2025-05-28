@@ -12,15 +12,15 @@ import lombok.ToString;
 @Setter
 @Getter
 @ToString
-public class CashInGenerateUuidRequestJson {
+public class CashGenerateUuidRequestJson {
     @NationalCodeValidation(label = "کد ملی")
     @Schema(name = NamingProperty.NATIONAL_CODE, description = "کدملی", example = "0063360993")
     @JsonProperty(NamingProperty.NATIONAL_CODE)
     private String nationalCode;
 
     @NumberValidation(label = "مبلغ")
-    @Schema(name = NamingProperty.QUANTITY, description = "مبلغ به ریال", example = "1000")
-    @JsonProperty(NamingProperty.QUANTITY)
+    @Schema(name = NamingProperty.AMOUNT, description = "مبلغ به ریال", example = "1000")
+    @JsonProperty(NamingProperty.AMOUNT)
     private String amount;
 
     @NumberValidation(label = "شماره حساب")

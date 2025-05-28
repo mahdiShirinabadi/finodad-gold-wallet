@@ -83,7 +83,7 @@ public class WalletApplicationTests {
     private static final String SELL_IN_PATH = "/api/v1/purchase/sell";
     private static final String PURCHASE_INQUIRY_IN_PATH = "/api/v1/purchase/inquiry";
 
-    private static final String CASH_IN_GENERATE_UUID_PATH = "/api/v1/cash/charge/generate/uuid";
+    private static final String CASH_IN_GENERATE_UUID_PATH = "/api/v1/cash/generate/uuid";
     private static final String CASH_IN_PATH = "/api/v1/cash/charge";
     private static final String CASH_IN_INQUIRY_PATH = "/api/v1/cash/charge/inquiry";
 
@@ -275,7 +275,7 @@ public class WalletApplicationTests {
     }
 
     public BaseResponse<UuidResponse> generateCashInUniqueIdentifier(MockMvc mockMvc, String token, String nationalCode, String amount, String accountNumber, HttpStatus httpStatus, int errorCode, boolean success) throws Exception {
-        CashInGenerateUuidRequestJson requestJson = new CashInGenerateUuidRequestJson();
+        CashGenerateUuidRequestJson requestJson = new CashGenerateUuidRequestJson();
         requestJson.setNationalCode(nationalCode);
         requestJson.setAmount(amount);
         requestJson.setAccountNumber(accountNumber);

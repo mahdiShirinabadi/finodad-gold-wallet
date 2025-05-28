@@ -16,7 +16,7 @@
         <module>gold-wallet-core</module>
         <module>gold-wallet-channel</module>
         <module>gold-wallet-util</module>
-        <module>gold-wallet-portal</module>
+<!--        <module>gold-wallet-portal</module>-->
     </modules>
 
     <properties>

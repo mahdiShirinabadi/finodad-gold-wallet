@@ -77,7 +77,7 @@ public class CashInServiceImplementation implements CashInService {
         RequestTypeEntity requestTypeEntity = requestTypeService.getRequestType(RequestTypeService.CASH_IN);
         RrnEntity rrnEntity = rrnService.findByUid(chargeObjectDTO.getUniqueIdentifier());
 
-        return redisLockService.runAfterLock(chargeObjectDTO.getUniqueIdentifier(), this.getClass(), () -> {
+        return redisLockService.runAfterLock(chargeObjectDTO.getAccountNumber(), this.getClass(), () -> {
             log.info("start checking existence of traceId({}) ...", chargeObjectDTO.getUniqueIdentifier());
             rrnService.checkRrn(chargeObjectDTO.getUniqueIdentifier(), chargeObjectDTO.getChannel(), requestTypeEntity, String.valueOf(chargeObjectDTO.getAmount()), chargeObjectDTO.getAccountNumber());
             log.info("finish checking existence of traceId({})", chargeObjectDTO.getUniqueIdentifier());

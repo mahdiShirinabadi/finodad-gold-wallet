@@ -34,6 +34,10 @@ public class CashOutTrackResponse {
     @JsonProperty(NamingProperty.RESULT)
     private int result;
 
+    @Schema(name = NamingProperty.SETTLEMENT_STATUS)
+    @JsonProperty(NamingProperty.SETTLEMENT_STATUS)
+    private String settlementStatus;
+
     @Schema(name = NamingProperty.DESCRIPTION)
     @JsonProperty(NamingProperty.DESCRIPTION)
     private String description;
