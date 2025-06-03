@@ -1,6 +1,7 @@
 package com.melli.wallet.service.impl;
 
 import com.melli.wallet.domain.dto.ChargeObjectDTO;
+import com.melli.wallet.domain.enumaration.CashInPaymentTypeEnum;
 import com.melli.wallet.domain.master.entity.*;
 import com.melli.wallet.domain.master.persistence.RefnumberRepository;
 import com.melli.wallet.domain.redis.RefNumberRedis;
@@ -129,6 +130,7 @@ public class CashInServiceImplementation implements CashInService {
             cashInRequestEntity.setCreatedBy(chargeObjectDTO.getChannel().getUsername());
             cashInRequestEntity.setCreatedAt(new Date());
             cashInRequestEntity.setRefNumber(chargeObjectDTO.getRefNumber());
+            cashInRequestEntity.setCashInPaymentTypeEnum(CashInPaymentTypeEnum.valueOf(chargeObjectDTO.getCashInPaymentType()));
             try {
                 requestService.save(cashInRequestEntity);
             } catch (Exception ex) {

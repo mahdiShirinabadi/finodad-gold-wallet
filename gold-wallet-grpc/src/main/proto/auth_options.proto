@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package wallet;
+
+option java_package = "com.melli.wallet.grpc";
+option java_multiple_files = true;
+
+import "google/protobuf/descriptor.proto";
+
+extend google.protobuf.MethodOptions {
+  string required_resource = 50001;
+}

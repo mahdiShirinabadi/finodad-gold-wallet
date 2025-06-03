@@ -13,9 +13,7 @@ import java.util.List;
  */
 public interface ChannelAccessTokenService {
     ChannelAccessTokenEntity findTopByRefreshTokenEndTimeIsnUll(String refreshToken) throws InternalServiceException;
-    ChannelAccessTokenEntity findTopByChannelEntityAndRefreshTokenEndTimeIsnUll(ChannelEntity channelEntity, String refreshToken);
     ChannelAccessTokenEntity findTopByChannelEntityAndEndTimeIsnUll(ChannelEntity channelEntity);
     void save(ChannelAccessTokenEntity channelAccessTokenEntity) throws InternalServiceException;
     List<ChannelAccessTokenEntity> findAllByChannelEntityAndEndTimeIsNull(ChannelEntity channelEntity);
-    List<ChannelAccessTokenEntity> findAllByProfileEntityAndEndTimeIsNull(ChannelEntity channelEntity);
 }

@@ -23,4 +23,5 @@ public class ChargeObjectDTO {
     private String accountNumber;
     private String additionalData;
     private String ip;
+    private String cashInPaymentType;
 }

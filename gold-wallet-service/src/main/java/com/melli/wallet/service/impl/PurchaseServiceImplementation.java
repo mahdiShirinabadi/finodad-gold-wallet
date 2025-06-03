@@ -1,8 +1,10 @@
 package com.melli.wallet.service.impl;
 
 import com.melli.wallet.domain.dto.BuyRequestDTO;
+import com.melli.wallet.domain.dto.ChargeObjectDTO;
 import com.melli.wallet.domain.dto.PurchaseObjectDto;
 import com.melli.wallet.domain.dto.SellRequestDTO;
+import com.melli.wallet.domain.enumaration.CashInPaymentTypeEnum;
 import com.melli.wallet.domain.enumaration.TransactionTypeEnum;
 import com.melli.wallet.domain.master.entity.*;
 import com.melli.wallet.domain.response.UuidResponse;
@@ -50,6 +52,7 @@ public class PurchaseServiceImplementation implements PurchaseService {
     private final RequestTypeService requestTypeService;
     private final WalletBuyLimitationService walletBuyLimitationService;
     private final WalletSellLimitationService walletSellLimitationService;
+    private final CashInService cashInService;
 
     @Override
     public UuidResponse buyGenerateUuid(ChannelEntity channelEntity, String nationalCode, String price, String walletAccountNumber) throws InternalServiceException {
@@ -185,6 +188,56 @@ public class PurchaseServiceImplementation implements PurchaseService {
         ), buyRequestDTO.getUniqueIdentifier());
     }
 
+    @Override
+    public PurchaseResponse buyDirect(BuyRequestDTO buyRequestDTO) throws InternalServiceException {
+
+        //first charge rial account and after that purchase (only in accountToAccount)
+        log.info("start generate traceId in direct buy, username ===> ({}), nationalCode ({})", buyRequestDTO.getChannel().getUsername(), buyRequestDTO.getNationalCode());
+        RrnEntity rrnEntity = rrnService.generateTraceId(buyRequestDTO.getNationalCode(), buyRequestDTO.getChannel(), requestTypeService.getRequestType(RequestTypeService.CASH_IN), buyRequestDTO.getWalletAccountNumber(), String.valueOf(buyRequestDTO.getPrice()));
+        log.info("finish direct buy traceId ===> {}, username ({}), nationalCode ({})", rrnEntity.getUuid(), buyRequestDTO.getChannel().getUsername(), buyRequestDTO.getNationalCode());
+
+        cashInService.charge(new ChargeObjectDTO(buyRequestDTO.getChannel(), buyRequestDTO.getNationalCode(), rrnEntity.getUuid(),
+                String.valueOf(buyRequestDTO.getPrice()), buyRequestDTO.getRefNumber(), buyRequestDTO.getWalletAccountNumber(),buyRequestDTO.getAdditionalData(),buyRequestDTO.getIp(), CashInPaymentTypeEnum.ACCOUNT_TO_ACCOUNT.getText()));
+
+        // Validate and retrieve currencies
+        WalletAccountCurrencyEntity currencyEntity = walletAccountCurrencyService.findCurrency(buyRequestDTO.getCurrency());
+        WalletAccountCurrencyEntity rialCurrencyEntity = walletAccountCurrencyService.findCurrency(WalletAccountCurrencyService.RIAL);
+
+
+        // Validate merchant and wallet accounts
+        MerchantEntity merchant = findMerchant(buyRequestDTO.getMerchantId());
+        WalletAccountEntity merchantCurrencyAccount = findMerchantWalletAccount(merchant, currencyEntity, buyRequestDTO.getCurrency());
+        WalletAccountEntity merchantRialAccount = findMerchantWalletAccount(merchant, rialCurrencyEntity, WalletAccountCurrencyService.RIAL);
+
+        // Validate user and wallet accounts
+        WalletEntity userWallet = findUserWallet(buyRequestDTO.getNationalCode());
+        WalletAccountEntity userCurrencyAccount = findUserWalletAccount(userWallet, currencyEntity, buyRequestDTO.getCurrency());
+        WalletAccountEntity userRialAccount = findUserAccount(userWallet, rialCurrencyEntity, buyRequestDTO.getWalletAccountNumber(), buyRequestDTO.getNationalCode());
+
+        // Validate channel commission account
+        WalletAccountEntity channelCommissionAccount = findChannelCommissionAccount(buyRequestDTO.getChannel(), WalletAccountCurrencyService.RIAL);
+
+        walletBuyLimitationService.checkGeneral(buyRequestDTO.getChannel(), userRialAccount.getWalletEntity(), new BigDecimal(buyRequestDTO.getPrice()), userRialAccount, buyRequestDTO.getUniqueIdentifier());
+        walletBuyLimitationService.checkDailyLimitation(buyRequestDTO.getChannel(), userRialAccount.getWalletEntity(), new BigDecimal(buyRequestDTO.getPrice()), userRialAccount, buyRequestDTO.getUniqueIdentifier());
+        walletBuyLimitationService.checkMonthlyLimitation(buyRequestDTO.getChannel(), userRialAccount.getWalletEntity(), new BigDecimal(buyRequestDTO.getPrice()), userRialAccount, buyRequestDTO.getUniqueIdentifier());
+
+        return redisLockService.runAfterLock(buyRequestDTO.getWalletAccountNumber(), this.getClass(), () -> processBuy(new PurchaseObjectDto(
+                buyRequestDTO.getChannel(),
+                buyRequestDTO.getUniqueIdentifier(),
+                buyRequestDTO.getAmount(),
+                BigDecimal.valueOf(buyRequestDTO.getPrice()),
+                buyRequestDTO.getCommission(),
+                buyRequestDTO.getAdditionalData(),
+                buyRequestDTO.getNationalCode(),
+                userWallet,
+                userRialAccount,
+                userCurrencyAccount,
+                merchant,
+                merchantRialAccount,
+                merchantCurrencyAccount,
+                channelCommissionAccount)
+        ), buyRequestDTO.getUniqueIdentifier());
+    }
 
     private MerchantEntity findMerchant(String merchantId) throws InternalServiceException {
         MerchantEntity merchant = merchantService.findById(Integer.parseInt(merchantId));

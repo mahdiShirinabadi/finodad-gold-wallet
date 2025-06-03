@@ -6,7 +6,6 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import jakarta.xml.bind.DatatypeConverter;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import java.io.Serializable;
@@ -17,7 +16,7 @@ import java.util.Map;
 import java.util.function.Function;
 
 @Component
-public class PortalJwtTokenUtil implements Serializable {
+public class JwtTokenUtil implements Serializable {
 
     private static final long serialVersionUID = -2550185165626007488L;
 
@@ -53,11 +52,23 @@ public class PortalJwtTokenUtil implements Serializable {
     }
 
     //generate token for user
-    public Map<String,String> generateToken(UserDetails userDetails, PanelOperatorEntity panelOperatorEntity) {
+    public Map<String,String> generateToken(String username, Long expireTimeDuration) {
         Map<String, String> stringStringMap = new HashMap<>();
         Map<String, Object> claims = new HashMap<>();
-        String token = doGenerateToken(claims, userDetails.getUsername(), panelOperatorEntity);
-        stringStringMap.put("token",token);
+        claims.put("generateTime",new Date().getTime());
+        String token = doGenerateToken(claims, username, expireTimeDuration);
+        stringStringMap.put("accessToken",token);
+        stringStringMap.put("expireTime",String.valueOf(getExpirationDateFromToken(token).getTime()));
+        return stringStringMap;
+    }
+
+    // Generate refresh token
+    public Map<String,String> generateRefreshToken(String username, Long expireTimeDuration) {
+        Map<String, String> stringStringMap = new HashMap<>();
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("generateTime",new Date().getTime());
+        String token = doGenerateToken(claims, username, expireTimeDuration);
+        stringStringMap.put("refreshToken",token);
         stringStringMap.put("expireTime",String.valueOf(getExpirationDateFromToken(token).getTime()));
         return stringStringMap;
     }
@@ -67,12 +78,13 @@ public class PortalJwtTokenUtil implements Serializable {
     //2. Sign the JWT using the HS512 algorithm and secret key.
     //3. According to JWS Compact Serialization(https://tools.ietf.org/html/draft-ietf-jose-json-web-signature-41#section-3.1)
     //   compaction of the JWT to a URL-safe string
-    private String doGenerateToken(Map<String, Object> claims, String subject, PanelOperatorEntity panelOperatorEntity) {
+    private String doGenerateToken(Map<String, Object> claims, String subject, Long expireTimeDuration) {
         String base64Key = DatatypeConverter.printBase64Binary(secret.getBytes());
         byte[] secretBytes = DatatypeConverter.parseBase64Binary(base64Key);
 
         return Jwts.builder().setClaims(claims).setSubject(subject).setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + panelOperatorEntity.getExpireTimeDuration() * 1000))
+
+                .setExpiration(new Date(System.currentTimeMillis() + expireTimeDuration * 1000))
                 .signWith(SignatureAlgorithm.HS512, secretBytes).compact();
     }
 
@@ -82,8 +94,8 @@ public class PortalJwtTokenUtil implements Serializable {
     }
 
     //validate token
-    public Boolean validateToken(String token, UserDetails userDetails) {
+    public Boolean validateToken(String token) {
         final String username = getUsernameFromToken(token);
-        return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
+        return (!isTokenExpired(token));
     }
 }

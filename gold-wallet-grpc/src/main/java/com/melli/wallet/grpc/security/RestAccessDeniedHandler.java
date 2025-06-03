@@ -1,7 +1,8 @@
-package com.melli.wallet.security;
+package com.melli.wallet.grpc.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
+import com.melli.wallet.domain.master.entity.StatusEntity;
 import com.melli.wallet.domain.response.base.ErrorDetail;
 import com.melli.wallet.service.StatusService;
 import com.melli.wallet.utils.Helper;
@@ -16,11 +17,10 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.Date;
 
 @Component
 @RequiredArgsConstructor
-public class PortalRestAccessDeniedHandler implements AccessDeniedHandler {
+public class RestAccessDeniedHandler implements AccessDeniedHandler {
 
     private final Helper helper;
     private final StatusService statusService;
@@ -31,8 +31,10 @@ public class PortalRestAccessDeniedHandler implements AccessDeniedHandler {
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
         response.setCharacterEncoding(StandardCharsets.UTF_8.toString());
+
         StatusEntity statusEntity = statusService.findByCode(String.valueOf(StatusService.USER_NOT_PERMISSION));
         ErrorDetail errorDetail = new ErrorDetail(statusEntity.getPersianDescription(), StatusService.USER_NOT_PERMISSION);
-        response.getWriter().print(ow.writeValueAsString(helper.fillBaseResponse(false, new Date(),errorDetail)));
+
+        response.getWriter().print(ow.writeValueAsString(helper.fillBaseResponse(false, errorDetail)));
     }
 }

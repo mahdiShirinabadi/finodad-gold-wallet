@@ -16,6 +16,7 @@
         <module>gold-wallet-core</module>
         <module>gold-wallet-channel</module>
         <module>gold-wallet-util</module>
+        <module>gold-wallet-grpc</module>
 <!--        <module>gold-wallet-portal</module>-->
     </modules>
 
@@ -352,17 +353,6 @@
         <dependency>
             <groupId>io.micrometer</groupId>
             <artifactId>micrometer-registry-prometheus</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-security</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.springframework.security</groupId>
-            <artifactId>spring-security-test</artifactId>
-            <scope>test</scope>
         </dependency>
 
 

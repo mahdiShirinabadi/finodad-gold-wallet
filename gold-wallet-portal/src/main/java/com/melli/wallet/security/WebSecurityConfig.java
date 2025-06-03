@@ -27,15 +27,15 @@ import static org.springframework.security.config.http.SessionCreationPolicy.STA
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity(prePostEnabled = true)
-public class PortalWebSecurityConfig {
+public class WebSecurityConfig {
 
     private final UserDetailsService jwtUserDetailsService;
 
-    private final PortalJwtRequestFilter jwtRequestFilter;
+    private final JwtRequestFilter jwtRequestFilter;
 
 
     @Autowired
-    public PortalWebSecurityConfig(UserDetailsService userDetailsService, PortalJwtRequestFilter jwtRequestFilter) {
+    public WebSecurityConfig(UserDetailsService userDetailsService, JwtRequestFilter jwtRequestFilter) {
         this.jwtUserDetailsService = userDetailsService;
         this.jwtRequestFilter = jwtRequestFilter;
     }
@@ -60,7 +60,7 @@ public class PortalWebSecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity httpSecurity, PortalJwtAuthenticationEntryPoint jwtAuthenticationEntryPoint, PortalRestAccessDeniedHandler restAccessDeniedHandler) throws Exception{
+    public SecurityFilterChain filterChain(HttpSecurity httpSecurity, JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint, RestAccessDeniedHandler restAccessDeniedHandler) throws Exception{
         httpSecurity.cors(httpSecurityCorsConfigurer -> {
                     CorsConfiguration configuration = new CorsConfiguration();
                     configuration.setAllowedOrigins(List.of("*"));
@@ -72,7 +72,8 @@ public class PortalWebSecurityConfig {
                 })
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(request-> request.requestMatchers("/index.html",
-                        "/api/v1/authentication/login",
+                        "/api/v1/auth/login",
+                        "/api/v1/auth/refresh",
                         "/",
                         "/v3/api-docs/**",
                         "/v2/api-docs/**",
@@ -83,10 +84,9 @@ public class PortalWebSecurityConfig {
                         "/swagger-ui/**",
                         "/swagger-ui.html/**",
                         "/configuration/**",
-                        "/actuator/prometheus/**",
-                        "/actuator/health",
+                        "/actuator/**",
                         "/webjars/**").permitAll().anyRequest().authenticated())
-                .exceptionHandling((exceptionConfig) ->
+                .exceptionHandling(exceptionConfig ->
                         exceptionConfig.authenticationEntryPoint(jwtAuthenticationEntryPoint).accessDeniedHandler(restAccessDeniedHandler)
                 )
                 .sessionManagement(manager -> manager.sessionCreationPolicy(STATELESS))

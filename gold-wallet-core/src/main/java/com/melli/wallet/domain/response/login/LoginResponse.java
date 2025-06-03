@@ -14,6 +14,7 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @ToString
+@Builder
 public class LoginResponse {
 
     @Schema(name = NamingProperty.CHANNEL_OBJECT)

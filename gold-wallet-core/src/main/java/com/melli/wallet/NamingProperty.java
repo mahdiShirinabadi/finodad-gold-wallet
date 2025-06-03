@@ -61,7 +61,8 @@ public class NamingProperty {
     public static final String LOGO = "logo";
     public static final String IBAN = "iban";
     public static final String AMOUNT = "amount";
-    public static final String SETTLEMENT_STATUS = "settlement_status";
+    public static final String SETTLEMENT_STATUS = "settlementStatus";
+    public static final String CASH_IN_TYPE = "cashInType";
 
 
     private NamingProperty() {

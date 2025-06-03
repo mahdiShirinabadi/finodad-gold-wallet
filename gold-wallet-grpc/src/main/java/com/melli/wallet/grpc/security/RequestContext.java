@@ -1,5 +1,6 @@
-package com.melli.wallet.security;
+package com.melli.wallet.grpc.security;
 
+import com.melli.wallet.domain.master.entity.ChannelEntity;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.context.annotation.Scope;
@@ -12,8 +13,8 @@ import org.springframework.web.context.WebApplicationContext;
 @Scope(value = WebApplicationContext.SCOPE_REQUEST, proxyMode = ScopedProxyMode.TARGET_CLASS)
 @Setter
 @Getter
-public class PortalRequestContext {
+public class RequestContext {
     private String clientIp;
     private String accessToken;
-    private PanelOperatorEntity panelOperatorEntity;
+    private ChannelEntity channelEntity;
 }

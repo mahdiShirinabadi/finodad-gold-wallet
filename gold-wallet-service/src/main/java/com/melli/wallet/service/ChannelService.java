@@ -33,5 +33,5 @@ public interface ChannelService {
 
 	void clearCacheAll();
 
-	ChannelEntity changePasswordChannel(String channelName,String password,PasswordEncoder bcryptEncoder)throws InternalServiceException;
+	ChannelEntity changePasswordChannel(String channelName, String password, PasswordEncoder bcryptEncoder)throws InternalServiceException;
 }

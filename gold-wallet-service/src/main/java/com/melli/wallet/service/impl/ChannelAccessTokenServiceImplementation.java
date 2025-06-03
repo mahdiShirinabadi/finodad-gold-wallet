@@ -37,10 +37,6 @@ public class ChannelAccessTokenServiceImplementation implements ChannelAccessTok
         });
     }
 
-    @Override
-    public ChannelAccessTokenEntity findTopByChannelEntityAndRefreshTokenEndTimeIsnUll(ChannelEntity channelEntity, String refreshToken) {
-        return channelAccessTokenRepository.findTopByChannelEntityAndRefreshTokenAndEndTimeIsNull(channelEntity, refreshToken);
-    }
 
     @Override
     public ChannelAccessTokenEntity findTopByChannelEntityAndEndTimeIsnUll(ChannelEntity channelEntity) {
@@ -70,8 +66,4 @@ public class ChannelAccessTokenServiceImplementation implements ChannelAccessTok
         return channelAccessTokenRepository.findAll();
     }
 
-    @Override
-    public List<ChannelAccessTokenEntity> findAllByProfileEntityAndEndTimeIsNull(ChannelEntity channelEntity) {
-        return channelAccessTokenRepository.findAllByChannelEntityAndEndTimeIsNull(channelEntity);
-    }
 }

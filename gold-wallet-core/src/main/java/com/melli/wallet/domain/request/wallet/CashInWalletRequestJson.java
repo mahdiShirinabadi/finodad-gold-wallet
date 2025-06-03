@@ -40,8 +40,12 @@ public class CashInWalletRequestJson {
     @JsonProperty(NamingProperty.ADDITIONAL_DATA)
     private String additionalData;
 
+    @Schema(name = NamingProperty.CASH_IN_TYPE, description = "نوع شارژ (IPG,ACCOUNT_TO_ACCOUNT)")
+    @JsonProperty(NamingProperty.CASH_IN_TYPE)
+    private String cashInType;
+
     @NumberValidation(label = "شماره حساب")
-    @Schema(name = NamingProperty.WALLET_ACCOUNT_NUMBER, description = "شماره حساب")
+    @Schema(name = NamingProperty.WALLET_ACCOUNT_NUMBER, description = "شماره حساب کیف پول")
     @JsonProperty(NamingProperty.WALLET_ACCOUNT_NUMBER)
     private String accountNumber;
 

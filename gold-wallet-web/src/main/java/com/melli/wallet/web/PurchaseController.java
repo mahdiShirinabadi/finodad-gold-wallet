@@ -3,10 +3,7 @@ package com.melli.wallet.web;
 import com.melli.wallet.annotation.fund_type.PurchaseTypeValidation;
 import com.melli.wallet.domain.dto.BuyRequestDTO;
 import com.melli.wallet.domain.dto.SellRequestDTO;
-import com.melli.wallet.domain.request.wallet.BuyGenerateUuidRequestJson;
-import com.melli.wallet.domain.request.wallet.BuyWalletRequestJson;
-import com.melli.wallet.domain.request.wallet.SellGenerateUuidRequestJson;
-import com.melli.wallet.domain.request.wallet.SellWalletRequestJson;
+import com.melli.wallet.domain.request.wallet.*;
 import com.melli.wallet.domain.response.UuidResponse;
 import com.melli.wallet.domain.response.base.BaseResponse;
 import com.melli.wallet.domain.response.purchase.PurchaseResponse;
@@ -92,7 +89,25 @@ public class PurchaseController extends WebController {
 
         PurchaseResponse purchaseResponse = purchaseService.buy(new BuyRequestDTO(requestContext.getChannelEntity(), requestJson.getUniqueIdentifier(), new BigDecimal(requestJson.getQuantity()),
                 Long.parseLong(requestJson.getTotalPrice()), requestJson.getWalletAccountNumber(), requestJson.getAdditionalData(), requestJson.getMerchantId(),
-                requestJson.getNationalCode(), new BigDecimal(requestJson.getCommissionObject().getAmount()), requestJson.getCurrency(), channelIp));
+                requestJson.getNationalCode(), new BigDecimal(requestJson.getCommissionObject().getAmount()), requestJson.getCurrency(), channelIp,""));
+
+        return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse<>(true,purchaseResponse));
+    }
+
+    @Timed(description = "Time taken to create wallet")
+    @PostMapping(path = "/buy/direct", produces = {MediaType.APPLICATION_JSON_VALUE})
+    @Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "خرید")
+    @PreAuthorize("hasAuthority(\""+ ResourceService.BUY_DIRECT +"\")")
+    public ResponseEntity<BaseResponse<PurchaseResponse>> buyDirect(@Valid @RequestBody BuyDirectWalletRequestJson requestJson) throws InternalServiceException {
+        String channelIp = requestContext.getClientIp();
+        String username = requestContext.getChannelEntity().getUsername();
+
+        log.info("start call buy direct in username ===> {}, nationalCode ===> {}, from ip ===> {}", username, requestJson.getNationalCode(), channelIp);
+        securityService.checkSign(requestContext.getChannelEntity(), requestJson.getSign(), requestJson.getDataString());
+
+        PurchaseResponse purchaseResponse = purchaseService.buyDirect(new BuyRequestDTO(requestContext.getChannelEntity(), requestJson.getUniqueIdentifier(), new BigDecimal(requestJson.getQuantity()),
+                Long.parseLong(requestJson.getTotalPrice()), requestJson.getWalletAccountNumber(), requestJson.getAdditionalData(), requestJson.getMerchantId(),
+                requestJson.getNationalCode(), new BigDecimal(requestJson.getCommissionObject().getAmount()), requestJson.getCurrency(), channelIp,requestJson.getRefNumber()));
 
         return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse<>(true,purchaseResponse));
     }

@@ -1,11 +1,12 @@
 package com.melli.wallet.security;
 
+import com.melli.wallet.domain.master.entity.ChannelEntity;
+import com.melli.wallet.service.ChannelAccessTokenService;
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.apache.logging.log4j.ThreadContext;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -19,28 +20,27 @@ import java.io.IOException;
 import java.util.UUID;
 
 @Component
+
 @Log4j2
-@RequiredArgsConstructor
-public class PortalJwtRequestFilter extends OncePerRequestFilter {
+public class JwtRequestFilter extends OncePerRequestFilter {
+    private final JwtChannelDetailsService jwtChannelDetailsService;
+    private final JwtTokenUtil jwtTokenUtil;
+    private final RequestContext requestContext;
+    private final ChannelAccessTokenService channelAccessTokenService;
 
-
-    private final PortalJwtProfileDetailsService jwtProfileDetailsService;
-
-    private final PortalJwtTokenUtil jwtTokenUtil;
-
-    private final PortalRequestContext requestContext;
-
+    public JwtRequestFilter(JwtChannelDetailsService jwtChannelDetailsService, JwtTokenUtil jwtTokenUtil, RequestContext requestContext, ChannelAccessTokenService channelAccessTokenService) {
+        this.jwtChannelDetailsService = jwtChannelDetailsService;
+        this.jwtTokenUtil = jwtTokenUtil;
+        this.requestContext = requestContext;
+        this.channelAccessTokenService = channelAccessTokenService;
+    }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
-            throws ServletException, IOException {
-
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws ServletException, IOException {
         final String requestTokenHeader = request.getHeader("Authorization");
-
         String username = null;
         String jwtToken = null;
-        // JWT Token is in the form "Bearer token". Remove Bearer word and get
-        // only the Token
+        // JWT Token is in the form "Bearer token". Remove Bearer word and get only the Token
 
         resolveClientIP(request);
         ThreadContext.put("uuid", UUID.randomUUID().toString().toUpperCase().replace("-", ""));
@@ -57,21 +57,20 @@ public class PortalJwtRequestFilter extends OncePerRequestFilter {
             } catch (ExpiredJwtException e) {
                 log.error("JWT Token has expired");
             }
-        } else {
+        } else if (requestTokenHeader != null) {
             log.error("JWT Token does not begin with Bearer String");
         }
 
         // Once we get the token validate it.
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
 
-            PanelOperatorEntity panelOperatorEntity = (PanelOperatorEntity) this.jwtProfileDetailsService.loadUserByUsername(username);
+            ChannelEntity channelEntity = (ChannelEntity) this.jwtChannelDetailsService.loadUserByUsername(username);
 
-            // if token is valid configure Spring Security to manually set
-            // authentication
-            if (panelOperatorEntity != null && panelOperatorEntity.getAccessToken() != null && panelOperatorEntity.getAccessToken().equals(jwtToken)) {
+            // if token is valid configure Spring Security to manually set authentication
+            if (channelEntity != null) {
 
                 UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = new UsernamePasswordAuthenticationToken(
-                        panelOperatorEntity, null, panelOperatorEntity.getAuthorities());
+                        channelEntity, null, channelEntity.getAuthorities());
                 usernamePasswordAuthenticationToken
                         .setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 // After setting the Authentication in the context, we specify
@@ -79,7 +78,7 @@ public class PortalJwtRequestFilter extends OncePerRequestFilter {
                 // Spring Security Configurations successfully.
                 SecurityContextHolder.getContext().setAuthentication(usernamePasswordAuthenticationToken);
             }
-            requestContext.setPanelOperatorEntity(panelOperatorEntity);
+            requestContext.setChannelEntity(channelEntity);
         }
         chain.doFilter(request, response);
         ThreadContext.clearAll();
@@ -87,7 +86,6 @@ public class PortalJwtRequestFilter extends OncePerRequestFilter {
 
     private void resolveClientIP(HttpServletRequest request) {
         String remoteAddr = "";
-
         if (request != null) {
             remoteAddr = request.getHeader("X-FORWARDED-FOR");
             if (!StringUtils.hasText(remoteAddr)) {
