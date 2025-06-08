@@ -32,7 +32,6 @@ public class AuthInterceptor implements ServerInterceptor {
 
     private static final String BEARER_PREFIX = "Bearer ";
     private final JwtTokenUtil jwtTokenUtil;
-    private final ChannelService channelService;
     private final JwtChannelDetailsService jwtChannelDetailsService;
 
     @Override
@@ -79,6 +78,7 @@ public class AuthInterceptor implements ServerInterceptor {
             Authentication authentication = new UsernamePasswordAuthenticationToken(username, null, channelEntity.getAuthorities());
             SecurityContextHolder.getContext().setAuthentication(authentication);
             ThreadContext.put("username", username);
+            RequestContext.setUsername(username);
             RequestContext.setChannelEntity(channelEntity);
             return next.startCall(call, headers);
         } catch (Exception e) {

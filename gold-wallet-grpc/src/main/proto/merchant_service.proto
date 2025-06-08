@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package wallet;
+import "auth_options.proto";
+import "base.proto";
+
+option java_package = "com.melli.wallet.grpc";
+option java_multiple_files = true;
+option java_outer_classname = "MerchantProto";
+
+service MerchantService {
+  rpc GetMerchant(GetMerchantRequestGrpc) returns (BaseResponseGrpc) {
+    option (required_resource) = "MERCHANT_LIST";
+  }
+}
+
+message GetMerchantRequestGrpc {
+  string currency = 1;
+}

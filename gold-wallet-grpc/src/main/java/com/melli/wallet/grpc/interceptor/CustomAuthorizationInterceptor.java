@@ -3,17 +3,16 @@ package com.melli.wallet.grpc.interceptor;
 
 import com.google.protobuf.DescriptorProtos;
 import com.google.protobuf.Descriptors;
-import com.melli.wallet.grpc.AuthServiceGrpc;
-import com.melli.wallet.grpc.PurchaseServiceGrpc;
-import com.melli.wallet.grpc.WalletProto;
+import com.melli.wallet.grpc.*;
 import io.grpc.*;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
-import com.melli.wallet.grpc.AuthOptions;
 
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -21,6 +20,7 @@ import java.util.Map;
  * Author: Mahdi Shirinabadi
  * Date: 6/3/2025
  */
+
 @Component
 @Log4j2
 public class CustomAuthorizationInterceptor implements ServerInterceptor {
@@ -29,8 +29,18 @@ public class CustomAuthorizationInterceptor implements ServerInterceptor {
     private static final Map<String, Descriptors.ServiceDescriptor> SERVICE_DESCRIPTOR_MAP = new HashMap<>();
 
     static {
-        for (Descriptors.ServiceDescriptor service : WalletProto.getDescriptor().getServices()) {
-            SERVICE_DESCRIPTOR_MAP.put(service.getFullName(), service); // e.g., wallet.AuthService
+        List<Descriptors.FileDescriptor> fileDescriptors = Arrays.asList(
+                AuthProto.getDescriptor(),
+                MerchantProto.getDescriptor(),
+                WalletProto.getDescriptor(),
+                PurchaseProto.getDescriptor(),
+                LimitationProto.getDescriptor()
+        );
+
+        for (Descriptors.FileDescriptor fileDescriptor : fileDescriptors) {
+            for (Descriptors.ServiceDescriptor service : fileDescriptor.getServices()) {
+                SERVICE_DESCRIPTOR_MAP.put(service.getFullName(), service);
+            }
         }
     }
 

@@ -1,7 +1,10 @@
 package com.melli.wallet.grpc.security;
 
 import com.melli.wallet.domain.master.entity.ChannelEntity;
+import com.melli.wallet.grpc.config.RequestContext;
 import com.melli.wallet.service.ChannelAccessTokenService;
+import io.grpc.Grpc;
+import io.grpc.ServerCall;
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -17,6 +20,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.net.SocketAddress;
 import java.util.UUID;
 
 @Component
@@ -25,13 +29,11 @@ import java.util.UUID;
 public class JwtRequestFilter extends OncePerRequestFilter {
     private final JwtChannelDetailsService jwtChannelDetailsService;
     private final JwtTokenUtil jwtTokenUtil;
-    private final RequestContext requestContext;
     private final ChannelAccessTokenService channelAccessTokenService;
 
-    public JwtRequestFilter(JwtChannelDetailsService jwtChannelDetailsService, JwtTokenUtil jwtTokenUtil, RequestContext requestContext, ChannelAccessTokenService channelAccessTokenService) {
+    public JwtRequestFilter(JwtChannelDetailsService jwtChannelDetailsService, JwtTokenUtil jwtTokenUtil, ChannelAccessTokenService channelAccessTokenService) {
         this.jwtChannelDetailsService = jwtChannelDetailsService;
         this.jwtTokenUtil = jwtTokenUtil;
-        this.requestContext = requestContext;
         this.channelAccessTokenService = channelAccessTokenService;
     }
 
@@ -42,9 +44,8 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         String jwtToken = null;
         // JWT Token is in the form "Bearer token". Remove Bearer word and get only the Token
 
-        resolveClientIP(request);
         ThreadContext.put("uuid", UUID.randomUUID().toString().toUpperCase().replace("-", ""));
-        ThreadContext.put("ipAddress", requestContext.getClientIp());
+        ThreadContext.put("ipAddress", RequestContext.getClientIp());
 
         log.info("Request URI: {}", request.getRequestURI());
         if (requestTokenHeader != null && requestTokenHeader.toLowerCase().startsWith("bearer ")) {
@@ -78,20 +79,10 @@ public class JwtRequestFilter extends OncePerRequestFilter {
                 // Spring Security Configurations successfully.
                 SecurityContextHolder.getContext().setAuthentication(usernamePasswordAuthenticationToken);
             }
-            requestContext.setChannelEntity(channelEntity);
+            RequestContext.setChannelEntity(channelEntity);
         }
         chain.doFilter(request, response);
         ThreadContext.clearAll();
     }
 
-    private void resolveClientIP(HttpServletRequest request) {
-        String remoteAddr = "";
-        if (request != null) {
-            remoteAddr = request.getHeader("X-FORWARDED-FOR");
-            if (!StringUtils.hasText(remoteAddr)) {
-                remoteAddr = request.getRemoteAddr();
-            }
-        }
-        requestContext.setClientIp(remoteAddr);
-    }
 }

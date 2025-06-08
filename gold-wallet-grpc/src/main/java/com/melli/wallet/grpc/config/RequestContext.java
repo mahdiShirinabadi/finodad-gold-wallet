@@ -1,13 +1,23 @@
 package com.melli.wallet.grpc.config;
 
 import com.melli.wallet.domain.master.entity.ChannelEntity;
+import lombok.Getter;
+import lombok.Setter;
 import org.apache.logging.log4j.ThreadContext;
+import org.springframework.context.annotation.Scope;
+import org.springframework.context.annotation.ScopedProxyMode;
+import org.springframework.stereotype.Component;
+import org.springframework.web.context.WebApplicationContext;
 
 /**
  * Class Name: RequestContect
  * Author: Mahdi Shirinabadi
  * Date: 6/2/2025
  */
+@Component
+@Scope(value = WebApplicationContext.SCOPE_REQUEST, proxyMode = ScopedProxyMode.TARGET_CLASS)
+@Setter
+@Getter
 public class RequestContext {
 
     private static final ThreadLocal<String> CLIENT_IP = new ThreadLocal<>();

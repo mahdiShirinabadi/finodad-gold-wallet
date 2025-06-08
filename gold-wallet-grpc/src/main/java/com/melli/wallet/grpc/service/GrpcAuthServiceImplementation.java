@@ -4,7 +4,7 @@ import com.melli.wallet.domain.master.entity.ChannelAccessTokenEntity;
 import com.melli.wallet.domain.master.entity.ChannelEntity;
 import com.melli.wallet.domain.response.login.LoginResponse;
 import com.melli.wallet.grpc.*;
-import com.melli.wallet.grpc.exception.GrpcExceptionHandler;
+import com.melli.wallet.grpc.exception.GrpcErrorHandler;
 import com.melli.wallet.grpc.security.JwtTokenUtil;
 import com.melli.wallet.service.*;
 import io.grpc.stub.StreamObserver;
@@ -15,7 +15,6 @@ import org.apache.logging.log4j.ThreadContext;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.stereotype.Service;
 
 import java.util.Date;
 import java.util.Map;
@@ -37,7 +36,7 @@ public class GrpcAuthServiceImplementation extends AuthServiceGrpc.AuthServiceIm
     private final ChannelAccessTokenService channelAccessTokenService;
     private final SettingGeneralService settingGeneralService;
     private final AuthenticateService authenticateService;
-    private final GrpcExceptionHandler exceptionHandler;
+    private final GrpcErrorHandler exceptionHandler;
 
     @Override
     public void login(LoginRequestGrpc request, StreamObserver<BaseResponseGrpc> responseObserver) {
@@ -141,8 +140,6 @@ public class GrpcAuthServiceImplementation extends AuthServiceGrpc.AuthServiceIm
     }
 
     private LoginResponseGrpc convertToProtoLoginResponse(LoginResponse loginResponse) {
-        // Implement conversion logic from LoginResponse to WalletProto.LoginResponse
-        // This involves mapping ChannelObject, TokenObject, etc.
         return LoginResponseGrpc.newBuilder()
                 .setChannelObject(ChannelObjectGrpc.newBuilder()
                         .setFirstName(loginResponse.getChannelObject().getFirstName())

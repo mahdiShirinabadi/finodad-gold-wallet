@@ -1,0 +1,138 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "com.melli.wallet.grpc";
+option java_outer_classname = "BaseProto";
+
+package wallet;
+import "auth_options.proto";
+
+// Message Definitions
+message BaseResponseGrpc {
+  bool success = 1;
+  ErrorDetailGrpc error_detail = 2;
+  string tracking_id = 3;
+  string do_time = 4;
+  int64 do_timestamp = 5;
+  oneof data {
+    LoginResponseGrpc login_response = 6;
+    UuidResponseGrpc uuid_response = 7;
+    PurchaseTrackResponseGrpc purchase_track_response = 8;
+    PurchaseResponseGrpc purchase_response = 9;
+    Empty empty = 10;
+    CreateWalletResponseGrpc create_wallet_response = 11;
+    MerchantResponseGrpc merchantResponseGrpc = 12;
+    LimitationCustomResponseGrpc limitationCustomResponseGrpc = 13;
+    LimitationListResponseGrpc limitationListResponseGrpc = 14;
+  }
+}
+
+message ErrorDetailGrpc {
+  string code = 1;
+  string message = 2;
+}
+
+
+message LoginResponseGrpc {
+  ChannelObjectGrpc channel_object = 1;
+  TokenObjectGrpc access_token_object = 2;
+  TokenObjectGrpc refresh_token_object = 3;
+}
+
+message ChannelObjectGrpc {
+  string first_name = 1;
+  string last_name = 2;
+  string username = 3;
+  string mobile = 4;
+}
+
+message TokenObjectGrpc {
+  string token = 1;
+  int64 expire_time = 2;
+}
+
+message UuidResponseGrpc {
+  string uuid = 1;
+}
+
+message PurchaseResponseGrpc {
+  string national_code = 1;
+  string amount = 2;
+  string price = 3;
+  string unique_identifier = 4;
+  string type = 5;
+  string channel_name = 6;
+  string create_time = 7;
+  int64 create_time_timestamp = 8;
+}
+
+message Empty {}
+
+message CreateWalletResponseGrpc {
+  string wallet_id = 1;
+  string mobile = 2;
+  string national_code = 3;
+  string status = 4;
+  string status_description = 5;
+  repeated WalletAccountObjectGrpc wallet_account_object_list = 6;
+}
+
+message WalletAccountObjectGrpc {
+  WalletAccountTypeObjectGrpc wallet_account_type_object = 1;
+  WalletAccountCurrencyObjectGrpc wallet_account_currency_object = 2;
+  string account_number = 3;
+  string balance = 4;
+  string status = 5;
+  string status_description = 6;
+}
+
+message WalletAccountTypeObjectGrpc {
+  string id = 1;
+  string name = 2; // Adjust based on actual structure
+}
+
+message WalletAccountCurrencyObjectGrpc {
+  string id = 1;
+  string name = 2; // Adjust based on actual structure
+}
+
+message PurchaseTrackResponseGrpc {
+  repeated PurchaseTrackObjectGrpc purchase_track_object_list = 1;
+}
+
+message PurchaseTrackObjectGrpc {
+  string national_code = 1;
+  string amount = 2;
+  string price = 3;
+  string unique_identifier = 4;
+  string type = 5;
+  string account_number = 6;
+  string result = 7;
+  string description = 8;
+  string channel_name = 9;
+  string create_time = 10;
+  int64 create_time_timestamp = 11;
+}
+
+message MerchantResponseGrpc {
+  repeated MerchantObjectGrpc merchant_object_list = 1;
+}
+
+message MerchantObjectGrpc {
+  string id = 1;
+  string name = 2;
+  string logo = 3;
+}
+
+message LimitationCustomResponseGrpc {
+  string value = 1;
+}
+
+message LimitationListResponseGrpc {
+  repeated LimitationObjectGrpc limitation_object_list = 1;
+}
+
+message LimitationObjectGrpc {
+  string name = 1;
+  string description = 2;
+}

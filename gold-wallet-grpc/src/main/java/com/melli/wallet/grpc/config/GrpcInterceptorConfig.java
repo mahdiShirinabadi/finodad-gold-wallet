@@ -6,6 +6,7 @@ import com.melli.wallet.grpc.interceptor.LoggingInterceptor;
 import net.devh.boot.grpc.server.interceptor.GlobalServerInterceptorConfigurer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 
 /**
  * Class Name: GrpcInterceptorConfig
@@ -13,6 +14,7 @@ import org.springframework.context.annotation.Configuration;
  * Date: 6/3/2025
  */
 @Configuration
+@EnableMethodSecurity()
 public class GrpcInterceptorConfig {
 
     @Bean

@@ -1,0 +1,51 @@
+syntax = "proto3";
+
+package wallet;
+
+option java_package = "com.melli.wallet.grpc";
+option java_multiple_files = true;
+option java_outer_classname = "WalletProto";
+
+import "auth_options.proto";
+import "base.proto";
+
+service WalletService {
+  rpc CreateWallet(CreateWalletRequestGrpc) returns (BaseResponseGrpc) {
+    option (required_resource) = "WALLET_CREATE";
+  }
+  rpc DeactivateWallet(DeactivateWalletRequestGrpc) returns (BaseResponseGrpc) {
+    option (required_resource) = "WALLET_DEACTIVATE";
+  }
+  rpc DeleteWallet(DeleteWalletRequestGrpc) returns (BaseResponseGrpc) {
+    option (required_resource) = "WALLET_DELETE";
+  }
+  rpc GetWallet(GetWalletRequestGrpc) returns (BaseResponseGrpc) {
+    option (required_resource) = "WALLET_INFO";
+  }
+  rpc ActivateWallet(ActivateWalletRequestGrpc) returns (BaseResponseGrpc) {
+    option (required_resource) = "WALLET_ACTIVE";
+  }
+}
+
+message CreateWalletRequestGrpc {
+  string mobile = 1;
+  string national_code = 2;
+}
+
+message DeactivateWalletRequestGrpc {
+  string id = 1;
+}
+
+message DeleteWalletRequestGrpc {
+  string id = 1;
+}
+
+message GetWalletRequestGrpc {
+  string national_code = 1;
+}
+
+message ActivateWalletRequestGrpc {
+  string id = 1;
+}
+
+
