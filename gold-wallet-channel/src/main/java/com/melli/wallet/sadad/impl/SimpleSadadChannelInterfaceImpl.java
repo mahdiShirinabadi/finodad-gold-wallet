@@ -24,7 +24,7 @@ import static com.melli.wallet.WebCallUtils.sendRequest;
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 
 @Service
-@Profile({"staging"})
+@Profile({"staging111"})
 @Log4j2
 public class SimpleSadadChannelInterfaceImpl implements SadadChannelInterface {
 

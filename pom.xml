@@ -501,6 +501,14 @@
         </profile>
 
         <profile>
+            <id>local</id>
+            <properties>
+                <build.profile.id>local</build.profile.id>
+                <profileActive>local</profileActive>
+            </properties>
+        </profile>
+
+        <profile>
             <id>prod</id>
             <activation>
                 <activeByDefault>true</activeByDefault>

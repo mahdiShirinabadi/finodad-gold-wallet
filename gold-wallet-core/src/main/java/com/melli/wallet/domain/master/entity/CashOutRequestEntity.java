@@ -24,15 +24,6 @@ public class CashOutRequestEntity extends RequestEntity {
 	@JoinColumn(name = "rrn_id", nullable = false)
 	private RrnEntity rrnEntity;
 
-	@Column(name = "national_code")
-	private String nationalCode;
-
-	@Column(name = "birth_date")
-	private String birthDate;
-
-	@Column(name = "settlement_status")
-	private String settlementStatus;
-
 	@Column(name = "additional_data")
 	private String additionalData;
 }

@@ -98,7 +98,6 @@ public class Helper {
         response.setWalletAccountNumber(cashOutRequestEntity.getWalletAccountEntity().getAccountNumber());
         response.setCreateTime(DateUtils.getLocaleDate(DateUtils.FARSI_LOCALE, cashOutRequestEntity.getCreatedAt(), FORMAT_DATE_RESPONSE, false));
         response.setCreateTimeTimestamp(cashOutRequestEntity.getCreatedAt().getTime());
-        response.setSettlementStatus(cashOutRequestEntity.getSettlementStatus());
         return response;
     }
 

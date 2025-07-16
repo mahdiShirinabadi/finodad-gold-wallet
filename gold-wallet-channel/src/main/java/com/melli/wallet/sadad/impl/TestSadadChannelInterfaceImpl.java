@@ -24,7 +24,7 @@ import static com.melli.wallet.WebCallUtils.sendRequest;
 import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 
 @Service
-@Profile({"test","dev"})
+@Profile({"test","dev","staging"})
 @Log4j2
 public class TestSadadChannelInterfaceImpl implements SadadChannelInterface {
 
@@ -347,14 +347,15 @@ public class TestSadadChannelInterfaceImpl implements SadadChannelInterface {
 
     @Override
     public String shahkar(String token, String nationalCode, String mobile) throws ChannelException, URISyntaxException {
-        if (mobile.equalsIgnoreCase("09124162337")) {
+        if (mobile.equalsIgnoreCase("09124162338")) {
             return """
-                    {"error":null,"response":{"response":200,"result":"OK","comment":"درخواست با موفقیت ثبت شد","inquiryDate":"2024-07-23T08:35:31.331","online":true}}
-                    """;
-        }
-        return """
                 {"error":null,"response":{"response":600,"result":"NotIdentifiedException","comment":"اطلاعات ارسالی با اطلاعات موجود در سامانه در یکی یا بیشتر از فیلدهای زیر مشابهت ندارد.(نام،نام خانوادگی،نام پدر،تاریخ تولد،جنسیت برای حقیقی ) (شماره ثبت شرکت،نام شرکت،تاریخ ثبت،فعال یا غیر فعال بودن برای حقوقی ایرانی)","inquiryDate":null,"online":true}}
                 """;
+        }
+
+        return """
+                    {"error":null,"response":{"response":200,"result":"OK","comment":"درخواست با موفقیت ثبت شد","inquiryDate":"2024-07-23T08:35:31.331","online":true}}
+                    """;
     }
 
     @Override
