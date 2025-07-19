@@ -6,7 +6,6 @@ import com.melli.wallet.exception.InternalServiceException;
 import com.melli.wallet.service.StatusService;
 import com.melli.wallet.service.TransactionService;
 import com.melli.wallet.service.WalletAccountService;
-import com.melli.wallet.utils.RedisLockService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.data.domain.PageRequest;
@@ -18,9 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
-import java.util.Properties;
 
-import static org.springframework.transaction.annotation.Propagation.MANDATORY;
 
 /**
  * Class Name: TransactionServiceImplementation
@@ -46,7 +43,7 @@ public class TransactionServiceImplementation implements TransactionService {
      * @throws InternalServiceException
      */
     @Override
-    @Transactional(propagation = Propagation.MANDATORY)
+    @Transactional(propagation = Propagation.REQUIRED)
     public void insertDeposit(TransactionEntity transaction) throws InternalServiceException {
         log.info("start deposit amount ({}) from walletAccountId ({})", transaction.getAmount(), transaction.getWalletAccountEntity().getId());
         BigDecimal walletBalance = walletAccountService.getBalance(transaction.getWalletAccountEntity().getId());
@@ -60,7 +57,7 @@ public class TransactionServiceImplementation implements TransactionService {
     }
 
     @Override
-    @Transactional(propagation = Propagation.MANDATORY)
+    @Transactional(propagation = Propagation.REQUIRED)
     public void insertWithdraw(TransactionEntity transaction) throws InternalServiceException {
 
         log.info("start withdraw amount ({}) from walletAccountId ({})", transaction.getAmount(), transaction.getWalletAccountEntity().getId());
@@ -68,7 +65,7 @@ public class TransactionServiceImplementation implements TransactionService {
         BigDecimal walletBalance = walletAccountService.getBalance(transaction.getWalletAccountEntity().getId());
 
         // Check for sufficient balance
-        if (walletBalance.subtract(transaction.getAmount()).compareTo(BigDecimal.valueOf(0L)) < 0) {
+        if (walletBalance.subtract(transaction.getAmount()).compareTo(BigDecimal.ZERO) < 0) {
             log.error("Balance of wallet({}) now is ({}), is less than withdraw amount({}) !!!", transaction.getWalletAccountEntity().getId(), walletBalance, transaction.getAmount());
             throw new InternalServiceException("Balance of walletAccountId( " + transaction.getWalletAccountEntity().getId() + "), is less than withdraw amount(" + transaction.getAmount() + ") !!!", StatusService.BALANCE_IS_NOT_ENOUGH, HttpStatus.OK);
         }

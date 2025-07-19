@@ -188,7 +188,7 @@ public class PurchaseServiceImplementation implements PurchaseService {
         ), buyRequestDTO.getUniqueIdentifier());
     }
 
-    @Override
+    @Transactional(propagation = Propagation.REQUIRED, rollbackFor = Exception.class)
     public PurchaseResponse buyDirect(BuyRequestDTO buyRequestDTO) throws InternalServiceException {
 
         //first charge rial account and after that purchase (only in accountToAccount)
@@ -346,7 +346,7 @@ public class PurchaseServiceImplementation implements PurchaseService {
                 });
     }
 
-    private PurchaseResponse processBuy(
+    public PurchaseResponse processBuy(
             PurchaseObjectDto purchaseObjectDto
     ) throws InternalServiceException {
         log.info("Starting purchase for uniqueIdentifier {}, nationalCode {}", purchaseObjectDto.getUniqueIdentifier(), purchaseObjectDto.getNationalCode());
@@ -436,7 +436,7 @@ public class PurchaseServiceImplementation implements PurchaseService {
         return request;
     }
 
-    private void buyProcessTransactions(
+    public void buyProcessTransactions(
             PurchaseRequestEntity purchaseRequest, WalletAccountEntity userRialAccount,
             WalletAccountEntity userCurrencyAccount, WalletAccountEntity merchantRialAccount,
             WalletAccountEntity merchantCurrencyAccount, WalletAccountEntity channelCommissionAccount
