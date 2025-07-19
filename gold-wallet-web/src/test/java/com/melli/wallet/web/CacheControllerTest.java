@@ -296,8 +296,8 @@ class CacheControllerTest extends WalletApplicationTests {
                     walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
                     "true","test cashInFailMinAmount");
         }
-        cashIn(mockMvc, ACCESS_TOKEN, uniqueIdentifier1.getData().getUniqueIdentifier(), refNumber, amount, NATIONAL_CODE_CORRECT, walletAccountObjectOptional.getAccountNumber(), "", "", HttpStatus.OK, StatusService.SUCCESSFUL, true);
-        cashIn(mockMvc, ACCESS_TOKEN, uniqueIdentifier2.getData().getUniqueIdentifier(), refNumber, amount, NATIONAL_CODE_CORRECT, walletAccountObjectOptional.getAccountNumber(), "", "", HttpStatus.OK, StatusService.REF_NUMBER_USED_BEFORE, false);
+        cashIn(mockMvc, ACCESS_TOKEN, uniqueIdentifier1.getData().getUniqueIdentifier(), refNumber, amount, NATIONAL_CODE_CORRECT, walletAccountObjectOptional.getAccountNumber(), "", "", "ACCOUNT_TO_ACCOUNT", HttpStatus.OK, StatusService.SUCCESSFUL, true);
+        cashIn(mockMvc, ACCESS_TOKEN, uniqueIdentifier2.getData().getUniqueIdentifier(), refNumber, amount, NATIONAL_CODE_CORRECT, walletAccountObjectOptional.getAccountNumber(), "", "", "ACCOUNT_TO_ACCOUNT", HttpStatus.OK, StatusService.REF_NUMBER_USED_BEFORE, false);
     }
 
     //duplicate refnumber
@@ -321,8 +321,8 @@ class CacheControllerTest extends WalletApplicationTests {
         }
         String minAmount = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService,USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_IN, walletAccountObjectOptional.getAccountNumber());
         BaseResponse<UuidResponse> uniqueIdentifier1 = generateCashInUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, String.valueOf(Long.parseLong(minAmount) + 1), walletAccountObjectOptional.getAccountNumber(), HttpStatus.OK, StatusService.SUCCESSFUL, true);
-        cashIn(mockMvc, ACCESS_TOKEN, uniqueIdentifier1.getData().getUniqueIdentifier(), refNumber, String.valueOf(Long.parseLong(minAmount) + 1), NATIONAL_CODE_CORRECT, walletAccountObjectOptional.getAccountNumber(), "", "", HttpStatus.OK, StatusService.SUCCESSFUL, true);
-        cashIn(mockMvc, ACCESS_TOKEN, uniqueIdentifier1.getData().getUniqueIdentifier(), new Date().getTime() + "", String.valueOf(Long.parseLong(minAmount) + 1), NATIONAL_CODE_CORRECT, walletAccountObjectOptional.getAccountNumber(), "", "", HttpStatus.OK, StatusService.DUPLICATE_UUID, false);
+        cashIn(mockMvc, ACCESS_TOKEN, uniqueIdentifier1.getData().getUniqueIdentifier(), refNumber, String.valueOf(Long.parseLong(minAmount) + 1), NATIONAL_CODE_CORRECT, walletAccountObjectOptional.getAccountNumber(), "", "", "ACCOUNT_TO_ACCOUNT", HttpStatus.OK, StatusService.SUCCESSFUL, true);
+        cashIn(mockMvc, ACCESS_TOKEN, uniqueIdentifier1.getData().getUniqueIdentifier(), new Date().getTime() + "", String.valueOf(Long.parseLong(minAmount) + 1), NATIONAL_CODE_CORRECT, walletAccountObjectOptional.getAccountNumber(), "", "", "ACCOUNT_TO_ACCOUNT", HttpStatus.OK, StatusService.DUPLICATE_UUID, false);
     }
 
     @Test
@@ -342,7 +342,7 @@ class CacheControllerTest extends WalletApplicationTests {
                     walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
                     "true","test cashInFailMinAmount");
         }
-        cashIn(mockMvc, ACCESS_TOKEN, uniqueIdentifier1.getData().getUniqueIdentifier(), refNumber, amount, NATIONAL_CODE_CORRECT, walletAccountObjectOptional.getAccountNumber(), "", "", HttpStatus.OK, StatusService.SUCCESSFUL, true);
+        cashIn(mockMvc, ACCESS_TOKEN, uniqueIdentifier1.getData().getUniqueIdentifier(), refNumber, amount, NATIONAL_CODE_CORRECT, walletAccountObjectOptional.getAccountNumber(), "", "", "ACCOUNT_TO_ACCOUNT", HttpStatus.OK, StatusService.SUCCESSFUL, true);
     }
 
 
@@ -363,7 +363,7 @@ class CacheControllerTest extends WalletApplicationTests {
                     walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
                     "true","test cashInFailMinAmount");
         }
-        cashIn(mockMvc, ACCESS_TOKEN, uniqueIdentifier1.getData().getUniqueIdentifier(), refNumber, String.valueOf(Long.parseLong(amount) + 1), NATIONAL_CODE_CORRECT, walletAccountObjectOptional.getAccountNumber(), "", "", HttpStatus.OK, StatusService.PRICE_NOT_SAME_WITH_UUID, false);
+        cashIn(mockMvc, ACCESS_TOKEN, uniqueIdentifier1.getData().getUniqueIdentifier(), refNumber, String.valueOf(Long.parseLong(amount) + 1), NATIONAL_CODE_CORRECT, walletAccountObjectOptional.getAccountNumber(), "", "", "ACCOUNT_TO_ACCOUNT", HttpStatus.OK, StatusService.PRICE_NOT_SAME_WITH_UUID, false);
     }
 
 
@@ -384,7 +384,7 @@ class CacheControllerTest extends WalletApplicationTests {
                     walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
                     "true","test cashInFailMinAmount");
         }
-        cashIn(mockMvc, ACCESS_TOKEN, uniqueIdentifier1.getData().getUniqueIdentifier(), refNumber, String.valueOf(Long.parseLong(amount)), NATIONAL_CODE_CORRECT, walletAccountObjectOptional.getAccountNumber()+"1", "", "", HttpStatus.OK, StatusService.ACCOUNT_NUMBER_NOT_SAME_WITH_UUID, false);
+        cashIn(mockMvc, ACCESS_TOKEN, uniqueIdentifier1.getData().getUniqueIdentifier(), refNumber, String.valueOf(Long.parseLong(amount)), NATIONAL_CODE_CORRECT, walletAccountObjectOptional.getAccountNumber()+"1", "", "", "ACCOUNT_TO_ACCOUNT", HttpStatus.OK, StatusService.ACCOUNT_NUMBER_NOT_SAME_WITH_UUID, false);
     }
 
 

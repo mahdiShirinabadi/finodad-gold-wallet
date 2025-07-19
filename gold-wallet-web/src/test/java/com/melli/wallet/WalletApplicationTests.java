@@ -80,6 +80,7 @@ public class WalletApplicationTests {
     private static final String BUY_GENERATE_UUID_PATH = "/api/v1/purchase/buy/generate/uuid";
     private static final String SELL_GENERATE_UUID_PATH = "/api/v1/purchase/sell/generate/uuid";
     private static final String BUY_IN_PATH = "/api/v1/purchase/buy";
+    private static final String BUY_DIRECT_IN_PATH = "/api/v1/purchase/buy/direct";
     private static final String SELL_IN_PATH = "/api/v1/purchase/sell";
     private static final String PURCHASE_INQUIRY_IN_PATH = "/api/v1/purchase/inquiry";
 
@@ -300,7 +301,7 @@ public class WalletApplicationTests {
         return objectMapper.readValue(response, typeReference);
     }
 
-    public BaseResponse<CashInResponse> cashIn(MockMvc mockMvc, String token, String uniqueIdentifier, String referenceNumber, String amount, String nationalCode, String accountNumber, String sign, String additionalData, HttpStatus httpStatus, int errorCode, boolean success) throws Exception {
+    public BaseResponse<CashInResponse> cashIn(MockMvc mockMvc, String token, String uniqueIdentifier, String referenceNumber, String amount, String nationalCode, String accountNumber, String sign, String additionalData, String cashInType, HttpStatus httpStatus, int errorCode, boolean success) throws Exception {
         CashInWalletRequestJson requestJson = new CashInWalletRequestJson();
         requestJson.setUniqueIdentifier(uniqueIdentifier);
         requestJson.setReferenceNumber(referenceNumber);
@@ -310,6 +311,7 @@ public class WalletApplicationTests {
         requestJson.setAccountNumber(accountNumber);
         requestJson.setSign(sign);
         requestJson.setNationalCode(nationalCode);
+        requestJson.setCashInType(cashInType);
         MockHttpServletRequestBuilder postRequest = buildPostRequest(token, CASH_IN_PATH, mapToJson(requestJson));
         String response = performTest(mockMvc, postRequest, httpStatus, success, errorCode);
         TypeReference<BaseResponse<CashInResponse>> typeReference = new TypeReference<>() {
@@ -330,6 +332,27 @@ public class WalletApplicationTests {
         requestJson.setAdditionalData(additionalData);
         requestJson.setSign(sign);
         MockHttpServletRequestBuilder postRequest = buildPostRequest(token, BUY_IN_PATH, mapToJson(requestJson));
+        String response = performTest(mockMvc, postRequest, httpStatus, success, errorCode);
+        TypeReference<BaseResponse<PurchaseResponse>> typeReference = new TypeReference<>() {
+        };
+        return objectMapper.readValue(response, typeReference);
+    }
+
+    public BaseResponse<PurchaseResponse> buyDirect(MockMvc mockMvc, String refNumber, String token, String uniqueIdentifier, String quantity, String price, String commissionCurrency, String commission, String nationalCode, String currency, String merchantId, String walletAccountNumber, String sign, String additionalData, HttpStatus httpStatus, int errorCode, boolean success) throws Exception {
+        BuyDirectWalletRequestJson requestJson = new BuyDirectWalletRequestJson();
+        requestJson.setUniqueIdentifier(uniqueIdentifier);
+        requestJson.setQuantity(quantity);
+        requestJson.setTotalPrice(price);
+        requestJson.setCommissionObject(new CommissionObject(commissionCurrency, commission));
+        requestJson.setNationalCode(nationalCode);
+        requestJson.setCurrency(currency);
+        requestJson.setMerchantId(merchantId);
+        requestJson.setWalletAccountNumber(walletAccountNumber);
+        requestJson.setAdditionalData(additionalData);
+        requestJson.setSign(sign);
+        requestJson.setRefNumber(refNumber);
+
+        MockHttpServletRequestBuilder postRequest = buildPostRequest(token, BUY_DIRECT_IN_PATH, mapToJson(requestJson));
         String response = performTest(mockMvc, postRequest, httpStatus, success, errorCode);
         TypeReference<BaseResponse<PurchaseResponse>> typeReference = new TypeReference<>() {
         };

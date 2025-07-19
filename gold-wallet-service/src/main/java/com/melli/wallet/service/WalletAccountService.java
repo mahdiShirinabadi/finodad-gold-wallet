@@ -31,6 +31,7 @@ public interface WalletAccountService {
     WalletAccountEntity findByWalletAndWalletAccountCurrencyId(WalletEntity walletEntity, long walletAccountCurrencyId);
 
     WalletAccountEntity findByAccountNumber(String account);
+    WalletAccountEntity findById(Long id) throws InternalServiceException;
 
     BigDecimal getBalance(long walletAccountId);
 

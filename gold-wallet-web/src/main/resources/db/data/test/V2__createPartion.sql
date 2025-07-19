@@ -1,5 +1,10 @@
 CREATE TABLE if not exists transaction_part_0000000001 PARTITION OF transaction_part FOR VALUES FROM (1) TO (100000);
 
+insert into resource(created_by, created_at, name, fa_name, display)
+values ('system', 'now()', 'BUY_DIRECT', 'لیست پذیرنده ها', 1)
+    on conflict do nothing;
+
+
 insert into role_resource(created_by, created_at, role_id, resource_id)
 values ('system', 'now()', (select id from role_ where name='WEB_PROFILE'), (select id from resource where name='WALLET_CREATE'));
 insert into role_resource(created_by, created_at, role_id, resource_id)
@@ -26,6 +31,8 @@ insert into role_resource(created_by, created_at, role_id, resource_id)
 values ('system', 'now()', (select id from role_ where name='WEB_PROFILE'), (select id from resource where name='GENERATE_CASH_IN_UNIQUE_IDENTIFIER'));
 insert into role_resource(created_by, created_at, role_id, resource_id)
 values ('system', 'now()', (select id from role_ where name='WEB_PROFILE'), (select id from resource where name='MERCHANT_LIST'));
+insert into role_resource(created_by, created_at, role_id, resource_id)
+values ('system', 'now()', (select id from role_ where name='WEB_PROFILE'), (select id from resource where name='BUY_DIRECT'));
 
 insert into channel_role(created_by, created_at, role_id, channel_id) values ('system',now(),(select id from role_ where name='WEB_PROFILE'), (select id from channel where username='admin'));
 

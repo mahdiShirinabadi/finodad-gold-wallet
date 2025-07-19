@@ -51,7 +51,8 @@ public class TransactionServiceImplementation implements TransactionService {
         transaction.setCreatedAt(new Date());
         transaction.setCreatedBy("System");
         transaction.setBalance(walletBalance.add(transaction.getAmount()));
-        walletAccountService.increaseBalance(transaction.getWalletAccountEntity().getId(), transaction.getAmount());
+        transaction.setWalletAccountEntity(walletAccountService.findById(transaction.getWalletAccountEntity().getId()));
+        walletAccountService.increaseBalance(walletAccountService.findById(transaction.getWalletAccountEntity().getId()).getId(), transaction.getAmount());
         transactionRepository.save(transaction);
         log.info("finish deposit amount ( {} ) from walletAccountId ({})", transaction.getAmount(), transaction.getWalletAccountEntity().getId());
     }
@@ -74,11 +75,12 @@ public class TransactionServiceImplementation implements TransactionService {
         transaction.setType(TransactionEntity.WITHDRAW);
         transaction.setCreatedAt(new Date());
         transaction.setCreatedBy("System");
-        int result = walletAccountService.decreaseBalance(transaction.getWalletAccountEntity().getId(), transaction.getAmount());
+        int result = walletAccountService.decreaseBalance(walletAccountService.findById(transaction.getWalletAccountEntity().getId()).getId(), transaction.getAmount());
         if (result <= 0) {
             log.error("Balance of wallet({}) now is ({}), is less than withdraw amount({}) !!!", transaction.getWalletAccountEntity().getId(), walletBalance, transaction.getAmount());
             throw new InternalServiceException("Balance of walletAccountId( " + transaction.getWalletAccountEntity().getId() + "), is less than withdraw amount(" + transaction.getAmount() + ") !!!", StatusService.BALANCE_IS_NOT_ENOUGH, HttpStatus.OK);
         }
+        transaction.setWalletAccountEntity(walletAccountService.findById(transaction.getWalletAccountEntity().getId()));
         transactionRepository.save(transaction);
         log.info("finish withdraw amount ({}) from walletAccountId ({})", transaction.getAmount(), transaction.getWalletAccountEntity().getId());
     }

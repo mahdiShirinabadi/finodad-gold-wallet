@@ -93,7 +93,6 @@ public class PurchaseServiceImplementation implements PurchaseService {
     }
 
     @Override
-    @Transactional(propagation = Propagation.REQUIRED, rollbackFor = Exception.class)
     public PurchaseResponse sell(SellRequestDTO sellRequestDTO) throws InternalServiceException {
 
         if (!sellRequestDTO.getCurrency().equalsIgnoreCase(sellRequestDTO.getCommissionCurrency())) {
@@ -145,7 +144,6 @@ public class PurchaseServiceImplementation implements PurchaseService {
     }
 
     @Override
-    @Transactional(propagation = Propagation.REQUIRED, rollbackFor = Exception.class)
     public PurchaseResponse buy(BuyRequestDTO buyRequestDTO) throws InternalServiceException {
 
         // Validate and retrieve currencies
@@ -188,7 +186,7 @@ public class PurchaseServiceImplementation implements PurchaseService {
         ), buyRequestDTO.getUniqueIdentifier());
     }
 
-    @Transactional(propagation = Propagation.REQUIRED, rollbackFor = Exception.class)
+
     public PurchaseResponse buyDirect(BuyRequestDTO buyRequestDTO) throws InternalServiceException {
 
         //first charge rial account and after that purchase (only in accountToAccount)
@@ -346,6 +344,8 @@ public class PurchaseServiceImplementation implements PurchaseService {
                 });
     }
 
+
+    @Transactional(propagation = Propagation.REQUIRED, rollbackFor = Exception.class)
     public PurchaseResponse processBuy(
             PurchaseObjectDto purchaseObjectDto
     ) throws InternalServiceException {
@@ -374,7 +374,8 @@ public class PurchaseServiceImplementation implements PurchaseService {
         return helper.fillPurchaseResponse(purchaseRequest);
     }
 
-    private PurchaseResponse processSell(
+    @Transactional(propagation = Propagation.REQUIRED, rollbackFor = Exception.class)
+    public PurchaseResponse processSell(
             PurchaseObjectDto purchaseObjectDto
     ) throws InternalServiceException {
         log.info("Starting sell for uniqueIdentifier {}, nationalCode {}", purchaseObjectDto.getUniqueIdentifier(), purchaseObjectDto.getNationalCode());

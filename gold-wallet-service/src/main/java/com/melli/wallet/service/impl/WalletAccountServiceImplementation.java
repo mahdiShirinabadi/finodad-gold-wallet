@@ -45,6 +45,12 @@ public class WalletAccountServiceImplementation implements WalletAccountService 
         return walletAccountRepository.findByAccountNumber(accountNumber);
     }
 
+    @Override
+    public WalletAccountEntity findById(Long id) throws InternalServiceException {
+        return walletAccountRepository.findById(id).orElseThrow(()->{
+            return new InternalServiceException("walletAccount is not found", StatusService.WALLET_ACCOUNT_NOT_FOUND, HttpStatus.INTERNAL_SERVER_ERROR);
+        });
+    }
 
     @Override
     public List<WalletAccountEntity> findByWallet(WalletEntity wallet) {
