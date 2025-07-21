@@ -142,6 +142,7 @@ public class CashInServiceImplementation implements CashInService {
             cashInRequestEntity.setAdditionalData(chargeObjectDTO.getAdditionalData());
 
             TransactionEntity transaction = new TransactionEntity();
+            transaction.setRrnEntity(rrnEntity);
             transaction.setAmount(BigDecimal.valueOf(Long.parseLong(chargeObjectDTO.getAmount())));
             transaction.setWalletAccountEntity(walletAccountEntity);
             transaction.setAdditionalData(chargeObjectDTO.getAdditionalData());
