@@ -3,11 +3,14 @@ package com.melli.wallet.service.impl;
 import com.melli.wallet.ConstantRedisName;
 import com.melli.wallet.domain.master.entity.WalletTypeEntity;
 import com.melli.wallet.domain.master.persistence.WalletTypeRepository;
+import com.melli.wallet.exception.InternalServiceException;
+import com.melli.wallet.service.StatusService;
 import com.melli.wallet.service.WalletTypeService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -40,5 +43,13 @@ public class WalletTypeServiceImplementation implements WalletTypeService {
     @Cacheable(key = "{#name}", unless = "#result == null")
     public WalletTypeEntity getByName(String name) {
         return walletTypeRepository.findByName(name);
+    }
+
+    @Override
+    public WalletTypeEntity getById(Long id) throws InternalServiceException {
+        return walletTypeRepository.findById(id).orElseThrow(() -> {
+            log.error("wallet type with id ({}) not found", id);
+            return new InternalServiceException("Wallet type not found", StatusService.WALLET_TYPE_NOT_FOUND, HttpStatus.OK);
+        });
     }
 }

@@ -2,14 +2,14 @@ package com.melli.wallet.domain.request.limitation;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.melli.wallet.NamingProperty;
-import com.melli.wallet.annotation.number.NumberValidation;
 import com.melli.wallet.annotation.string.StringValidation;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 /**
- * Class Name: UpdateLimitationGeneralRequest
+ * Class Name: UpdateLimitationGeneralRequestJson
  * Author: Mahdi Shirinabadi
  * Date: 1/20/2025
  */
@@ -20,18 +20,20 @@ import lombok.*;
 @ToString
 public class UpdateLimitationGeneralRequestJson {
 
-    @Schema(name = NamingProperty.ID)
+    @Schema(name = NamingProperty.ID, required = true)
     @JsonProperty(NamingProperty.ID)
-    @NotBlank(message = "Limitation id is required")
-    @NumberValidation
+    @NotNull(message = "Limitation ID is required")
+    @StringValidation(label = "شناسه محدودیت")
     private String id;
 
-    @Schema(name = NamingProperty.VALUE)
+    @Schema(name = NamingProperty.VALUE, required = true)
     @JsonProperty(NamingProperty.VALUE)
-    @StringValidation(minLength = "1", message = "Limitation value is required")
+    @NotBlank(message = "Limitation value is required")
+    @StringValidation(label = "مقدار محدودیت")
     private String value;
 
     @Schema(name = NamingProperty.PATTERN)
     @JsonProperty(NamingProperty.PATTERN)
+    @StringValidation(label = "الگوی محدودیت")
     private String pattern;
 } 

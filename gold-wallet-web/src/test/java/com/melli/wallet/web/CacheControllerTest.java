@@ -60,6 +60,7 @@ class CacheControllerTest extends WalletApplicationTests {
     private WalletTypeService walletTypeService;
     @Autowired
     private LimitationGeneralCustomService limitationGeneralCustomService;
+    private LimitationGeneralService limitationGeneralService;
     @Autowired
     private ChannelService channelService;
     @Autowired
@@ -178,7 +179,7 @@ class CacheControllerTest extends WalletApplicationTests {
         String value = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService,USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN,  walletAccountObjectOptional.getAccountNumber());
         if("false".equalsIgnoreCase(value)){
             limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
-                    LimitationGeneralService.ENABLE_CASH_IN, walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
+                    limitationGeneralService.getSetting(LimitationGeneralService.ENABLE_CASH_IN).getId(), walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
                     walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
                     "true","test cashInFailMinAmount");
         }
@@ -189,14 +190,14 @@ class CacheControllerTest extends WalletApplicationTests {
         if( Long.parseLong(amount) >= Long.parseLong(valueMinAmountCashIn)){
             changeMinAmountCashIn = true;
             limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
-                    LimitationGeneralService.MIN_AMOUNT_CASH_IN, walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
+                    limitationGeneralService.getSetting(LimitationGeneralService.MIN_AMOUNT_CASH_IN).getId(), walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
                     walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
                     String.valueOf(Long.parseLong(valueMinAmountCashIn) - 1),"test cashInFailMinAmount");
         }
         generateCashInUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, amount, walletAccountObjectOptional.getAccountNumber(), HttpStatus.OK, StatusService.AMOUNT_LESS_THAN_MIN, false);
         if(changeMinAmountCashIn){
             limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
-                    LimitationGeneralService.MIN_AMOUNT_CASH_IN, walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
+                    limitationGeneralService.getSetting(LimitationGeneralService.MIN_AMOUNT_CASH_IN).getId(), walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
                     walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
                     valueMinAmountCashIn,"test cashInFailMinAmount");
         }
@@ -214,7 +215,7 @@ class CacheControllerTest extends WalletApplicationTests {
         String value = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService,USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN,  walletAccountObjectOptional.getAccountNumber());
         if("false".equalsIgnoreCase(value)){
             limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
-                    LimitationGeneralService.ENABLE_CASH_IN, walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
+                    limitationGeneralService.getSetting(LimitationGeneralService.ENABLE_CASH_IN).getId(), walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
                     walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
                     "true","test cashInFailMinAmount");
         }
@@ -225,7 +226,7 @@ class CacheControllerTest extends WalletApplicationTests {
         if( Long.parseLong(amount) <= Long.parseLong(valueMaxAmountCashIn)){
             changeMaxAmountCashIn = true;
             limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
-                    LimitationGeneralService.MAX_WALLET_BALANCE, walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
+                    limitationGeneralService.getSetting(LimitationGeneralService.MAX_WALLET_BALANCE).getId(), walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
                     walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
                     String.valueOf(Long.parseLong(amount) - 1),"test cashInFailMaxAmount");
         }
@@ -233,7 +234,7 @@ class CacheControllerTest extends WalletApplicationTests {
         generateCashInUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, amount, walletAccountObjectOptional.getAccountNumber(), HttpStatus.OK, StatusService.AMOUNT_BIGGER_THAN_MAX, false);
         if(changeMaxAmountCashIn){
             limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
-                    LimitationGeneralService.MAX_WALLET_BALANCE, walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
+                    limitationGeneralService.getSetting(LimitationGeneralService.MAX_WALLET_BALANCE).getId(), walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
                     walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
                     valueMaxAmountCashIn,"test cashInFailMaxAmount");
         }
@@ -253,7 +254,7 @@ class CacheControllerTest extends WalletApplicationTests {
         String valueEnableCashIn = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService,USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN,  walletAccountObjectOptional.getAccountNumber());
         if("false".equalsIgnoreCase(valueEnableCashIn)){
             limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
-                    LimitationGeneralService.ENABLE_CASH_IN, walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
+                    limitationGeneralService.getSetting(LimitationGeneralService.ENABLE_CASH_IN).getId(), walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
                     walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
                     "true","test cashInFailMinAmount");
         }
@@ -264,14 +265,14 @@ class CacheControllerTest extends WalletApplicationTests {
         if( Long.parseLong(amount) <= Long.parseLong(valueMaxWalletBalance)){
             changeMaxBalance = true;
             limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
-                    LimitationGeneralService.MAX_WALLET_BALANCE, walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
+                    limitationGeneralService.getSetting(LimitationGeneralService.MAX_WALLET_BALANCE).getId(), walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
                     walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
                     String.valueOf(Long.parseLong(amount) - 1),"test cashInFailMaxBalance");
         }
         generateCashInUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, amount, walletAccountObjectOptional.getAccountNumber(), HttpStatus.OK, StatusService.BALANCE_MORE_THAN_STANDARD, false);
         if(changeMaxBalance){
             limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
-                    LimitationGeneralService.MAX_WALLET_BALANCE, walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
+                    limitationGeneralService.getSetting(LimitationGeneralService.MAX_WALLET_BALANCE).getId(), walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
                     walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
                     valueMaxWalletBalance,"test cashInFailMaxBalance");
         }
@@ -292,7 +293,7 @@ class CacheControllerTest extends WalletApplicationTests {
         String value = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService,USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN,  walletAccountObjectOptional.getAccountNumber());
         if("false".equalsIgnoreCase(value)){
             limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
-                    LimitationGeneralService.ENABLE_CASH_IN, walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
+                    limitationGeneralService.getSetting(LimitationGeneralService.ENABLE_CASH_IN).getId(), walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
                     walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
                     "true","test cashInFailMinAmount");
         }
@@ -315,7 +316,7 @@ class CacheControllerTest extends WalletApplicationTests {
         String value = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService,USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN,  walletAccountObjectOptional.getAccountNumber());
         if("false".equalsIgnoreCase(value)){
             limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
-                    LimitationGeneralService.ENABLE_CASH_IN, walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
+                    limitationGeneralService.getSetting(LimitationGeneralService.ENABLE_CASH_IN).getId(), walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
                     walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
                     "true","test cashInFailMinAmount");
         }
@@ -338,7 +339,7 @@ class CacheControllerTest extends WalletApplicationTests {
         String value = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService,USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN,  walletAccountObjectOptional.getAccountNumber());
         if("false".equalsIgnoreCase(value)){
             limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
-                    LimitationGeneralService.ENABLE_CASH_IN, walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
+                    limitationGeneralService.getSetting(LimitationGeneralService.ENABLE_CASH_IN).getId(), walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
                     walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
                     "true","test cashInFailMinAmount");
         }
@@ -359,7 +360,7 @@ class CacheControllerTest extends WalletApplicationTests {
         String value = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService,USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN,  walletAccountObjectOptional.getAccountNumber());
         if("false".equalsIgnoreCase(value)){
             limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
-                    LimitationGeneralService.ENABLE_CASH_IN, walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
+                    limitationGeneralService.getSetting(LimitationGeneralService.ENABLE_CASH_IN).getId(), walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
                     walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
                     "true","test cashInFailMinAmount");
         }
@@ -380,7 +381,7 @@ class CacheControllerTest extends WalletApplicationTests {
         String value = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService,USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN,  walletAccountObjectOptional.getAccountNumber());
         if("false".equalsIgnoreCase(value)){
             limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
-                    LimitationGeneralService.ENABLE_CASH_IN, walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
+                    limitationGeneralService.getSetting(LimitationGeneralService.ENABLE_CASH_IN).getId(), walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
                     walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
                     "true","test cashInFailMinAmount");
         }
@@ -399,7 +400,7 @@ class CacheControllerTest extends WalletApplicationTests {
         String value = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService,USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN,  walletAccountObjectOptional.getAccountNumber());
         if("false".equalsIgnoreCase(value)){
             limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
-                    LimitationGeneralService.ENABLE_CASH_IN, walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
+                    limitationGeneralService.getSetting(LimitationGeneralService.ENABLE_CASH_IN).getId(), walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
                     walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
                     "true","test cashInFailMinAmount");
         }
@@ -423,7 +424,7 @@ class CacheControllerTest extends WalletApplicationTests {
         String value = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService,USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN,  walletAccountObjectOptional.getAccountNumber());
         if("false".equalsIgnoreCase(value)){
             limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
-                    LimitationGeneralService.ENABLE_CASH_IN, walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
+                    limitationGeneralService.getSetting(LimitationGeneralService.ENABLE_CASH_IN).getId(), walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
                     walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
                     "true","test cashInFailMinAmount");
         }
@@ -452,7 +453,7 @@ class CacheControllerTest extends WalletApplicationTests {
         String value = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService,USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN,  walletAccountObjectOptional.getAccountNumber());
         if("false".equalsIgnoreCase(value)){
             limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
-                    LimitationGeneralService.ENABLE_CASH_IN, walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
+                    limitationGeneralService.getSetting(LimitationGeneralService.ENABLE_CASH_IN).getId(), walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
                     walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
                     "true","test cashInFailMinAmount");
         }

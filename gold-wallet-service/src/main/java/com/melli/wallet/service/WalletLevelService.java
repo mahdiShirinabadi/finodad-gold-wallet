@@ -1,6 +1,7 @@
 package com.melli.wallet.service;
 
 import com.melli.wallet.domain.master.entity.WalletLevelEntity;
+import com.melli.wallet.exception.InternalServiceException;
 
 import java.util.List;
 
@@ -18,4 +19,5 @@ public interface WalletLevelService {
 
     List<WalletLevelEntity> getAll();
     void clearCache();
+    WalletLevelEntity getById(Long id) throws InternalServiceException;
 }

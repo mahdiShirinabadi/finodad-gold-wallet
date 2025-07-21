@@ -1,12 +1,24 @@
 package com.melli.wallet.service;
 
 
+import com.melli.wallet.domain.master.entity.ChannelEntity;
 import com.melli.wallet.domain.master.entity.LimitationGeneralEntity;
+import com.melli.wallet.domain.master.entity.SettingGeneralEntity;
+import com.melli.wallet.domain.response.limitation.GeneralLimitationListResponse;
 import com.melli.wallet.exception.InternalServiceException;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
+import java.util.Map;
 
 public interface LimitationGeneralService {
+
+    default Pageable getPageableConfig(SettingGeneralService settingService, Integer page, Integer size) {
+        SettingGeneralEntity settingPage = settingService.getSetting(SettingGeneralService.SETTLE_DEFAULT_PAGE);
+        SettingGeneralEntity settingSize = settingService.getSetting(SettingGeneralService.SETTLE_DEFAULT_SIZE);
+        return PageRequest.of(page == null ? Integer.parseInt(settingPage.getValue()) : page, size == null ? Integer.parseInt(settingSize.getValue()) : size);
+    }
     //cashIn
     String ENABLE_CASH_IN = "ENABLE_CASH_IN";
     String MIN_AMOUNT_CASH_IN = "MIN_AMOUNT_CASH_IN";
@@ -37,6 +49,9 @@ public interface LimitationGeneralService {
 
     List<LimitationGeneralEntity> getLimitationGeneralEntities() throws InternalServiceException;
     LimitationGeneralEntity getSetting(String name);
+    LimitationGeneralEntity getById(Long id) throws InternalServiceException;
     public void clearCache();
     void save(LimitationGeneralEntity setting) throws InternalServiceException;
+    GeneralLimitationListResponse getGeneralLimitationList(ChannelEntity channelEntity, Map<String, String> mapParameter) throws InternalServiceException;
+
 }

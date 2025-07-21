@@ -20,6 +20,7 @@ public interface ResourceService {
     String SELL = "SELL";
     String SETTING_LIST = "SETTING_LIST";
     String LIMITATION_LIST = "LIMITATION_LIST";
+    String LIMITATION_MANAGE = "LIMITATION_MANAGE";
 
     ResourceEntity getRequestType(String name);
 

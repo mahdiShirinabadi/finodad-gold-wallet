@@ -13,5 +13,6 @@ import java.util.List;
 public interface LimitationGeneralCustomRepository extends CrudRepository<LimitationGeneralCustomEntity, Long> {
 
     List<LimitationGeneralCustomEntity> findByLimitationGeneralEntityAndEndTimeIsNull(LimitationGeneralEntity limitationGeneralEntity);
+    List<LimitationGeneralCustomEntity> findByEndTimeIsNull();
     Page<LimitationGeneralCustomEntity> findAll(Specification<LimitationGeneralCustomEntity> spec, Pageable pageable);
 }

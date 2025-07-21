@@ -63,6 +63,18 @@ public class NamingProperty {
     public static final String AMOUNT = "amount";
     public static final String SETTLEMENT_STATUS = "settlementStatus";
     public static final String CASH_IN_TYPE = "cashInType";
+    public static final String LIMITATION_GENERAL_ID = "limitationGeneralId";
+    public static final String LIMITATION_GENERAL_NAME = "limitationGeneralName";
+    public static final String WALLET_LEVEL_ID = "walletLevelId";
+    public static final String WALLET_LEVEL_NAME = "walletLevelName";
+    public static final String WALLET_ACCOUNT_TYPE_ID = "walletAccountTypeId";
+    public static final String WALLET_ACCOUNT_TYPE_NAME = "walletAccountTypeName";
+    public static final String WALLET_ACCOUNT_CURRENCY_ID = "walletAccountCurrencyId";
+    public static final String WALLET_ACCOUNT_CURRENCY_NAME = "walletAccountCurrencyName";
+    public static final String WALLET_TYPE_ID = "walletTypeId";
+    public static final String WALLET_TYPE_NAME = "walletTypeName";
+    public static final String CHANNEL_ID = "channelId";
+    public static final String END_TIME = "endTime";
 
 
     private NamingProperty() {

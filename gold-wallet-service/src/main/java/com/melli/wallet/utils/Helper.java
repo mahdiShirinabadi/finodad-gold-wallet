@@ -8,8 +8,7 @@ import com.melli.wallet.domain.response.cash.CashInResponse;
 import com.melli.wallet.domain.response.cash.CashInTrackResponse;
 import com.melli.wallet.domain.response.cash.CashOutResponse;
 import com.melli.wallet.domain.response.cash.CashOutTrackResponse;
-import com.melli.wallet.domain.response.limitation.LimitationListResponse;
-import com.melli.wallet.domain.response.limitation.LimitationObject;
+import com.melli.wallet.domain.response.limitation.*;
 import com.melli.wallet.domain.response.login.*;
 import com.melli.wallet.domain.response.channel.ChannelObject;
 import com.melli.wallet.domain.response.purchase.*;
@@ -23,6 +22,7 @@ import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.ObjectUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -149,6 +149,78 @@ public class Helper {
 
     public LimitationObject fillLimitationObject(LimitationGeneralEntity limitationGeneralEntity) {
         return new LimitationObject(limitationGeneralEntity.getName(), limitationGeneralEntity.getAdditionalData());
+    }
+
+    public GeneralLimitationListResponse fillGeneralLimitationListResponse(Page<LimitationGeneralEntity> limitationGeneralEntityPage) {
+        GeneralLimitationListResponse response = new GeneralLimitationListResponse();
+        response.setSize(limitationGeneralEntityPage.getSize());
+        response.setNumber(limitationGeneralEntityPage.getNumber());
+        response.setTotalPages(limitationGeneralEntityPage.getTotalPages());
+        response.setTotalElements(limitationGeneralEntityPage.getTotalElements());
+        response.setGeneralLimitationList(limitationGeneralEntityPage.getContent().stream().map(this::fillGeneralLimitationObject).toList());
+        return response;
+    }
+
+    public GeneralCustomLimitationListResponse fillGeneralCustomLimitationListResponse(Page<LimitationGeneralCustomEntity> limitationGeneralCustomEntityPage) {
+        GeneralCustomLimitationListResponse response = new GeneralCustomLimitationListResponse();
+        response.setSize(limitationGeneralCustomEntityPage.getSize());
+        response.setNumber(limitationGeneralCustomEntityPage.getNumber());
+        response.setTotalPages(limitationGeneralCustomEntityPage.getTotalPages());
+        response.setTotalElements(limitationGeneralCustomEntityPage.getTotalElements());
+        response.setGeneralCustomLimitationList(limitationGeneralCustomEntityPage.getContent().stream().map(this::fillGeneralCustomLimitationObject).toList());
+        return response;
+    }
+
+    public GeneralLimitationObject fillGeneralLimitationObject(LimitationGeneralEntity limitationGeneralEntity) {
+        GeneralLimitationObject object = new GeneralLimitationObject();
+        object.setId(String.valueOf(limitationGeneralEntity.getId()));
+        object.setName(limitationGeneralEntity.getName());
+        object.setValue(limitationGeneralEntity.getValue());
+        object.setPattern(limitationGeneralEntity.getPattern());
+        object.setAdditionalData(limitationGeneralEntity.getAdditionalData());
+        object.setCreateTime(limitationGeneralEntity.getCreatedAt() != null ? 
+            DateUtils.getLocaleDate(DateUtils.FARSI_LOCALE, limitationGeneralEntity.getCreatedAt(), FORMAT_DATE_RESPONSE, false) : null);
+        object.setCreateBy(limitationGeneralEntity.getCreatedBy());
+        object.setUpdateTime(limitationGeneralEntity.getUpdatedAt() != null ? 
+            DateUtils.getLocaleDate(DateUtils.FARSI_LOCALE, limitationGeneralEntity.getUpdatedAt(), FORMAT_DATE_RESPONSE, false) : null);
+        object.setUpdateBy(limitationGeneralEntity.getUpdatedBy());
+        return object;
+    }
+
+    public GeneralCustomLimitationObject fillGeneralCustomLimitationObject(LimitationGeneralCustomEntity limitationGeneralCustomEntity) {
+        GeneralCustomLimitationObject object = new GeneralCustomLimitationObject();
+        object.setId(String.valueOf(limitationGeneralCustomEntity.getId()));
+        object.setLimitationGeneralId(String.valueOf(limitationGeneralCustomEntity.getLimitationGeneralEntity().getId()));
+        object.setLimitationGeneralName(limitationGeneralCustomEntity.getLimitationGeneralEntity().getName());
+        object.setGeneralLimitationObject(this.fillGeneralLimitationObject(limitationGeneralCustomEntity.getLimitationGeneralEntity()));
+        object.setValue(limitationGeneralCustomEntity.getValue());
+        object.setAdditionalData(limitationGeneralCustomEntity.getAdditionalData());
+        object.setWalletLevelId(limitationGeneralCustomEntity.getWalletLevelEntity() != null ? 
+            String.valueOf(limitationGeneralCustomEntity.getWalletLevelEntity().getId()) : null);
+        object.setWalletLevelName(limitationGeneralCustomEntity.getWalletLevelEntity() != null ? 
+            limitationGeneralCustomEntity.getWalletLevelEntity().getName() : null);
+        object.setWalletAccountTypeId(limitationGeneralCustomEntity.getWalletAccountTypeEntity() != null ? 
+            String.valueOf(limitationGeneralCustomEntity.getWalletAccountTypeEntity().getId()) : null);
+        object.setWalletAccountTypeName(limitationGeneralCustomEntity.getWalletAccountTypeEntity() != null ? 
+            limitationGeneralCustomEntity.getWalletAccountTypeEntity().getName() : null);
+        object.setWalletAccountCurrencyId(limitationGeneralCustomEntity.getWalletAccountCurrencyEntity() != null ? 
+            String.valueOf(limitationGeneralCustomEntity.getWalletAccountCurrencyEntity().getId()) : null);
+        object.setWalletAccountCurrencyName(limitationGeneralCustomEntity.getWalletAccountCurrencyEntity() != null ? 
+            limitationGeneralCustomEntity.getWalletAccountCurrencyEntity().getName() : null);
+        object.setWalletTypeId(limitationGeneralCustomEntity.getWalletTypeEntity() != null ? 
+            String.valueOf(limitationGeneralCustomEntity.getWalletTypeEntity().getId()) : null);
+        object.setWalletTypeName(limitationGeneralCustomEntity.getWalletTypeEntity() != null ? 
+            limitationGeneralCustomEntity.getWalletTypeEntity().getName() : null);
+        object.setChannelId(limitationGeneralCustomEntity.getChannelEntity() != null ? 
+            String.valueOf(limitationGeneralCustomEntity.getChannelEntity().getId()) : null);
+        object.setChannelName(limitationGeneralCustomEntity.getChannelEntity() != null ? 
+            limitationGeneralCustomEntity.getChannelEntity().getUsername() : null);
+        object.setCreateTime(limitationGeneralCustomEntity.getCreatedAt() != null ? 
+            DateUtils.getLocaleDate(DateUtils.FARSI_LOCALE, limitationGeneralCustomEntity.getCreatedAt(), FORMAT_DATE_RESPONSE, false) : null);
+        object.setCreateBy(limitationGeneralCustomEntity.getCreatedBy());
+        object.setEndTime(limitationGeneralCustomEntity.getEndTime() != null ? 
+            DateUtils.getLocaleDate(DateUtils.FARSI_LOCALE, limitationGeneralCustomEntity.getEndTime(), FORMAT_DATE_RESPONSE, false) : null);
+        return object;
     }
 
     public CashInResponse fillCashInResponse(String nationalCode,  String uuid, String balance, String accountNumber) {

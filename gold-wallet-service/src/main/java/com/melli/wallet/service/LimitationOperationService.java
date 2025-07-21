@@ -12,4 +12,6 @@ import com.melli.wallet.exception.InternalServiceException;
 public interface LimitationOperationService {
     String getValue(ChannelEntity channelEntity, String limitationName, String accountNumber, String nationalCode, String ip) throws InternalServiceException;
     LimitationListResponse getAll() throws InternalServiceException;
+    void updateLimitationGeneral(Long id, String value, String pattern, ChannelEntity channelEntity) throws InternalServiceException;
+    void insertLimitationGeneralCustom(Long limitationGeneralId, String value, String additionalData, Long walletLevelId, Long walletAccountTypeId, Long walletAccountCurrencyId, Long walletTypeId, Long channelId, ChannelEntity channelEntity) throws InternalServiceException;
 }

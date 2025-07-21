@@ -51,4 +51,12 @@ public class WalletAccountCurrencyServiceImplementation implements WalletAccount
     public void clearCache() {
         log.info("clear cache ({})", ConstantRedisName.WALLET_ACCOUNT_CURRENCY_CACHE);
     }
+
+    @Override
+    public WalletAccountCurrencyEntity getById(Long id) throws InternalServiceException {
+        return walletAccountCurrencyRepository.findById(id).orElseThrow(() -> {
+            log.error("wallet account currency with id ({}) not found", id);
+            return new InternalServiceException("Wallet account currency not found",  StatusService.WALLET_ACCOUNT_CURRENCY_NOT_FOUND, HttpStatus.OK);
+        });
+    }
 }

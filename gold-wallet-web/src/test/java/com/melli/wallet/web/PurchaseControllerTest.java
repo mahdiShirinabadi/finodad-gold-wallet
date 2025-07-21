@@ -77,6 +77,8 @@ class PurchaseControllerTest extends WalletApplicationTests {
     private WalletBuyLimitationService walletBuyLimitationService;
     @Autowired
     private RequestService requestService;
+    @Autowired
+    private LimitationGeneralService limitationGeneralService;
 
 
     @Test
@@ -234,7 +236,7 @@ class PurchaseControllerTest extends WalletApplicationTests {
         if ("false".equalsIgnoreCase(value)) {
             WalletAccountEntity walletAccountEntity = walletAccountService.findByAccountNumber(walletAccountObjectOptional.getAccountNumber());
             limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
-                    LimitationGeneralService.ENABLE_CASH_IN, walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
+                    limitationGeneralService.getSetting(LimitationGeneralService.ENABLE_CASH_IN).getId(), walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
                     walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
                     "true", "test cashInFailMinAmount");
         }
@@ -272,26 +274,26 @@ class PurchaseControllerTest extends WalletApplicationTests {
         AggregationPurchaseDTO aggregationPurchaseDTO = requestService.findSumAmountByTransactionTypeBetweenDate(new long[]{walletAccountEntity.getId()}, TransactionTypeEnum.BUY.name(), new Date(), new Date());
 
         limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
-                LimitationGeneralService.MAX_DAILY_COUNT_BUY, walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
+                limitationGeneralService.getSetting(LimitationGeneralService.MAX_DAILY_COUNT_BUY).getId(), walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
                 walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
                 aggregationPurchaseDTO.getCountRecord(), "change MAX_DAILY_COUNT_BUY");
 
         generateBuyUuid(mockMvc, ACCESS_TOKEN, walletAccountObjectOptional.getAccountNumber(), price, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusService.BUY_EXCEEDED_COUNT_DAILY_LIMITATION, false);
 
         limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
-                LimitationGeneralService.MAX_DAILY_COUNT_BUY, walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
+                limitationGeneralService.getSetting(LimitationGeneralService.MAX_DAILY_COUNT_BUY).getId(), walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
                 walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
                 valueMaxDailyCount, "change MAX_DAILY_COUNT_BUY");
 
         limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
-                LimitationGeneralService.MAX_DAILY_PRICE_BUY, walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
+                limitationGeneralService.getSetting(LimitationGeneralService.MAX_DAILY_PRICE_BUY).getId(), walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
                 walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
                 aggregationPurchaseDTO.getSumPrice(), "change MAX_DAILY_PRICE_BUY");
 
         generateBuyUuid(mockMvc, ACCESS_TOKEN, walletAccountObjectOptional.getAccountNumber(), price, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusService.BUY_EXCEEDED_AMOUNT_DAILY_LIMITATION, false);
 
         limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
-                LimitationGeneralService.MAX_DAILY_PRICE_BUY, walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
+                limitationGeneralService.getSetting(LimitationGeneralService.MAX_DAILY_PRICE_BUY).getId(), walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
                 walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
                 valueMaxDailyPrice, "change MAX_DAILY_PRICE_BUY");
 
@@ -318,26 +320,26 @@ class PurchaseControllerTest extends WalletApplicationTests {
         AggregationPurchaseDTO aggregationPurchaseDTO = requestService.findSumAmountByTransactionTypeBetweenDate(new long[]{walletAccountEntity.getId()}, TransactionTypeEnum.BUY.name(), fromDate, untilDate);
 
         limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
-                LimitationGeneralService.MAX_MONTHLY_COUNT_BUY, walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
+                limitationGeneralService.getSetting(LimitationGeneralService.MAX_MONTHLY_COUNT_BUY).getId(), walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
                 walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
                 aggregationPurchaseDTO.getCountRecord(), "change MAX_MONTHLY_COUNT_BUY");
 
         generateBuyUuid(mockMvc, ACCESS_TOKEN, walletAccountObjectOptional.getAccountNumber(), price, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusService.BUY_EXCEEDED_COUNT_MONTHLY_LIMITATION, false);
 
         limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
-                LimitationGeneralService.MAX_MONTHLY_PRICE_BUY, walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
+                limitationGeneralService.getSetting(LimitationGeneralService.MAX_MONTHLY_PRICE_BUY).getId(), walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
                 walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
                 valueMaxDailyCount, "change MAX_MONTHLY_PRICE_BUY");
 
         limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
-                LimitationGeneralService.MAX_MONTHLY_COUNT_BUY, walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
+                limitationGeneralService.getSetting(LimitationGeneralService.MAX_MONTHLY_COUNT_BUY).getId(), walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
                 walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
                 aggregationPurchaseDTO.getSumPrice(), "change MAX_MONTHLY_COUNT_BUY");
 
         generateBuyUuid(mockMvc, ACCESS_TOKEN, walletAccountObjectOptional.getAccountNumber(), price, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusService.BUY_EXCEEDED_AMOUNT_MONTHLY_LIMITATION, false);
 
         limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
-                LimitationGeneralService.MAX_MONTHLY_PRICE_BUY, walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
+                limitationGeneralService.getSetting(LimitationGeneralService.MAX_MONTHLY_PRICE_BUY).getId(), walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
                 walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
                 valueMaxDailyPrice, "change MAX_MONTHLY_PRICE_BUY");
 
@@ -368,7 +370,7 @@ class PurchaseControllerTest extends WalletApplicationTests {
         if ("false".equalsIgnoreCase(value)) {
             WalletAccountEntity walletAccountEntity = walletAccountService.findByAccountNumber(walletAccountObjectOptional.getAccountNumber());
             limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
-                    LimitationGeneralService.ENABLE_CASH_IN, walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
+                    limitationGeneralService.getSetting(LimitationGeneralService.ENABLE_CASH_IN).getId(), walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
                     walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
                     "true", "test cashInFailMinAmount");
         }

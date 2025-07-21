@@ -9,8 +9,10 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
+import java.util.Date;
+
 /**
- * Class Name: UpdateLimitationGeneralCustomRequest
+ * Class Name: CreateLimitationGeneralCustomRequestJson
  * Author: Mahdi Shirinabadi
  * Date: 1/20/2025
  */
@@ -21,44 +23,45 @@ import lombok.*;
 @ToString
 public class CreateLimitationGeneralCustomRequestJson {
 
-    @Schema(name = "limitationGeneralId")
-    @JsonProperty("limitationGeneralId")
+    @Schema(name = NamingProperty.ID, required = true)
+    @JsonProperty(NamingProperty.ID)
     @NotNull(message = "General limitation ID is required")
-    @NumberValidation(label = "limitationGeneralId")
-    private Long limitationGeneralId;
+    @NumberValidation(label = "شناسه محدودیت عمومی")
+    private String limitationGeneralId;
 
-    @Schema(name = NamingProperty.VALUE)
+    @Schema(name = NamingProperty.VALUE, required = true)
     @JsonProperty(NamingProperty.VALUE)
-    @StringValidation(minLength = "1", label = NamingProperty.VALUE)
     @NotBlank(message = "Limitation value is required")
+    @StringValidation(label = "مقدار محدودیت")
     private String value;
 
     @Schema(name = NamingProperty.ADDITIONAL_DATA)
     @JsonProperty(NamingProperty.ADDITIONAL_DATA)
+    @StringValidation(label = "اطلاعات اضافی")
     private String additionalData;
 
     @Schema(name = "walletLevelId")
     @JsonProperty("walletLevelId")
-    @NumberValidation(label = "walletLevelId")
-    private Long walletLevelId;
+    @NumberValidation(label = "شناسه سطح کیف پول")
+    private String walletLevelId;
 
     @Schema(name = "walletAccountTypeId")
     @JsonProperty("walletAccountTypeId")
-    @NumberValidation(label = "walletAccountTypeId")
-    private Long walletAccountTypeId;
+    @NumberValidation(label = "شناسه نوع حساب کیف پول")
+    private String walletAccountTypeId;
 
     @Schema(name = "walletAccountCurrencyId")
     @JsonProperty("walletAccountCurrencyId")
-    @NumberValidation(label = "walletAccountCurrencyId")
-    private Long walletAccountCurrencyId;
+    @NumberValidation(label = "شناسه ارز حساب کیف پول")
+    private String walletAccountCurrencyId;
 
     @Schema(name = "walletTypeId")
     @JsonProperty("walletTypeId")
-    @NumberValidation(label = "walletTypeId")
-    private Long walletTypeId;
+    @NumberValidation(label = "شناسه نوع کیف پول")
+    private String walletTypeId;
 
     @Schema(name = "channelId")
     @JsonProperty("channelId")
-    @NumberValidation(label = "channelId")
-    private Long channelId;
+    @NumberValidation(label = "شناسه کانال")
+    private String channelId;
 } 

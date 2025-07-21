@@ -18,4 +18,5 @@ public interface WalletAccountCurrencyService {
     List<WalletAccountCurrencyEntity> getAll();
     void clearCache();
     WalletAccountCurrencyEntity findCurrency(String currency) throws InternalServiceException;
+    WalletAccountCurrencyEntity getById(Long id) throws InternalServiceException;
 }
