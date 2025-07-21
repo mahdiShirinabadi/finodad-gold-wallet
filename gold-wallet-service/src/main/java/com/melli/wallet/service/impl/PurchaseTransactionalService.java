@@ -9,7 +9,6 @@ import com.melli.wallet.domain.response.purchase.PurchaseResponse;
 import com.melli.wallet.exception.InternalServiceException;
 import com.melli.wallet.service.*;
 import com.melli.wallet.utils.Helper;
-import com.melli.wallet.utils.RedisLockService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
@@ -143,7 +142,7 @@ public class PurchaseTransactionalService {
         return request;
     }
 
-    public void buyProcessTransactions(
+    private void buyProcessTransactions(
             PurchaseRequestEntity purchaseRequest, WalletAccountEntity userRialAccount,
             WalletAccountEntity userCurrencyAccount, WalletAccountEntity merchantRialAccount,
             WalletAccountEntity merchantCurrencyAccount, WalletAccountEntity channelCommissionAccount

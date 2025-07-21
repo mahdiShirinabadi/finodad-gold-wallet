@@ -1,16 +1,11 @@
 insert into status(created_by, created_at, code, persian_description) values ('admin',now(),'-1','ایجاد شده');
 insert into status(created_by, created_at, code, persian_description) values ('admin',now(),'0','موفق');
 insert into status(created_by, created_at, code, persian_description) values ('admin',now(),'1','پارامترهای ارسالی معتیر نیست');
-insert into status(created_by, created_at, code, persian_description) values ('admin',now(),'2','');
 insert into status(created_by, created_at, code, persian_description) values ('admin',now(),'3','دسترسی مورد نظر یافت نشد');
 insert into status(created_by, created_at, code, persian_description) values ('admin',now(),'4','نوع درخواست بافت نشد');
-insert into status(created_by, created_at, code, persian_description) values ('admin',now(),'5','');
-insert into status(created_by, created_at, code, persian_description) values ('admin',now(),'6','');
 insert into status(created_by, created_at, code, persian_description) values ('admin',now(),'7','نام کاربری یا رمز عبور نادرست است');
 insert into status(created_by, created_at, code, persian_description) values ('admin',now(),'8','کاربر به سرویس مورد نظر دسترسی ندارد');
 insert into status(created_by, created_at, code, persian_description) values ('admin',now(),'9','توکن ارسالی معتبر نیست');
-insert into status(created_by, created_at, code, persian_description) values ('admin',now(),'10','');
-insert into status(created_by, created_at, code, persian_description) values ('admin',now(),'11','');
 insert into status(created_by, created_at, code, persian_description) values ('admin',now(),'12','کانال مسدود شده است');
 insert into status(created_by, created_at, code, persian_description) values ('admin',now(),'13','آی پی ارسالی معتبر نیست');
 insert into status(created_by, created_at, code, persian_description) values ('admin',now(),'14','درخواستها بیشتر از حد مجاز میباشد');
@@ -18,10 +13,6 @@ insert into status(created_by, created_at, code, persian_description) values ('a
 insert into status(created_by, created_at, code, persian_description) values ('admin',now(),'16','خطا در فراخوانی شاهکار');
 insert into status(created_by, created_at, code, persian_description) values ('admin',now(),'17','عدم تطابق شماهر همراه و کد ملی ارسالی شده');
 insert into status(created_by, created_at, code, persian_description) values ('admin',now(),'18','خطا در ارسال پیام کوتاه');
-insert into status(created_by, created_at, code, persian_description) values ('admin',now(),'19','');
-insert into status(created_by, created_at, code, persian_description) values ('admin',now(),'20','');
-insert into status(created_by, created_at, code, persian_description) values ('admin',now(),'21','');
-insert into status(created_by, created_at, code, persian_description) values ('admin',now(),'22','');
 insert into status(created_by, created_at, code, persian_description) values ('admin',now(),'23','نام کانال تکراری است');
 insert into status(created_by, created_at, code, persian_description) values ('admin',now(),'24','کانال یافت نشد');
 insert into status(created_by, created_at, code, persian_description) values ('admin',now(),'25','کیف پول بافت نشد');
@@ -45,8 +36,6 @@ insert into status(created_by, created_at, code, persian_description) values ('a
 insert into status(created_by, created_at, code, persian_description) values ('admin',now(),'43','موجودی کافی نیست');
 insert into status(created_by, created_at, code, persian_description) values ('admin',now(),'44','رکورد یافت نشد');
 insert into status(created_by, created_at, code, persian_description) values ('admin',now(),'45','پذیرنده یافت نشد');
-insert into status(created_by, created_at, code, persian_description) values ('admin',now(),'46','');
-insert into status(created_by, created_at, code, persian_description) values ('admin',now(),'47','');
 insert into status(created_by, created_at, code, persian_description) values ('admin',now(),'898','رفرش توکن به کاربر متعلق نیست');
 insert into status(created_by, created_at, code, persian_description) values ('admin',now(),'899','رفرش توکن یافت نشد');
 insert into status(created_by, created_at, code, persian_description) values ('admin',now(),'900','رفرش توکن منقضی شده است');
