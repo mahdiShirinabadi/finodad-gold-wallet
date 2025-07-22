@@ -140,7 +140,7 @@ public class GrpcPurchaseServiceImplementation extends PurchaseServiceGrpc.Purch
                             new BigDecimal(request.getCommissionObject().getAmount()),
                             request.getCurrency(),
                             channelIp,
-                            ""
+                            "",request.getCommissionObject().getCurrency()
                     )
             );
 
@@ -184,7 +184,8 @@ public class GrpcPurchaseServiceImplementation extends PurchaseServiceGrpc.Purch
                             new BigDecimal(request.getCommissionObject().getAmount()),
                             request.getCurrency(),
                             channelIp,
-                            request.getRefNumber()
+                            request.getRefNumber(),
+                            request.getCommissionObject().getCurrency()
                     )
             );
 
