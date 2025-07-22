@@ -28,4 +28,5 @@ public class BuyRequestDTO {
     private String currency;
     private String ip;
     private String refNumber;
+    private String commissionType;
 }

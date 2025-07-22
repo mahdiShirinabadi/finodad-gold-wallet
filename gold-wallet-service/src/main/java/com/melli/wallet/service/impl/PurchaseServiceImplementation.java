@@ -155,6 +155,10 @@ public class PurchaseServiceImplementation implements PurchaseService {
         WalletAccountEntity userRialAccount = findUserAccount(userWallet, rialCurrencyEntity, buyRequestDTO.getWalletAccountNumber(), buyRequestDTO.getNationalCode());
 
         // Validate channel commission account
+        if(!WalletAccountCurrencyService.RIAL.equalsIgnoreCase(buyRequestDTO.getCommissionType())){
+            log.error("commission type in buy must it rial!!!");
+            throw new InternalServiceException("commission type must be rial", StatusService.COMMISSION_CURRENCY_NOT_VALID, HttpStatus.OK);
+        }
         WalletAccountEntity channelCommissionAccount = findChannelCommissionAccount(buyRequestDTO.getChannel(), WalletAccountCurrencyService.RIAL);
 
         walletBuyLimitationService.checkGeneral(buyRequestDTO.getChannel(), userRialAccount.getWalletEntity(), new BigDecimal(buyRequestDTO.getPrice()), userRialAccount, buyRequestDTO.getUniqueIdentifier());
@@ -208,6 +212,11 @@ public class PurchaseServiceImplementation implements PurchaseService {
         WalletAccountEntity userRialAccount = findUserAccount(userWallet, rialCurrencyEntity, buyRequestDTO.getWalletAccountNumber(), buyRequestDTO.getNationalCode());
 
         // Validate channel commission account
+        if(!WalletAccountCurrencyService.RIAL.equalsIgnoreCase(buyRequestDTO.getCommissionType())){
+            log.error("commission type in buy must it rial!!!");
+            throw new InternalServiceException("commission type must be rial", StatusService.COMMISSION_CURRENCY_NOT_VALID, HttpStatus.OK);
+        }
+
         WalletAccountEntity channelCommissionAccount = findChannelCommissionAccount(buyRequestDTO.getChannel(), WalletAccountCurrencyService.RIAL);
 
         walletBuyLimitationService.checkGeneral(buyRequestDTO.getChannel(), userRialAccount.getWalletEntity(), new BigDecimal(buyRequestDTO.getPrice()), userRialAccount, buyRequestDTO.getUniqueIdentifier());

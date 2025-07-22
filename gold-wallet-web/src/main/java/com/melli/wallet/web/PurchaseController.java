@@ -89,7 +89,7 @@ public class PurchaseController extends WebController {
 
         PurchaseResponse purchaseResponse = purchaseService.buy(new BuyRequestDTO(requestContext.getChannelEntity(), requestJson.getUniqueIdentifier(), new BigDecimal(requestJson.getQuantity()),
                 Long.parseLong(requestJson.getTotalPrice()), requestJson.getWalletAccountNumber(), requestJson.getAdditionalData(), requestJson.getMerchantId(),
-                requestJson.getNationalCode(), new BigDecimal(requestJson.getCommissionObject().getAmount()), requestJson.getCurrency(), channelIp,""));
+                requestJson.getNationalCode(), new BigDecimal(requestJson.getCommissionObject().getAmount()), requestJson.getCurrency(), channelIp,"", requestJson.getCommissionObject().getCurrency()));
 
         return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse<>(true,purchaseResponse));
     }
@@ -107,7 +107,7 @@ public class PurchaseController extends WebController {
 
         PurchaseResponse purchaseResponse = purchaseService.buyDirect(new BuyRequestDTO(requestContext.getChannelEntity(), requestJson.getUniqueIdentifier(), new BigDecimal(requestJson.getQuantity()),
                 Long.parseLong(requestJson.getTotalPrice()), requestJson.getWalletAccountNumber(), requestJson.getAdditionalData(), requestJson.getMerchantId(),
-                requestJson.getNationalCode(), new BigDecimal(requestJson.getCommissionObject().getAmount()), requestJson.getCurrency(), channelIp,requestJson.getRefNumber()));
+                requestJson.getNationalCode(), new BigDecimal(requestJson.getCommissionObject().getAmount()), requestJson.getCurrency(), channelIp,requestJson.getRefNumber(), requestJson.getCommissionObject().getCurrency()));
 
         return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse<>(true,purchaseResponse));
     }
