@@ -20,4 +20,7 @@ public interface MerchantService {
     MerchantEntity findById(int id);
     void save(MerchantEntity merchant);
     void clearAllCache();
+    
+    String increaseBalance(ChannelEntity channelEntity, String walletAccountNumber, String amount, String merchantId) throws InternalServiceException;
+    String decreaseBalance(ChannelEntity channelEntity, String walletAccountNumber, String amount, String merchantId) throws InternalServiceException;
 }

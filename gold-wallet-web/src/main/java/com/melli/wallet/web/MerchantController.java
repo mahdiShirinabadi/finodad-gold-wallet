@@ -1,6 +1,8 @@
 package com.melli.wallet.web;
 
+import com.melli.wallet.annotation.number.NumberValidation;
 import com.melli.wallet.annotation.string.StringValidation;
+import com.melli.wallet.domain.request.merchant.MerchantBalanceRequest;
 import com.melli.wallet.domain.response.base.BaseResponse;
 import com.melli.wallet.domain.response.purchase.MerchantResponse;
 import com.melli.wallet.domain.response.wallet.CreateWalletResponse;
@@ -21,6 +23,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+
+
 
 /**
  * Class Name: CashEndPoint
@@ -51,13 +55,57 @@ public class MerchantController extends WebController {
 
     @Timed(description = "Time taken to inquiry gold amount")
     @GetMapping(path = "/balance", produces = {MediaType.APPLICATION_JSON_VALUE})
-    @Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "لیست پذیرنده ها")
-    @PreAuthorize("hasAuthority(\""+ ResourceService.MERCHANT_LIST +"\")")
+    @Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "مانده پذیرنده")
+    @PreAuthorize("hasAuthority(\""+ ResourceService.MERCHANT_BALANCE +"\")")
     public ResponseEntity<BaseResponse<WalletBalanceResponse>> getBalanceMerchant(@Valid @StringValidation @RequestParam("merchantId") String merchantId) throws InternalServiceException {
         String channelIp = requestContext.getClientIp();
         String username = requestContext.getChannelEntity().getUsername();
         log.info("start call balance getMerchant in username ===> {}, merchantId ===> {}, from ip ===> {}", username, merchantId, channelIp);
         WalletBalanceResponse response = merchantService.getBalance(requestContext.getChannelEntity(), merchantId);
         return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse<>(true, response));
+    }
+
+    @Timed(description = "Time taken to increase merchant balance")
+    @PostMapping(path = "/balance/increase", produces = {MediaType.APPLICATION_JSON_VALUE})
+    @Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "افزایش مانده پذیرنده")
+    @PreAuthorize("hasAuthority(\""+ ResourceService.MERCHANT_INCREASE_BALANCE +"\")")
+    public ResponseEntity<BaseResponse<String>> increaseBalance(@Valid @RequestBody MerchantBalanceRequest request) throws InternalServiceException {
+        
+        String channelIp = requestContext.getClientIp();
+        String username = requestContext.getChannelEntity().getUsername();
+        log.info("start call increaseBalance in username ===> {}, walletAccountNumber ===> {}, amount ===> {}, merchantId ===> {}, from ip ===> {}", 
+                username, request.getWalletAccountNumber(), request.getAmount(), request.getMerchantId(), channelIp);
+        
+        String traceId = merchantService.increaseBalance(
+                requestContext.getChannelEntity(),
+                request.getWalletAccountNumber(),
+                request.getAmount(),
+                request.getMerchantId()
+        );
+        
+        log.info("finish increaseBalance for merchant {} with amount {} and traceId {}", request.getMerchantId(), request.getAmount(), traceId);
+        return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse<>(true, "Balance increased successfully. TraceId: " + traceId));
+    }
+
+    @Timed(description = "Time taken to decrease merchant balance")
+    @PostMapping(path = "/balance/decrease", produces = {MediaType.APPLICATION_JSON_VALUE})
+    @Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "کاهش مانده پذیرنده")
+    @PreAuthorize("hasAuthority(\""+ ResourceService.MERCHANT_DECREASE_BALANCE +"\")")
+    public ResponseEntity<BaseResponse<String>> decreaseBalance(@Valid @RequestBody MerchantBalanceRequest request) throws InternalServiceException {
+        
+        String channelIp = requestContext.getClientIp();
+        String username = requestContext.getChannelEntity().getUsername();
+        log.info("start call decreaseBalance in username ===> {}, walletAccountNumber ===> {}, amount ===> {}, merchantId ===> {}, from ip ===> {}", 
+                username, request.getWalletAccountNumber(), request.getAmount(), request.getMerchantId(), channelIp);
+        
+        String traceId = merchantService.decreaseBalance(
+                requestContext.getChannelEntity(),
+                request.getWalletAccountNumber(),
+                request.getAmount(),
+                request.getMerchantId()
+        );
+        
+        log.info("finish decreaseBalance for merchant {} with amount {} and traceId {}", request.getMerchantId(), request.getAmount(), traceId);
+        return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse<>(true, "Balance decreased successfully. TraceId: " + traceId));
     }
 }

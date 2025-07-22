@@ -12,6 +12,8 @@ public interface RequestTypeService {
 	String CASH_OUT = "cash_out";
 	String BUY = "buy";
 	String SELL = "sell";
+	String MERCHANT_INCREASE_BALANCE = "merchant_increase_balance";
+	String MERCHANT_DECREASE_BALANCE = "merchant_decrease_balance";
 	RequestTypeEntity getRequestType(String name);
 	void clearCache (long id)throws InternalServiceException;
 	void clearCacheAllData();

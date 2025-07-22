@@ -12,6 +12,11 @@ import com.melli.wallet.service.MerchantService;
 import com.melli.wallet.service.StatusService;
 import com.melli.wallet.service.WalletAccountCurrencyService;
 import com.melli.wallet.service.WalletAccountService;
+import com.melli.wallet.service.TransactionService;
+import com.melli.wallet.service.RrnService;
+import com.melli.wallet.service.RequestTypeService;
+import com.melli.wallet.utils.RedisLockService;
+import com.melli.wallet.domain.master.entity.*;
 import com.melli.wallet.utils.Helper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -22,6 +27,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.math.BigDecimal;
 
 /**
  * Class Name: MerchantServiceImplementation
@@ -39,6 +45,10 @@ public class MerchantServiceImplementation implements MerchantService {
     private final WalletAccountCurrencyService walletAccountCurrencyService;
     private final Helper helper;
     private final WalletAccountService walletAccountService;
+    private final TransactionService transactionService;
+    private final RrnService rrnService;
+    private final RequestTypeService requestTypeService;
+    private final RedisLockService redisLockService;
 
     @Override
     public MerchantWalletAccountCurrencyEntity checkPermissionOnCurrency(WalletAccountCurrencyEntity walletAccountCurrencyEntity, MerchantEntity merchant) throws InternalServiceException {
@@ -84,5 +94,121 @@ public class MerchantServiceImplementation implements MerchantService {
     @CacheEvict
     public void clearAllCache() {
         log.info("start clear all merchant");
+    }
+
+    @Override
+    public String increaseBalance(ChannelEntity channelEntity, String walletAccountNumber, String amount, String merchantId) throws InternalServiceException {
+
+        // Validate merchant exists
+        MerchantEntity merchant = findById(Integer.parseInt(merchantId));
+        if (merchant == null) {
+            log.error("Merchant with ID {} not found", merchantId);
+            throw new InternalServiceException("Merchant not found", StatusService.MERCHANT_IS_NOT_EXIST, HttpStatus.OK);
+        }
+
+        // Find wallet account
+        WalletAccountEntity walletAccount = walletAccountService.findByAccountNumber(walletAccountNumber);
+        if (walletAccount == null) {
+            log.error("Wallet account with number {} not found", walletAccountNumber);
+            throw new InternalServiceException("Wallet account not found", StatusService.WALLET_ACCOUNT_NOT_FOUND, HttpStatus.OK);
+        }
+
+        // Check if wallet account belongs to the merchant
+        if (walletAccount.getWalletEntity().getId() != merchant.getWalletEntity().getId()) {
+            log.error("Wallet account {} does not belong to merchant {}", walletAccountNumber, merchantId);
+            throw new InternalServiceException("Wallet account does not belong to merchant", StatusService.WALLET_ACCOUNT_NOT_FOUND, HttpStatus.OK);
+        }
+
+        return redisLockService.runAfterLock(merchantId, this.getClass(), () -> {
+            log.info("start increaseBalance for merchantId ({}) with amount ({})", merchantId, amount);
+
+            
+            // Generate RRN for transaction
+            RrnEntity rrnEntity = rrnService.generateTraceId(
+                    merchant.getWalletEntity().getNationalCode(),
+                    channelEntity,
+                    requestTypeService.getRequestType(RequestTypeService.MERCHANT_INCREASE_BALANCE),
+                    walletAccountNumber,
+                    amount
+            );
+            
+            // Create transaction entity
+            TransactionEntity transaction = new TransactionEntity();
+            transaction.setAmount(new BigDecimal(amount));
+            transaction.setWalletAccountEntity(walletAccount);
+            transaction.setRrnEntity(rrnEntity);
+            transaction.setRequestTypeId(requestTypeService.getRequestType(RequestTypeService.MERCHANT_INCREASE_BALANCE).getId());
+            transaction.setAdditionalData("Manual increase by admin");
+            
+            // Create description
+            transaction.setDescription("افزایش مانده پذیرنده " + merchant.getName() + " به مبلغ " + amount + " - شناسه تراکنش: " + rrnEntity.getId());
+            
+            // Execute deposit transaction
+            transactionService.insertDeposit(transaction);
+            
+            log.info("finish increaseBalance for merchant {} with amount {} and traceId {}", merchantId, amount, rrnEntity.getUuid());
+            return rrnEntity.getUuid();
+        }, merchantId);
+    }
+
+    @Override
+    public String decreaseBalance(ChannelEntity channelEntity, String walletAccountNumber, String amount, String merchantId) throws InternalServiceException {
+        return redisLockService.runAfterLock(merchantId, this.getClass(), () -> {
+            log.info("start decreaseBalance for merchantId ({}) with amount ({})", merchantId, amount);
+            
+            // Validate merchant exists
+            MerchantEntity merchant = findById(Integer.parseInt(merchantId));
+            if (merchant == null) {
+                log.error("Merchant with ID {} not found", merchantId);
+                throw new InternalServiceException("Merchant not found", StatusService.MERCHANT_IS_NOT_EXIST, HttpStatus.OK);
+            }
+            
+            // Find wallet account
+            WalletAccountEntity walletAccount = walletAccountService.findByAccountNumber(walletAccountNumber);
+            if (walletAccount == null) {
+                log.error("Wallet account with number {} not found", walletAccountNumber);
+                throw new InternalServiceException("Wallet account not found", StatusService.WALLET_ACCOUNT_NOT_FOUND, HttpStatus.OK);
+            }
+            
+            // Check if wallet account belongs to the merchant
+            if (walletAccount.getWalletEntity().getId() != merchant.getWalletEntity().getId()) {
+                log.error("Wallet account {} does not belong to merchant {}", walletAccountNumber, merchantId);
+                throw new InternalServiceException("Wallet account does not belong to merchant", StatusService.WALLET_ACCOUNT_NOT_FOUND, HttpStatus.OK);
+            }
+            
+            // Check if merchant has sufficient balance
+            BigDecimal currentBalance = walletAccountService.getBalance(walletAccount.getId());
+            BigDecimal requestedAmount = new BigDecimal(amount);
+            if (currentBalance.compareTo(requestedAmount) < 0) {
+                log.error("Insufficient balance for merchant {}. Current: {}, Requested: {}", merchantId, currentBalance, requestedAmount);
+                throw new InternalServiceException("Insufficient balance", StatusService.BALANCE_IS_NOT_ENOUGH, HttpStatus.OK);
+            }
+            
+            // Generate RRN for transaction
+            RrnEntity rrnEntity = rrnService.generateTraceId(
+                    merchant.getWalletEntity().getNationalCode(),
+                    channelEntity,
+                    requestTypeService.getRequestType(RequestTypeService.MERCHANT_DECREASE_BALANCE),
+                    walletAccountNumber,
+                    amount
+            );
+            
+            // Create transaction entity
+            TransactionEntity transaction = new TransactionEntity();
+            transaction.setAmount(requestedAmount);
+            transaction.setWalletAccountEntity(walletAccount);
+            transaction.setRrnEntity(rrnEntity);
+            transaction.setRequestTypeId(requestTypeService.getRequestType(RequestTypeService.MERCHANT_DECREASE_BALANCE).getId());
+            transaction.setAdditionalData("Manual decrease by admin");
+            
+            // Create description
+            transaction.setDescription("کاهش مانده پذیرنده " + merchant.getName() + " به مبلغ " + amount + " - شناسه تراکنش: " + rrnEntity.getId());
+            
+            // Execute withdrawal transaction
+            transactionService.insertWithdraw(transaction);
+            
+            log.info("finish decreaseBalance for merchant {} with amount {} and traceId {}", merchantId, amount, rrnEntity.getUuid());
+            return rrnEntity.getUuid();
+        }, merchantId);
     }
 }
