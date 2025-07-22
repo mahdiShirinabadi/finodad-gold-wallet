@@ -16,7 +16,7 @@ import com.melli.wallet.domain.response.cash.CashInTrackResponse;
 import com.melli.wallet.domain.response.login.LoginResponse;
 import com.melli.wallet.domain.response.purchase.MerchantResponse;
 import com.melli.wallet.domain.response.purchase.PurchaseResponse;
-import com.melli.wallet.domain.response.wallet.CreateWalletResponse;
+import com.melli.wallet.domain.response.wallet.WalletResponse;
 import com.melli.wallet.domain.response.wallet.WalletAccountObject;
 import com.melli.wallet.service.ChannelService;
 import com.melli.wallet.service.LimitationGeneralCustomService;
@@ -224,13 +224,13 @@ public class WalletApplicationTests {
     }
 
 
-    public BaseResponse<CreateWalletResponse> createWallet(MockMvc mockMvc, String token, String nationalCode, String mobile, HttpStatus httpStatus, int errorCode, boolean success) throws Exception {
+    public BaseResponse<WalletResponse> createWallet(MockMvc mockMvc, String token, String nationalCode, String mobile, HttpStatus httpStatus, int errorCode, boolean success) throws Exception {
         CreateWalletRequestJson createWalletRequestJson = new CreateWalletRequestJson();
         createWalletRequestJson.setMobile(mobile);
         createWalletRequestJson.setNationalCode(nationalCode);
         MockHttpServletRequestBuilder postRequest = buildPostRequest(token, CREATE_WALLET_PATH, mapToJson(createWalletRequestJson));
         String response = performTest(mockMvc, postRequest, httpStatus, success, errorCode);
-        TypeReference<BaseResponse<CreateWalletResponse>> typeReference = new TypeReference<>() {
+        TypeReference<BaseResponse<WalletResponse>> typeReference = new TypeReference<>() {
         };
         return objectMapper.readValue(response, typeReference);
     }
@@ -389,17 +389,17 @@ public class WalletApplicationTests {
         return objectMapper.readValue(response, typeReference);
     }
 
-    public BaseResponse<CreateWalletResponse> balance(MockMvc mockMvc, String token, String nationalCode, HttpStatus httpStatus, int errorCode, boolean success) throws Exception {
+    public BaseResponse<WalletResponse> balance(MockMvc mockMvc, String token, String nationalCode, HttpStatus httpStatus, int errorCode, boolean success) throws Exception {
         MockHttpServletRequestBuilder postRequest = buildGetRequest(token, GET_DATA_WALLET_PATH + "?nationalCode=" + nationalCode);
         String response = performTest(mockMvc, postRequest, httpStatus, success, errorCode);
-        TypeReference<BaseResponse<CreateWalletResponse>> typeReference = new TypeReference<>() {
+        TypeReference<BaseResponse<WalletResponse>> typeReference = new TypeReference<>() {
         };
         return objectMapper.readValue(response, typeReference);
     }
 
     public WalletAccountObject getAccountNumber(MockMvc mockMvc, String token, String nationalCode, String walletAccountType, String walletAccountCurrency) throws Exception {
         log.info("start get wallet data ...");
-        BaseResponse<CreateWalletResponse> createWalletResponseBaseResponse = balance(mockMvc, token, nationalCode, HttpStatus.OK, StatusService.SUCCESSFUL, true);
+        BaseResponse<WalletResponse> createWalletResponseBaseResponse = balance(mockMvc, token, nationalCode, HttpStatus.OK, StatusService.SUCCESSFUL, true);
         List<WalletAccountObject> walletAccountObjectList = createWalletResponseBaseResponse.getData().getWalletAccountObjectList();
         Optional<WalletAccountObject> walletAccountObjectOptional = walletAccountObjectList.stream().filter(x -> x.getWalletAccountTypeObject().getName().equalsIgnoreCase(walletAccountType)
                         && x.getWalletAccountCurrencyObject().getName().equalsIgnoreCase(walletAccountCurrency))

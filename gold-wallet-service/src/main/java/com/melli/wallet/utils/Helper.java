@@ -12,7 +12,7 @@ import com.melli.wallet.domain.response.limitation.*;
 import com.melli.wallet.domain.response.login.*;
 import com.melli.wallet.domain.response.channel.ChannelObject;
 import com.melli.wallet.domain.response.purchase.*;
-import com.melli.wallet.domain.response.wallet.CreateWalletResponse;
+import com.melli.wallet.domain.response.wallet.WalletResponse;
 import com.melli.wallet.domain.response.wallet.WalletAccountObject;
 import com.melli.wallet.exception.InternalServiceException;
 import com.melli.wallet.service.*;
@@ -231,8 +231,8 @@ public class Helper {
         return new CashOutResponse(nationalCode, balance, uuid, accountNumber);
     }
 
-    public CreateWalletResponse fillCreateWalletResponse(WalletEntity walletEntity, List<WalletAccountEntity> walletAccountEntityList, WalletAccountService walletAccountService) {
-        CreateWalletResponse response = new CreateWalletResponse();
+    public WalletResponse fillCreateWalletResponse(WalletEntity walletEntity, List<WalletAccountEntity> walletAccountEntityList, WalletAccountService walletAccountService) {
+        WalletResponse response = new WalletResponse();
         List<WalletAccountObject> walletAccountObjectList = new ArrayList<>();
         response.setMobile(walletEntity.getMobile());
         response.setNationalCode(walletEntity.getNationalCode());

@@ -1,17 +1,16 @@
 package com.melli.wallet.service.impl;
 
 import com.melli.wallet.ConstantRedisName;
-import com.melli.wallet.domain.master.entity.ChannelEntity;
-import com.melli.wallet.domain.master.entity.MerchantEntity;
-import com.melli.wallet.domain.master.entity.MerchantWalletAccountCurrencyEntity;
-import com.melli.wallet.domain.master.entity.WalletAccountCurrencyEntity;
+import com.melli.wallet.domain.master.entity.*;
 import com.melli.wallet.domain.master.persistence.MerchantRepository;
 import com.melli.wallet.domain.master.persistence.MerchantWalletAccountCurrencyRepository;
 import com.melli.wallet.domain.response.purchase.MerchantResponse;
+import com.melli.wallet.domain.response.wallet.WalletResponse;
 import com.melli.wallet.exception.InternalServiceException;
 import com.melli.wallet.service.MerchantService;
 import com.melli.wallet.service.StatusService;
 import com.melli.wallet.service.WalletAccountCurrencyService;
+import com.melli.wallet.service.WalletAccountService;
 import com.melli.wallet.utils.Helper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -38,6 +37,7 @@ public class MerchantServiceImplementation implements MerchantService {
     private final MerchantWalletAccountCurrencyRepository merchantWalletAccountCurrencyRepository;
     private final WalletAccountCurrencyService walletAccountCurrencyService;
     private final Helper helper;
+    private final WalletAccountService walletAccountService;
 
     @Override
     public MerchantWalletAccountCurrencyEntity checkPermissionOnCurrency(WalletAccountCurrencyEntity walletAccountCurrencyEntity, MerchantEntity merchant) throws InternalServiceException {
@@ -58,6 +58,14 @@ public class MerchantServiceImplementation implements MerchantService {
             return new MerchantResponse();
         }
         return helper.fillMerchantResponse(merchantWalletAccountCurrencyEntityList.stream().map(MerchantWalletAccountCurrencyEntity::getMerchantEntity).toList());
+    }
+
+    @Override
+    public WalletResponse getBalance(ChannelEntity channelEntity, String merchantId) throws InternalServiceException {
+        log.info("start get balance for merchantId ({})", merchantId);
+        MerchantEntity merchantEntity = merchantRepository.findById(Integer.parseInt(merchantId));
+        List<WalletAccountEntity> walletAccountEntityList = walletAccountService.findByWallet(merchantEntity.getWalletEntity());
+        return helper.fillCreateWalletResponse(merchantEntity.getWalletEntity(), walletAccountEntityList, walletAccountService);
     }
 
     @Override

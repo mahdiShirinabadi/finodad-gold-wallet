@@ -3,7 +3,7 @@ package com.melli.wallet.service.impl;
 import com.melli.wallet.domain.enumaration.WalletStatusEnum;
 import com.melli.wallet.domain.master.entity.*;
 import com.melli.wallet.domain.response.base.BaseResponse;
-import com.melli.wallet.domain.response.wallet.CreateWalletResponse;
+import com.melli.wallet.domain.response.wallet.WalletResponse;
 import com.melli.wallet.exception.InternalServiceException;
 import com.melli.wallet.service.*;
 import com.melli.wallet.util.StringUtils;
@@ -38,7 +38,7 @@ public class WalletOperationServiceImplementation implements WalletOperationalSe
     private final WalletLevelService walletLevelService;
 
     @Override
-    public CreateWalletResponse createWallet(ChannelEntity channelEntity, String mobile, String nationalCode, String walletTypeString, List<String> walletAccountCurrencyList, List<String> walletAccountTypeList) throws InternalServiceException {
+    public WalletResponse createWallet(ChannelEntity channelEntity, String mobile, String nationalCode, String walletTypeString, List<String> walletAccountCurrencyList, List<String> walletAccountTypeList) throws InternalServiceException {
         if (channelEntity.getCheckShahkar() == ChannelService.TRUE || StringUtils.hasText(nationalCode)) {
             log.info("Start checking if nationalCode({}) and mobile({}) are related from shahkar or not ...", nationalCode, mobile);
             shahkarInfoOperationService.checkShahkarInfo(mobile, nationalCode, false);
@@ -119,7 +119,7 @@ public class WalletOperationServiceImplementation implements WalletOperationalSe
     }
 
     @Override
-    public CreateWalletResponse get(ChannelEntity channelEntity, String nationalCode) throws InternalServiceException {
+    public WalletResponse get(ChannelEntity channelEntity, String nationalCode) throws InternalServiceException {
 
         Optional<WalletTypeEntity> walletTypeEntity = walletTypeService.getAll().stream().filter(x -> x.getName().equals(WalletTypeService.NORMAL_USER)).findFirst();
         if (walletTypeEntity.isEmpty()) {

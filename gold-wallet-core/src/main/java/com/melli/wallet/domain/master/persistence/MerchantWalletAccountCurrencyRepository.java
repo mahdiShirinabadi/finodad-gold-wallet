@@ -13,6 +13,7 @@ import java.util.Optional;
 @Repository
 public interface MerchantWalletAccountCurrencyRepository extends CrudRepository<MerchantWalletAccountCurrencyEntity, Long> {
    List<MerchantWalletAccountCurrencyEntity> findByWalletAccountCurrencyEntityAndMerchantEntity(WalletAccountCurrencyEntity walletAccountCurrencyEntity, MerchantEntity merchantEntity);
+   List<MerchantWalletAccountCurrencyEntity> findByMerchantEntity(MerchantEntity merchantEntity);
    List<MerchantWalletAccountCurrencyEntity> findByWalletAccountCurrencyEntity(WalletAccountCurrencyEntity walletAccountCurrencyEntity);
    List<MerchantWalletAccountCurrencyEntity> findAll();
 }

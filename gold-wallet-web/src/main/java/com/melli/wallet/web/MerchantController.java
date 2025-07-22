@@ -3,6 +3,7 @@ package com.melli.wallet.web;
 import com.melli.wallet.annotation.string.StringValidation;
 import com.melli.wallet.domain.response.base.BaseResponse;
 import com.melli.wallet.domain.response.purchase.MerchantResponse;
+import com.melli.wallet.domain.response.wallet.WalletResponse;
 import com.melli.wallet.exception.InternalServiceException;
 import com.melli.wallet.security.RequestContext;
 import com.melli.wallet.service.MerchantService;
@@ -44,6 +45,18 @@ public class MerchantController extends WebController {
         String username = requestContext.getChannelEntity().getUsername();
         log.info("start call getMerchant in username ===> {}, currency ===> {}, from ip ===> {}", username, currency, channelIp);
         MerchantResponse merchantResponse = merchantService.getMerchant(requestContext.getChannelEntity(), currency);
+        return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse<>(true, merchantResponse));
+    }
+
+    @Timed(description = "Time taken to inquiry gold amount")
+    @GetMapping(path = "/balance", produces = {MediaType.APPLICATION_JSON_VALUE})
+    @Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "لیست پذیرنده ها")
+    @PreAuthorize("hasAuthority(\""+ ResourceService.MERCHANT_LIST +"\")")
+    public ResponseEntity<BaseResponse<WalletResponse>> getBalanceMerchant(@Valid @StringValidation @RequestParam("merchantId") String merchantId) throws InternalServiceException {
+        String channelIp = requestContext.getClientIp();
+        String username = requestContext.getChannelEntity().getUsername();
+        log.info("start call balance getMerchant in username ===> {}, merchantId ===> {}, from ip ===> {}", username, merchantId, channelIp);
+        WalletResponse merchantResponse = merchantService.getBalance(requestContext.getChannelEntity(), merchantId);
         return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse<>(true, merchantResponse));
     }
 }

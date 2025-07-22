@@ -5,6 +5,7 @@ import com.melli.wallet.domain.master.entity.MerchantEntity;
 import com.melli.wallet.domain.master.entity.MerchantWalletAccountCurrencyEntity;
 import com.melli.wallet.domain.master.entity.WalletAccountCurrencyEntity;
 import com.melli.wallet.domain.response.purchase.MerchantResponse;
+import com.melli.wallet.domain.response.wallet.WalletResponse;
 import com.melli.wallet.exception.InternalServiceException;
 
 
@@ -14,6 +15,7 @@ public interface MerchantService {
     int DISABLED = 2;
     MerchantWalletAccountCurrencyEntity checkPermissionOnCurrency(WalletAccountCurrencyEntity walletAccountCurrencyEntity, MerchantEntity merchant) throws InternalServiceException;
     MerchantResponse getMerchant(ChannelEntity channelEntity, String currency) throws InternalServiceException;
+    WalletResponse getBalance(ChannelEntity channelEntity, String currency) throws InternalServiceException;
     MerchantEntity findById(int id);
     void save(MerchantEntity merchant);
     void clearAllCache();
