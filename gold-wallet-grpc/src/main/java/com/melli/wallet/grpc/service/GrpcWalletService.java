@@ -1,7 +1,7 @@
 package com.melli.wallet.grpc.service;
 
 import com.melli.wallet.domain.master.entity.ChannelEntity;
-import com.melli.wallet.domain.response.wallet.WalletResponse;
+import com.melli.wallet.domain.response.wallet.CreateWalletResponse;
 import com.melli.wallet.domain.response.wallet.WalletAccountObject;
 import com.melli.wallet.exception.InternalServiceException;
 import com.melli.wallet.grpc.*;
@@ -42,7 +42,7 @@ public class GrpcWalletService extends WalletServiceGrpc.WalletServiceImplBase {
 
             ChannelEntity channelEntity = RequestContext.getChannelEntity();
 
-            WalletResponse response = walletOperationalService.createWallet(
+            CreateWalletResponse response = walletOperationalService.createWallet(
                     channelEntity,
                     cleanMobile,
                     request.getNationalCode(),
@@ -118,7 +118,7 @@ public class GrpcWalletService extends WalletServiceGrpc.WalletServiceImplBase {
             String channelIp = RequestContext.getClientIp();
             log.info("start get wallet with nationalCode ==> {}, from Ip ({})", request.getNationalCode(), channelIp);
 
-            WalletResponse response = walletOperationalService.get(
+            CreateWalletResponse response = walletOperationalService.get(
                     RequestContext.getChannelEntity(),
                     request.getNationalCode()
             );
@@ -158,7 +158,7 @@ public class GrpcWalletService extends WalletServiceGrpc.WalletServiceImplBase {
         }
     }
 
-    private CreateWalletResponseGrpc convertToGrpcCreateWalletResponse(WalletResponse response) {
+    private CreateWalletResponseGrpc convertToGrpcCreateWalletResponse(CreateWalletResponse response) {
         // Adjust fields based on your actual CreateWalletResponse class
         CreateWalletResponseGrpc.Builder builder = CreateWalletResponseGrpc.newBuilder()
                 .setWalletId(response.getWalletId() != null ? response.getWalletId() : "")

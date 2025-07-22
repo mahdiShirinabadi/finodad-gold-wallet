@@ -12,7 +12,7 @@ import java.util.List;
 @Setter
 @Getter
 @ToString
-public class WalletResponse {
+public class CreateWalletResponse {
 
 	@Schema(name = NamingProperty.ID)
 	@JsonProperty(NamingProperty.ID)

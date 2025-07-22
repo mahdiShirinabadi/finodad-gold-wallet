@@ -12,7 +12,7 @@ import com.melli.wallet.domain.response.UuidResponse;
 import com.melli.wallet.domain.response.base.BaseResponse;
 import com.melli.wallet.domain.response.login.LoginResponse;
 import com.melli.wallet.domain.response.purchase.PurchaseResponse;
-import com.melli.wallet.domain.response.wallet.WalletResponse;
+import com.melli.wallet.domain.response.wallet.CreateWalletResponse;
 import com.melli.wallet.domain.response.wallet.WalletAccountObject;
 import com.melli.wallet.exception.InternalServiceException;
 import com.melli.wallet.service.*;
@@ -130,7 +130,7 @@ class PurchaseControllerTest extends WalletApplicationTests {
     @Order(20)
     @DisplayName("create wallet- success")
     void createWalletSuccess() throws Exception {
-        BaseResponse<WalletResponse> response = createWallet(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, MOBILE_CORRECT, HttpStatus.OK, StatusService.SUCCESSFUL, true);
+        BaseResponse<CreateWalletResponse> response = createWallet(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, MOBILE_CORRECT, HttpStatus.OK, StatusService.SUCCESSFUL, true);
         WalletEntity walletEntity = walletService.findById(Long.parseLong(response.getData().getWalletId()));
         if (!walletEntity.getNationalCode().equalsIgnoreCase(NATIONAL_CODE_CORRECT)) {
             log.error("wallet create not same with national code ({})", NATIONAL_CODE_CORRECT);

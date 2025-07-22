@@ -12,8 +12,9 @@ import com.melli.wallet.domain.response.limitation.*;
 import com.melli.wallet.domain.response.login.*;
 import com.melli.wallet.domain.response.channel.ChannelObject;
 import com.melli.wallet.domain.response.purchase.*;
-import com.melli.wallet.domain.response.wallet.WalletResponse;
+import com.melli.wallet.domain.response.wallet.CreateWalletResponse;
 import com.melli.wallet.domain.response.wallet.WalletAccountObject;
+import com.melli.wallet.domain.response.wallet.WalletBalanceResponse;
 import com.melli.wallet.exception.InternalServiceException;
 import com.melli.wallet.service.*;
 import com.melli.wallet.util.StringUtils;
@@ -231,14 +232,32 @@ public class Helper {
         return new CashOutResponse(nationalCode, balance, uuid, accountNumber);
     }
 
-    public WalletResponse fillCreateWalletResponse(WalletEntity walletEntity, List<WalletAccountEntity> walletAccountEntityList, WalletAccountService walletAccountService) {
-        WalletResponse response = new WalletResponse();
+    public CreateWalletResponse fillCreateWalletResponse(WalletEntity walletEntity, List<WalletAccountEntity> walletAccountEntityList, WalletAccountService walletAccountService) {
+        CreateWalletResponse response = new CreateWalletResponse();
         List<WalletAccountObject> walletAccountObjectList = new ArrayList<>();
         response.setMobile(walletEntity.getMobile());
         response.setNationalCode(walletEntity.getNationalCode());
         response.setWalletId(String.valueOf(walletEntity.getId()));
         response.setStatus(walletEntity.getStatus().getText());
         response.setStatusDescription(walletEntity.getStatus().getPersianDescription());
+        for (WalletAccountEntity walletAccountEntity : walletAccountEntityList) {
+            WalletAccountObject walletAccountObject = new WalletAccountObject();
+            walletAccountObject.setWalletAccountTypeObject(SubHelper.convertWalletAccountEntityToObject(walletAccountEntity.getWalletAccountTypeEntity()));
+            walletAccountObject.setWalletAccountCurrencyObject(SubHelper.convertWalletAccountCurrencyEntityToObject(walletAccountEntity.getWalletAccountCurrencyEntity()));
+            walletAccountObject.setAccountNumber(walletAccountEntity.getAccountNumber());
+            walletAccountObject.setStatus(String.valueOf(walletAccountEntity.getStatus()));
+            walletAccountObject.setBalance(String.valueOf(walletAccountService.getBalance(walletAccountEntity.getId())));
+            walletAccountObject.setStatus(walletAccountEntity.getStatus().getText());
+            walletAccountObject.setStatusDescription(walletAccountEntity.getStatus().getPersianDescription());
+            walletAccountObjectList.add(walletAccountObject);
+        }
+        response.setWalletAccountObjectList(walletAccountObjectList);
+        return response;
+    }
+
+    public WalletBalanceResponse fillWalletBalanceResponse(List<WalletAccountEntity> walletAccountEntityList, WalletAccountService walletAccountService) {
+        WalletBalanceResponse response = new WalletBalanceResponse();
+        List<WalletAccountObject> walletAccountObjectList = new ArrayList<>();
         for (WalletAccountEntity walletAccountEntity : walletAccountEntityList) {
             WalletAccountObject walletAccountObject = new WalletAccountObject();
             walletAccountObject.setWalletAccountTypeObject(SubHelper.convertWalletAccountEntityToObject(walletAccountEntity.getWalletAccountTypeEntity()));

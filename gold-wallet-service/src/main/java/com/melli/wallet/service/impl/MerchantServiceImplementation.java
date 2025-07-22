@@ -5,7 +5,8 @@ import com.melli.wallet.domain.master.entity.*;
 import com.melli.wallet.domain.master.persistence.MerchantRepository;
 import com.melli.wallet.domain.master.persistence.MerchantWalletAccountCurrencyRepository;
 import com.melli.wallet.domain.response.purchase.MerchantResponse;
-import com.melli.wallet.domain.response.wallet.WalletResponse;
+import com.melli.wallet.domain.response.wallet.CreateWalletResponse;
+import com.melli.wallet.domain.response.wallet.WalletBalanceResponse;
 import com.melli.wallet.exception.InternalServiceException;
 import com.melli.wallet.service.MerchantService;
 import com.melli.wallet.service.StatusService;
@@ -61,11 +62,11 @@ public class MerchantServiceImplementation implements MerchantService {
     }
 
     @Override
-    public WalletResponse getBalance(ChannelEntity channelEntity, String merchantId) throws InternalServiceException {
+    public WalletBalanceResponse getBalance(ChannelEntity channelEntity, String merchantId) throws InternalServiceException {
         log.info("start get balance for merchantId ({})", merchantId);
         MerchantEntity merchantEntity = merchantRepository.findById(Integer.parseInt(merchantId));
         List<WalletAccountEntity> walletAccountEntityList = walletAccountService.findByWallet(merchantEntity.getWalletEntity());
-        return helper.fillCreateWalletResponse(merchantEntity.getWalletEntity(), walletAccountEntityList, walletAccountService);
+        return helper.fillWalletBalanceResponse(walletAccountEntityList, walletAccountService);
     }
 
     @Override

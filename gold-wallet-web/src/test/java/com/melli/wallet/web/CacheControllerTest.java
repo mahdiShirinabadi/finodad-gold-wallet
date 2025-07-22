@@ -7,7 +7,7 @@ import com.melli.wallet.domain.master.entity.*;
 import com.melli.wallet.domain.response.UuidResponse;
 import com.melli.wallet.domain.response.base.BaseResponse;
 import com.melli.wallet.domain.response.login.LoginResponse;
-import com.melli.wallet.domain.response.wallet.WalletResponse;
+import com.melli.wallet.domain.response.wallet.CreateWalletResponse;
 import com.melli.wallet.domain.response.wallet.WalletAccountObject;
 import com.melli.wallet.service.*;
 import lombok.extern.log4j.Log4j2;
@@ -121,7 +121,7 @@ class CacheControllerTest extends WalletApplicationTests {
     @Order(20)
     @DisplayName("create wallet- success")
     void createWalletSuccess() throws Exception {
-        BaseResponse<WalletResponse> response = createWallet(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, MOBILE_CORRECT, HttpStatus.OK, StatusService.SUCCESSFUL, true);
+        BaseResponse<CreateWalletResponse> response = createWallet(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, MOBILE_CORRECT, HttpStatus.OK, StatusService.SUCCESSFUL, true);
         WalletEntity walletEntity = walletService.findById(Long.parseLong(response.getData().getWalletId()));
         if (!walletEntity.getNationalCode().equalsIgnoreCase(NATIONAL_CODE_CORRECT)) {
             log.error("wallet create not same with national code ({})", NATIONAL_CODE_CORRECT);
@@ -142,7 +142,7 @@ class CacheControllerTest extends WalletApplicationTests {
 
         WalletEntity walletExistEntity = walletService.findByNationalCodeAndWalletTypeId(NATIONAL_CODE_CORRECT, walletTypeEntity.getId());
 
-        BaseResponse<WalletResponse> response = createWallet(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, MOBILE_CORRECT, HttpStatus.OK, StatusService.SUCCESSFUL, true);
+        BaseResponse<CreateWalletResponse> response = createWallet(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, MOBILE_CORRECT, HttpStatus.OK, StatusService.SUCCESSFUL, true);
         if (walletExistEntity.getId() != Long.parseLong(response.getData().getWalletId())) {
             log.error("create new wallet not same with created wallet!!!");
             throw new Exception("create new wallet not same with created wallet!!!");

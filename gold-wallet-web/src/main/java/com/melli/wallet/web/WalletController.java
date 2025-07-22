@@ -6,7 +6,7 @@ import com.melli.wallet.domain.request.wallet.CreateWalletRequestJson;
 import com.melli.wallet.domain.request.wallet.DeactivatedWalletRequestJson;
 import com.melli.wallet.domain.request.wallet.DeleteWalletRequestJson;
 import com.melli.wallet.domain.response.base.BaseResponse;
-import com.melli.wallet.domain.response.wallet.WalletResponse;
+import com.melli.wallet.domain.response.wallet.CreateWalletResponse;
 import com.melli.wallet.exception.InternalServiceException;
 import com.melli.wallet.security.RequestContext;
 import com.melli.wallet.service.*;
@@ -43,14 +43,14 @@ public class WalletController extends WebController {
 	@PostMapping(path = "/create", produces = {MediaType.APPLICATION_JSON_VALUE})
 	@Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "ایجاد کیف پول")
 	@PreAuthorize("hasAuthority(\""+ ResourceService.WALLET_CREATE +"\")")
-	public ResponseEntity<BaseResponse<WalletResponse>> createWallet(@Valid  @RequestBody CreateWalletRequestJson requestJson) throws InternalServiceException {
+	public ResponseEntity<BaseResponse<CreateWalletResponse>> createWallet(@Valid  @RequestBody CreateWalletRequestJson requestJson) throws InternalServiceException {
 		String channelIp = requestContext.getClientIp();
 		String username = requestContext.getChannelEntity().getUsername();
 		log.info("start call create wallet in username ===> {}, mobile ===> {}, from ip ===> {}", username, requestJson.getMobile(), channelIp);
 		String cleanMobile = Utility.cleanPhoneNumber(requestJson.getMobile());
-		WalletResponse walletResponse = walletOperationalService.createWallet(requestContext.getChannelEntity(), cleanMobile, requestJson.getNationalCode(), WalletTypeService.NORMAL_USER, List.of(WalletAccountCurrencyService.GOLD, WalletAccountCurrencyService.RIAL),
+		CreateWalletResponse createWalletResponse = walletOperationalService.createWallet(requestContext.getChannelEntity(), cleanMobile, requestJson.getNationalCode(), WalletTypeService.NORMAL_USER, List.of(WalletAccountCurrencyService.GOLD, WalletAccountCurrencyService.RIAL),
 				List.of(WalletAccountTypeService.NORMAL));
-		return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse<>(true, walletResponse));
+		return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse<>(true,createWalletResponse));
 	}
 
 
@@ -84,10 +84,10 @@ public class WalletController extends WebController {
 	@GetMapping(path = "/get", produces = {MediaType.APPLICATION_JSON_VALUE})
 	@Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "دریافت اطلاعات کیف پول ")
 	@PreAuthorize("hasAuthority(\""+ ResourceService.WALLET_INFO +"\")")
-	public ResponseEntity<BaseResponse<WalletResponse>> getBalance(@Valid @RequestParam @NationalCodeValidation(label = "کد ملی") String nationalCode) throws InternalServiceException {
+	public ResponseEntity<BaseResponse<CreateWalletResponse>> getBalance(@Valid @RequestParam @NationalCodeValidation(label = "کد ملی") String nationalCode) throws InternalServiceException {
 		String channelIp = requestContext.getClientIp();
 		log.info("start get wallet with nationalCode ==> {}, from Ip ({})", nationalCode, channelIp);
-		WalletResponse response = walletOperationalService.get(requestContext.getChannelEntity() ,nationalCode);
+		CreateWalletResponse response = walletOperationalService.get(requestContext.getChannelEntity() ,nationalCode);
 		return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse<>(true, response));
 	}
 
