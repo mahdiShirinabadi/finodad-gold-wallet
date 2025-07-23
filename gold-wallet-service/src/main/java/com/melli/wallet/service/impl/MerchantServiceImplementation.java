@@ -75,6 +75,10 @@ public class MerchantServiceImplementation implements MerchantService {
     public WalletBalanceResponse getBalance(ChannelEntity channelEntity, String merchantId) throws InternalServiceException {
         log.info("start get balance for merchantId ({})", merchantId);
         MerchantEntity merchantEntity = merchantRepository.findById(Integer.parseInt(merchantId));
+        if(merchantEntity == null){
+            log.error("merchant {} not found", merchantId);
+            throw new InternalServiceException("merchant not found", StatusService.MERCHANT_IS_NOT_EXIST, HttpStatus.OK);
+        }
         List<WalletAccountEntity> walletAccountEntityList = walletAccountService.findByWallet(merchantEntity.getWalletEntity());
         return helper.fillWalletBalanceResponse(walletAccountEntityList, walletAccountService);
     }

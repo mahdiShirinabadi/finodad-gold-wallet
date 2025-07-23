@@ -36,7 +36,7 @@ import static org.springframework.security.test.web.servlet.setup.SecurityMockMv
 @DisplayName("CacheControllerTest End2End test")
 @DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_CLASS)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-class CacheControllerTest extends WalletApplicationTests {
+class CashInControllerTest extends WalletApplicationTests {
 
 
 

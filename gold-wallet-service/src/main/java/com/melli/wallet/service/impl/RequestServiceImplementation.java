@@ -43,10 +43,12 @@ public class RequestServiceImplementation implements RequestService {
     @Override
     public void save(RequestEntity requestEntity) throws InternalServiceException {
         log.info("start save object request ===> {}", requestEntity);
-        if (requestEntity instanceof CashInRequestEntity) {
-            cashInRequestRepository.save((CashInRequestEntity) requestEntity);
-        } else if (requestEntity instanceof PurchaseRequestEntity) {
-            purchaseRequestRepository.save((PurchaseRequestEntity) requestEntity);
+        if (requestEntity instanceof CashInRequestEntity cashInRequestEntity) {
+            cashInRequestRepository.save(cashInRequestEntity);
+        } else if (requestEntity instanceof PurchaseRequestEntity purchaseRequestEntity) {
+            purchaseRequestRepository.save(purchaseRequestEntity);
+        }else if (requestEntity instanceof CashOutRequestEntity cashOutRequestEntity) {
+            cashOutRequestRepository.save(cashOutRequestEntity);
         } else {
             log.error("requestEntity is not instanceof");
             throw new InternalServiceException("error in save request, instance not define", StatusService.GENERAL_ERROR, HttpStatus.OK);

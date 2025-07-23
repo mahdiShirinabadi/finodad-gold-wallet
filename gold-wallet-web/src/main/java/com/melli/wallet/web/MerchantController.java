@@ -57,7 +57,7 @@ public class MerchantController extends WebController {
     @GetMapping(path = "/balance", produces = {MediaType.APPLICATION_JSON_VALUE})
     @Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "مانده پذیرنده")
     @PreAuthorize("hasAuthority(\""+ ResourceService.MERCHANT_BALANCE +"\")")
-    public ResponseEntity<BaseResponse<WalletBalanceResponse>> getBalanceMerchant(@Valid @StringValidation @RequestParam("merchantId") String merchantId) throws InternalServiceException {
+    public ResponseEntity<BaseResponse<WalletBalanceResponse>> getBalanceMerchant(@Valid @NumberValidation @RequestParam("merchantId") String merchantId) throws InternalServiceException {
         String channelIp = requestContext.getClientIp();
         String username = requestContext.getChannelEntity().getUsername();
         log.info("start call balance getMerchant in username ===> {}, merchantId ===> {}, from ip ===> {}", username, merchantId, channelIp);

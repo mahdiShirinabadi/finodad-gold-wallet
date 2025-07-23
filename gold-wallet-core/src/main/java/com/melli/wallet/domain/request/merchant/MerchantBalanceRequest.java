@@ -25,7 +25,7 @@ public class MerchantBalanceRequest {
 
     @Valid
     @StringValidation(label = "مبلغ")
-    @JsonProperty(NamingProperty.WALLET_ACCOUNT_NUMBER)
+    @JsonProperty(NamingProperty.AMOUNT)
     private String amount;
 
     @Valid

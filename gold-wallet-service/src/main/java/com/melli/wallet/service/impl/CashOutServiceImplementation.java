@@ -67,7 +67,7 @@ public class CashOutServiceImplementation implements CashOutService {
             rrnService.checkRrn(cashOutObjectDTO.getUniqueIdentifier(), cashOutObjectDTO.getChannel(), requestTypeEntity, String.valueOf(cashOutObjectDTO.getAmount()), cashOutObjectDTO.getAccountNumber());
             log.info("finish checking existence of traceId({})", cashOutObjectDTO.getUniqueIdentifier());
 
-            requestService.findCashInDuplicateWithRrnId(rrnEntity.getId());
+            requestService.findCashOutDuplicateWithRrnId(rrnEntity.getId());
 
             WalletAccountEntity walletAccountEntity = helper.checkWalletAndWalletAccountForNormalUser(walletService, rrnEntity.getNationalCode(), walletAccountService, cashOutObjectDTO.getAccountNumber());
             walletCashLimitationService.checkCashOutLimitation(cashOutObjectDTO.getChannel(), walletAccountEntity.getWalletEntity(), BigDecimal.valueOf(Long.parseLong(cashOutObjectDTO.getAmount())), walletAccountEntity);
@@ -87,7 +87,7 @@ public class CashOutServiceImplementation implements CashOutService {
             try {
                 requestService.save(cashOutRequestEntity);
             } catch (Exception ex) {
-                log.error("error in save cashIn with message ({})", ex.getMessage());
+                log.error("error in save cashOut with message ({})", ex.getMessage());
                 throw new InternalServiceException("error in save cashIn", StatusService.GENERAL_ERROR, HttpStatus.OK);
             }
             cashOutRequestEntity.setResult(StatusService.SUCCESSFUL);

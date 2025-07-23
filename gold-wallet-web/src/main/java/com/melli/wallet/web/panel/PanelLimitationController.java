@@ -110,5 +110,4 @@ public class PanelLimitationController extends WebController {
         return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse<>(true, response));
     }
 
-
 }

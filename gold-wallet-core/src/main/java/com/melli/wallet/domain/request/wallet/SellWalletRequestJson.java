@@ -44,6 +44,11 @@ SellWalletRequestJson {
     @JsonProperty(NamingProperty.NATIONAL_CODE)
     private String nationalCode;
 
+    @NationalCodeValidation(label = "شماره شبا")
+    @Schema(name = NamingProperty.IBAN, description = "شماره شبا")
+    @JsonProperty(NamingProperty.IBAN)
+    private String iban;
+
     @StringValidation(label = "نوع ارز")
     @Schema(name = NamingProperty.CURRENCY, description = "نوع ارز (مثال: GOLD, SILVER, PLATINUM)", example = "GOLD")
     @JsonProperty(NamingProperty.CURRENCY)

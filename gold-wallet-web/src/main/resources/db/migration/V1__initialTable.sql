@@ -655,6 +655,11 @@ INSERT INTO limitation_general(created_by, created_at, name, value, additional_d
 VALUES ('System', now(), 'MAX_QUANTITY_SELL', '100', 'حداکثر مقدار فروش در هر درخواست')
 on conflict do nothing;
 
+INSERT INTO limitation_general(created_by, created_at, name, value, additional_data)
+VALUES ('System', now(), 'ENABLE_CASH_OUT', 'false', 'مجوز برداشت از حساب')
+    on conflict do nothing;
+
+
 INSERT into request_type(created_by, created_at, name, fa_name, display)
 VALUES ('System', now(), 'cash_in', 'شارژ کیف پول', 1);
 
@@ -704,3 +709,5 @@ insert into resource(created_by, created_at, name, fa_name, display)
 values ('system', 'now()', 'GENERATE_CASH_IN_UNIQUE_IDENTIFIER', 'کد یکتا شارژ', 1);
 insert into resource(created_by, created_at, name, fa_name, display)
 values ('system', 'now()', 'MERCHANT_LIST', 'لیست پذیرنده ها', 1);
+insert into resource(created_by, created_at, name, fa_name, display)
+values ('system', 'now()', 'CASH_OUT', 'لیست پذیرنده ها', 1);

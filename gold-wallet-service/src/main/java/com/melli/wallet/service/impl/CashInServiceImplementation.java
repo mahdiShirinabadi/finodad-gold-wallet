@@ -56,13 +56,20 @@ public class CashInServiceImplementation implements CashInService {
 
 
     @Override
-    public UuidResponse generateUuid(ChannelEntity channelEntity, String nationalCode, String amount, String accountNumber) throws InternalServiceException {
+    public UuidResponse generateUuid(ChannelEntity channelEntity, String nationalCode, String amount, String accountNumber, String requestTypeName) throws InternalServiceException {
         try {
 
             WalletAccountEntity walletAccountEntity = helper.checkWalletAndWalletAccountForNormalUser(walletService,nationalCode, walletAccountService, accountNumber);
-            walletCashLimitationService.checkCashInLimitation(channelEntity, walletAccountEntity.getWalletEntity(), BigDecimal.valueOf(Long.parseLong(amount)), walletAccountEntity);
+            if(RequestTypeService.CASH_IN.equalsIgnoreCase(requestTypeName)){
+                walletCashLimitationService.checkCashInLimitation(channelEntity, walletAccountEntity.getWalletEntity(), BigDecimal.valueOf(Long.parseLong(amount)), walletAccountEntity);
+            }else if(RequestTypeService.CASH_OUT.equalsIgnoreCase(requestTypeName)){
+                walletCashLimitationService.checkCashOutLimitation(channelEntity, walletAccountEntity.getWalletEntity(), BigDecimal.valueOf(Long.parseLong(amount)), walletAccountEntity);
+            }else{
+                log.error("in generate uuid requestType ({}) not found", requestTypeName);
+                throw new InternalServiceException("wallet cash type not found", StatusService.REQUEST_TYPE_NOT_FOUND, HttpStatus.OK);
+            }
             log.info("start generate traceId, username ===> ({}), nationalCode ({})", channelEntity.getUsername(), nationalCode);
-            RrnEntity rrnEntity = rrnService.generateTraceId(nationalCode, channelEntity, requestTypeService.getRequestType(RequestTypeService.CASH_IN), accountNumber, amount);
+            RrnEntity rrnEntity = rrnService.generateTraceId(nationalCode, channelEntity, requestTypeService.getRequestType(requestTypeName), accountNumber, amount);
             log.info("finish traceId ===> {}, username ({}), nationalCode ({})", rrnEntity.getUuid(), channelEntity.getUsername(), nationalCode);
             return new UuidResponse(rrnEntity.getUuid());
         } catch (InternalServiceException e) {
