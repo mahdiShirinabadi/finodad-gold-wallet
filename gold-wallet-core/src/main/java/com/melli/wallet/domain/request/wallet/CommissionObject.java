@@ -20,12 +20,12 @@ import lombok.*;
 public class CommissionObject {
 
     @StringValidation(label = "نوع ارز")
-    @Schema(name = NamingProperty.CURRENCY, description = "نوع کارمزد GOLD,RIAL, SILVER, PLATINUM", example = "RIAL")
+    @Schema(name = NamingProperty.CURRENCY, description = "نوع کارمزد GOLD,RIAL, SILVER, PLATINUM", example = "GOLD")
     @JsonProperty(NamingProperty.CURRENCY)
     private String currency;
 
     @NumberValidation(allowDecimal = true)
-    @Schema(name = NamingProperty.QUANTITY, description = "مقدار کارمزد", example = "1000")
-    @JsonProperty(NamingProperty.QUANTITY)
+    @Schema(name = NamingProperty.AMOUNT, description = "مقدار کارمزد", example = "1000")
+    @JsonProperty(NamingProperty.AMOUNT)
     private String amount;
 }

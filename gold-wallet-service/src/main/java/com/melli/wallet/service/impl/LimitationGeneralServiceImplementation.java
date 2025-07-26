@@ -76,12 +76,7 @@ public class LimitationGeneralServiceImplementation implements LimitationGeneral
         String key = setting.getName();
         redisLockService.runAfterLock(key, this.getClass(), () -> {
             LimitationGeneralEntity limitationGeneralEntity = limitationGeneralRepository.findByName(setting.getName());
-            if (limitationGeneralEntity != null) {
-                log.error("limitationGeneralEntity with name ({}) already exists and set endTime", setting.getName());
-                limitationGeneralEntity.setEndTime(setting.getEndTime());
-                limitationGeneralRepository.save(limitationGeneralEntity);
-            }
-            limitationGeneralRepository.save(setting);
+            limitationGeneralRepository.save(limitationGeneralEntity);
             return null;
         }, key);
     }

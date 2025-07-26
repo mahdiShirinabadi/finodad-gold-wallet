@@ -215,7 +215,7 @@ public class WalletBuyLimitationServiceImplementation implements WalletBuyLimita
     }
 
 
-    private void updateBuyDailyLimitation(WalletAccountEntity walletAccount, BigDecimal amount, String uniqueIdentifier) throws InternalServiceException {
+    private void updateBuyDailyLimitation(WalletAccountEntity walletAccount, BigDecimal amount, BigDecimal quantity, String uniqueIdentifier) throws InternalServiceException {
         log.info("start updating updateBuyDailyLimitation for walletAccount({}) ...", walletAccount.getAccountNumber());
         String key = walletAccount.getAccountNumber();
         redisLockService.runAfterLock(key, this.getClass(), () -> {
@@ -227,11 +227,13 @@ public class WalletBuyLimitationServiceImplementation implements WalletBuyLimita
 
                 log.info("start creating walletLimitation for walletAccount({}) for key: {}", walletAccount.getAccountNumber(), walletLimitationId);
                 walletDailyBuyLimitationRedis = new WalletDailyBuyLimitationRedis();
+                walletDailyBuyLimitationRedis.setQuantity(quantity);
                 walletDailyBuyLimitationRedis.setId(walletLimitationId);
                 walletDailyBuyLimitationRedis.setCount(1);
                 walletDailyBuyLimitationRedis.setAmount(amount.longValue());
 
             } else {
+                walletDailyBuyLimitationRedis.setQuantity(walletDailyBuyLimitationRedis.getQuantity().add(quantity));
                 walletDailyBuyLimitationRedis.setCount(walletDailyBuyLimitationRedis.getCount() + 1);
                 walletDailyBuyLimitationRedis.setAmount(walletDailyBuyLimitationRedis.getAmount() + amount.longValue());
             }
@@ -254,20 +256,20 @@ public class WalletBuyLimitationServiceImplementation implements WalletBuyLimita
 
     @Override
     @Async("threadPoolExecutor")
-    public void updateLimitation(WalletAccountEntity walletAccount, BigDecimal amount, String uniqueIdentifier) throws InternalServiceException {
+    public void updateLimitation(WalletAccountEntity walletAccount, BigDecimal amount, BigDecimal quantity, String uniqueIdentifier) throws InternalServiceException {
         try {
             log.info("start update monthlyLimitation for walletAccount ({}), amount ({})", walletAccount.getAccountNumber(), amount);
-            updateBuyMonthlyLimitation(walletAccount, amount, uniqueIdentifier);
+            updateBuyMonthlyLimitation(walletAccount, amount, quantity, uniqueIdentifier);
             log.info("finish update monthlyLimitation for walletAccount ({}), amount ({})", walletAccount.getAccountNumber(), amount);
             log.info("start update dailyLimitation for walletAccount ({}), amount ({})", walletAccount.getAccountNumber(), amount);
-            updateBuyDailyLimitation(walletAccount, amount, uniqueIdentifier);
+            updateBuyDailyLimitation(walletAccount, amount, quantity, uniqueIdentifier);
             log.info("finish update dailyLimitation for walletAccount ({}), amount ({})", walletAccount.getAccountNumber(), amount);
         } catch (InternalServiceException e) {
             log.error("there is something wrong !!!! in updateBuyLimitation ==> ({})", e.getMessage());
         }
     }
 
-    private void updateBuyMonthlyLimitation(WalletAccountEntity walletAccount, BigDecimal amount, String uniqueIdentifier) throws InternalServiceException {
+    private void updateBuyMonthlyLimitation(WalletAccountEntity walletAccount, BigDecimal amount, BigDecimal quantity, String uniqueIdentifier) throws InternalServiceException {
 
         log.info("start updating updateBuyMonthlyLimitation for walletAccount({}) ...", walletAccount.getAccountNumber());
         String key = walletAccount.getAccountNumber();
@@ -281,10 +283,12 @@ public class WalletBuyLimitationServiceImplementation implements WalletBuyLimita
                 log.info("start creating walletMonthlyLimitation for walletAccount({}) for key: {}", walletAccount.getAccountNumber(), walletLimitationId);
                 walletMonthlyBuyLimitationRedis = new WalletMonthlyBuyLimitationRedis();
                 walletMonthlyBuyLimitationRedis.setId(walletLimitationId);
+                walletMonthlyBuyLimitationRedis.setQuantity(quantity);
                 walletMonthlyBuyLimitationRedis.setCount(1);
                 walletMonthlyBuyLimitationRedis.setAmount(amount.longValue());
 
             } else {
+                walletMonthlyBuyLimitationRedis.setQuantity(walletMonthlyBuyLimitationRedis.getQuantity().add(quantity));
                 walletMonthlyBuyLimitationRedis.setCount(walletMonthlyBuyLimitationRedis.getCount() + 1);
                 walletMonthlyBuyLimitationRedis.setAmount(walletMonthlyBuyLimitationRedis.getAmount() + amount.longValue());
             }

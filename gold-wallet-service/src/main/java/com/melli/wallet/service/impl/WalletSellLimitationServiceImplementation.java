@@ -76,7 +76,7 @@ public class WalletSellLimitationServiceImplementation implements WalletSellLimi
 
         redisLockService.runAfterLock(key, this.getClass(), () -> {
 
-            if (quantity.longValue() > maxQuantity.longValue()) {
+            if (quantity.compareTo(maxQuantity) > 0) {
                 log.error("checkSellGeneral: sell quantity({}) for wallet({}), is bigger than maxQuantity({}) !!!", quantity, wallet.getNationalCode(), maxQuantity);
                 throw new InternalServiceException("sell amount is bigger than maxSell", StatusService.QUANTITY_BIGGER_THAN_MAX, HttpStatus.OK, Map.ofEntries(
                         entry("1", Utility.addComma(quantity.longValue())),
@@ -84,7 +84,7 @@ public class WalletSellLimitationServiceImplementation implements WalletSellLimi
                 ));
             }
 
-            if (quantity.longValue() < minQuantity.longValue()) {
+            if (quantity.compareTo(minQuantity)< 0) {
                 log.error("checkSellGeneral: sell amount({}) for wallet({}), is less than minQuantity({}) !!!", quantity, wallet.getNationalCode(), minQuantity);
                 throw new InternalServiceException("sell amount is less than minSell", StatusService.QUANTITY_LESS_THAN_MIN, HttpStatus.OK, Map.ofEntries(
                         entry("1", Utility.addComma(quantity.longValue())),
@@ -128,14 +128,15 @@ public class WalletSellLimitationServiceImplementation implements WalletSellLimi
                 log.info("checkSellDailyLimitation read from database for walletAccount ({}), nationalCode ({}), sumAmount ({}), count ({}) for date ({})", walletAccount.getAccountNumber(), wallet.getNationalCode(), aggregationPurchaseDTO.getSumPrice(), aggregationPurchaseDTO.getCountRecord(), new Date());
                 walletDailySellLimitationRedis.setId(walletLimitationId);
                 walletDailySellLimitationRedis.setAmount(Long.parseLong(aggregationPurchaseDTO.getSumQuantity()));
+                walletDailySellLimitationRedis.setQuantity(BigDecimal.ZERO);
                 walletDailySellLimitationRedis.setCount(Integer.parseInt(aggregationPurchaseDTO.getCountRecord()));
                 walletDailySellLimitationRepository.save(walletDailySellLimitationRedis);
             }
 
             log.info("checkSellDailyLimitation: SumPurchaseCount for wallet({}) in date: ({}) is: {}", wallet.getNationalCode(), currentDate, walletDailySellLimitationRedis.getAmount());
 
-            if ((walletDailySellLimitationRedis.getAmount() + quantity.longValue()) > maxQuantityDaily.longValue()) {
-                log.error("checkPurchaseDailyLimitation: wallet({}) on channel ({}) , exceeded amount limitation in purchase!!! SumPurchaseAmount plus amount is: {} and bigger than maxAmountDaily {}", wallet.getMobile(), wallet.getOwner().getId(), walletDailySellLimitationRedis.getAmount() + quantity.longValue(), maxQuantityDaily);
+            if ((walletDailySellLimitationRedis.getQuantity().add(quantity).compareTo(maxQuantityDaily)) > 0) {
+                log.error("checkPurchaseDailyLimitation: wallet({}) on channel ({}) , exceeded amount limitation in purchase!!! SumPurchaseAmount plus amount is: {} and bigger than maxAmountDaily {}", wallet.getMobile(), wallet.getOwner().getId(), walletDailySellLimitationRedis.getQuantity().add(quantity), maxQuantityDaily);
                 throw new InternalServiceException("wallet sum amount sell exceeded the limitation !!!", StatusService.SELL_EXCEEDED_AMOUNT_DAILY_LIMITATION, HttpStatus.OK, Map.ofEntries(
                         entry("1", Utility.addComma(walletDailySellLimitationRedis.getAmount() + quantity.longValue())),
                         entry("2", Utility.addComma((maxQuantityDaily.longValue())))
@@ -164,7 +165,7 @@ public class WalletSellLimitationServiceImplementation implements WalletSellLimi
         String key = walletAccount.getAccountNumber();
 
         BigDecimal maxCountMonthly = new BigDecimal(limitationGeneralCustomService.getSetting(channel, LimitationGeneralService.MAX_MONTHLY_COUNT_SELL, walletLevelEntity, walletAccountTypeEntity, walletAccountCurrencyEntity, walletTypeEntity));
-        BigDecimal maxAmountMonthly = new BigDecimal(limitationGeneralCustomService.getSetting(channel, LimitationGeneralService.MAX_MONTHLY_QUANTITY_SELL, walletLevelEntity, walletAccountTypeEntity, walletAccountCurrencyEntity, walletTypeEntity));
+        BigDecimal maxQuantityMonthly = new BigDecimal(limitationGeneralCustomService.getSetting(channel, LimitationGeneralService.MAX_MONTHLY_QUANTITY_SELL, walletLevelEntity, walletAccountTypeEntity, walletAccountCurrencyEntity, walletTypeEntity));
 
 
         redisLockService.runAfterLock(key, this.getClass(), () -> {
@@ -194,11 +195,11 @@ public class WalletSellLimitationServiceImplementation implements WalletSellLimi
 
             log.info("checkSellMonthlyLimitation: SumPurchaseCount for wallet({}) in month: ({}) is: {}", wallet.getMobile(), helper.convertDateToMonth(new Date()), walletMonthlySellLimitationRedis.getAmount());
 
-            if ((walletMonthlySellLimitationRedis.getAmount() + amount.longValue()) > maxAmountMonthly.longValue()) {
-                log.error("checkSellMonthlyLimitation: wallet({}) on channel ({}) , exceeded amount limitation in purchase!!! SumPurchaseAmount plus amount is: {} and bigger than maxAmountMonthly {}", wallet.getMobile(), wallet.getOwner().getId(), walletMonthlySellLimitationRedis.getAmount() + amount.longValue(), maxAmountMonthly);
+            if (walletMonthlySellLimitationRedis.getQuantity().add(amount).compareTo(maxQuantityMonthly)> 0) {
+                log.error("checkSellMonthlyLimitation: wallet({}) on channel ({}) , exceeded amount limitation in purchase!!! SumPurchaseAmount plus amount is: {} and bigger than maxAmountMonthly {}", wallet.getMobile(), wallet.getOwner().getId(), walletMonthlySellLimitationRedis.getAmount() + amount.longValue(), maxQuantityMonthly);
                 throw new InternalServiceException("wallet sum amount sell exceeded the limitation !!!", StatusService.SELL_EXCEEDED_AMOUNT_MONTHLY_LIMITATION, HttpStatus.OK, Map.ofEntries(
                         entry("1", Utility.addComma(walletMonthlySellLimitationRedis.getAmount() + amount.longValue())),
-                        entry("2", Utility.addComma((maxAmountMonthly.longValue())))
+                        entry("2", Utility.addComma((maxQuantityMonthly.longValue())))
                 ));
             }
 
@@ -216,7 +217,7 @@ public class WalletSellLimitationServiceImplementation implements WalletSellLimi
 
 
 
-    private void updateDailyLimitation(WalletAccountEntity walletAccount, BigDecimal amount, String uniqueIdentifier) throws InternalServiceException {
+    private void updateDailyLimitation(WalletAccountEntity walletAccount, BigDecimal amount, BigDecimal quantity, String uniqueIdentifier) throws InternalServiceException {
         log.info("start updating walletDailySellLimitationRedis for walletAccount({}) ...", walletAccount.getAccountNumber());
         String key = walletAccount.getAccountNumber();
         redisLockService.runAfterLock(key, this.getClass(), () -> {
@@ -229,10 +230,12 @@ public class WalletSellLimitationServiceImplementation implements WalletSellLimi
                 log.info("start creating walletDailySellLimitationRedis for walletAccount({}) for key: {}", walletAccount.getAccountNumber(), walletLimitationId);
                 walletDailySellLimitationRedis = new WalletDailySellLimitationRedis();
                 walletDailySellLimitationRedis.setId(walletLimitationId);
+                walletDailySellLimitationRedis.setQuantity(quantity);
                 walletDailySellLimitationRedis.setCount(1);
                 walletDailySellLimitationRedis.setAmount(amount.longValue());
 
             } else {
+                walletDailySellLimitationRedis.setQuantity(walletDailySellLimitationRedis.getQuantity().add(quantity));
                 walletDailySellLimitationRedis.setCount(walletDailySellLimitationRedis.getCount() + 1);
                 walletDailySellLimitationRedis.setAmount(walletDailySellLimitationRedis.getAmount() + amount.longValue());
             }
@@ -255,20 +258,20 @@ public class WalletSellLimitationServiceImplementation implements WalletSellLimi
 
     @Override
     @Async("threadPoolExecutor")
-    public void updateLimitation(WalletAccountEntity walletAccount, BigDecimal amount, String uniqueIdentifier) throws InternalServiceException {
+    public void updateLimitation(WalletAccountEntity walletAccount, BigDecimal amount, BigDecimal quantity, String uniqueIdentifier) throws InternalServiceException {
         try {
             log.info("start update monthlyLimitation for walletAccount ({}), amount ({})", walletAccount.getAccountNumber(), amount);
-            updateMonthlyLimitation(walletAccount, amount, uniqueIdentifier);
+            updateMonthlyLimitation(walletAccount, amount, quantity, uniqueIdentifier);
             log.info("finish update monthlyLimitation for walletAccount ({}), amount ({})", walletAccount.getAccountNumber(), amount);
             log.info("start update dailyLimitation for walletAccount ({}), amount ({})", walletAccount.getAccountNumber(), amount);
-            updateDailyLimitation(walletAccount, amount, uniqueIdentifier);
+            updateDailyLimitation(walletAccount, amount, quantity, uniqueIdentifier);
             log.info("finish update dailyLimitation for walletAccount ({}), amount ({})", walletAccount.getAccountNumber(), amount);
         } catch (InternalServiceException e) {
             log.error("there is something wrong !!!! in updateSellLimitation ==> ({})", e.getMessage());
         }
     }
 
-    private void updateMonthlyLimitation(WalletAccountEntity walletAccount, BigDecimal amount, String uniqueIdentifier) throws InternalServiceException {
+    private void updateMonthlyLimitation(WalletAccountEntity walletAccount, BigDecimal amount, BigDecimal quantity, String uniqueIdentifier) throws InternalServiceException {
 
         log.info("start updating updateSellMonthlyLimitation for walletAccount({}) ...", walletAccount.getAccountNumber());
         String key = walletAccount.getAccountNumber();
@@ -282,10 +285,12 @@ public class WalletSellLimitationServiceImplementation implements WalletSellLimi
                 log.info("start creating walletMonthlyLimitation for walletAccount({}) for key: {}", walletAccount.getAccountNumber(), walletLimitationId);
                 walletMonthlySellLimitationRedis = new WalletMonthlySellLimitationRedis();
                 walletMonthlySellLimitationRedis.setId(walletLimitationId);
+                walletMonthlySellLimitationRedis.setQuantity(quantity);
                 walletMonthlySellLimitationRedis.setCount(1);
                 walletMonthlySellLimitationRedis.setAmount(amount.longValue());
 
             } else {
+                walletMonthlySellLimitationRedis.setQuantity(walletMonthlySellLimitationRedis.getQuantity().add(quantity));
                 walletMonthlySellLimitationRedis.setCount(walletMonthlySellLimitationRedis.getCount() + 1);
                 walletMonthlySellLimitationRedis.setAmount(walletMonthlySellLimitationRedis.getAmount() + amount.longValue());
             }

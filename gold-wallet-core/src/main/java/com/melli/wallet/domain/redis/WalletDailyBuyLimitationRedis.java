@@ -7,6 +7,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.redis.core.RedisHash;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 
 @RedisHash(value = ConstantRedisName.WALLET_BUY_DAILY_LIMITATION, timeToLive = 86400L) // 1 day
 @Setter
@@ -18,4 +19,5 @@ public class WalletDailyBuyLimitationRedis implements Serializable {
 
 	private int count;
 	private long amount;
+	private BigDecimal quantity;
 }

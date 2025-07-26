@@ -16,6 +16,7 @@ import com.melli.wallet.domain.response.base.BaseResponse;
 import com.melli.wallet.domain.response.login.LoginResponse;
 import com.melli.wallet.domain.response.purchase.MerchantResponse;
 import com.melli.wallet.domain.response.purchase.PurchaseResponse;
+import com.melli.wallet.domain.response.purchase.PurchaseTrackResponse;
 import com.melli.wallet.domain.response.wallet.CreateWalletResponse;
 import com.melli.wallet.domain.response.wallet.WalletAccountObject;
 import com.melli.wallet.domain.response.wallet.WalletBalanceResponse;
@@ -299,10 +300,10 @@ public class WalletApplicationTests {
         return objectMapper.readValue(response, typeReference);
     }
 
-    public BaseResponse<UuidResponse> generateSellUniqueIdentifier(MockMvc mockMvc, String token, String nationalCode, String amount, String accountNumber, String currency, HttpStatus httpStatus, int errorCode, boolean success) throws Exception {
+    public BaseResponse<UuidResponse> generateSellUniqueIdentifier(MockMvc mockMvc, String token, String nationalCode, String quantity, String accountNumber, String currency, HttpStatus httpStatus, int errorCode, boolean success) throws Exception {
         SellGenerateUuidRequestJson requestJson = new SellGenerateUuidRequestJson();
         requestJson.setNationalCode(nationalCode);
-        requestJson.setQuantity(amount);
+        requestJson.setQuantity(quantity);
         requestJson.setAccountNumber(accountNumber);
         requestJson.setCurrency(currency);
         MockHttpServletRequestBuilder postRequest = buildPostRequest(token, SELL_GENERATE_UUID_PATH, mapToJson(requestJson));
@@ -469,10 +470,10 @@ public class WalletApplicationTests {
         return objectMapper.readValue(response, typeReference);
     }
 
-    public BaseResponse<CashInTrackResponse> inquiryPurchase(MockMvc mockMvc, String token, String uniqueIdentifier, HttpStatus httpStatus, int errorCode, boolean success) throws Exception {
+    public BaseResponse<PurchaseTrackResponse> inquiryPurchase(MockMvc mockMvc, String token, String uniqueIdentifier, HttpStatus httpStatus, int errorCode, boolean success) throws Exception {
         MockHttpServletRequestBuilder postRequest = buildGetRequest(token, PURCHASE_INQUIRY_IN_PATH + "?uniqueIdentifier=" + uniqueIdentifier);
         String response = performTest(mockMvc, postRequest, httpStatus, success, errorCode);
-        TypeReference<BaseResponse<CashInTrackResponse>> typeReference = new TypeReference<>() {
+        TypeReference<BaseResponse<PurchaseTrackResponse>> typeReference = new TypeReference<>() {
         };
         return objectMapper.readValue(response, typeReference);
     }

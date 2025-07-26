@@ -192,12 +192,11 @@ class PhysicalCashOutControllerTest extends WalletApplicationTests {
         log.info("start physicalCashOutSuccess test");
         
         // Step 1: Get account numbers
-        WalletAccountObject rialAccountObject = getAccountNumber(mockMvc, accessToken, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.RIAL);
         WalletAccountObject goldAccountObject = getAccountNumber(mockMvc, accessToken, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.GOLD);
         String goldAccountNumber = goldAccountObject.getAccountNumber();
 
         //Step 3: update balance wallet-account
-        walletAccountService.increaseBalance(walletAccountService.findByAccountNumber(goldAccountNumber).getId(), new BigDecimal("10"));
+        walletAccountService.increaseBalance(walletAccountService.findByAccountNumber(goldAccountNumber).getId(), new BigDecimal("5.05"));
 
 
         
@@ -212,12 +211,12 @@ class PhysicalCashOutControllerTest extends WalletApplicationTests {
         }
         
         // Step 6: Generate UUID for physical cash out
-        String physicalCashOutQuantity = "5";
+        String physicalCashOutQuantity = "5.05";
         BaseResponse<UuidResponse> physicalCashOutUuidResponse = generatePhysicalCashOutUuid(mockMvc, accessToken, NATIONAL_CODE_CORRECT, physicalCashOutQuantity, goldAccountNumber, HttpStatus.OK, StatusService.SUCCESSFUL, true);
         String uniqueIdentifier = physicalCashOutUuidResponse.getData().getUniqueIdentifier();
         
         // Step 7: Perform physical cash out
-        BaseResponse<PhysicalCashOutResponse> response = physicalCashOut(mockMvc, accessToken, uniqueIdentifier, physicalCashOutQuantity, NATIONAL_CODE_CORRECT, goldAccountNumber, "", VALID_SIGN, ADDITIONAL_DATA, CURRENCY_GOLD, "100",CURRENCY_GOLD, HttpStatus.OK, StatusService.SUCCESSFUL, true);
+        BaseResponse<PhysicalCashOutResponse> response = physicalCashOut(mockMvc, accessToken, uniqueIdentifier, physicalCashOutQuantity, NATIONAL_CODE_CORRECT, goldAccountNumber, "", VALID_SIGN, ADDITIONAL_DATA, CURRENCY_GOLD, "0.05",CURRENCY_GOLD, HttpStatus.OK, StatusService.SUCCESSFUL, true);
         Assert.assertNotNull(response.getData());
         Assert.assertEquals(NATIONAL_CODE_CORRECT, response.getData().getNationalCode());
         Assert.assertEquals(goldAccountNumber, response.getData().getWalletAccountNumber());
@@ -258,7 +257,7 @@ class PhysicalCashOutControllerTest extends WalletApplicationTests {
         String uniqueIdentifier = uuidResponse.getData().getUniqueIdentifier();
         
         // Test with different commission currency (should fail)
-        BaseResponse<PhysicalCashOutResponse> response = physicalCashOut(mockMvc, accessToken, uniqueIdentifier, quantity, NATIONAL_CODE_CORRECT, accountNumber, "", VALID_SIGN, ADDITIONAL_DATA, CURRENCY_GOLD, "100","RIAL", HttpStatus.OK, StatusService.COMMISSION_CURRENCY_NOT_VALID, false);
+        BaseResponse<PhysicalCashOutResponse> response = physicalCashOut(mockMvc, accessToken, uniqueIdentifier, quantity, NATIONAL_CODE_CORRECT, accountNumber, "", VALID_SIGN, ADDITIONAL_DATA, CURRENCY_GOLD, "0.01","RIAL", HttpStatus.OK, StatusService.COMMISSION_CURRENCY_NOT_VALID, false);
         Assert.assertSame(StatusService.COMMISSION_CURRENCY_NOT_VALID, response.getErrorDetail().getCode());
     }
 
@@ -289,6 +288,34 @@ class PhysicalCashOutControllerTest extends WalletApplicationTests {
         Assert.assertSame(StatusService.INVALID_SIGN, response.getErrorDetail().getCode());
     }*/
 
+
+    @Test
+    @Order(44)
+    @DisplayName("physicalCashOut-fail-balance not enough")
+    void physicalCashOutFailBalanceNoEnough() throws Exception {
+        log.info("start physicalCashOutFailBalanceNoEnough test");
+        WalletAccountObject walletAccountObject = getAccountNumber(mockMvc, accessToken, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.GOLD);
+        String accountNumber = walletAccountObject.getAccountNumber();
+
+        // Enable physical cash out
+        WalletAccountEntity walletAccountEntity = walletAccountService.findByAccountNumber(accountNumber);
+        String physicalCashOutValue = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.ENABLE_PHYSICAL_CASH_OUT, accountNumber);
+        if("false".equalsIgnoreCase(physicalCashOutValue)){
+            limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
+                    limitationGeneralService.getSetting(LimitationGeneralService.ENABLE_PHYSICAL_CASH_OUT).getId(), walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
+                    walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
+                    "true","test physicalCashOutFailInvalidCommissionCurrency");
+        }
+
+        String quantity = "20";
+        BaseResponse<UuidResponse> uuidResponse = generatePhysicalCashOutUuid(mockMvc, accessToken, NATIONAL_CODE_CORRECT, quantity, accountNumber, HttpStatus.OK, StatusService.SUCCESSFUL, true);
+        String uniqueIdentifier = uuidResponse.getData().getUniqueIdentifier();
+
+        // Test with different commission currency (should fail)
+        BaseResponse<PhysicalCashOutResponse> response = physicalCashOut(mockMvc, accessToken, uniqueIdentifier, quantity, NATIONAL_CODE_CORRECT, accountNumber, "", VALID_SIGN, ADDITIONAL_DATA, CURRENCY_GOLD, "0.01","GOLD", HttpStatus.OK, StatusService.BALANCE_IS_NOT_ENOUGH, false);
+        Assert.assertSame(StatusService.BALANCE_IS_NOT_ENOUGH, response.getErrorDetail().getCode());
+    }
+
     @Test
     @Order(50)
     @DisplayName("physicalInquiryCashOut-success")
@@ -300,7 +327,7 @@ class PhysicalCashOutControllerTest extends WalletApplicationTests {
         String goldAccountNumber = goldAccountObject.getAccountNumber();
         
         // Charge RIAL account
-        walletAccountService.increaseBalance(walletAccountService.findByAccountNumber(goldAccountNumber).getId(), new BigDecimal("10"));
+        walletAccountService.increaseBalance(walletAccountService.findByAccountNumber(goldAccountNumber).getId(), new BigDecimal("10.01"));
         
         // Enable physical cash out
         WalletAccountEntity goldWalletAccountEntity = walletAccountService.findByAccountNumber(goldAccountNumber);
@@ -313,7 +340,7 @@ class PhysicalCashOutControllerTest extends WalletApplicationTests {
         }
         
         // Generate UUID and perform physical cash out
-        String physicalCashOutQuantity = "5";
+        String physicalCashOutQuantity = "10.01";
         BaseResponse<UuidResponse> physicalCashOutUuidResponse = generatePhysicalCashOutUuid(mockMvc, accessToken, NATIONAL_CODE_CORRECT, physicalCashOutQuantity, goldAccountNumber, HttpStatus.OK, StatusService.SUCCESSFUL, true);
         String uniqueIdentifier = physicalCashOutUuidResponse.getData().getUniqueIdentifier();
         BaseResponse<PhysicalCashOutResponse> physicalCashOutResponse = physicalCashOut(mockMvc, accessToken, uniqueIdentifier, physicalCashOutQuantity, NATIONAL_CODE_CORRECT, goldAccountNumber, "", VALID_SIGN, ADDITIONAL_DATA, CURRENCY_GOLD,"0.01", CURRENCY_GOLD, HttpStatus.OK, StatusService.SUCCESSFUL, true);

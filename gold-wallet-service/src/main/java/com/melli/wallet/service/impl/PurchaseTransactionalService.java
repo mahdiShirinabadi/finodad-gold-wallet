@@ -38,6 +38,7 @@ public class PurchaseTransactionalService {
     private final TemplateService templateService;
     private final RequestTypeService requestTypeService;
     private final WalletBuyLimitationService walletBuyLimitationService;
+    private final WalletSellLimitationService walletSellLimitationService;
     private final CashInService cashInService;
 
     @Transactional(propagation = Propagation.REQUIRED, rollbackFor = Exception.class)
@@ -95,7 +96,7 @@ public class PurchaseTransactionalService {
                 purchaseObjectDto.getMerchantRialAccount(), purchaseObjectDto.getMerchantCurrencyAccount(), purchaseObjectDto.getChannelCommissionAccount(), purchaseObjectDto.getCommission());
 
         log.info("start updateBuyLimitation for uniqueIdentifier ({}), walletAccountId ({})", purchaseRequest.getRrnEntity().getUuid(), purchaseObjectDto.getUserRialAccount().getId());
-        walletBuyLimitationService.updateLimitation(purchaseObjectDto.getUserRialAccount(), purchaseObjectDto.getPrice(), purchaseObjectDto.getUniqueIdentifier());
+        walletBuyLimitationService.updateLimitation(purchaseObjectDto.getUserCurrencyAccount(), purchaseObjectDto.getPrice(), purchaseObjectDto.getQuantity(), purchaseObjectDto.getUniqueIdentifier());
 
         // Finalize purchase
         purchaseRequest.setResult(StatusService.SUCCESSFUL);
@@ -267,6 +268,7 @@ public class PurchaseTransactionalService {
                 messageResolverService.resolve(depositTemplate, model), purchaseRequest.getAdditionalData(), purchaseRequest, purchaseRequest.getRrnEntity());
         transactionService.insertDeposit(merchantCurrencyDeposit);
         log.info("finish sell transaction for uniqueIdentifier ({}), quantity ({}) for merchant deposit currency user walletAccountId({}), transactionId ({})", purchaseRequest.getRrnEntity().getUuid(), purchaseRequest.getQuantity().subtract(commission), userCurrencyAccount.getId(), merchantCurrencyDeposit.getId());
+        walletSellLimitationService.updateLimitation(userCurrencyAccount, new BigDecimal(purchaseRequest.getPrice()), purchaseRequest.getQuantity(), purchaseRequest.getRrnEntity().getUuid());
     }
 
     private TransactionEntity createTransaction(WalletAccountEntity account, BigDecimal amount, String description,
