@@ -4,10 +4,7 @@ import com.melli.wallet.domain.enumaration.WalletStatusEnum;
 import com.melli.wallet.domain.master.entity.*;
 import com.melli.wallet.domain.response.base.BaseResponse;
 import com.melli.wallet.domain.response.base.ErrorDetail;
-import com.melli.wallet.domain.response.cash.CashInResponse;
-import com.melli.wallet.domain.response.cash.CashInTrackResponse;
-import com.melli.wallet.domain.response.cash.CashOutResponse;
-import com.melli.wallet.domain.response.cash.CashOutTrackResponse;
+import com.melli.wallet.domain.response.cash.*;
 import com.melli.wallet.domain.response.limitation.*;
 import com.melli.wallet.domain.response.login.*;
 import com.melli.wallet.domain.response.channel.ChannelObject;
@@ -99,6 +96,21 @@ public class Helper {
         response.setWalletAccountNumber(cashOutRequestEntity.getWalletAccountEntity().getAccountNumber());
         response.setCreateTime(DateUtils.getLocaleDate(DateUtils.FARSI_LOCALE, cashOutRequestEntity.getCreatedAt(), FORMAT_DATE_RESPONSE, false));
         response.setCreateTimeTimestamp(cashOutRequestEntity.getCreatedAt().getTime());
+        return response;
+    }
+
+    public PhysicalCashOutTrackResponse fillPhysicalCashOutTrackResponse(PhysicalCashOutRequestEntity physicalCashOutRequestEntity, StatusService statusService) {
+        StatusEntity statusEntity = statusService.findByCode(String.valueOf(physicalCashOutRequestEntity.getResult()));
+        PhysicalCashOutTrackResponse response = new PhysicalCashOutTrackResponse();
+        response.setId(physicalCashOutRequestEntity.getId());
+        response.setNationalCode(physicalCashOutRequestEntity.getWalletAccountEntity().getWalletEntity().getNationalCode());
+        response.setQuantity(physicalCashOutRequestEntity.getFinalQuantity());
+        response.setUniqueIdentifier(physicalCashOutRequestEntity.getRrnEntity().getUuid());
+        response.setResult(physicalCashOutRequestEntity.getResult());
+        response.setDescription(statusEntity != null ? statusEntity.getPersianDescription() : "");
+        response.setWalletAccountNumber(physicalCashOutRequestEntity.getWalletAccountEntity().getAccountNumber());
+        response.setCreateTime(DateUtils.getLocaleDate(DateUtils.FARSI_LOCALE, physicalCashOutRequestEntity.getCreatedAt(), FORMAT_DATE_RESPONSE, false));
+        response.setCreateTimeTimestamp(physicalCashOutRequestEntity.getCreatedAt().getTime());
         return response;
     }
 
@@ -230,6 +242,10 @@ public class Helper {
 
     public CashOutResponse fillCashOutResponse(String nationalCode, String uuid, String balance, String accountNumber) {
         return new CashOutResponse(nationalCode, balance, uuid, accountNumber);
+    }
+
+    public PhysicalCashOutResponse fillPhysicalCashOutResponse(String nationalCode, String uuid, String balance, String accountNumber) {
+        return new PhysicalCashOutResponse(nationalCode, balance, uuid, accountNumber);
     }
 
     public CreateWalletResponse fillCreateWalletResponse(WalletEntity walletEntity, List<WalletAccountEntity> walletAccountEntityList, WalletAccountService walletAccountService) {

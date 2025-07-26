@@ -11,7 +11,7 @@ import com.melli.wallet.exception.InternalServiceException;
 
 public interface CashInService {
 
-	UuidResponse generateUuid(ChannelEntity channelEntity, String nationalCode, String amount, String accountNumber, String requestTypeName) throws InternalServiceException;
+	UuidResponse generateUuid(ChannelEntity channelEntity, String nationalCode, String amount, String accountNumber) throws InternalServiceException;
 	CashInResponse charge(ChargeObjectDTO chargeObjectDTO) throws InternalServiceException;
 	CashInTrackResponse inquiry(ChannelEntity channel, String uuid, String channelIp)throws InternalServiceException;
 }

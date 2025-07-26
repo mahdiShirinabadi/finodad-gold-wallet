@@ -6,6 +6,7 @@ import com.melli.wallet.domain.dto.AggregationPurchaseDTO;
 import com.melli.wallet.domain.master.entity.*;
 import com.melli.wallet.domain.master.persistence.CashInRequestRepository;
 import com.melli.wallet.domain.master.persistence.CashOutRequestRepository;
+import com.melli.wallet.domain.master.persistence.PhysicalCashOutRequestRepository;
 import com.melli.wallet.domain.master.persistence.PurchaseRequestRepository;
 import com.melli.wallet.domain.response.cash.CashInTrackResponse;
 import com.melli.wallet.exception.InternalServiceException;
@@ -18,6 +19,7 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
 
@@ -38,6 +40,7 @@ public class RequestServiceImplementation implements RequestService {
     private final Helper helper;
     private final StatusService statusService;
     private final CashOutRequestRepository cashOutRequestRepository;
+    private final PhysicalCashOutRequestRepository physicalCashOutRequestRepository;
 
 
     @Override
@@ -49,6 +52,8 @@ public class RequestServiceImplementation implements RequestService {
             purchaseRequestRepository.save(purchaseRequestEntity);
         }else if (requestEntity instanceof CashOutRequestEntity cashOutRequestEntity) {
             cashOutRequestRepository.save(cashOutRequestEntity);
+        }else if (requestEntity instanceof PhysicalCashOutRequestEntity physicalCashOutRequestEntity) {
+            physicalCashOutRequestRepository.save(physicalCashOutRequestEntity);
         } else {
             log.error("requestEntity is not instanceof");
             throw new InternalServiceException("error in save request, instance not define", StatusService.GENERAL_ERROR, HttpStatus.OK);
@@ -66,6 +71,10 @@ public class RequestServiceImplementation implements RequestService {
             resultRequest = cashInRequestRepository.findByRrnEntityId(traceId);
         } else if (requestEntity instanceof PurchaseRequestEntity) {
             resultRequest = purchaseRequestRepository.findByRrnEntityId(traceId);
+        }else if (requestEntity instanceof CashOutRequestEntity) {
+            resultRequest = cashOutRequestRepository.findByRrnEntityId(traceId);
+        }else if (requestEntity instanceof PhysicalCashOutRequestEntity) {
+            resultRequest = physicalCashOutRequestRepository.findByRrnEntityId(traceId);
         }
 
         if (resultRequest != null) {
@@ -137,8 +146,16 @@ public class RequestServiceImplementation implements RequestService {
     @Override
     public CashOutRequestEntity findCashOutWithRrnId(long rrnId) throws InternalServiceException {
         return cashOutRequestRepository.findOptionalByRrnEntityId(rrnId).orElseThrow(() -> {
-            log.error("cashInRequest with id ({}) not found", rrnId);
-            return new InternalServiceException("cashIn not found", StatusService.RECORD_NOT_FOUND, HttpStatus.OK);
+            log.error("cashOutRequest with id ({}) not found", rrnId);
+            return new InternalServiceException("cashOutRequest not found", StatusService.RECORD_NOT_FOUND, HttpStatus.OK);
+        });
+    }
+
+    @Override
+    public PhysicalCashOutRequestEntity findPhysicalCashOutWithRrnId(long rrnId) throws InternalServiceException {
+        return physicalCashOutRequestRepository.findOptionalByRrnEntityId(rrnId).orElseThrow(() -> {
+            log.error("physicalCashOutRequest with id ({}) not found", rrnId);
+            return new InternalServiceException("physicalCashOutRequest not found", StatusService.RECORD_NOT_FOUND, HttpStatus.OK);
         });
     }
 
@@ -157,6 +174,15 @@ public class RequestServiceImplementation implements RequestService {
         if(cashOutRequestEntity != null) {
             log.error("cashOutDuplicateWithRrnId ({}) found", rrnId);
             throw new InternalServiceException("cashInDuplicateWithRrnId", StatusService.DUPLICATE_UUID, HttpStatus.OK);
+        }
+    }
+
+    @Override
+    public void findPhyicalCashOutDuplicateWithRrnId(long rrnId) throws InternalServiceException {
+        PhysicalCashOutRequestEntity physicalCashOutRequestEntity = physicalCashOutRequestRepository.findByRrnEntityId(rrnId);
+        if(physicalCashOutRequestEntity != null) {
+            log.error("cashOutDuplicateWithRrnId ({}) found", rrnId);
+            throw new InternalServiceException("physicalCashOutDuplicateWithRrnId", StatusService.DUPLICATE_UUID, HttpStatus.OK);
         }
     }
 
@@ -191,5 +217,10 @@ public class RequestServiceImplementation implements RequestService {
     @Override
     public AggregationCashOutDTO findSumAmountCashOutBetweenDate(long[] walletAccountId, Date fromDate, Date toDate) {
         return cashOutRequestRepository.findSumAmountBetweenDate(walletAccountId, fromDate, toDate);
+    }
+
+    @Override
+    public AggregationCashOutDTO findSumAmountPhysicalCashOutBetweenDate(long[] walletAccountId, Date fromDate, Date toDate) {
+        return physicalCashOutRequestRepository.findSumAmountBetweenDate(walletAccountId, fromDate, toDate);
     }
 }

@@ -10,12 +10,9 @@ import com.melli.wallet.domain.request.login.LoginRequestJson;
 import com.melli.wallet.domain.request.login.RefreshTokenRequestJson;
 import com.melli.wallet.domain.request.wallet.*;
 import com.melli.wallet.domain.request.merchant.MerchantBalanceRequest;
-import com.melli.wallet.domain.response.cash.CashOutResponse;
-import com.melli.wallet.domain.response.cash.CashOutTrackResponse;
+import com.melli.wallet.domain.response.cash.*;
 import com.melli.wallet.domain.response.UuidResponse;
 import com.melli.wallet.domain.response.base.BaseResponse;
-import com.melli.wallet.domain.response.cash.CashInResponse;
-import com.melli.wallet.domain.response.cash.CashInTrackResponse;
 import com.melli.wallet.domain.response.login.LoginResponse;
 import com.melli.wallet.domain.response.purchase.MerchantResponse;
 import com.melli.wallet.domain.response.purchase.PurchaseResponse;
@@ -88,12 +85,12 @@ public class WalletApplicationTests {
     private static final String SELL_IN_PATH = "/api/v1/purchase/sell";
     private static final String PURCHASE_INQUIRY_IN_PATH = "/api/v1/purchase/inquiry";
 
-    private static final String CASH_IN_GENERATE_UUID_PATH = "/api/v1/cash/charge/generate/uuid";
+    private static final String CASH_IN_GENERATE_UUID_PATH = "/api/v1/cash/generate/uuid";
     private static final String CASH_IN_PATH = "/api/v1/cash/charge";
-    private static final String CASH_IN_INQUIRY_PATH = "/api/v1/cash/charge/inquiry";
-    private static final String CASH_OUT_GENERATE_UUID_PATH = "/api/v1/cash/cashOut/generate/uuid";
-    private static final String CASH_OUT_PATH = "/api/v1/cash/cashOut";
-    private static final String CASH_OUT_INQUIRY_PATH = "/api/v1/cash/cashOut/inquiry";
+    private static final String CASH_IN_INQUIRY_PATH = "/api/v1/cash/inquiry";
+    private static final String CASH_OUT_GENERATE_UUID_PATH = "/api/v1/cashOut/generate/uuid";
+    private static final String CASH_OUT_PATH = "/api/v1/cashOut/withdrawal";
+    private static final String CASH_OUT_INQUIRY_PATH = "/api/v1/cashOut/inquiry";
 
     private static final String MERCHANT_GET_IN_PATH = "/api/v1/merchant/list";
     private static final String MERCHANT_BALANCE_PATH = "/api/v1/merchant/balance";
@@ -102,6 +99,10 @@ public class WalletApplicationTests {
 
     private static final String REFRESHTOKEN_PATH = "/api/v1/auth/refresh";
     private static final String LOGOUT_PATH = "/api/v1/auth/logout";
+
+    private static final String PHYSICAL_CASH_OUT_GENERATE_UUID_PATH = "/api/v1/physicalCashOut/generate/uuid";
+    private static final String PHYSICAL_CASH_OUT_INQUIRY_PATH = "/api/v1/physicalCashOut/inquiry?uniqueIdentifier=";
+    private static final String PHYSICAL_CASH_OUT_DO_PATH = "/api/v1/physicalCashOut/withdrawal";
 
     private static final String NATIONAL_CODE_CORRECT = "0077847660";
     private static final String NATIONAL_CODE_INCORRECT = "0077847661";
@@ -513,6 +514,42 @@ public class WalletApplicationTests {
         MockHttpServletRequestBuilder getRequest = buildGetRequest(token, CASH_OUT_INQUIRY_PATH + "?uniqueIdentifier=" + uniqueIdentifier);
         String response = performTest(mockMvc, getRequest, httpStatus, success, errorCode);
         TypeReference<BaseResponse<CashOutTrackResponse>> typeReference = new TypeReference<>() {};
+        return objectMapper.readValue(response, typeReference);
+    }
+
+    // Helper methods for physical cash operations
+    public BaseResponse<UuidResponse> generatePhysicalCashOutUuid(MockMvc mockMvc, String token, String nationalCode, String quantity, String accountNumber, HttpStatus httpStatus, int errorCode, boolean success) throws Exception {
+        PhysicalCashGenerateUuidRequestJson requestJson = new PhysicalCashGenerateUuidRequestJson();
+        requestJson.setNationalCode(nationalCode);
+        requestJson.setQuantity(quantity);
+        requestJson.setAccountNumber(accountNumber);
+        MockHttpServletRequestBuilder postRequest = buildPostRequest(token, PHYSICAL_CASH_OUT_GENERATE_UUID_PATH, mapToJson(requestJson));
+        String response = performTest(mockMvc, postRequest, httpStatus, success, errorCode);
+        TypeReference<BaseResponse<UuidResponse>> typeReference = new TypeReference<>() {};
+        return objectMapper.readValue(response, typeReference);
+    }
+
+    public BaseResponse<PhysicalCashOutResponse> physicalCashOut(MockMvc mockMvc, String token, String uniqueIdentifier, String quantity, String nationalCode, String accountNumber, String additionalData, String sign, String additionalDataParam, String currency, String commissionAmount, String commissionCurrency, HttpStatus httpStatus, int errorCode, boolean success) throws Exception {
+        PhysicalCashOutWalletRequestJson requestJson = new PhysicalCashOutWalletRequestJson();
+        requestJson.setUniqueIdentifier(uniqueIdentifier);
+        requestJson.setQuantity(quantity);
+        requestJson.setNationalCode(nationalCode);
+        requestJson.setAccountNumber(accountNumber);
+        requestJson.setAdditionalData(additionalDataParam);
+        requestJson.setSign(sign);
+        requestJson.setCurrency(currency);
+        requestJson.setCommissionObject(new CommissionObject(commissionCurrency, commissionAmount));
+        MockHttpServletRequestBuilder postRequest = buildPostRequest(token, PHYSICAL_CASH_OUT_DO_PATH, mapToJson(requestJson));
+        String response = performTest(mockMvc, postRequest, httpStatus, success, errorCode);
+        TypeReference<BaseResponse<PhysicalCashOutResponse>> typeReference = new TypeReference<>() {};
+        return objectMapper.readValue(response, typeReference);
+    }
+
+    public BaseResponse<PhysicalCashOutTrackResponse> physicalInquiryCashOut(MockMvc mockMvc, String token, String uniqueIdentifier, HttpStatus httpStatus, int errorCode, boolean success) throws Exception {
+
+        MockHttpServletRequestBuilder getRequest = buildGetRequest(token, PHYSICAL_CASH_OUT_INQUIRY_PATH + uniqueIdentifier);
+        String response = performTest(mockMvc, getRequest, httpStatus, success, errorCode);
+        TypeReference<BaseResponse<PhysicalCashOutTrackResponse>> typeReference = new TypeReference<>() {};
         return objectMapper.readValue(response, typeReference);
     }
 

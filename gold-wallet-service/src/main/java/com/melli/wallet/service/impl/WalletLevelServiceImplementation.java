@@ -46,4 +46,9 @@ public class WalletLevelServiceImplementation implements WalletLevelService {
             return new InternalServiceException("Wallet level not found", StatusService.WALLET_LEVEL_NOT_FOUND, HttpStatus.OK);
         });
     }
+
+    @Override
+    public WalletLevelEntity getByLevel(String level) throws InternalServiceException {
+        return walletLevelRepository.getByName(level);
+    }
 }

@@ -5,8 +5,10 @@ import com.melli.wallet.domain.dto.AggregationCashOutDTO;
 import com.melli.wallet.domain.master.entity.*;
 import com.melli.wallet.domain.master.persistence.WalletCashInLimitationRepository;
 import com.melli.wallet.domain.master.persistence.WalletCashOutLimitationRepository;
+import com.melli.wallet.domain.master.persistence.WalletPhysicalCashOutLimitationRepository;
 import com.melli.wallet.domain.redis.WalletCashInLimitationRedis;
 import com.melli.wallet.domain.redis.WalletCashOutLimitationRedis;
+import com.melli.wallet.domain.redis.WalletPhysicalCashOutLimitationRedis;
 import com.melli.wallet.exception.InternalServiceException;
 import com.melli.wallet.service.*;
 import com.melli.wallet.util.Utility;
@@ -37,6 +39,7 @@ public class WalletCashLimitationServiceImplementation implements WalletCashLimi
     private final LimitationGeneralCustomService limitationGeneralCustomService;
     private final WalletCashInLimitationRepository walletCashInLimitationRepository;
     private final WalletCashOutLimitationRepository walletCashOutLimitationRepository;
+    private final WalletPhysicalCashOutLimitationRepository walletPhysicalCashOutLimitationRepository;
     private final WalletAccountService walletAccountService;
     private final RedisLockService redisLockService;
     private final RequestService requestService;
@@ -47,6 +50,10 @@ public class WalletCashLimitationServiceImplementation implements WalletCashLimi
 
     private void saveCashOut(WalletCashOutLimitationRedis walletCashOutLimitationRedis) {
         walletCashOutLimitationRepository.save(walletCashOutLimitationRedis);
+    }
+
+    private void savePhysicalCashOut(WalletPhysicalCashOutLimitationRedis walletCashOutLimitationRedis) {
+        walletPhysicalCashOutLimitationRepository.save(walletCashOutLimitationRedis);
     }
 
     @Override
@@ -213,6 +220,112 @@ public class WalletCashLimitationServiceImplementation implements WalletCashLimi
     }
 
     @Override
+    public void checkPhysicalCashOutLimitation(ChannelEntity channel, WalletEntity wallet, BigDecimal quantity, WalletAccountEntity walletAccount) throws InternalServiceException {
+        log.info("checking checkPhysicalCashOutLimitation for nationalCode({}) ...", wallet.getNationalCode());
+
+        WalletLevelEntity walletLevelEntity = wallet.getWalletLevelEntity();
+        WalletAccountTypeEntity walletAccountTypeEntity = walletAccount.getWalletAccountTypeEntity();
+        WalletAccountCurrencyEntity walletAccountCurrencyEntity = walletAccount.getWalletAccountCurrencyEntity();
+        WalletTypeEntity walletTypeEntity = wallet.getWalletTypeEntity();
+
+        Boolean enableCashOut = Boolean.parseBoolean(limitationGeneralCustomService.getSetting(channel, LimitationGeneralService.ENABLE_PHYSICAL_CASH_OUT, walletLevelEntity, walletAccountTypeEntity,
+                walletAccountCurrencyEntity, walletTypeEntity));
+
+        if (Boolean.FALSE.equals(enableCashOut)) {
+            log.error("checkPhysicalCashOutLimitation: physical cash out for channel {}, walletAccountCurrencyEntity ({}) and walletAccountTypeEntity ({}) walletTypeEntity ({}) is not permission !!!", channel,
+                    walletAccount.getWalletAccountCurrencyEntity().getName(),  walletAccount.getWalletAccountTypeEntity().getName(), walletAccount.getWalletEntity().getWalletTypeEntity().getName());
+            throw new InternalServiceException("account (" + walletAccount.getAccountNumber() + ") dont permission to cashIn", StatusService.ACCOUNT_DONT_PERMISSION_FOR_PHYSICAL_CASH_OUT, HttpStatus.OK);
+        }
+
+        BigDecimal minAmount = new BigDecimal(limitationGeneralCustomService.getSetting(channel, LimitationGeneralService.MIN_AMOUNT_PHYSICAL_CASH_OUT, walletLevelEntity, walletAccountTypeEntity, walletAccountCurrencyEntity, walletTypeEntity));
+        BigDecimal maxAmount = new BigDecimal(limitationGeneralCustomService.getSetting(channel, LimitationGeneralService.MAX_AMOUNT_PHYSICAL_CASH_OUT, walletLevelEntity, walletAccountTypeEntity, walletAccountCurrencyEntity, walletTypeEntity));
+        BigDecimal maxCashInDaily = new BigDecimal(limitationGeneralCustomService.getSetting(channel, LimitationGeneralService.MAX_WALLET_AMOUNT_DAILY_PHYSICAL_CASH_OUT, walletLevelEntity, walletAccountTypeEntity, walletAccountCurrencyEntity, walletTypeEntity));
+
+
+        String key = walletAccount.getAccountNumber();
+
+        redisLockService.runAfterLock(key, this.getClass(), () -> {
+
+            if (quantity.compareTo(maxAmount)> 0) {
+                log.error("checkPhysicalCashOutLimitation: CashOut's amount({}) for wallet({}), is bigger than maxCashIn({}) !!!", quantity, wallet.getNationalCode(), maxAmount);
+                throw new InternalServiceException("CashOut's amount is bigger than minCashIn", StatusService.AMOUNT_BIGGER_THAN_MAX, HttpStatus.OK,
+                        Map.ofEntries(
+                                entry("1", Utility.addComma(quantity.longValue())),
+                                entry("2", Utility.addComma(maxAmount.longValue()))
+                        )
+                );
+            }
+
+            if (quantity.compareTo(minAmount) < 0) {
+                log.error("checkPhysicalCashOutLimitation: CashOut's amount({}) for wallet({}), is less than minCashIn({}) !!!", quantity, wallet.getNationalCode(), minAmount);
+                throw new InternalServiceException("CashOut's amount is less than minCashIn", StatusService.AMOUNT_LESS_THAN_MIN, HttpStatus.OK, Map.ofEntries(
+                        entry("1", Utility.addComma(quantity.longValue())),
+                        entry("2", Utility.addComma(minAmount.longValue()))
+                ));
+            }
+
+            log.info("Start checking daily cashOut limitation for wallet({}) ...", wallet.getNationalCode());
+
+            String currentDate = DateUtils.getLocaleDate(DateUtils.ENGLISH_LOCALE, new Date(), "MMdd", false);
+            String walletLimitationId = walletAccount.getId() + "-" + currentDate;
+
+            WalletPhysicalCashOutLimitationRedis walletPhysicalCashOutLimitationRedis = findPhysicalCashOutById(walletLimitationId);
+
+            if (walletPhysicalCashOutLimitationRedis == null) {
+                log.info("wallet with nationalCode ({}) dont have any physical cashOut in date({})", wallet.getNationalCode(), currentDate);
+                walletPhysicalCashOutLimitationRedis = new WalletPhysicalCashOutLimitationRedis();
+                AggregationCashOutDTO sumAmountCashOutBetweenDate = requestService.findSumAmountPhysicalCashOutBetweenDate(new long[]{walletAccount.getId()}, new Date(), new Date());
+                log.info("walletPhysicalCashOutLimitationRedis read from database for walletAccount ({}), nationalCode ({}), sumAmount ({}), count ({}) for date ({})", walletAccount.getAccountNumber(),
+                        wallet.getNationalCode(), sumAmountCashOutBetweenDate.getSumPrice(), sumAmountCashOutBetweenDate.getCountRecord(), new Date());
+                walletPhysicalCashOutLimitationRedis.setId(walletLimitationId);
+                walletPhysicalCashOutLimitationRedis.setCashOutDailyAmount(new BigDecimal(sumAmountCashOutBetweenDate.getSumPrice()));
+                walletPhysicalCashOutLimitationRedis.setCashOutDailyCount(Long.parseLong(sumAmountCashOutBetweenDate.getCountRecord()));
+                walletPhysicalCashOutLimitationRepository.save(walletPhysicalCashOutLimitationRedis);
+            }
+
+            log.info("SumPhysicalCashOutAmount for wallet({}) in date: ({}) is: {}", wallet.getNationalCode(), currentDate, walletPhysicalCashOutLimitationRedis.getCashOutDailyAmount());
+
+            if ((walletPhysicalCashOutLimitationRedis.getCashOutDailyAmount().add(quantity).compareTo(BigDecimal.valueOf(maxCashInDaily.longValue()))) > 0) {
+                log.error("wallet({}) on channel ({}) , exceeded amount limitation in cashOut!!! SumPhysicalCashOutAmount is: {}", wallet.getNationalCode(), wallet.getOwner().getId(), walletPhysicalCashOutLimitationRedis.getCashOutDailyAmount());
+                throw new InternalServiceException("wallet exceeded the limitation !!!", StatusService.PHYSICAL_CASHOUT_EXCEEDED_AMOUNT_DAILY_LIMITATION, HttpStatus.OK, Map.ofEntries(
+                        entry("1", Utility.addComma(walletPhysicalCashOutLimitationRedis.getCashOutDailyAmount().add(quantity).longValue())),
+                        entry("2", Utility.addComma((maxCashInDaily.longValue())))
+                ));
+            }
+            return null;
+        }, null);
+    }
+
+    @Override
+    public void updatePhysicalCashOutLimitation(WalletAccountEntity walletAccountEntity, BigDecimal quantity) throws InternalServiceException {
+        log.info("start update updatePhysicalCashOutLimitation for mobile {} with amount {}", walletAccountEntity.getWalletEntity().getNationalCode(), quantity);
+
+        String key = walletAccountEntity.getAccountNumber();
+
+        redisLockService.runAfterLock(key, this.getClass(), () -> {
+            String currentDate = DateUtils.getLocaleDate(DateUtils.ENGLISH_LOCALE, new Date(), "MMdd", false);
+            String walletLimitationId = walletAccountEntity.getId() + "-" + currentDate;
+
+            WalletPhysicalCashOutLimitationRedis walletPhysicalCashOutLimitationRedis = findPhysicalCashOutById(walletLimitationId);
+
+            if (walletPhysicalCashOutLimitationRedis == null) {
+                log.info("It is the first time that creating updatePhysicalCashOutLimitation for walletAccount({}) for cashIn in date: {}", walletAccountEntity.getAccountNumber(), currentDate);
+                walletPhysicalCashOutLimitationRedis = new WalletPhysicalCashOutLimitationRedis();
+                walletPhysicalCashOutLimitationRedis.setId(walletLimitationId);
+                walletPhysicalCashOutLimitationRedis.setCashOutDailyCount(1);
+                walletPhysicalCashOutLimitationRedis.setCashOutDailyAmount(quantity);
+            } else {
+                walletPhysicalCashOutLimitationRedis.setCashOutDailyCount(walletPhysicalCashOutLimitationRedis.getCashOutDailyCount() + 1);
+                walletPhysicalCashOutLimitationRedis.setCashOutDailyAmount(walletPhysicalCashOutLimitationRedis.getCashOutDailyAmount().add(quantity));
+            }
+            savePhysicalCashOut(walletPhysicalCashOutLimitationRedis);
+            return null;
+        }, null);
+        log.info("finish updatePhysicalCashOutLimitation for mobile {} with amount {}", walletAccountEntity.getWalletEntity().getNationalCode(), quantity);
+
+    }
+
+    @Override
     public void updateCashOutLimitation(WalletAccountEntity walletAccountEntity, BigDecimal amount) throws InternalServiceException {
         log.info("start update updateCashOutLimitation for mobile {} with amount {}", walletAccountEntity.getWalletEntity().getNationalCode(), amount);
 
@@ -277,6 +390,10 @@ public class WalletCashLimitationServiceImplementation implements WalletCashLimi
 
     WalletCashOutLimitationRedis findCashOutById(String id) {
         return walletCashOutLimitationRepository.findById(id).orElse(null);
+    }
+
+    WalletPhysicalCashOutLimitationRedis findPhysicalCashOutById(String id) {
+        return walletPhysicalCashOutLimitationRepository.findById(id).orElse(null);
     }
 
 

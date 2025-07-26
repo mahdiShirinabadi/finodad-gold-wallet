@@ -9,6 +9,7 @@ public interface TemplateService {
 
 	String CASH_IN = "cash_in";
 	String CASH_OUT = "cash_out";
+	String PHYSICAL_CASH_OUT = "physical_cash_out";
 	String BUY_WITHDRAWAL = "BUY_WITHDRAWAL";
 	String BUY_DEPOSIT = "BUY_DEPOSIT";
 

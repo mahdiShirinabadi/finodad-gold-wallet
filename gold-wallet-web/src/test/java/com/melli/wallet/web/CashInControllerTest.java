@@ -33,7 +33,7 @@ import static org.springframework.security.test.web.servlet.setup.SecurityMockMv
  * Date: 4/7/2025
  */
 @Log4j2
-@DisplayName("CacheControllerTest End2End test")
+@DisplayName("CacheInControllerTest End2End test")
 @DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_CLASS)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class CashInControllerTest extends WalletApplicationTests {
@@ -60,6 +60,7 @@ class CashInControllerTest extends WalletApplicationTests {
     private WalletTypeService walletTypeService;
     @Autowired
     private LimitationGeneralCustomService limitationGeneralCustomService;
+    @Autowired
     private LimitationGeneralService limitationGeneralService;
     @Autowired
     private ChannelService channelService;

@@ -14,6 +14,7 @@ public interface ResourceService {
     String MERCHANT_LIST = "MERCHANT_LIST";
     String CASH_IN = "CASH_IN";
     String CASH_OUT = "CASH_OUT";
+    String PHYSICAL_CASH_OUT = "PHYSICAL_CASH_OUT";
     String P2P = "P2P";
     String BUY = "BUY";
     String BUY_DIRECT = "BUY_DIRECT";

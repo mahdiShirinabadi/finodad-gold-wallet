@@ -12,6 +12,7 @@ import com.melli.wallet.domain.response.UuidResponse;
 import com.melli.wallet.domain.response.base.BaseResponse;
 import com.melli.wallet.domain.response.login.LoginResponse;
 import com.melli.wallet.domain.response.purchase.PurchaseResponse;
+import com.melli.wallet.domain.response.cash.CashInResponse;
 import com.melli.wallet.domain.response.wallet.CreateWalletResponse;
 import com.melli.wallet.domain.response.wallet.WalletAccountObject;
 import com.melli.wallet.exception.InternalServiceException;
@@ -354,6 +355,7 @@ class PurchaseControllerTest extends WalletApplicationTests {
         String quantity = "1.07";
         walletBuyLimitationService.deleteAll();
         WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.RIAL);
+
         //update balance merchant wallet-account
         WalletEntity walletMerchantEntity = walletService.findByNationalCodeAndWalletTypeId("1111111111", walletTypeService.getByName(WalletTypeService.MERCHANT).getId());
         List<WalletAccountEntity> walletAccountEntityList = walletAccountService.findByWallet(walletMerchantEntity);
@@ -394,5 +396,235 @@ class PurchaseControllerTest extends WalletApplicationTests {
 
     //
 
+
+    @Test
+    @Order(51)
+    @DisplayName("buyDirectFail-InvalidCommissionCurrency")
+    void buyDirectFailInvalidCommissionCurrency() throws Exception {
+        log.info("start buyDirectFailInvalidCommissionCurrency test");
+        String price = "100000";
+        String quantity = "1.07";
+        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.RIAL);
+        
+        // Charge account first
+        String refNumber = new Date().getTime() + "";
+        String cashInAmount = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_IN, walletAccountObjectOptional.getAccountNumber());
+        WalletAccountEntity walletAccountEntity = walletAccountService.findByAccountNumber(walletAccountObjectOptional.getAccountNumber());
+        String cashInValue = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, walletAccountObjectOptional.getAccountNumber());
+        if("false".equalsIgnoreCase(cashInValue)){
+            limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
+                limitationGeneralService.getSetting(LimitationGeneralService.ENABLE_CASH_IN).getId(), walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
+                walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
+                "true","test buyDirectFailInvalidCommissionCurrency");
+        }
+        BaseResponse<UuidResponse> cashInUuidResponse = generateCashInUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, cashInAmount, walletAccountObjectOptional.getAccountNumber(), HttpStatus.OK, StatusService.SUCCESSFUL, true);
+        BaseResponse<CashInResponse> cashInResponse = cashIn(mockMvc, ACCESS_TOKEN, cashInUuidResponse.getData().getUniqueIdentifier(), refNumber, cashInAmount, NATIONAL_CODE_CORRECT, walletAccountObjectOptional.getAccountNumber(), "", "", "ACCOUNT_TO_ACCOUNT", HttpStatus.OK, StatusService.SUCCESSFUL, true);
+        Assert.assertNotNull(cashInResponse.getData());
+
+        // Update merchant balance
+        WalletEntity walletMerchantEntity = walletService.findByNationalCodeAndWalletTypeId("1111111111", walletTypeService.getByName(WalletTypeService.MERCHANT).getId());
+        List<WalletAccountEntity> walletAccountEntityList = walletAccountService.findByWallet(walletMerchantEntity);
+        long id = 0;
+        try {
+            id = walletAccountCurrencyService.findCurrency(WalletAccountCurrencyService.GOLD).getId();
+        } catch (InternalServiceException ex) {
+            log.error("walletAccountCurrencyEntityGold not found", ex);
+        }
+        long finalId = id;
+        WalletAccountEntity merchantWalletAccountEntity = walletAccountEntityList.stream().filter(
+                x -> x.getWalletAccountCurrencyEntity().getId() == finalId).findFirst().orElse(null);
+        walletAccountService.increaseBalance(merchantWalletAccountEntity.getId(), new BigDecimal("1.07"));
+
+        // Generate UUID for buyDirect
+        BaseResponse<UuidResponse> uuidResponse = generateBuyUuid(mockMvc, ACCESS_TOKEN, walletAccountObjectOptional.getAccountNumber(), price, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusService.SUCCESSFUL, true);
+        String uniqueIdentifier = uuidResponse.getData().getUniqueIdentifier();
+        
+        // Test with GOLD commission currency (should fail)
+        BaseResponse<PurchaseResponse> response = buyDirect(mockMvc, refNumber, ACCESS_TOKEN, uniqueIdentifier, quantity, String.valueOf(Long.parseLong(price)), "GOLD", "2000", NATIONAL_CODE_CORRECT, CURRENCY_GOLD, "1", walletAccountObjectOptional.getAccountNumber(), "", "test commission currency error", HttpStatus.OK, StatusService.COMMISSION_CURRENCY_NOT_VALID, false);
+        Assert.assertSame(StatusService.COMMISSION_CURRENCY_NOT_VALID, response.getErrorDetail().getCode());
+    }
+
+    @Test
+    @Order(52)
+    @DisplayName("buyDirectFail-InvalidUniqueIdentifier")
+    void buyDirectFailInvalidUniqueIdentifier() throws Exception {
+        log.info("start buyDirectFailInvalidUniqueIdentifier test");
+        String quantity = "1.07";
+        String price = "100000";
+        String refNumber = new Date().getTime() + "";
+        
+        buyDirect(mockMvc, refNumber, ACCESS_TOKEN, "invalid_uuid", quantity, price, "RIAL", "2000", NATIONAL_CODE_CORRECT, CURRENCY_GOLD, "1", "1234567890", "", "test invalid uuid", HttpStatus.OK, StatusService.UUID_NOT_FOUND, false);
+    }
+
+    @Test
+    @Order(53)
+    @DisplayName("buyDirectFail-MerchantBalanceNotEnough")
+    void buyDirectFailMerchantBalanceNotEnough() throws Exception {
+        log.info("start buyDirectFailMerchantBalanceNotEnough test");
+        String price = "100000";
+        String quantity = "1.07";
+        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.RIAL);
+        
+        // Charge account first
+        String refNumber = new Date().getTime() + "";
+        String cashInAmount = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_IN, walletAccountObjectOptional.getAccountNumber());
+        WalletAccountEntity walletAccountEntity = walletAccountService.findByAccountNumber(walletAccountObjectOptional.getAccountNumber());
+        String cashInValue = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, walletAccountObjectOptional.getAccountNumber());
+        if("false".equalsIgnoreCase(cashInValue)){
+            limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
+                limitationGeneralService.getSetting(LimitationGeneralService.ENABLE_CASH_IN).getId(), walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
+                walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
+                "true","test buyDirectFailMerchantBalanceNotEnough");
+        }
+        BaseResponse<UuidResponse> cashInUuidResponse = generateCashInUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, cashInAmount, walletAccountObjectOptional.getAccountNumber(), HttpStatus.OK, StatusService.SUCCESSFUL, true);
+        BaseResponse<CashInResponse> cashInResponse = cashIn(mockMvc, ACCESS_TOKEN, cashInUuidResponse.getData().getUniqueIdentifier(), refNumber, cashInAmount, NATIONAL_CODE_CORRECT, walletAccountObjectOptional.getAccountNumber(), "", "", "ACCOUNT_TO_ACCOUNT", HttpStatus.OK, StatusService.SUCCESSFUL, true);
+        Assert.assertNotNull(cashInResponse.getData());
+
+        // Don't update merchant balance to simulate insufficient balance
+        BaseResponse<UuidResponse> uuidResponse = generateBuyUuid(mockMvc, ACCESS_TOKEN, walletAccountObjectOptional.getAccountNumber(), price, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusService.SUCCESSFUL, true);
+        String uniqueIdentifier = uuidResponse.getData().getUniqueIdentifier();
+        
+        // Test with insufficient merchant balance
+        BaseResponse<PurchaseResponse> response = buyDirect(mockMvc, refNumber, ACCESS_TOKEN, uniqueIdentifier, quantity, String.valueOf(Long.parseLong(price)), "RIAL", "2000", NATIONAL_CODE_CORRECT, CURRENCY_GOLD, "1", walletAccountObjectOptional.getAccountNumber(), "", "test merchant balance not enough", HttpStatus.OK, StatusService.MERCHANT_BALANCE_NOT_ENOUGH, false);
+        Assert.assertSame(StatusService.MERCHANT_BALANCE_NOT_ENOUGH, response.getErrorDetail().getCode());
+    }
+
+    @Test
+    @Order(54)
+    @DisplayName("buyDirectFail-InvalidMerchantId")
+    void buyDirectFailInvalidMerchantId() throws Exception {
+        log.info("start buyDirectFailInvalidMerchantId test");
+        String price = "100000";
+        String quantity = "1.07";
+        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.RIAL);
+        
+        // Charge account first
+        String refNumber = new Date().getTime() + "";
+        String cashInAmount = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_IN, walletAccountObjectOptional.getAccountNumber());
+        WalletAccountEntity walletAccountEntity = walletAccountService.findByAccountNumber(walletAccountObjectOptional.getAccountNumber());
+        String cashInValue = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, walletAccountObjectOptional.getAccountNumber());
+        if("false".equalsIgnoreCase(cashInValue)){
+            limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
+                limitationGeneralService.getSetting(LimitationGeneralService.ENABLE_CASH_IN).getId(), walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
+                walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
+                "true","test buyDirectFailInvalidMerchantId");
+        }
+        BaseResponse<UuidResponse> cashInUuidResponse = generateCashInUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, cashInAmount, walletAccountObjectOptional.getAccountNumber(), HttpStatus.OK, StatusService.SUCCESSFUL, true);
+        BaseResponse<CashInResponse> cashInResponse = cashIn(mockMvc, ACCESS_TOKEN, cashInUuidResponse.getData().getUniqueIdentifier(), refNumber, cashInAmount, NATIONAL_CODE_CORRECT, walletAccountObjectOptional.getAccountNumber(), "", "", "ACCOUNT_TO_ACCOUNT", HttpStatus.OK, StatusService.SUCCESSFUL, true);
+        Assert.assertNotNull(cashInResponse.getData());
+
+        // Update merchant balance
+        WalletEntity walletMerchantEntity = walletService.findByNationalCodeAndWalletTypeId("1111111111", walletTypeService.getByName(WalletTypeService.MERCHANT).getId());
+        List<WalletAccountEntity> walletAccountEntityList = walletAccountService.findByWallet(walletMerchantEntity);
+        long id = 0;
+        try {
+            id = walletAccountCurrencyService.findCurrency(WalletAccountCurrencyService.GOLD).getId();
+        } catch (InternalServiceException ex) {
+            log.error("walletAccountCurrencyEntityGold not found", ex);
+        }
+        long finalId = id;
+        WalletAccountEntity merchantWalletAccountEntity = walletAccountEntityList.stream().filter(
+                x -> x.getWalletAccountCurrencyEntity().getId() == finalId).findFirst().orElse(null);
+        walletAccountService.increaseBalance(merchantWalletAccountEntity.getId(), new BigDecimal("1.07"));
+
+        BaseResponse<UuidResponse> uuidResponse = generateBuyUuid(mockMvc, ACCESS_TOKEN, walletAccountObjectOptional.getAccountNumber(), price, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusService.SUCCESSFUL, true);
+        String uniqueIdentifier = uuidResponse.getData().getUniqueIdentifier();
+        
+        // Test with invalid merchant ID
+        BaseResponse<PurchaseResponse> response = buyDirect(mockMvc, refNumber, ACCESS_TOKEN, uniqueIdentifier, quantity, String.valueOf(Long.parseLong(price)), "RIAL", "2000", NATIONAL_CODE_CORRECT, CURRENCY_GOLD, "999", walletAccountObjectOptional.getAccountNumber(), "", "test invalid merchant id", HttpStatus.OK, StatusService.MERCHANT_IS_NOT_EXIST, false);
+        Assert.assertSame(StatusService.MERCHANT_IS_NOT_EXIST, response.getErrorDetail().getCode());
+    }
+
+    @Test
+    @Order(55)
+    @DisplayName("buyDirectFail-InvalidCurrency")
+    void buyDirectFailInvalidCurrency() throws Exception {
+        log.info("start buyDirectFailInvalidCurrency test");
+        String price = "100000";
+        String quantity = "1.07";
+        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.RIAL);
+        
+        // Charge account first
+        String refNumber = new Date().getTime() + "";
+        String cashInAmount = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_IN, walletAccountObjectOptional.getAccountNumber());
+        WalletAccountEntity walletAccountEntity = walletAccountService.findByAccountNumber(walletAccountObjectOptional.getAccountNumber());
+        String cashInValue = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, walletAccountObjectOptional.getAccountNumber());
+        if("false".equalsIgnoreCase(cashInValue)){
+            limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
+                limitationGeneralService.getSetting(LimitationGeneralService.ENABLE_CASH_IN).getId(), walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
+                walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
+                "true","test buyDirectFailInvalidCurrency");
+        }
+        BaseResponse<UuidResponse> cashInUuidResponse = generateCashInUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, cashInAmount, walletAccountObjectOptional.getAccountNumber(), HttpStatus.OK, StatusService.SUCCESSFUL, true);
+        BaseResponse<CashInResponse> cashInResponse = cashIn(mockMvc, ACCESS_TOKEN, cashInUuidResponse.getData().getUniqueIdentifier(), refNumber, cashInAmount, NATIONAL_CODE_CORRECT, walletAccountObjectOptional.getAccountNumber(), "", "", "ACCOUNT_TO_ACCOUNT", HttpStatus.OK, StatusService.SUCCESSFUL, true);
+        Assert.assertNotNull(cashInResponse.getData());
+
+        // Update merchant balance
+        WalletEntity walletMerchantEntity = walletService.findByNationalCodeAndWalletTypeId("1111111111", walletTypeService.getByName(WalletTypeService.MERCHANT).getId());
+        List<WalletAccountEntity> walletAccountEntityList = walletAccountService.findByWallet(walletMerchantEntity);
+        long id = 0;
+        try {
+            id = walletAccountCurrencyService.findCurrency(WalletAccountCurrencyService.GOLD).getId();
+        } catch (InternalServiceException ex) {
+            log.error("walletAccountCurrencyEntityGold not found", ex);
+        }
+        long finalId = id;
+        WalletAccountEntity merchantWalletAccountEntity = walletAccountEntityList.stream().filter(
+                x -> x.getWalletAccountCurrencyEntity().getId() == finalId).findFirst().orElse(null);
+        walletAccountService.increaseBalance(merchantWalletAccountEntity.getId(), new BigDecimal("1.07"));
+
+        BaseResponse<UuidResponse> uuidResponse = generateBuyUuid(mockMvc, ACCESS_TOKEN, walletAccountObjectOptional.getAccountNumber(), price, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusService.SUCCESSFUL, true);
+        String uniqueIdentifier = uuidResponse.getData().getUniqueIdentifier();
+        
+        // Test with invalid currency
+        BaseResponse<PurchaseResponse> response = buyDirect(mockMvc, refNumber, ACCESS_TOKEN, uniqueIdentifier, quantity, String.valueOf(Long.parseLong(price)), "RIAL", "2000", NATIONAL_CODE_CORRECT, "INVALID_CURRENCY", "1", walletAccountObjectOptional.getAccountNumber(), "", "test invalid currency", HttpStatus.OK, StatusService.WALLET_ACCOUNT_CURRENCY_NOT_FOUND, false);
+        Assert.assertSame(StatusService.WALLET_ACCOUNT_CURRENCY_NOT_FOUND, response.getErrorDetail().getCode());
+    }
+
+    @Test
+    @Order(56)
+    @DisplayName("buyDirectFail-InvalidSign")
+    void buyDirectFailInvalidSign() throws Exception {
+        log.info("start buyDirectFailInvalidSign test");
+        String price = "100000";
+        String quantity = "1.07";
+        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.RIAL);
+        
+        // Charge account first
+        String refNumber = new Date().getTime() + "";
+        String cashInAmount = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_IN, walletAccountObjectOptional.getAccountNumber());
+        WalletAccountEntity walletAccountEntity = walletAccountService.findByAccountNumber(walletAccountObjectOptional.getAccountNumber());
+        String cashInValue = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, walletAccountObjectOptional.getAccountNumber());
+        if("false".equalsIgnoreCase(cashInValue)){
+            limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
+                limitationGeneralService.getSetting(LimitationGeneralService.ENABLE_CASH_IN).getId(), walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
+                walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
+                "true","test buyDirectFailInvalidSign");
+        }
+        BaseResponse<UuidResponse> cashInUuidResponse = generateCashInUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, cashInAmount, walletAccountObjectOptional.getAccountNumber(), HttpStatus.OK, StatusService.SUCCESSFUL, true);
+        BaseResponse<CashInResponse> cashInResponse = cashIn(mockMvc, ACCESS_TOKEN, cashInUuidResponse.getData().getUniqueIdentifier(), refNumber, cashInAmount, NATIONAL_CODE_CORRECT, walletAccountObjectOptional.getAccountNumber(), "", "", "ACCOUNT_TO_ACCOUNT", HttpStatus.OK, StatusService.SUCCESSFUL, true);
+        Assert.assertNotNull(cashInResponse.getData());
+
+        // Update merchant balance
+        WalletEntity walletMerchantEntity = walletService.findByNationalCodeAndWalletTypeId("1111111111", walletTypeService.getByName(WalletTypeService.MERCHANT).getId());
+        List<WalletAccountEntity> walletAccountEntityList = walletAccountService.findByWallet(walletMerchantEntity);
+        long id = 0;
+        try {
+            id = walletAccountCurrencyService.findCurrency(WalletAccountCurrencyService.GOLD).getId();
+        } catch (InternalServiceException ex) {
+            log.error("walletAccountCurrencyEntityGold not found", ex);
+        }
+        long finalId = id;
+        WalletAccountEntity merchantWalletAccountEntity = walletAccountEntityList.stream().filter(
+                x -> x.getWalletAccountCurrencyEntity().getId() == finalId).findFirst().orElse(null);
+        walletAccountService.increaseBalance(merchantWalletAccountEntity.getId(), new BigDecimal("1.07"));
+
+        BaseResponse<UuidResponse> uuidResponse = generateBuyUuid(mockMvc, ACCESS_TOKEN, walletAccountObjectOptional.getAccountNumber(), price, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusService.SUCCESSFUL, true);
+        String uniqueIdentifier = uuidResponse.getData().getUniqueIdentifier();
+        
+        // Test with invalid sign
+        BaseResponse<PurchaseResponse> response = buyDirect(mockMvc, refNumber, ACCESS_TOKEN, uniqueIdentifier, quantity, String.valueOf(Long.parseLong(price)), "RIAL", "2000", NATIONAL_CODE_CORRECT, CURRENCY_GOLD, "1", walletAccountObjectOptional.getAccountNumber(), "invalid_sign", "test invalid sign", HttpStatus.OK, StatusService.INVALID_SIGN, false);
+        Assert.assertSame(StatusService.INVALID_SIGN, response.getErrorDetail().getCode());
+    }
 
 }

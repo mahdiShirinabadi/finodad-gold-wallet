@@ -11,4 +11,5 @@ import java.util.List;
 public interface WalletLevelRepository extends CrudRepository<WalletLevelEntity, Long> {
    WalletLevelEntity findById(long id);
    List<WalletLevelEntity> findAll();
+   WalletLevelEntity getByName(String walletLevelName);
 }

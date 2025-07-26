@@ -26,11 +26,14 @@ public interface RequestService {
     CashInRequestEntity findCashInWithId(long requestId);
     CashInRequestEntity findCashInWithRrnId(long rrnId) throws InternalServiceException;
     CashOutRequestEntity findCashOutWithRrnId(long rrnId) throws InternalServiceException;
+    PhysicalCashOutRequestEntity findPhysicalCashOutWithRrnId(long rrnId) throws InternalServiceException;
     void findCashInDuplicateWithRrnId(long rrnId) throws InternalServiceException;
     void findCashOutDuplicateWithRrnId(long rrnId) throws InternalServiceException;
+    void findPhyicalCashOutDuplicateWithRrnId(long rrnId) throws InternalServiceException;
     List<Long> findPurchaseIdsByTerminalId(String likeStr, Integer[] results, Date fromDate, Date toDate, WalletAccountTypeEntity walletAccountTypeEntity);
     CashInTrackResponse cashInTrack(String uid, String channelIp) throws InternalServiceException;
     AggregationPurchaseDTO findSumAmountByTransactionTypeBetweenDate(@Param("walletAccountId") long[] walletAccountId, String transactionType, Date fromDate, Date toDate);
     AggregationCashInDTO findSumAmountCashInBetweenDate(@Param("walletAccountId") long[] walletAccountId, Date fromDate, Date toDate);
     AggregationCashOutDTO findSumAmountCashOutBetweenDate(@Param("walletAccountId") long[] walletAccountId, Date fromDate, Date toDate);
+    AggregationCashOutDTO findSumAmountPhysicalCashOutBetweenDate(@Param("walletAccountId") long[] walletAccountId, Date fromDate, Date toDate);
 }

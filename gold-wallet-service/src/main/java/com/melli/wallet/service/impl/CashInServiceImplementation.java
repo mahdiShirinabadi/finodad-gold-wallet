@@ -56,20 +56,13 @@ public class CashInServiceImplementation implements CashInService {
 
 
     @Override
-    public UuidResponse generateUuid(ChannelEntity channelEntity, String nationalCode, String amount, String accountNumber, String requestTypeName) throws InternalServiceException {
+    public UuidResponse generateUuid(ChannelEntity channelEntity, String nationalCode, String amount, String accountNumber) throws InternalServiceException {
         try {
 
-            WalletAccountEntity walletAccountEntity = helper.checkWalletAndWalletAccountForNormalUser(walletService,nationalCode, walletAccountService, accountNumber);
-            if(RequestTypeService.CASH_IN.equalsIgnoreCase(requestTypeName)){
-                walletCashLimitationService.checkCashInLimitation(channelEntity, walletAccountEntity.getWalletEntity(), BigDecimal.valueOf(Long.parseLong(amount)), walletAccountEntity);
-            }else if(RequestTypeService.CASH_OUT.equalsIgnoreCase(requestTypeName)){
-                walletCashLimitationService.checkCashOutLimitation(channelEntity, walletAccountEntity.getWalletEntity(), BigDecimal.valueOf(Long.parseLong(amount)), walletAccountEntity);
-            }else{
-                log.error("in generate uuid requestType ({}) not found", requestTypeName);
-                throw new InternalServiceException("wallet cash type not found", StatusService.REQUEST_TYPE_NOT_FOUND, HttpStatus.OK);
-            }
+            WalletAccountEntity walletAccountEntity = helper.checkWalletAndWalletAccountForNormalUser(walletService, nationalCode, walletAccountService, accountNumber);
+            walletCashLimitationService.checkCashInLimitation(channelEntity, walletAccountEntity.getWalletEntity(), BigDecimal.valueOf(Long.parseLong(amount)), walletAccountEntity);
             log.info("start generate traceId, username ===> ({}), nationalCode ({})", channelEntity.getUsername(), nationalCode);
-            RrnEntity rrnEntity = rrnService.generateTraceId(nationalCode, channelEntity, requestTypeService.getRequestType(requestTypeName), accountNumber, amount);
+            RrnEntity rrnEntity = rrnService.generateTraceId(nationalCode, channelEntity, requestTypeService.getRequestType(RequestTypeService.CASH_IN), accountNumber, amount);
             log.info("finish traceId ===> {}, username ({}), nationalCode ({})", rrnEntity.getUuid(), channelEntity.getUsername(), nationalCode);
             return new UuidResponse(rrnEntity.getUuid());
         } catch (InternalServiceException e) {
@@ -106,9 +99,11 @@ public class CashInServiceImplementation implements CashInService {
                     log.error("ref number ({}) is duplicated", chargeObjectDTO.getRefNumber());
                     throw new InternalServiceException("rer number is duplicate", StatusService.REF_NUMBER_USED_BEFORE, HttpStatus.OK);
                 } else {
+                    log.info("start save refNumber ({})", chargeObjectDTO.getRefNumber());
                     RefNumberRedis refNumberRedis = new RefNumberRedis();
                     refNumberRedis.setId(chargeObjectDTO.getRefNumber());
                     refnumberRepository.save(refNumberRedis);
+                    log.info("finish save refNumber ({})", chargeObjectDTO.getRefNumber());
                 }
             } catch (Exception ex) {
                 log.error("ref number ({}) is duplicated or system can not be lock", chargeObjectDTO.getRefNumber());
@@ -122,7 +117,7 @@ public class CashInServiceImplementation implements CashInService {
             requestService.findSuccessCashInByRefNumber(chargeObjectDTO.getRefNumber());
 
             WalletAccountEntity walletAccountEntity = helper.checkWalletAndWalletAccountForNormalUser(walletService, rrnEntity.getNationalCode(), walletAccountService, chargeObjectDTO.getAccountNumber());
-            walletCashLimitationService.checkCashInLimitation(chargeObjectDTO.getChannel(), walletAccountEntity.getWalletEntity(),BigDecimal.valueOf(Long.parseLong(chargeObjectDTO.getAmount())), walletAccountEntity);
+            walletCashLimitationService.checkCashInLimitation(chargeObjectDTO.getChannel(), walletAccountEntity.getWalletEntity(), BigDecimal.valueOf(Long.parseLong(chargeObjectDTO.getAmount())), walletAccountEntity);
 
             CashInRequestEntity cashInRequestEntity = new CashInRequestEntity();
             cashInRequestEntity.setAmount(Long.parseLong(chargeObjectDTO.getAmount()));
@@ -180,7 +175,7 @@ public class CashInServiceImplementation implements CashInService {
     public CashInTrackResponse inquiry(ChannelEntity channelEntity, String uuid, String channelIp) throws InternalServiceException {
         RequestTypeEntity requestTypeEntity = requestTypeService.getRequestType(RequestTypeService.CASH_IN);
         RrnEntity rrnEntity = rrnService.findByUid(uuid);
-        rrnService.checkRrn(uuid, channelEntity, requestTypeEntity,"","");
+        rrnService.checkRrn(uuid, channelEntity, requestTypeEntity, "", "");
         CashInRequestEntity cashInRequestEntity = requestService.findCashInWithRrnId(rrnEntity.getId());
         return helper.fillCashInTrackResponse(cashInRequestEntity, statusService);
     }

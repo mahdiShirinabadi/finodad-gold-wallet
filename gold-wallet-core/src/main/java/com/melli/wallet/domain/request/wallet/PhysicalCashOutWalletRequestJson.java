@@ -14,22 +14,17 @@ import lombok.ToString;
 @Setter
 @Getter
 @ToString
-public class CashOutWalletRequestJson {
+public class PhysicalCashOutWalletRequestJson {
 
     @StringValidation
     @Schema(name = NamingProperty.UNIQUE_IDENTIFIER, description = "شناسه یکتا")
     @JsonProperty(NamingProperty.UNIQUE_IDENTIFIER)
     private String uniqueIdentifier;
 
-    @NumberValidation
-    @Schema(name = NamingProperty.AMOUNT, description = "مبلغ به ریال")
-    @JsonProperty(NamingProperty.AMOUNT)
-    private String amount;
-
-    @StringValidation(minLength = "26", maxLength = "26")
-    @Schema(name = NamingProperty.IBAN, description = "شماره شبا مقصد", example = "IR000000000000000000000000")
-    @JsonProperty(NamingProperty.IBAN)
-    private String iban;
+    @NumberValidation(label = "مقدار" ,allowDecimal = true)
+    @Schema(name = NamingProperty.QUANTITY, description = "مقدار ارز")
+    @JsonProperty(NamingProperty.QUANTITY)
+    private String quantity;
 
     @NationalCodeValidation(label = "کد ملی")
     @Schema(name = NamingProperty.NATIONAL_CODE, description = "کدملی")
@@ -40,8 +35,8 @@ public class CashOutWalletRequestJson {
     @JsonProperty(NamingProperty.ADDITIONAL_DATA)
     private String additionalData;
 
-    @NumberValidation(label = "شماره حساب کیف پول")
-    @Schema(name = NamingProperty.WALLET_ACCOUNT_NUMBER, description = "شماره حساب کیف پول")
+    @NumberValidation(label = "شماره حساب")
+    @Schema(name = NamingProperty.WALLET_ACCOUNT_NUMBER, description = "شماره حساب")
     @JsonProperty(NamingProperty.WALLET_ACCOUNT_NUMBER)
     private String accountNumber;
 
@@ -50,8 +45,17 @@ public class CashOutWalletRequestJson {
     @JsonProperty(NamingProperty.SIGN)
     private String sign;
 
+    @Schema(name = NamingProperty.COMMISSION_OBJECT, description = "کارمزد")
+    @JsonProperty(NamingProperty.COMMISSION_OBJECT)
+    private CommissionObject commissionObject;
+
+    @StringValidation(label = "نوع ارز")
+    @Schema(name = NamingProperty.CURRENCY, description = "نوع ارز (مثال: GOLD, SILVER, PLATINUM)", example = "GOLD")
+    @JsonProperty(NamingProperty.CURRENCY)
+    private String currency;
+
     @Hidden
     public String getDataString() {
-        return uniqueIdentifier + "|" + iban + "|" + amount + "|" + nationalCode;
+        return uniqueIdentifier + "|" + quantity + "|" + nationalCode;
     }
 }
