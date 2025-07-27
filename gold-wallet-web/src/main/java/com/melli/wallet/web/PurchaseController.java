@@ -65,7 +65,7 @@ public class PurchaseController extends WebController {
     }
 
     @Timed(description = "Time taken to inquiry gold amount")
-    @PostMapping(path = "/inquiry", produces = {MediaType.APPLICATION_JSON_VALUE})
+    @GetMapping(path = "/inquiry", produces = {MediaType.APPLICATION_JSON_VALUE})
     @Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "پیگیری")
     @PreAuthorize("hasAuthority(\""+ ResourceService.GENERATE_PURCHASE_UNIQUE_IDENTIFIER +"\")")
     public ResponseEntity<BaseResponse<PurchaseTrackResponse>> sell(@Valid @RequestParam("uniqueIdentifier") String uniqueIdentifier,@Valid @RequestParam("type") @PurchaseTypeValidation(label = "نوع تراکنش")  String type) throws InternalServiceException {

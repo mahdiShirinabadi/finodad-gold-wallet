@@ -189,6 +189,7 @@ public class WalletBuyLimitationServiceImplementation implements WalletBuyLimita
                 walletMonthlyBuyLimitationRedis.setId(walletLimitationId);
                 walletMonthlyBuyLimitationRedis.setAmount(Long.parseLong(aggregationPurchaseDTO.getSumPrice()));
                 walletMonthlyBuyLimitationRedis.setCount(Integer.parseInt(aggregationPurchaseDTO.getCountRecord()));
+                walletMonthlyBuyLimitationRedis.setQuantity(new BigDecimal(aggregationPurchaseDTO.getSumQuantity()));
                 walletMonthlyBuyLimitationRepository.save(walletMonthlyBuyLimitationRedis);
             }
 

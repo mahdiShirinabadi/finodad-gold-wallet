@@ -371,7 +371,7 @@ public class WalletApplicationTests {
         return objectMapper.readValue(response, typeReference);
     }
 
-    public  BaseResponse<PurchaseResponse> sell(MockMvc mockMvc, String token, String uniqueIdentifier, String quantity, String price, String commissionCurrency, String commission, String nationalCode, String currency, String merchantId, String walletAccountNumber, String sign, String additionalData, HttpStatus httpStatus, int errorCode, boolean success) throws Exception {
+    public  BaseResponse<PurchaseResponse> sell(MockMvc mockMvc, String token, String uniqueIdentifier, String quantity, String price, String commissionCurrency, String commission, String nationalCode, String currency, String merchantId, String walletAccountNumber, String sign, String additionalData, HttpStatus httpStatus, String iban, int errorCode, boolean success) throws Exception {
         SellWalletRequestJson requestJson = new SellWalletRequestJson();
         requestJson.setUniqueIdentifier(uniqueIdentifier);
         requestJson.setQuantity(quantity);
@@ -382,6 +382,7 @@ public class WalletApplicationTests {
         requestJson.setMerchantId(merchantId);
         requestJson.setWalletAccountNumber(walletAccountNumber);
         requestJson.setAdditionalData(additionalData);
+        requestJson.setIban(iban);
         requestJson.setSign(sign);
         MockHttpServletRequestBuilder postRequest = buildPostRequest(token, SELL_IN_PATH, mapToJson(requestJson));
         String response = performTest(mockMvc, postRequest, httpStatus, success, errorCode);
@@ -470,8 +471,8 @@ public class WalletApplicationTests {
         return objectMapper.readValue(response, typeReference);
     }
 
-    public BaseResponse<PurchaseTrackResponse> inquiryPurchase(MockMvc mockMvc, String token, String uniqueIdentifier, HttpStatus httpStatus, int errorCode, boolean success) throws Exception {
-        MockHttpServletRequestBuilder postRequest = buildGetRequest(token, PURCHASE_INQUIRY_IN_PATH + "?uniqueIdentifier=" + uniqueIdentifier);
+    public BaseResponse<PurchaseTrackResponse> inquiryPurchase(MockMvc mockMvc, String token, String uniqueIdentifier, String type, HttpStatus httpStatus, int errorCode, boolean success) throws Exception {
+        MockHttpServletRequestBuilder postRequest = buildGetRequest(token, PURCHASE_INQUIRY_IN_PATH + "?uniqueIdentifier=" + uniqueIdentifier+"&type=" + type);
         String response = performTest(mockMvc, postRequest, httpStatus, success, errorCode);
         TypeReference<BaseResponse<PurchaseTrackResponse>> typeReference = new TypeReference<>() {
         };
