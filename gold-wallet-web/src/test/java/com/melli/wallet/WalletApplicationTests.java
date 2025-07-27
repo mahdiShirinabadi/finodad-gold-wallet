@@ -86,11 +86,12 @@ public class WalletApplicationTests {
     private static final String SELL_IN_PATH = "/api/v1/purchase/sell";
     private static final String PURCHASE_INQUIRY_IN_PATH = "/api/v1/purchase/inquiry";
 
-    private static final String CASH_IN_GENERATE_UUID_PATH = "/api/v1/cash/generate/uuid";
-    private static final String CASH_IN_PATH = "/api/v1/cash/charge";
-    private static final String CASH_IN_INQUIRY_PATH = "/api/v1/cash/inquiry";
+    private static final String CASH_IN_GENERATE_UUID_PATH = "/api/v1/cashIn/generate/uuid";
+    private static final String CASH_IN_PATH = "/api/v1/cashIn/charge";
+    private static final String CASH_IN_INQUIRY_PATH = "/api/v1/cashIn/inquiry";
+
     private static final String CASH_OUT_GENERATE_UUID_PATH = "/api/v1/cashOut/generate/uuid";
-    private static final String CASH_OUT_PATH = "/api/v1/cashOut/withdrawal";
+    private static final String CASH_OUT_PATH = "/api/v1/cashOut/withdraw";
     private static final String CASH_OUT_INQUIRY_PATH = "/api/v1/cashOut/inquiry";
 
     private static final String MERCHANT_GET_IN_PATH = "/api/v1/merchant/list";
@@ -391,11 +392,15 @@ public class WalletApplicationTests {
         return objectMapper.readValue(response, typeReference);
     }
 
-    public  BaseResponse<UuidResponse> generateBuyUuid(MockMvc mockMvc, String token, String accountNumber, String price, String nationalCode, HttpStatus httpStatus, int errorCode, boolean success) throws Exception {
+    public  BaseResponse<UuidResponse> generateBuyUuid(MockMvc mockMvc, String token, String accountNumber, String price, String nationalCode, HttpStatus httpStatus, int errorCode, boolean success, String merchantId, String quantity, String currency) throws Exception {
         BuyGenerateUuidRequestJson requestJson = new BuyGenerateUuidRequestJson();
         requestJson.setPrice(price);
         requestJson.setNationalCode(nationalCode);
         requestJson.setAccountNumber(accountNumber);
+        requestJson.setMerchantId(merchantId);
+        requestJson.setQuantity(quantity);
+        requestJson.setCurrency(currency);
+
         MockHttpServletRequestBuilder postRequest = buildPostRequest(token, BUY_GENERATE_UUID_PATH, mapToJson(requestJson));
         String response = performTest(mockMvc, postRequest, httpStatus, success, errorCode);
         TypeReference<BaseResponse<UuidResponse>> typeReference = new TypeReference<>() {};

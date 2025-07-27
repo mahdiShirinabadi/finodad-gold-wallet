@@ -14,16 +14,36 @@ on conflict do nothing;
 
 -- Physical Cash Out limitations
 INSERT INTO limitation_general(created_by, created_at, name, value, additional_data)
-VALUES ('System', now(), 'MIN_AMOUNT_PHYSICAL_CASH_OUT', '5', 'حداقل مبلغ برداشت فیزیکی از کیف پول')
+VALUES ('System', now(), 'MIN_QUANTITY_PHYSICAL_CASH_OUT', '5', 'حداقل مبلغ برداشت فیزیکی از کیف پول')
 on conflict do nothing;
 
 INSERT INTO limitation_general(created_by, created_at, name, value, additional_data)
-VALUES ('System', now(), 'MAX_AMOUNT_PHYSICAL_CASH_OUT', '5', 'حداکثر مبلغ برداشت فیزیکی از کیف پول')
+VALUES ('System', now(), 'MAX_QUANTITY_PHYSICAL_CASH_OUT', '5', 'حداکثر مبلغ برداشت فیزیکی از کیف پول')
 on conflict do nothing;
 
 INSERT INTO limitation_general(created_by, created_at, name, value, additional_data)
-VALUES ('System', now(), 'MAX_WALLET_AMOUNT_DAILY_PHYSICAL_CASH_OUT', '50',
+VALUES ('System', now(), 'MAX_WALLET_QUANTITY_DAILY_PHYSICAL_CASH_OUT', '50',
         'حداکثر مبلغ برداشت فیزیکی روزانه از کیف پول')
+on conflict do nothing;
+
+INSERT INTO limitation_general(created_by, created_at, name, value, additional_data)
+VALUES ('System', now(), 'MAX_MONTHLY_QUANTITY_BUY', '1000',
+        'حداکثر مقدار خرید در یک ماه')
+on conflict do nothing;
+
+INSERT INTO limitation_general(created_by, created_at, name, value, additional_data)
+VALUES ('System', now(), 'MAX_DAILY_QUANTITY_BUY', '50',
+        'حداکثر مقدار خرید در یک روز')
+on conflict do nothing;
+
+INSERT INTO limitation_general(created_by, created_at, name, value, additional_data)
+VALUES ('System', now(), 'MIN_QUANTITY_BUY', '0.001',
+        'حداقل مقدار خرید در هر تراکنش')
+on conflict do nothing;
+
+INSERT INTO limitation_general(created_by, created_at, name, value, additional_data)
+VALUES ('System', now(), 'MAX_QUANTITY_BUY', '5',
+        'حداکثر مقدار خرید در هر تراکنش')
 on conflict do nothing;
 
 INSERT INTO limitation_general(created_by, created_at, name, value, additional_data)

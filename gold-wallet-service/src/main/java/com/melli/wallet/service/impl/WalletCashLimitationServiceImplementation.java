@@ -170,7 +170,7 @@ public class WalletCashLimitationServiceImplementation implements WalletCashLimi
         redisLockService.runAfterLock(key, this.getClass(), () -> {
 
             if (amount.compareTo(maxAmount)> 0) {
-                log.error("checkCashOutLimitation: CashOut's amount({}) for wallet({}), is bigger than maxCashIn({}) !!!", amount, wallet.getNationalCode(), maxAmount);
+                log.error("checkCashOutLimitation: CashOut's amount({}) for wallet({}), is bigger than maxCashOut({}) !!!", amount, wallet.getNationalCode(), maxAmount);
                 throw new InternalServiceException("CashOut's amount is bigger than minCashIn", StatusService.AMOUNT_BIGGER_THAN_MAX, HttpStatus.OK,
                         Map.ofEntries(
                                 entry("1", Utility.addComma(amount.longValue())),
@@ -180,7 +180,7 @@ public class WalletCashLimitationServiceImplementation implements WalletCashLimi
             }
 
             if (amount.compareTo(minAmount) < 0) {
-                log.error("checkCashOutLimitation: CashOut's amount({}) for wallet({}), is less than minCashIn({}) !!!", amount, wallet.getNationalCode(), minAmount);
+                log.error("checkCashOutLimitation: CashOut's amount({}) for wallet({}), is less than maxCashOut({}) !!!", amount, wallet.getNationalCode(), minAmount);
                 throw new InternalServiceException("CashOut's amount is less than minCashIn", StatusService.AMOUNT_LESS_THAN_MIN, HttpStatus.OK, Map.ofEntries(
                         entry("1", Utility.addComma(amount.longValue())),
                         entry("2", Utility.addComma(minAmount.longValue()))
@@ -237,18 +237,26 @@ public class WalletCashLimitationServiceImplementation implements WalletCashLimi
             throw new InternalServiceException("account (" + walletAccount.getAccountNumber() + ") dont permission to cashIn", StatusService.ACCOUNT_DONT_PERMISSION_FOR_PHYSICAL_CASH_OUT, HttpStatus.OK);
         }
 
-        BigDecimal minAmount = new BigDecimal(limitationGeneralCustomService.getSetting(channel, LimitationGeneralService.MIN_AMOUNT_PHYSICAL_CASH_OUT, walletLevelEntity, walletAccountTypeEntity, walletAccountCurrencyEntity, walletTypeEntity));
-        BigDecimal maxAmount = new BigDecimal(limitationGeneralCustomService.getSetting(channel, LimitationGeneralService.MAX_AMOUNT_PHYSICAL_CASH_OUT, walletLevelEntity, walletAccountTypeEntity, walletAccountCurrencyEntity, walletTypeEntity));
-        BigDecimal maxCashInDaily = new BigDecimal(limitationGeneralCustomService.getSetting(channel, LimitationGeneralService.MAX_WALLET_AMOUNT_DAILY_PHYSICAL_CASH_OUT, walletLevelEntity, walletAccountTypeEntity, walletAccountCurrencyEntity, walletTypeEntity));
+        BigDecimal minAmount = new BigDecimal(limitationGeneralCustomService.getSetting(channel, LimitationGeneralService.MIN_QUANTITY_PHYSICAL_CASH_OUT, walletLevelEntity, walletAccountTypeEntity, walletAccountCurrencyEntity, walletTypeEntity));
+        BigDecimal maxAmount = new BigDecimal(limitationGeneralCustomService.getSetting(channel, LimitationGeneralService.MAX_QUANTITY_PHYSICAL_CASH_OUT, walletLevelEntity, walletAccountTypeEntity, walletAccountCurrencyEntity, walletTypeEntity));
+        BigDecimal maxCashInDaily = new BigDecimal(limitationGeneralCustomService.getSetting(channel, LimitationGeneralService.MAX_WALLET_QUANTITY_DAILY_PHYSICAL_CASH_OUT, walletLevelEntity, walletAccountTypeEntity, walletAccountCurrencyEntity, walletTypeEntity));
 
 
         String key = walletAccount.getAccountNumber();
 
         redisLockService.runAfterLock(key, this.getClass(), () -> {
 
+            if (quantity.compareTo(minAmount) < 0) {
+                log.error("checkPhysicalCashOutLimitation: PhysicalCashOut's quantity({}) for wallet({}), is less than minPhysicalCashOut({}) !!!", quantity, wallet.getNationalCode(), minAmount);
+                throw new InternalServiceException("CashOut's amount is less than minCashOut", StatusService.QUANTITY_LESS_THAN_MIN, HttpStatus.OK, Map.ofEntries(
+                        entry("1", Utility.addComma(quantity.longValue())),
+                        entry("2", Utility.addComma(minAmount.longValue()))
+                ));
+            }
+
             if (quantity.compareTo(maxAmount)> 0) {
-                log.error("checkPhysicalCashOutLimitation: CashOut's amount({}) for wallet({}), is bigger than maxCashIn({}) !!!", quantity, wallet.getNationalCode(), maxAmount);
-                throw new InternalServiceException("CashOut's amount is bigger than minCashIn", StatusService.AMOUNT_BIGGER_THAN_MAX, HttpStatus.OK,
+                log.error("checkPhysicalCashOutLimitation: CashOut's amount({}) for wallet({}), is bigger than maxCashOut({}) !!!", quantity, wallet.getNationalCode(), maxAmount);
+                throw new InternalServiceException("CashOut's amount is bigger than maxCashOut", StatusService.QUANTITY_BIGGER_THAN_MAX, HttpStatus.OK,
                         Map.ofEntries(
                                 entry("1", Utility.addComma(quantity.longValue())),
                                 entry("2", Utility.addComma(maxAmount.longValue()))
@@ -256,13 +264,7 @@ public class WalletCashLimitationServiceImplementation implements WalletCashLimi
                 );
             }
 
-            if (quantity.compareTo(minAmount) < 0) {
-                log.error("checkPhysicalCashOutLimitation: CashOut's amount({}) for wallet({}), is less than minCashIn({}) !!!", quantity, wallet.getNationalCode(), minAmount);
-                throw new InternalServiceException("CashOut's amount is less than minCashIn", StatusService.AMOUNT_LESS_THAN_MIN, HttpStatus.OK, Map.ofEntries(
-                        entry("1", Utility.addComma(quantity.longValue())),
-                        entry("2", Utility.addComma(minAmount.longValue()))
-                ));
-            }
+
 
             log.info("Start checking daily cashOut limitation for wallet({}) ...", wallet.getNationalCode());
 

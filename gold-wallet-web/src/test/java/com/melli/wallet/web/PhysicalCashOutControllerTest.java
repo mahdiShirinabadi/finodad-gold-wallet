@@ -209,8 +209,15 @@ class PhysicalCashOutControllerTest extends WalletApplicationTests {
                     goldWalletAccountEntity.getWalletAccountTypeEntity(), goldWalletAccountEntity.getWalletAccountCurrencyEntity(), goldWalletAccountEntity.getWalletEntity().getWalletTypeEntity(),
                     "true","test physicalCashOutSuccess");
         }
+
+        String valueMaxDailyPrice = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.MAX_QUANTITY_PHYSICAL_CASH_OUT, goldAccountObject.getAccountNumber());
         
         // Step 6: Generate UUID for physical cash out
+        limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
+                limitationGeneralService.getSetting(LimitationGeneralService.MAX_QUANTITY_PHYSICAL_CASH_OUT).getId(), goldWalletAccountEntity.getWalletEntity().getWalletLevelEntity(),
+                goldWalletAccountEntity.getWalletAccountTypeEntity(), goldWalletAccountEntity.getWalletAccountCurrencyEntity(), goldWalletAccountEntity.getWalletEntity().getWalletTypeEntity(),
+                "10", "change MAX_DAILY_COUNT_BUY");
+
         String physicalCashOutQuantity = "5.05";
         BaseResponse<UuidResponse> physicalCashOutUuidResponse = generatePhysicalCashOutUuid(mockMvc, accessToken, NATIONAL_CODE_CORRECT, physicalCashOutQuantity, goldAccountNumber, HttpStatus.OK, StatusService.SUCCESSFUL, true);
         String uniqueIdentifier = physicalCashOutUuidResponse.getData().getUniqueIdentifier();
@@ -223,6 +230,11 @@ class PhysicalCashOutControllerTest extends WalletApplicationTests {
         Assert.assertNotNull(response.getData().getBalance());
         Assert.assertEquals(uniqueIdentifier, response.getData().getUniqueIdentifier());
         log.info("Physical cash out completed successfully");
+
+        limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
+                limitationGeneralService.getSetting(LimitationGeneralService.MAX_QUANTITY_PHYSICAL_CASH_OUT).getId(), goldWalletAccountEntity.getWalletEntity().getWalletLevelEntity(),
+                goldWalletAccountEntity.getWalletAccountTypeEntity(), goldWalletAccountEntity.getWalletAccountCurrencyEntity(), goldWalletAccountEntity.getWalletEntity().getWalletTypeEntity(),
+                valueMaxDailyPrice, "change MAX_DAILY_COUNT_BUY");
     }
 
     @Test
@@ -308,12 +320,25 @@ class PhysicalCashOutControllerTest extends WalletApplicationTests {
         }
 
         String quantity = "20";
+        String valueMaxDailyPrice = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.MAX_QUANTITY_PHYSICAL_CASH_OUT, walletAccountObject.getAccountNumber());
+
+        // Step 6: Generate UUID for physical cash out
+        limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
+                limitationGeneralService.getSetting(LimitationGeneralService.MAX_QUANTITY_PHYSICAL_CASH_OUT).getId(), walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
+                walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
+                quantity, "change MAX_QUANTITY_PHYSICAL_CASH_OUT");
         BaseResponse<UuidResponse> uuidResponse = generatePhysicalCashOutUuid(mockMvc, accessToken, NATIONAL_CODE_CORRECT, quantity, accountNumber, HttpStatus.OK, StatusService.SUCCESSFUL, true);
         String uniqueIdentifier = uuidResponse.getData().getUniqueIdentifier();
+
+        walletAccountService.decreaseBalance(walletAccountEntity.getId(), new BigDecimal(quantity));
 
         // Test with different commission currency (should fail)
         BaseResponse<PhysicalCashOutResponse> response = physicalCashOut(mockMvc, accessToken, uniqueIdentifier, quantity, NATIONAL_CODE_CORRECT, accountNumber, "", VALID_SIGN, ADDITIONAL_DATA, CURRENCY_GOLD, "0.01","GOLD", HttpStatus.OK, StatusService.BALANCE_IS_NOT_ENOUGH, false);
         Assert.assertSame(StatusService.BALANCE_IS_NOT_ENOUGH, response.getErrorDetail().getCode());
+        limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
+                limitationGeneralService.getSetting(LimitationGeneralService.MAX_QUANTITY_PHYSICAL_CASH_OUT).getId(), walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
+                walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
+                valueMaxDailyPrice, "change MAX_QUANTITY_PHYSICAL_CASH_OUT");
     }
 
     @Test
@@ -338,9 +363,13 @@ class PhysicalCashOutControllerTest extends WalletApplicationTests {
                     goldWalletAccountEntity.getWalletAccountTypeEntity(), goldWalletAccountEntity.getWalletAccountCurrencyEntity(), goldWalletAccountEntity.getWalletEntity().getWalletTypeEntity(),
                     "true","test physicalInquiryCashOutSuccess");
         }
-        
+
         // Generate UUID and perform physical cash out
         String physicalCashOutQuantity = "10.01";
+        limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
+                limitationGeneralService.getSetting(LimitationGeneralService.MAX_QUANTITY_PHYSICAL_CASH_OUT).getId(), goldWalletAccountEntity.getWalletEntity().getWalletLevelEntity(),
+                goldWalletAccountEntity.getWalletAccountTypeEntity(), goldWalletAccountEntity.getWalletAccountCurrencyEntity(), goldWalletAccountEntity.getWalletEntity().getWalletTypeEntity(),
+                physicalCashOutQuantity, "change MAX_DAILY_COUNT_BUY");
         BaseResponse<UuidResponse> physicalCashOutUuidResponse = generatePhysicalCashOutUuid(mockMvc, accessToken, NATIONAL_CODE_CORRECT, physicalCashOutQuantity, goldAccountNumber, HttpStatus.OK, StatusService.SUCCESSFUL, true);
         String uniqueIdentifier = physicalCashOutUuidResponse.getData().getUniqueIdentifier();
         BaseResponse<PhysicalCashOutResponse> physicalCashOutResponse = physicalCashOut(mockMvc, accessToken, uniqueIdentifier, physicalCashOutQuantity, NATIONAL_CODE_CORRECT, goldAccountNumber, "", VALID_SIGN, ADDITIONAL_DATA, CURRENCY_GOLD,"0.01", CURRENCY_GOLD, HttpStatus.OK, StatusService.SUCCESSFUL, true);

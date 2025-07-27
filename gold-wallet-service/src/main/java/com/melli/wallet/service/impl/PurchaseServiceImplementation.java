@@ -48,20 +48,31 @@ public class PurchaseServiceImplementation implements PurchaseService {
     private final PurchaseTransactionalService purchaseTransactionalService;
 
     @Override
-    public UuidResponse buyGenerateUuid(ChannelEntity channelEntity, String nationalCode, String price, String walletAccountNumber) throws InternalServiceException {
+    public UuidResponse buyGenerateUuid(BuyRequestDTO buyRequestDTO) throws InternalServiceException {
         try {
-            log.info("start generate traceId, username ===> ({}), nationalCode ({})", channelEntity.getUsername(), nationalCode);
-            WalletEntity walletEntity = findUserWallet(nationalCode);
+            log.info("start generate traceId, username ===> ({}), nationalCode ({})", buyRequestDTO.getChannel().getUsername(), buyRequestDTO.getNationalCode());
+            WalletEntity walletEntity = findUserWallet(buyRequestDTO.getNationalCode());
             WalletAccountCurrencyEntity rialCurrencyEntity = walletAccountCurrencyService.findCurrency(WalletAccountCurrencyService.RIAL);
-            WalletAccountEntity walletAccountEntity = findUserAccount(walletEntity, rialCurrencyEntity, walletAccountNumber, nationalCode);
-            RrnEntity rrnEntity = rrnService.generateTraceId(nationalCode, channelEntity, requestTypeService.getRequestType(TransactionTypeEnum.BUY.name()), walletAccountNumber, price);
-            log.info("finish traceId ===> {}, username ({}), nationalCode ({})", rrnEntity.getUuid(), channelEntity.getUsername(), nationalCode);
-            walletBuyLimitationService.checkGeneral(channelEntity, walletEntity, new BigDecimal(price), walletAccountEntity, walletAccountNumber);
-            walletBuyLimitationService.checkDailyLimitation(channelEntity, walletEntity, new BigDecimal(price), walletAccountEntity, walletAccountNumber);
-            walletBuyLimitationService.checkMonthlyLimitation(channelEntity, walletEntity, new BigDecimal(price), walletAccountEntity, walletAccountNumber);
+            WalletAccountEntity walletAccountEntity = findUserAccount(walletEntity, rialCurrencyEntity, buyRequestDTO.getWalletAccountNumber(), buyRequestDTO.getNationalCode());
+            RrnEntity rrnEntity = rrnService.generateTraceId(buyRequestDTO.getNationalCode(), buyRequestDTO.getChannel(), requestTypeService.getRequestType(TransactionTypeEnum.BUY.name()), buyRequestDTO.getWalletAccountNumber(), String.valueOf(buyRequestDTO.getPrice()));
+            log.info("finish traceId ===> {}, username ({}), nationalCode ({})", rrnEntity.getUuid(), buyRequestDTO.getChannel().getUsername(), buyRequestDTO.getNationalCode());
+            MerchantEntity merchant = findMerchant(buyRequestDTO.getMerchantId());
+            WalletAccountCurrencyEntity currencyEntity = walletAccountCurrencyService.findCurrency(buyRequestDTO.getCurrency());
+
+            walletBuyLimitationService.checkGeneral(buyRequestDTO.getChannel(), walletEntity, buyRequestDTO.getAmount(), walletAccountEntity, buyRequestDTO.getWalletAccountNumber());
+            walletBuyLimitationService.checkDailyLimitation(buyRequestDTO.getChannel(), walletEntity, buyRequestDTO.getAmount(), walletAccountEntity, buyRequestDTO.getWalletAccountNumber());
+            walletBuyLimitationService.checkMonthlyLimitation(buyRequestDTO.getChannel(), walletEntity, buyRequestDTO.getAmount(), walletAccountEntity, buyRequestDTO.getWalletAccountNumber());
+
+
+            WalletAccountEntity merchantCurrencyAccount = findMerchantWalletAccount(merchant, currencyEntity);
+            if (walletAccountService.getBalance(merchantCurrencyAccount.getId()).compareTo(buyRequestDTO.getAmount()) < 0) {
+                log.error("balance for merchant id ({}) and walletAccount ({}) for currency ({}) is less than ({})", merchant.getId(), merchantCurrencyAccount.getId(), buyRequestDTO.getCurrency(), buyRequestDTO.getAmount());
+                throw new InternalServiceException("merchant balance is not enough", StatusService.MERCHANT_BALANCE_NOT_ENOUGH, HttpStatus.OK);
+            }
+
             return new UuidResponse(rrnEntity.getUuid());
         } catch (InternalServiceException e) {
-            log.error("error in generate traceId with info ===> username ({}), nationalCode ({}) error ===> ({})", channelEntity.getUsername(), nationalCode, e.getMessage());
+            log.error("error in generate traceId with info ===> username ({}), nationalCode ({}) error ===> ({})", buyRequestDTO.getChannel().getUsername(), buyRequestDTO.getNationalCode(), e.getMessage());
             throw e;
         }
     }
@@ -100,8 +111,8 @@ public class PurchaseServiceImplementation implements PurchaseService {
 
         // Validate merchant and wallet accounts
         MerchantEntity merchant = findMerchant(sellRequestDTO.getMerchantId());
-        WalletAccountEntity merchantCurrencyAccount = findMerchantWalletAccount(merchant, currencyEntity, sellRequestDTO.getCurrency());
-        WalletAccountEntity merchantRialAccount = findMerchantWalletAccount(merchant, rialCurrencyEntity, WalletAccountCurrencyService.RIAL);
+        WalletAccountEntity merchantCurrencyAccount = findMerchantWalletAccount(merchant, currencyEntity);
+        WalletAccountEntity merchantRialAccount = findMerchantWalletAccount(merchant, rialCurrencyEntity);
 
         // Validate user and wallet accounts
         WalletEntity userWallet = findUserWallet(sellRequestDTO.getNationalCode());
@@ -146,8 +157,8 @@ public class PurchaseServiceImplementation implements PurchaseService {
 
         // Validate merchant and wallet accounts
         MerchantEntity merchant = findMerchant(buyRequestDTO.getMerchantId());
-        WalletAccountEntity merchantCurrencyAccount = findMerchantWalletAccount(merchant, currencyEntity, buyRequestDTO.getCurrency());
-        WalletAccountEntity merchantRialAccount = findMerchantWalletAccount(merchant, rialCurrencyEntity, WalletAccountCurrencyService.RIAL);
+        WalletAccountEntity merchantCurrencyAccount = findMerchantWalletAccount(merchant, currencyEntity);
+        WalletAccountEntity merchantRialAccount = findMerchantWalletAccount(merchant, rialCurrencyEntity);
 
         // Validate user and wallet accounts
         WalletEntity userWallet = findUserWallet(buyRequestDTO.getNationalCode());
@@ -161,9 +172,9 @@ public class PurchaseServiceImplementation implements PurchaseService {
         }
         WalletAccountEntity channelCommissionAccount = findChannelCommissionAccount(buyRequestDTO.getChannel(), WalletAccountCurrencyService.RIAL);
 
-        walletBuyLimitationService.checkGeneral(buyRequestDTO.getChannel(), userRialAccount.getWalletEntity(), new BigDecimal(buyRequestDTO.getPrice()), userRialAccount, buyRequestDTO.getUniqueIdentifier());
-        walletBuyLimitationService.checkDailyLimitation(buyRequestDTO.getChannel(), userRialAccount.getWalletEntity(), new BigDecimal(buyRequestDTO.getPrice()), userRialAccount, buyRequestDTO.getUniqueIdentifier());
-        walletBuyLimitationService.checkMonthlyLimitation(buyRequestDTO.getChannel(), userRialAccount.getWalletEntity(), new BigDecimal(buyRequestDTO.getPrice()), userRialAccount, buyRequestDTO.getUniqueIdentifier());
+        walletBuyLimitationService.checkGeneral(buyRequestDTO.getChannel(), userRialAccount.getWalletEntity(), buyRequestDTO.getAmount(), userRialAccount, buyRequestDTO.getUniqueIdentifier());
+        walletBuyLimitationService.checkDailyLimitation(buyRequestDTO.getChannel(), userRialAccount.getWalletEntity(), buyRequestDTO.getAmount(), userRialAccount, buyRequestDTO.getUniqueIdentifier());
+        walletBuyLimitationService.checkMonthlyLimitation(buyRequestDTO.getChannel(), userRialAccount.getWalletEntity(), buyRequestDTO.getAmount(), userRialAccount, buyRequestDTO.getUniqueIdentifier());
 
         return redisLockService.runAfterLock(buyRequestDTO.getWalletAccountNumber(), this.getClass(), () -> purchaseTransactionalService.processBuy(new PurchaseObjectDto(
                 buyRequestDTO.getChannel(),
@@ -191,10 +202,10 @@ public class PurchaseServiceImplementation implements PurchaseService {
         WalletAccountCurrencyEntity rialCurrencyEntity = walletAccountCurrencyService.findCurrency(WalletAccountCurrencyService.RIAL);
 
         MerchantEntity merchant = findMerchant(buyRequestDTO.getMerchantId());
-        WalletAccountEntity merchantRialAccount = findMerchantWalletAccount(merchant, rialCurrencyEntity, WalletAccountCurrencyService.RIAL);
+        WalletAccountEntity merchantRialAccount = findMerchantWalletAccount(merchant, rialCurrencyEntity);
 
         // Validate merchant and wallet accounts
-        WalletAccountEntity merchantCurrencyAccount = findMerchantWalletAccount(merchant, currencyEntity, buyRequestDTO.getCurrency());
+        WalletAccountEntity merchantCurrencyAccount = findMerchantWalletAccount(merchant, currencyEntity);
         if (walletAccountService.getBalance(merchantCurrencyAccount.getId()).compareTo(buyRequestDTO.getAmount()) < 0) {
             log.error("balance for merchant id ({}) and walletAccount ({}) for currency ({}) is less than ({})", merchant.getId(), merchantCurrencyAccount.getId(), buyRequestDTO.getCurrency(), buyRequestDTO.getAmount());
             throw new InternalServiceException("merchant balance is not enough", StatusService.MERCHANT_BALANCE_NOT_ENOUGH, HttpStatus.OK);
@@ -219,9 +230,9 @@ public class PurchaseServiceImplementation implements PurchaseService {
 
         WalletAccountEntity channelCommissionAccount = findChannelCommissionAccount(buyRequestDTO.getChannel(), WalletAccountCurrencyService.RIAL);
 
-        walletBuyLimitationService.checkGeneral(buyRequestDTO.getChannel(), userRialAccount.getWalletEntity(), new BigDecimal(buyRequestDTO.getPrice()), userRialAccount, buyRequestDTO.getUniqueIdentifier());
-        walletBuyLimitationService.checkDailyLimitation(buyRequestDTO.getChannel(), userRialAccount.getWalletEntity(), new BigDecimal(buyRequestDTO.getPrice()), userRialAccount, buyRequestDTO.getUniqueIdentifier());
-        walletBuyLimitationService.checkMonthlyLimitation(buyRequestDTO.getChannel(), userRialAccount.getWalletEntity(), new BigDecimal(buyRequestDTO.getPrice()), userRialAccount, buyRequestDTO.getUniqueIdentifier());
+        walletBuyLimitationService.checkGeneral(buyRequestDTO.getChannel(), userRialAccount.getWalletEntity(), buyRequestDTO.getAmount(), userRialAccount, buyRequestDTO.getUniqueIdentifier());
+        walletBuyLimitationService.checkDailyLimitation(buyRequestDTO.getChannel(), userRialAccount.getWalletEntity(), buyRequestDTO.getAmount(), userRialAccount, buyRequestDTO.getUniqueIdentifier());
+        walletBuyLimitationService.checkMonthlyLimitation(buyRequestDTO.getChannel(), userRialAccount.getWalletEntity(), buyRequestDTO.getAmount(), userRialAccount, buyRequestDTO.getUniqueIdentifier());
 
         return redisLockService.runAfterLock(buyRequestDTO.getWalletAccountNumber(), this.getClass(), () -> purchaseTransactionalService.processBuy(new PurchaseObjectDto(
                         buyRequestDTO.getChannel(),
@@ -255,7 +266,7 @@ public class PurchaseServiceImplementation implements PurchaseService {
     }
 
     private WalletAccountEntity findMerchantWalletAccount(
-            MerchantEntity merchant, WalletAccountCurrencyEntity currencyEntity, String currency) throws InternalServiceException {
+            MerchantEntity merchant, WalletAccountCurrencyEntity currencyEntity) throws InternalServiceException {
         List<WalletAccountEntity> accounts = walletAccountService.findByWallet(merchant.getWalletEntity());
         if (CollectionUtils.isEmpty(accounts)) {
             log.error("No wallet accounts found for merchant {}", merchant.getName());
@@ -269,7 +280,7 @@ public class PurchaseServiceImplementation implements PurchaseService {
                 .filter(x -> x.getWalletAccountCurrencyEntity().getId() == (currencyEntity.getId()))
                 .findFirst()
                 .orElseThrow(() -> {
-                    log.error("Wallet account with currency {} not found for merchant {}", currency, merchant.getName());
+                    log.error("Wallet account with currency {} not found for merchant {}", currencyEntity.getName(), merchant.getName());
                     return new InternalServiceException(
                             "Wallet account not found for merchant",
                             StatusService.MERCHANT_WALLET_ACCOUNT_NOT_FOUND,

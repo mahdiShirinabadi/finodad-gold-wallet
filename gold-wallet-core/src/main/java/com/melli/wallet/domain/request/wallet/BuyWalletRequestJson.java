@@ -21,7 +21,7 @@ public class BuyWalletRequestJson {
     @JsonProperty(NamingProperty.UNIQUE_IDENTIFIER)
     private String uniqueIdentifier;
 
-    @NumberValidation(allowDecimal = true, minDecimalValue = "0.00001")
+    @NumberValidation(allowDecimal = true)
     @Schema(name = NamingProperty.QUANTITY, description = "مقدار طلا", example = "1.1")
     @JsonProperty(NamingProperty.QUANTITY)
     private String quantity;

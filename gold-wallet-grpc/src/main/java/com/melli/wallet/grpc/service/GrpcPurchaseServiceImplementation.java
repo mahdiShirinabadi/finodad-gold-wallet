@@ -40,11 +40,22 @@ public class GrpcPurchaseServiceImplementation extends PurchaseServiceGrpc.Purch
     public void generateBuyUuid(BuyGenerateUuidRequestGrpc request, StreamObserver<BaseResponseGrpc> responseObserver) {
         try {
             log.info("start call buy uuid nationalCode ===> {}", request.getNationalCode());
+            String channelIp = RequestContext.getClientIp();
             UuidResponse response = purchaseService.buyGenerateUuid(
-                    RequestContext.getChannelEntity(),
-                    request.getNationalCode(),
-                    request.getPrice(),
-                    request.getAccountNumber()
+                    new BuyRequestDTO(
+                            RequestContext.getChannelEntity(),
+                            "",
+                            new BigDecimal(request.getQuantity()),
+                            Long.parseLong(request.getPrice()),
+                            request.getAccountNumber(),
+                            "",
+                            request.getMerchantId(),
+                            request.getNationalCode(),
+                            null,
+                            request.getCurrency(),
+                            channelIp,
+                            "",""
+                    )
             );
 
             BaseResponseGrpc grpcResponse = BaseResponseGrpc.newBuilder()

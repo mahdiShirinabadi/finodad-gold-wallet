@@ -50,7 +50,10 @@ public class PurchaseController extends WebController {
     @PreAuthorize("hasAuthority(\""+ ResourceService.GENERATE_PURCHASE_UNIQUE_IDENTIFIER +"\")")
     public ResponseEntity<BaseResponse<UuidResponse>> generateBuyUuid(@Valid @RequestBody BuyGenerateUuidRequestJson requestJson) throws InternalServiceException {
         log.info("start call buy uuid nationalCode ===> {}", requestJson.getNationalCode());
-        UuidResponse response = purchaseService.buyGenerateUuid(requestContext.getChannelEntity(), requestJson.getNationalCode(), requestJson.getPrice(), requestJson.getAccountNumber());
+        String channelIp = requestContext.getClientIp();
+        UuidResponse response = purchaseService.buyGenerateUuid(new BuyRequestDTO(requestContext.getChannelEntity(), "", new BigDecimal(requestJson.getQuantity()),
+                Long.parseLong(requestJson.getPrice()), requestJson.getAccountNumber(), "", requestJson.getMerchantId(),
+                requestJson.getNationalCode(), null, requestJson.getCurrency(), channelIp,"", ""));
         return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse<>(true,response));
     }
 

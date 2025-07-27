@@ -33,6 +33,9 @@ message BuyGenerateUuidRequestGrpc {
   string national_code = 1;
   string price = 2;
   string account_number = 3;
+  string merchant_id = 4;
+  string quantity = 5;
+  string currency = 6;
 }
 
 message SellGenerateUuidRequestGrpc {

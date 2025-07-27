@@ -59,7 +59,7 @@ public class WalletBuyLimitationServiceImplementation implements WalletBuyLimita
     }
 
     @Override
-    public void checkGeneral(ChannelEntity channel, WalletEntity wallet, BigDecimal amount, WalletAccountEntity walletAccount, String uniqueIdentifier) throws InternalServiceException {
+    public void checkGeneral(ChannelEntity channel, WalletEntity wallet, BigDecimal quantity, WalletAccountEntity walletAccount, String uniqueIdentifier) throws InternalServiceException {
         log.info("checking checkBuyGeneral for nationalCode({}) ...", wallet.getNationalCode());
 
         WalletLevelEntity walletLevelEntity = wallet.getWalletLevelEntity();
@@ -68,27 +68,27 @@ public class WalletBuyLimitationServiceImplementation implements WalletBuyLimita
         WalletTypeEntity walletTypeEntity = wallet.getWalletTypeEntity();
 
 
-        BigDecimal minPrice = new BigDecimal(limitationGeneralCustomService.getSetting(channel, LimitationGeneralService.MIN_PRICE_BUY, walletLevelEntity, walletAccountTypeEntity, walletAccountCurrencyEntity, walletTypeEntity));
-        BigDecimal maxPrice = new BigDecimal(limitationGeneralCustomService.getSetting(channel, LimitationGeneralService.MAX_PRICE_BUY, walletLevelEntity, walletAccountTypeEntity, walletAccountCurrencyEntity, walletTypeEntity));
+        BigDecimal minQuantity = new BigDecimal(limitationGeneralCustomService.getSetting(channel, LimitationGeneralService.MIN_QUANTITY_BUY, walletLevelEntity, walletAccountTypeEntity, walletAccountCurrencyEntity, walletTypeEntity));
+        BigDecimal maxQuantity = new BigDecimal(limitationGeneralCustomService.getSetting(channel, LimitationGeneralService.MAX_QUANTITY_BUY, walletLevelEntity, walletAccountTypeEntity, walletAccountCurrencyEntity, walletTypeEntity));
 
 
         String key = walletAccount.getAccountNumber();
 
         redisLockService.runAfterLock(key, this.getClass(), () -> {
 
-            if (amount.longValue() > maxPrice.longValue()) {
-                log.error("checkBuyGeneral: buy amount({}) for wallet({}), is bigger than maxPrice({}) !!!", amount, wallet.getNationalCode(), maxPrice);
-                throw new InternalServiceException("buy amount is bigger than maxBuy", StatusService.AMOUNT_BIGGER_THAN_MAX, HttpStatus.OK, Map.ofEntries(
-                        entry("1", Utility.addComma(amount.longValue())),
-                        entry("2", Utility.addComma((maxPrice.longValue())))
+            if (quantity.compareTo(maxQuantity) > 0) {
+                log.error("checkGeneral: buy quantity({}) for wallet({}), is bigger than maxQuantity({}) !!!", quantity, wallet.getNationalCode(), maxQuantity);
+                throw new InternalServiceException("buy quantity is bigger than maxBuy", StatusService.QUANTITY_BIGGER_THAN_MAX, HttpStatus.OK, Map.ofEntries(
+                        entry("1", String.valueOf(quantity)),
+                        entry("2", String.valueOf((maxQuantity)))
                 ));
             }
 
-            if (amount.longValue() < minPrice.longValue()) {
-                log.error("checkBuyGeneral: buy amount({}) for wallet({}), is less than minPrice({}) !!!", amount, wallet.getNationalCode(), minPrice);
-                throw new InternalServiceException("buy amount is less than minBuy", StatusService.AMOUNT_LESS_THAN_MIN, HttpStatus.OK, Map.ofEntries(
-                        entry("1", Utility.addComma(amount.longValue())),
-                        entry("2", Utility.addComma((minPrice.longValue())))
+            if (quantity.compareTo(minQuantity) < 0) {
+                log.error("checkGeneral: buy quantity({}) for wallet({}), is less than minQuantity({}) !!!", quantity, wallet.getNationalCode(), minQuantity);
+                throw new InternalServiceException("buy quantity is less than minBuy", StatusService.QUANTITY_LESS_THAN_MIN, HttpStatus.OK, Map.ofEntries(
+                        entry("1", String.valueOf(quantity.longValue())),
+                        entry("2", String.valueOf((minQuantity)))
                 ));
             }
             return null;
@@ -106,7 +106,7 @@ public class WalletBuyLimitationServiceImplementation implements WalletBuyLimita
         String key = walletAccount.getAccountNumber();
 
         BigDecimal maxCountDaily = new BigDecimal(limitationGeneralCustomService.getSetting(channel, LimitationGeneralService.MAX_DAILY_COUNT_BUY, walletLevelEntity, walletAccountTypeEntity, walletAccountCurrencyEntity, walletTypeEntity));
-        BigDecimal maxAmountDaily = new BigDecimal(limitationGeneralCustomService.getSetting(channel, LimitationGeneralService.MAX_DAILY_PRICE_BUY, walletLevelEntity, walletAccountTypeEntity, walletAccountCurrencyEntity, walletTypeEntity));
+        BigDecimal maxQuantityDaily = new BigDecimal(limitationGeneralCustomService.getSetting(channel, LimitationGeneralService.MAX_DAILY_QUANTITY_BUY, walletLevelEntity, walletAccountTypeEntity, walletAccountCurrencyEntity, walletTypeEntity));
 
 
         redisLockService.runAfterLock(key, this.getClass(), () -> {
@@ -129,16 +129,17 @@ public class WalletBuyLimitationServiceImplementation implements WalletBuyLimita
                 walletDailyBuyLimitationRedis.setId(walletLimitationId);
                 walletDailyBuyLimitationRedis.setAmount(Long.parseLong(aggregationPurchaseDTO.getSumPrice()));
                 walletDailyBuyLimitationRedis.setCount(Integer.parseInt(aggregationPurchaseDTO.getCountRecord()));
+                walletDailyBuyLimitationRedis.setQuantity(new BigDecimal(aggregationPurchaseDTO.getSumQuantity()));
                 walletDailyBuyLimitationRepository.save(walletDailyBuyLimitationRedis);
             }
 
             log.info("checkBuyDailyLimitation: SumPurchaseCount for wallet({}) in date: ({}) is: {}", wallet.getMobile(), currentDate, walletDailyBuyLimitationRedis.getAmount());
 
-            if ((walletDailyBuyLimitationRedis.getAmount() + amount.longValue()) > maxAmountDaily.longValue()) {
-                log.error("checkPurchaseDailyLimitation: wallet({}) on channel ({}) , exceeded amount limitation in purchase!!! SumPurchaseAmount plus amount is: {} and bigger than maxAmountDaily {}", wallet.getMobile(), wallet.getOwner().getId(), walletDailyBuyLimitationRedis.getAmount() + amount.longValue(), maxAmountDaily);
-                throw new InternalServiceException("wallet sum amount buy exceeded the limitation !!!", StatusService.BUY_EXCEEDED_AMOUNT_DAILY_LIMITATION, HttpStatus.OK, Map.ofEntries(
-                        entry("1", Utility.addComma(walletDailyBuyLimitationRedis.getAmount() + amount.longValue())),
-                        entry("2", Utility.addComma((maxAmountDaily.longValue())))
+            if (walletDailyBuyLimitationRedis.getQuantity().add(amount).compareTo(maxQuantityDaily) > 0) {
+                log.error("checkPurchaseDailyLimitation: wallet({}) on channel ({}) , exceeded amount limitation in purchase!!! SumPurchaseAmount plus amount is: {} and bigger than maxAmountDaily {}", wallet.getMobile(), wallet.getOwner().getId(), walletDailyBuyLimitationRedis.getQuantity().add(amount), maxQuantityDaily);
+                throw new InternalServiceException("wallet sum amount buy exceeded the limitation !!!", StatusService.BUY_EXCEEDED_QUANTITY_DAILY_LIMITATION, HttpStatus.OK, Map.ofEntries(
+                        entry("1", String.valueOf(walletDailyBuyLimitationRedis.getQuantity().add(amount))),
+                        entry("2", (String.valueOf(maxQuantityDaily)))
                 ));
             }
 
@@ -164,7 +165,7 @@ public class WalletBuyLimitationServiceImplementation implements WalletBuyLimita
         String key = walletAccount.getAccountNumber();
 
         BigDecimal maxCountMonthly = new BigDecimal(limitationGeneralCustomService.getSetting(channel, LimitationGeneralService.MAX_MONTHLY_COUNT_BUY, walletLevelEntity, walletAccountTypeEntity, walletAccountCurrencyEntity, walletTypeEntity));
-        BigDecimal maxAmountMonthly = new BigDecimal(limitationGeneralCustomService.getSetting(channel, LimitationGeneralService.MAX_MONTHLY_PRICE_BUY, walletLevelEntity, walletAccountTypeEntity, walletAccountCurrencyEntity, walletTypeEntity));
+        BigDecimal maxQuantityMonthly = new BigDecimal(limitationGeneralCustomService.getSetting(channel, LimitationGeneralService.MAX_MONTHLY_QUANTITY_BUY, walletLevelEntity, walletAccountTypeEntity, walletAccountCurrencyEntity, walletTypeEntity));
 
 
         redisLockService.runAfterLock(key, this.getClass(), () -> {
@@ -195,11 +196,11 @@ public class WalletBuyLimitationServiceImplementation implements WalletBuyLimita
 
             log.info("checkBuyMonthlyLimitation: SumPurchaseCount for wallet({}) in month: ({}) is: {}", wallet.getMobile(), helper.convertDateToMonth(new Date()), walletMonthlyBuyLimitationRedis.getAmount());
 
-            if ((walletMonthlyBuyLimitationRedis.getAmount() + amount.longValue()) > maxAmountMonthly.longValue()) {
-                log.error("checkBuyMonthlyLimitation: wallet({}) on channel ({}) , exceeded amount limitation in purchase!!! SumPurchaseAmount plus amount is: {} and bigger than maxAmountMonthly {}", wallet.getMobile(), wallet.getOwner().getId(), walletMonthlyBuyLimitationRedis.getAmount() + amount.longValue(), maxAmountMonthly);
-                throw new InternalServiceException("wallet sum amount buy exceeded the limitation !!!", StatusService.BUY_EXCEEDED_AMOUNT_MONTHLY_LIMITATION, HttpStatus.OK, Map.ofEntries(
-                        entry("1", Utility.addComma(walletMonthlyBuyLimitationRedis.getAmount() + amount.longValue())),
-                        entry("2", Utility.addComma((maxAmountMonthly.longValue())))
+            if (walletMonthlyBuyLimitationRedis.getQuantity().add(amount).compareTo(maxQuantityMonthly) > 0) {
+                log.error("checkBuyMonthlyLimitation: wallet({}) on channel ({}) , exceeded amount limitation in purchase!!! SumPurchaseAmount plus amount is: {} and bigger than maxAmountMonthly {}", wallet.getMobile(), wallet.getOwner().getId(), walletMonthlyBuyLimitationRedis.getAmount() + amount.longValue(), maxQuantityMonthly);
+                throw new InternalServiceException("wallet sum amount buy exceeded the limitation !!!", StatusService.BUY_EXCEEDED_QUANTITY_MONTHLY_LIMITATION, HttpStatus.OK, Map.ofEntries(
+                        entry("1", String.valueOf(walletMonthlyBuyLimitationRedis.getQuantity().add(amount))),
+                        entry("2", String.valueOf(maxQuantityMonthly))
                 ));
             }
 

@@ -608,27 +608,11 @@ VALUES ('System', now(), 'ENABLE_CASH_IN', 'false', 'قابلیت شارژ حس�
 on conflict do nothing;
 
 INSERT INTO limitation_general(created_by, created_at, name, value, additional_data)
-VALUES ('System', now(), 'MAX_DAILY_PRICE_BUY', '2000000000', 'حداکثر مبالغ خرید در روز')
-on conflict do nothing;
-
-INSERT INTO limitation_general(created_by, created_at, name, value, additional_data)
 VALUES ('System', now(), 'MAX_DAILY_COUNT_BUY', '90', 'حداکثر تعداد خرید در روز')
 on conflict do nothing;
 
 INSERT INTO limitation_general(created_by, created_at, name, value, additional_data)
-VALUES ('System', now(), 'MAX_MONTHLY_PRICE_BUY', '10000000000', 'حداکثر مبالغ خرید در ماه')
-on conflict do nothing;
-
-INSERT INTO limitation_general(created_by, created_at, name, value, additional_data)
 VALUES ('System', now(), 'MAX_MONTHLY_COUNT_BUY', '10', 'حداکثر تعداد خرید در ماه')
-on conflict do nothing;
-
-INSERT INTO limitation_general(created_by, created_at, name, value, additional_data)
-VALUES ('System', now(), 'MAX_PRICE_BUY', '20000000', 'حداکثر مبلغ خرید')
-on conflict do nothing;
-
-INSERT INTO limitation_general(created_by, created_at, name, value, additional_data)
-VALUES ('System', now(), 'MIN_PRICE_BUY', '50000', 'حداقل مبلغ خرید')
 on conflict do nothing;
 
 INSERT INTO limitation_general(created_by, created_at, name, value, additional_data)
