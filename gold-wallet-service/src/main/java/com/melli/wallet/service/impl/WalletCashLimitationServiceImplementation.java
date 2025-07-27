@@ -70,7 +70,7 @@ public class WalletCashLimitationServiceImplementation implements WalletCashLimi
         if (Boolean.FALSE.equals(enableCashIn)) {
             log.error("checkCashInLimitation: cash in for channel {}, walletAccountCurrencyEntity ({}) and walletAccountTypeEntity ({}) walletTypeEntity ({}) is not permission !!!", channel, walletAccountCurrencyEntity.getName(), walletAccountTypeEntity.getName(), walletTypeEntity.getName());
             StringBuilder st = new StringBuilder();
-            st.append("account (").append( walletAccount.getAccountNumber()).append(") dont permission to cashIn");
+            st.append("checkCashInLimitation: account (").append( walletAccount.getAccountNumber()).append(") dont permission to cashIn");
             throw new InternalServiceException(st.toString(), StatusService.ACCOUNT_DONT_PERMISSION_FOR_CASH_IN, HttpStatus.OK);
         }
 
