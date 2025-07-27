@@ -1,6 +1,9 @@
 package com.melli.wallet.config;
 
 import com.melli.wallet.ConstantRedisName;
+import com.melli.wallet.service.WalletBuyLimitationService;
+import com.melli.wallet.service.WalletCashLimitationService;
+import com.melli.wallet.service.WalletSellLimitationService;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,8 +18,20 @@ import java.util.Objects;
 @Service
 @Log4j2
 public class CacheClearService {
-    @Autowired
-    private CacheManager cacheManager;
+    private final CacheManager cacheManager;
+    
+    private final WalletCashLimitationService walletCashLimitationService;
+    
+    private final WalletBuyLimitationService walletBuyLimitationService;
+    
+    private final WalletSellLimitationService walletSellLimitationService;
+
+    public CacheClearService(CacheManager cacheManager, WalletCashLimitationService walletCashLimitationService, WalletBuyLimitationService walletBuyLimitationService, WalletSellLimitationService walletSellLimitationService) {
+        this.cacheManager = cacheManager;
+        this.walletCashLimitationService = walletCashLimitationService;
+        this.walletBuyLimitationService = walletBuyLimitationService;
+        this.walletSellLimitationService = walletSellLimitationService;
+    }
 
     @PostConstruct
     public void clearCache() {
@@ -54,6 +69,13 @@ public class CacheClearService {
                 log.error("Cache not found: ({})", cacheName);
             }
         });
+
+        // Clear Redis repositories (for @RedisHash entities)
+        log.info("Clearing Redis repositories...");
+        walletCashLimitationService.deleteAll();
+        walletBuyLimitationService.deleteAll();
+        walletSellLimitationService.deleteAll();
+        log.info("Redis repositories cleared successfully");
     }
 
 }

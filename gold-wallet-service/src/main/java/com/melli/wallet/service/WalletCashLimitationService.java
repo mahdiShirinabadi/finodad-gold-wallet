@@ -18,4 +18,6 @@ public interface WalletCashLimitationService {
 	void updateCashOutLimitation(WalletAccountEntity wallet, BigDecimal amount) throws InternalServiceException;
 	void updatePhysicalCashOutLimitation(WalletAccountEntity wallet, BigDecimal quantity) throws InternalServiceException;
 
+	void deleteAll();
+
 }

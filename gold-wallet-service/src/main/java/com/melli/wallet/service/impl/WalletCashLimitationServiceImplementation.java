@@ -396,5 +396,15 @@ public class WalletCashLimitationServiceImplementation implements WalletCashLimi
         return walletPhysicalCashOutLimitationRepository.findById(id).orElse(null);
     }
 
+    @Override
+    public void deleteAll() {
+        log.info("delete all cash in limitation");
+        walletCashInLimitationRepository.deleteAll();
+        log.info("delete all cash out limitation");
+        walletCashOutLimitationRepository.deleteAll();
+        log.info("delete all physical cash out limitation");
+        walletPhysicalCashOutLimitationRepository.deleteAll();
+    }
+
 
 }
