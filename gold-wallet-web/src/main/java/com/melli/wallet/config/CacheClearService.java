@@ -21,9 +21,7 @@ public class CacheClearService {
     private final CacheManager cacheManager;
     
     private final WalletCashLimitationService walletCashLimitationService;
-    
     private final WalletBuyLimitationService walletBuyLimitationService;
-    
     private final WalletSellLimitationService walletSellLimitationService;
 
     public CacheClearService(CacheManager cacheManager, WalletCashLimitationService walletCashLimitationService, WalletBuyLimitationService walletBuyLimitationService, WalletSellLimitationService walletSellLimitationService) {
