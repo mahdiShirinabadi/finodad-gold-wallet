@@ -6,8 +6,6 @@ import com.melli.wallet.domain.request.limitation.UpdateLimitationGeneralRequest
 import com.melli.wallet.domain.response.base.BaseResponse;
 import com.melli.wallet.domain.response.limitation.GeneralCustomLimitationListResponse;
 import com.melli.wallet.domain.response.limitation.GeneralLimitationListResponse;
-import com.melli.wallet.domain.response.limitation.GeneralLimitationObject;
-import com.melli.wallet.domain.response.limitation.GeneralCustomLimitationObject;
 import com.melli.wallet.exception.InternalServiceException;
 import com.melli.wallet.security.RequestContext;
 import com.melli.wallet.service.LimitationGeneralCustomService;
@@ -61,7 +59,7 @@ public class PanelLimitationController extends WebController {
     }
 
     @Timed(description = "Time taken to insert limitation general custom")
-    @PostMapping(path = "/insertGeneralCustom", produces = {MediaType.APPLICATION_JSON_VALUE}, consumes = {MediaType.APPLICATION_JSON_VALUE})
+    @PostMapping(path = "/insertG.0eneralCustom", produces = {MediaType.APPLICATION_JSON_VALUE}, consumes = {MediaType.APPLICATION_JSON_VALUE})
     @Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "Insert general custom limitation")
     @PreAuthorize("hasAuthority(\""+ ResourceService.LIMITATION_MANAGE +"\")")
     public ResponseEntity<BaseResponse<String>> insertLimitationGeneralCustom(@Valid @RequestBody CreateLimitationGeneralCustomRequestJson request) throws InternalServiceException {

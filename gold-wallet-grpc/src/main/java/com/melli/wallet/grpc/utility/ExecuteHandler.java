@@ -3,7 +3,6 @@ package com.melli.wallet.grpc.utility;
 import com.melli.wallet.grpc.BaseResponseGrpc;
 import com.melli.wallet.grpc.exception.GrpcErrorHandler;
 import io.grpc.stub.StreamObserver;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
 

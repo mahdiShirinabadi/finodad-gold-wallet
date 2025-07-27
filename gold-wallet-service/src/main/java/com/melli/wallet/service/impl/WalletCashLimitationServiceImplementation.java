@@ -69,7 +69,9 @@ public class WalletCashLimitationServiceImplementation implements WalletCashLimi
 
         if (Boolean.FALSE.equals(enableCashIn)) {
             log.error("checkCashInLimitation: cash in for channel {}, walletAccountCurrencyEntity ({}) and walletAccountTypeEntity ({}) walletTypeEntity ({}) is not permission !!!", channel, walletAccountCurrencyEntity.getName(), walletAccountTypeEntity.getName(), walletTypeEntity.getName());
-            throw new InternalServiceException("account (" + walletAccount.getAccountNumber() + ") dont permission to cashIn", StatusService.ACCOUNT_DONT_PERMISSION_FOR_CASH_IN, HttpStatus.OK);
+            StringBuilder st = new StringBuilder();
+            st.append("account (").append( walletAccount.getAccountNumber()).append(") dont permission to cashIn");
+            throw new InternalServiceException(st.toString(), StatusService.ACCOUNT_DONT_PERMISSION_FOR_CASH_IN, HttpStatus.OK);
         }
 
         BigDecimal minAmount = new BigDecimal(limitationGeneralCustomService.getSetting(channel, LimitationGeneralService.MIN_AMOUNT_CASH_IN, walletLevelEntity, walletAccountTypeEntity, walletAccountCurrencyEntity, walletTypeEntity));
@@ -133,7 +135,7 @@ public class WalletCashLimitationServiceImplementation implements WalletCashLimi
 
             if ((walletCashInLimitationRedis.getCashInDailyAmount().add(amount).compareTo(BigDecimal.valueOf(maxCashInDaily.longValue()))) > 0) {
                 log.error("wallet({}) on channel ({}) , exceeded amount limitation in cashIn!!! SumCashInAmount is: {}", wallet.getNationalCode(), wallet.getOwner().getId(), walletCashInLimitationRedis.getCashInDailyAmount());
-                throw new InternalServiceException("wallet exceeded the limitation !!!", StatusService.WALLET_EXCEEDED_AMOUNT_LIMITATION, HttpStatus.OK, Map.ofEntries(
+                throw new InternalServiceException("wallet exceeded cashIn the limitation !!!", StatusService.WALLET_EXCEEDED_AMOUNT_LIMITATION, HttpStatus.OK, Map.ofEntries(
                         entry("1", Utility.addComma(walletCashInLimitationRedis.getCashInDailyAmount().add(amount).longValue())),
                         entry("2", Utility.addComma((maxCashInDaily.longValue())))
                 ));

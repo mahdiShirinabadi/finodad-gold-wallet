@@ -1,9 +1,8 @@
 package com.melli.wallet.domain.master.entity;
 
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
-
-import jakarta.persistence.*;
 
 @Entity
 @Table(name = "cash_in_special_request")

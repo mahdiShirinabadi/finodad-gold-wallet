@@ -5,7 +5,6 @@ import com.melli.wallet.annotation.string.StringValidation;
 import com.melli.wallet.domain.request.merchant.MerchantBalanceRequest;
 import com.melli.wallet.domain.response.base.BaseResponse;
 import com.melli.wallet.domain.response.purchase.MerchantResponse;
-import com.melli.wallet.domain.response.wallet.CreateWalletResponse;
 import com.melli.wallet.domain.response.wallet.WalletBalanceResponse;
 import com.melli.wallet.exception.InternalServiceException;
 import com.melli.wallet.security.RequestContext;

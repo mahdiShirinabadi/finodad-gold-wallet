@@ -3,8 +3,6 @@ package com.melli.wallet.grpc.security;
 import com.melli.wallet.domain.master.entity.ChannelEntity;
 import com.melli.wallet.grpc.config.RequestContext;
 import com.melli.wallet.service.ChannelAccessTokenService;
-import io.grpc.Grpc;
-import io.grpc.ServerCall;
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -16,11 +14,9 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.net.SocketAddress;
 import java.util.UUID;
 
 @Component

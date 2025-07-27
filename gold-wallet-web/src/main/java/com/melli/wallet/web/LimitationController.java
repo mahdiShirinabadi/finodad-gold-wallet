@@ -1,7 +1,5 @@
 package com.melli.wallet.web;
 
-import com.melli.wallet.domain.request.limitation.UpdateLimitationGeneralRequestJson;
-import com.melli.wallet.domain.request.limitation.CreateLimitationGeneralCustomRequestJson;
 import com.melli.wallet.domain.response.base.BaseResponse;
 import com.melli.wallet.domain.response.limitation.LimitationCustomResponse;
 import com.melli.wallet.domain.response.limitation.LimitationListResponse;
@@ -20,7 +18,10 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 /**
  * Class Name: CashEndPoint

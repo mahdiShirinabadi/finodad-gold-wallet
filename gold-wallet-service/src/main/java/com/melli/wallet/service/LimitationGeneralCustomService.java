@@ -2,10 +2,8 @@ package com.melli.wallet.service;
 
 
 import com.melli.wallet.domain.master.entity.*;
-import com.melli.wallet.domain.master.entity.SettingGeneralEntity;
 import com.melli.wallet.domain.response.limitation.GeneralCustomLimitationListResponse;
 import com.melli.wallet.exception.InternalServiceException;
-import com.melli.wallet.service.SettingGeneralService;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 

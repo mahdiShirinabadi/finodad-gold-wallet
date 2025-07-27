@@ -2,7 +2,6 @@ package com.melli.wallet.domain.request.wallet;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.melli.wallet.NamingProperty;
-import com.melli.wallet.annotation.fund_type.PurchaseTypeValidation;
 import com.melli.wallet.annotation.number.NumberValidation;
 import com.melli.wallet.annotation.string.StringValidation;
 import io.swagger.v3.oas.annotations.media.Schema;

@@ -1,10 +1,7 @@
 package com.melli.wallet.domain.master.entity;
 
-import jakarta.persistence.Table;
-
 import jakarta.persistence.*;
 import lombok.*;
-import org.apache.poi.hpsf.Decimal;
 
 import java.io.Serializable;
 import java.math.BigDecimal;

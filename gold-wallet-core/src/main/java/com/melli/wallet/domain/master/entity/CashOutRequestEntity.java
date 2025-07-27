@@ -1,7 +1,8 @@
 package com.melli.wallet.domain.master.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.Getter;
+import lombok.Setter;
 
 @Entity
 @Table(name = "cash_out_request")

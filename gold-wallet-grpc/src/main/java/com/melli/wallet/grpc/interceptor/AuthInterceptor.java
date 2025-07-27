@@ -4,7 +4,6 @@ import com.melli.wallet.domain.master.entity.ChannelEntity;
 import com.melli.wallet.grpc.config.RequestContext;
 import com.melli.wallet.grpc.security.JwtChannelDetailsService;
 import com.melli.wallet.grpc.security.JwtTokenUtil;
-import com.melli.wallet.service.ChannelService;
 import io.grpc.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -16,7 +15,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
 import java.net.SocketAddress;
-import java.util.List;
 import java.util.UUID;
 
 /**

@@ -1,7 +1,7 @@
 package com.melli.wallet.service;
 
 
-import com.melli.wallet.domain.master.entity.*;
+import com.melli.wallet.domain.master.entity.ChannelEntity;
 import com.melli.wallet.domain.response.base.BaseResponse;
 import com.melli.wallet.domain.response.wallet.CreateWalletResponse;
 import com.melli.wallet.exception.InternalServiceException;

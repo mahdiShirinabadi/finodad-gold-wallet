@@ -5,7 +5,6 @@ import com.melli.wallet.domain.master.entity.MerchantEntity;
 import com.melli.wallet.domain.master.entity.MerchantWalletAccountCurrencyEntity;
 import com.melli.wallet.domain.master.entity.WalletAccountCurrencyEntity;
 import com.melli.wallet.domain.response.purchase.MerchantResponse;
-import com.melli.wallet.domain.response.wallet.CreateWalletResponse;
 import com.melli.wallet.domain.response.wallet.WalletBalanceResponse;
 import com.melli.wallet.exception.InternalServiceException;
 

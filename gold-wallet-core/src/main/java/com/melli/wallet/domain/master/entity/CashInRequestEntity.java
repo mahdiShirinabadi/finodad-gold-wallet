@@ -1,8 +1,9 @@
 package com.melli.wallet.domain.master.entity;
 
 import com.melli.wallet.domain.enumaration.CashInPaymentTypeEnum;
-import lombok.*;
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 
 
 @Entity

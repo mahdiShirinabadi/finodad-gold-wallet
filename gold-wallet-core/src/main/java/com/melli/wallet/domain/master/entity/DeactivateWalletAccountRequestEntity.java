@@ -1,8 +1,8 @@
 package com.melli.wallet.domain.master.entity;
 
-import lombok.*;
-
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 
 @Entity
 @Table(name = "deactivate_wallet_account_request")

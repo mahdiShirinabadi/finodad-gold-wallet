@@ -1,7 +1,6 @@
 package com.melli.wallet.domain.master.persistence;
 
 import com.melli.wallet.domain.master.entity.LimitationGeneralEntity;
-import com.melli.wallet.domain.master.entity.SettingGeneralEntity;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;

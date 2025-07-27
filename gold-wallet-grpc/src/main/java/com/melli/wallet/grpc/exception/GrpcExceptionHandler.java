@@ -1,6 +1,5 @@
 package com.melli.wallet.grpc.exception;
 
-import com.melli.wallet.domain.response.base.BaseResponse;
 import com.melli.wallet.domain.response.base.ErrorDetail;
 import com.melli.wallet.exception.InternalServiceException;
 import com.melli.wallet.grpc.BaseResponseGrpc;

@@ -1,8 +1,7 @@
 package com.melli.wallet.domain.master.entity;
 
-import lombok.*;
-
 import jakarta.persistence.*;
+import lombok.*;
 
 import java.io.Serializable;
 

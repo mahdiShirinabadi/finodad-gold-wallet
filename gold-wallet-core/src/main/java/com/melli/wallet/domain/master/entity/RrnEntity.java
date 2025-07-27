@@ -5,6 +5,7 @@ import com.melli.wallet.domain.master.RrnExtraData;
 import com.melli.wallet.domain.master.RrnExtraDataConvertor;
 import jakarta.persistence.*;
 import lombok.*;
+
 import java.io.Serializable;
 
 /**

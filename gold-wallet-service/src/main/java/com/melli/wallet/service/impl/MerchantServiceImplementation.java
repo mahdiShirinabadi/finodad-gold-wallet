@@ -5,19 +5,11 @@ import com.melli.wallet.domain.master.entity.*;
 import com.melli.wallet.domain.master.persistence.MerchantRepository;
 import com.melli.wallet.domain.master.persistence.MerchantWalletAccountCurrencyRepository;
 import com.melli.wallet.domain.response.purchase.MerchantResponse;
-import com.melli.wallet.domain.response.wallet.CreateWalletResponse;
 import com.melli.wallet.domain.response.wallet.WalletBalanceResponse;
 import com.melli.wallet.exception.InternalServiceException;
-import com.melli.wallet.service.MerchantService;
-import com.melli.wallet.service.StatusService;
-import com.melli.wallet.service.WalletAccountCurrencyService;
-import com.melli.wallet.service.WalletAccountService;
-import com.melli.wallet.service.TransactionService;
-import com.melli.wallet.service.RrnService;
-import com.melli.wallet.service.RequestTypeService;
-import com.melli.wallet.utils.RedisLockService;
-import com.melli.wallet.domain.master.entity.*;
+import com.melli.wallet.service.*;
 import com.melli.wallet.utils.Helper;
+import com.melli.wallet.utils.RedisLockService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.cache.annotation.CacheConfig;
@@ -26,8 +18,8 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.math.BigDecimal;
+import java.util.List;
 
 /**
  * Class Name: MerchantServiceImplementation

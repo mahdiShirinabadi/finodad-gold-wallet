@@ -1,8 +1,6 @@
 package com.melli.wallet.domain.master.persistence;
 
-import com.melli.wallet.domain.dto.AggregationCashInDTO;
 import com.melli.wallet.domain.dto.AggregationCashOutDTO;
-import com.melli.wallet.domain.master.entity.CashInRequestEntity;
 import com.melli.wallet.domain.master.entity.CashOutRequestEntity;
 import com.melli.wallet.domain.master.entity.RrnEntity;
 import org.springframework.data.jpa.repository.Query;

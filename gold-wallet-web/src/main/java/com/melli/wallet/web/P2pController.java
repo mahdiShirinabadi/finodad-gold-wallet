@@ -1,26 +1,10 @@
 package com.melli.wallet.web;
 
-import com.melli.wallet.domain.dto.CashOutObjectDTO;
-import com.melli.wallet.domain.request.wallet.CashGenerateUuidRequestJson;
-import com.melli.wallet.domain.request.wallet.CashOutWalletRequestJson;
-import com.melli.wallet.domain.response.UuidResponse;
-import com.melli.wallet.domain.response.base.BaseResponse;
-import com.melli.wallet.domain.response.cash.CashInTrackResponse;
-import com.melli.wallet.domain.response.cash.CashOutResponse;
-import com.melli.wallet.exception.InternalServiceException;
-import com.melli.wallet.service.ResourceService;
-import io.micrometer.core.annotation.Timed;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 /**
  * Class Name: P2pController

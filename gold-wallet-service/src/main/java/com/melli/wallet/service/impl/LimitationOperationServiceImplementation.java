@@ -4,7 +4,6 @@ import com.melli.wallet.domain.master.entity.*;
 import com.melli.wallet.domain.response.limitation.LimitationListResponse;
 import com.melli.wallet.exception.InternalServiceException;
 import com.melli.wallet.service.*;
-import com.melli.wallet.service.StatusService;
 import com.melli.wallet.utils.Helper;
 import com.melli.wallet.utils.RedisLockService;
 import lombok.RequiredArgsConstructor;
