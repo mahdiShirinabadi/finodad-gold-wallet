@@ -44,10 +44,9 @@ public class PanelLimitationController extends WebController {
     private final LimitationGeneralService limitationGeneralService;
     private final LimitationGeneralCustomService limitationGeneralCustomService;
     private final LimitationOperationService limitationOperationService;
-    private final Helper helper;
 
     @Timed(description = "Time taken to update limitation general")
-    @PutMapping(path = "/updateGeneral", produces = {MediaType.APPLICATION_JSON_VALUE}, consumes = {MediaType.APPLICATION_JSON_VALUE})
+    @PostMapping(path = "/updateGeneral", produces = {MediaType.APPLICATION_JSON_VALUE}, consumes = {MediaType.APPLICATION_JSON_VALUE})
     @Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "Update general limitation (value and pattern only)")
     @PreAuthorize("hasAuthority(\""+ ResourceService.LIMITATION_MANAGE +"\")")
     public ResponseEntity<BaseResponse<String>> updateLimitationGeneral(@Valid @RequestBody UpdateLimitationGeneralRequestJson request) throws InternalServiceException {
@@ -59,7 +58,7 @@ public class PanelLimitationController extends WebController {
     }
 
     @Timed(description = "Time taken to insert limitation general custom")
-    @PostMapping(path = "/insertG.0eneralCustom", produces = {MediaType.APPLICATION_JSON_VALUE}, consumes = {MediaType.APPLICATION_JSON_VALUE})
+    @PostMapping(path = "/insertGeneralCustom", produces = {MediaType.APPLICATION_JSON_VALUE}, consumes = {MediaType.APPLICATION_JSON_VALUE})
     @Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "Insert general custom limitation")
     @PreAuthorize("hasAuthority(\""+ ResourceService.LIMITATION_MANAGE +"\")")
     public ResponseEntity<BaseResponse<String>> insertLimitationGeneralCustom(@Valid @RequestBody CreateLimitationGeneralCustomRequestJson request) throws InternalServiceException {

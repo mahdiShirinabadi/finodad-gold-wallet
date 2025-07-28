@@ -2,12 +2,15 @@ package com.melli.wallet.service.impl;
 
 import com.melli.wallet.domain.master.entity.TransactionEntity;
 import com.melli.wallet.domain.master.persistence.TransactionRepository;
+import com.melli.wallet.domain.slave.entity.ReportTransactionEntity;
+import com.melli.wallet.domain.slave.persistence.ReportTransactionRepository;
 import com.melli.wallet.exception.InternalServiceException;
 import com.melli.wallet.service.StatusService;
 import com.melli.wallet.service.TransactionService;
 import com.melli.wallet.service.WalletAccountService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -30,11 +33,17 @@ import java.util.List;
 public class TransactionServiceImplementation implements TransactionService {
 
     private final TransactionRepository transactionRepository;
+    private final ReportTransactionRepository reportTransactionRepository;
     private final WalletAccountService walletAccountService;
 
     @Override
     public List<TransactionEntity> walletLastTransaction(long walletAccountId, int limit) {
         return transactionRepository.findByWalletAccountEntityIdOrderByIdDesc(walletAccountId, PageRequest.of(0, limit));
+    }
+
+    @Override
+    public Page<ReportTransactionEntity> reportWalletLastTransaction(long walletAccountId, int limit, int page) {
+        return reportTransactionRepository.findByWalletAccountEntityIdOrderByIdDesc(walletAccountId, PageRequest.of(page, limit));
     }
 
     /**

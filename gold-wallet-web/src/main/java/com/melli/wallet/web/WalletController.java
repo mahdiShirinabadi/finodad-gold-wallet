@@ -1,11 +1,13 @@
 package com.melli.wallet.web;
 
 import com.melli.wallet.annotation.national_code.NationalCodeValidation;
+import com.melli.wallet.domain.request.PanelBaseSearchJson;
 import com.melli.wallet.domain.request.wallet.ActiveWalletRequestJson;
 import com.melli.wallet.domain.request.wallet.CreateWalletRequestJson;
 import com.melli.wallet.domain.request.wallet.DeactivatedWalletRequestJson;
 import com.melli.wallet.domain.request.wallet.DeleteWalletRequestJson;
 import com.melli.wallet.domain.response.base.BaseResponse;
+import com.melli.wallet.domain.response.limitation.GeneralCustomLimitationListResponse;
 import com.melli.wallet.domain.response.wallet.CreateWalletResponse;
 import com.melli.wallet.exception.InternalServiceException;
 import com.melli.wallet.security.RequestContext;
@@ -106,5 +108,20 @@ public class WalletController extends WebController {
 		log.info("start disable wallet with mobile ==> {}", requestJson.getId());
 		walletOperationalService.activateWallet(requestContext.getChannelEntity() ,requestJson.getId(), channelIp);
 		return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse<>(true));
+	}
+
+
+	@Timed(description = "Time taken to get general custom limitations list")
+	@GetMapping(path = "/statement", produces = {MediaType.APPLICATION_JSON_VALUE})
+	@Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "Get general custom limitations list")
+	@PreAuthorize("hasAuthority(\""+ ResourceService.LIMITATION_MANAGE +"\")")
+	public ResponseEntity<BaseResponse<GeneralCustomLimitationListResponse>> statement(@Valid @RequestBody PanelBaseSearchJson panelSearchJson) throws InternalServiceException {
+		String channelIp = requestContext.getClientIp();
+		String username = requestContext.getChannelEntity().getUsername();
+		log.info("start get generalCustomList by username ({}), ip ({}) for request ({})", username,
+				channelIp, Utility.mapToJsonOrNull(panelSearchJson));
+		log.info("start get general custom limitations list in username ===> {}, from ip ===> {}", username, channelIp);
+		GeneralCustomLimitationListResponse response = walletOperationalService.getStatement(requestContext.getChannelEntity(), panelSearchJson.getMap(), requestContext.getClientIp());
+		return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse<>(true, response));
 	}
 }
