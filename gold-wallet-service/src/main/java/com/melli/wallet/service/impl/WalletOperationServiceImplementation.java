@@ -146,9 +146,6 @@ public class WalletOperationServiceImplementation implements WalletOperationalSe
             log.error("wallet for nationalCode ({}) not exist", walletEntity.getNationalCode());
             throw new InternalServiceException("walletAccount not found", StatusService.WALLET_ACCOUNT_NOT_FOUND, HttpStatus.OK);
         }
-        Page<ReportTransactionEntity> reportTransactionEntityPage = transactionService.reportWalletLastTransaction(walletAccountEntityOptional.get().getId(), pageRequest.getPageSize(), pageRequest.getPageNumber());
-        return helper.fillGeneralCustomLimitationListResponse(limitationGeneralCustomEntityPage);
-
     }
 
     @Override
