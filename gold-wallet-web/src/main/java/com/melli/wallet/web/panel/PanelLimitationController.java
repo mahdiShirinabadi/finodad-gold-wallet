@@ -80,7 +80,7 @@ public class PanelLimitationController extends WebController {
     }
 
     @Timed(description = "Time taken to get general limitations list")
-    @GetMapping(path = "/generalList", produces = {MediaType.APPLICATION_JSON_VALUE})
+    @PostMapping(path = "/generalList", produces = {MediaType.APPLICATION_JSON_VALUE})
     @Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "Get general limitations list")
     @PreAuthorize("hasAuthority(\""+ ResourceService.LIMITATION_MANAGE +"\")")
     public ResponseEntity<BaseResponse<GeneralLimitationListResponse>> getGeneralLimitationsList(@Valid @RequestBody PanelBaseSearchJson panelSearchJson) throws InternalServiceException {
@@ -94,7 +94,7 @@ public class PanelLimitationController extends WebController {
     }
 
     @Timed(description = "Time taken to get general custom limitations list")
-    @GetMapping(path = "/generalCustomList", produces = {MediaType.APPLICATION_JSON_VALUE})
+    @PostMapping(path = "/generalCustomList", produces = {MediaType.APPLICATION_JSON_VALUE})
     @Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "Get general custom limitations list")
     @PreAuthorize("hasAuthority(\""+ ResourceService.LIMITATION_MANAGE +"\")")
     public ResponseEntity<BaseResponse<GeneralCustomLimitationListResponse>> getGeneralCustomLimitationsList(@Valid @RequestBody PanelBaseSearchJson panelSearchJson) throws InternalServiceException {
