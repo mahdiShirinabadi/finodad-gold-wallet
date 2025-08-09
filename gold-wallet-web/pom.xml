@@ -93,7 +93,7 @@
             </plugin>
 
         </plugins>
-        <finalName>gold-web</finalName>
+        <finalName>wallet-gold-web</finalName>
 
     </build>
 

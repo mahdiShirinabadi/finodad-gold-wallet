@@ -133,7 +133,7 @@ public class WalletBuyLimitationServiceImplementation implements WalletBuyLimita
                 walletDailyBuyLimitationRepository.save(walletDailyBuyLimitationRedis);
             }
 
-            log.info("checkBuyDailyLimitation: SumPurchaseCount for wallet({}) in date: ({}) is: {}", wallet.getMobile(), currentDate, walletDailyBuyLimitationRedis.getAmount());
+            log.info("checkBuyDailyLimitation: SumPurchaseQuantity for wallet({}) in date: ({}) is: {}", wallet.getMobile(), currentDate, walletDailyBuyLimitationRedis.getQuantity());
 
             if (walletDailyBuyLimitationRedis.getQuantity().add(amount).compareTo(maxQuantityDaily) > 0) {
                 log.error("checkPurchaseDailyLimitation: wallet({}) on channel ({}) , exceeded amount limitation in purchase!!! SumPurchaseAmount plus amount is: {} and bigger than maxAmountDaily {}", wallet.getMobile(), wallet.getOwner().getId(), walletDailyBuyLimitationRedis.getQuantity().add(amount), maxQuantityDaily);
