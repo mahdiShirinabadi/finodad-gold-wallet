@@ -546,7 +546,7 @@ class SellControllerTest extends WalletApplicationTests {
         // Step 2: Get user's GOLD account number
         WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.GOLD);
         // Step 3: Generate sell UUID - should fail due to maximum quantity limitation
-        BaseResponse<UuidResponse> uuidResponse = generateSellUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, quantity, walletAccountObjectOptional.getAccountNumber(), CURRENCY_GOLD, HttpStatus.OK, StatusService.QUANTITY_BIGGER_THAN_MAX, false);
+        generateSellUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, quantity, walletAccountObjectOptional.getAccountNumber(), CURRENCY_GOLD, HttpStatus.OK, StatusService.QUANTITY_BIGGER_THAN_MAX, false);
     }
 
     /**
