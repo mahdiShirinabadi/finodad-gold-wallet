@@ -446,9 +446,10 @@ class BuyControllerTest extends WalletApplicationTests {
         
         // Step 3: Get user's RIAL account number
         WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.RIAL);
+        WalletAccountObject walletAccountCurrencyObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.GOLD);
 
         // Step 4: Get current buy statistics and limitation values
-        WalletAccountEntity walletAccountEntity = walletAccountService.findByAccountNumber(walletAccountObjectOptional.getAccountNumber());
+        WalletAccountEntity walletAccountEntity = walletAccountService.findByAccountNumber(walletAccountCurrencyObjectOptional.getAccountNumber());
         String valueMaxDailyCount = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.MAX_DAILY_COUNT_BUY, walletAccountObjectOptional.getAccountNumber());
         String valueMaxDailyPrice = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.MAX_DAILY_QUANTITY_BUY, walletAccountObjectOptional.getAccountNumber());
         AggregationPurchaseDTO aggregationPurchaseDTO = requestService.findSumAmountByTransactionTypeBetweenDate(new long[]{walletAccountEntity.getId()}, TransactionTypeEnum.BUY.name(), new Date(), new Date());
@@ -504,8 +505,9 @@ class BuyControllerTest extends WalletApplicationTests {
         walletBuyLimitationService.deleteAll();
         // Step 3: Get user's RIAL account number
         WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.RIAL);
+        WalletAccountObject walletAccountCurrencyObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.GOLD);
         // Step 4: Update balance merchant wallet-account
-        WalletAccountEntity walletAccountEntity = walletAccountService.findByAccountNumber(walletAccountObjectOptional.getAccountNumber());
+        WalletAccountEntity walletAccountEntity = walletAccountService.findByAccountNumber(walletAccountCurrencyObjectOptional.getAccountNumber());
         // Step 5: Get current monthly limitation values for backup
         String valueMaxMonthlyCount = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.MAX_MONTHLY_COUNT_BUY, walletAccountObjectOptional.getAccountNumber());
         String valueMaxMonthlyQuantity = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.MAX_MONTHLY_QUANTITY_BUY, walletAccountObjectOptional.getAccountNumber());

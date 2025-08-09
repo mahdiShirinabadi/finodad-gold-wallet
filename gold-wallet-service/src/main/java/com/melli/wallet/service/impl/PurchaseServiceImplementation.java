@@ -53,15 +53,18 @@ public class PurchaseServiceImplementation implements PurchaseService {
             log.info("start generate traceId, username ===> ({}), nationalCode ({})", buyRequestDTO.getChannel().getUsername(), buyRequestDTO.getNationalCode());
             WalletEntity walletEntity = findUserWallet(buyRequestDTO.getNationalCode());
             WalletAccountCurrencyEntity rialCurrencyEntity = walletAccountCurrencyService.findCurrency(WalletAccountCurrencyService.RIAL);
-            WalletAccountEntity walletAccountEntity = findUserAccount(walletEntity, rialCurrencyEntity, buyRequestDTO.getWalletAccountNumber(), buyRequestDTO.getNationalCode());
+            WalletAccountCurrencyEntity currencyEntity = walletAccountCurrencyService.findCurrency(buyRequestDTO.getCurrency());
+            findUserAccount(walletEntity, rialCurrencyEntity, buyRequestDTO.getWalletAccountNumber(), buyRequestDTO.getNationalCode());
+            WalletAccountEntity userCurrencyAccount = findUserWalletAccount(walletEntity, currencyEntity, buyRequestDTO.getCurrency());
             RrnEntity rrnEntity = rrnService.generateTraceId(buyRequestDTO.getNationalCode(), buyRequestDTO.getChannel(), requestTypeService.getRequestType(TransactionTypeEnum.BUY.name()), buyRequestDTO.getWalletAccountNumber(), String.valueOf(buyRequestDTO.getPrice()));
             log.info("finish traceId ===> {}, username ({}), nationalCode ({})", rrnEntity.getUuid(), buyRequestDTO.getChannel().getUsername(), buyRequestDTO.getNationalCode());
             MerchantEntity merchant = findMerchant(buyRequestDTO.getMerchantId());
-            WalletAccountCurrencyEntity currencyEntity = walletAccountCurrencyService.findCurrency(buyRequestDTO.getCurrency());
 
-            walletBuyLimitationService.checkGeneral(buyRequestDTO.getChannel(), walletEntity, buyRequestDTO.getAmount(), walletAccountEntity, buyRequestDTO.getWalletAccountNumber());
-            walletBuyLimitationService.checkDailyLimitation(buyRequestDTO.getChannel(), walletEntity, buyRequestDTO.getAmount(), walletAccountEntity, buyRequestDTO.getWalletAccountNumber());
-            walletBuyLimitationService.checkMonthlyLimitation(buyRequestDTO.getChannel(), walletEntity, buyRequestDTO.getAmount(), walletAccountEntity, buyRequestDTO.getWalletAccountNumber());
+
+
+            walletBuyLimitationService.checkGeneral(buyRequestDTO.getChannel(), walletEntity, buyRequestDTO.getAmount(), userCurrencyAccount, rrnEntity.getUuid(), currencyEntity);
+            walletBuyLimitationService.checkDailyLimitation(buyRequestDTO.getChannel(), walletEntity, buyRequestDTO.getAmount(), userCurrencyAccount, rrnEntity.getUuid(), currencyEntity);
+            walletBuyLimitationService.checkMonthlyLimitation(buyRequestDTO.getChannel(), walletEntity, buyRequestDTO.getAmount(), userCurrencyAccount, rrnEntity.getUuid(), currencyEntity);
 
 
             WalletAccountEntity merchantCurrencyAccount = findMerchantWalletAccount(merchant, currencyEntity);
@@ -172,9 +175,9 @@ public class PurchaseServiceImplementation implements PurchaseService {
         }
         WalletAccountEntity channelCommissionAccount = findChannelCommissionAccount(buyRequestDTO.getChannel(), WalletAccountCurrencyService.RIAL);
 
-        walletBuyLimitationService.checkGeneral(buyRequestDTO.getChannel(), userRialAccount.getWalletEntity(), buyRequestDTO.getAmount(), userRialAccount, buyRequestDTO.getUniqueIdentifier());
-        walletBuyLimitationService.checkDailyLimitation(buyRequestDTO.getChannel(), userRialAccount.getWalletEntity(), buyRequestDTO.getAmount(), userRialAccount, buyRequestDTO.getUniqueIdentifier());
-        walletBuyLimitationService.checkMonthlyLimitation(buyRequestDTO.getChannel(), userRialAccount.getWalletEntity(), buyRequestDTO.getAmount(), userRialAccount, buyRequestDTO.getUniqueIdentifier());
+        walletBuyLimitationService.checkGeneral(buyRequestDTO.getChannel(), userRialAccount.getWalletEntity(), buyRequestDTO.getAmount(), userCurrencyAccount, buyRequestDTO.getUniqueIdentifier(), walletAccountCurrencyService.findCurrency(buyRequestDTO.getCurrency()));
+        walletBuyLimitationService.checkDailyLimitation(buyRequestDTO.getChannel(), userRialAccount.getWalletEntity(), buyRequestDTO.getAmount(), userCurrencyAccount, buyRequestDTO.getUniqueIdentifier(), walletAccountCurrencyService.findCurrency(buyRequestDTO.getCurrency()));
+        walletBuyLimitationService.checkMonthlyLimitation(buyRequestDTO.getChannel(), userRialAccount.getWalletEntity(), buyRequestDTO.getAmount(), userCurrencyAccount, buyRequestDTO.getUniqueIdentifier(), walletAccountCurrencyService.findCurrency(buyRequestDTO.getCurrency()));
 
         return redisLockService.runAfterLock(buyRequestDTO.getWalletAccountNumber(), this.getClass(), () -> purchaseTransactionalService.processBuy(new PurchaseObjectDto(
                 buyRequestDTO.getChannel(),
@@ -230,9 +233,9 @@ public class PurchaseServiceImplementation implements PurchaseService {
 
         WalletAccountEntity channelCommissionAccount = findChannelCommissionAccount(buyRequestDTO.getChannel(), WalletAccountCurrencyService.RIAL);
 
-        walletBuyLimitationService.checkGeneral(buyRequestDTO.getChannel(), userRialAccount.getWalletEntity(), buyRequestDTO.getAmount(), userRialAccount, buyRequestDTO.getUniqueIdentifier());
-        walletBuyLimitationService.checkDailyLimitation(buyRequestDTO.getChannel(), userRialAccount.getWalletEntity(), buyRequestDTO.getAmount(), userRialAccount, buyRequestDTO.getUniqueIdentifier());
-        walletBuyLimitationService.checkMonthlyLimitation(buyRequestDTO.getChannel(), userRialAccount.getWalletEntity(), buyRequestDTO.getAmount(), userRialAccount, buyRequestDTO.getUniqueIdentifier());
+        walletBuyLimitationService.checkGeneral(buyRequestDTO.getChannel(), userRialAccount.getWalletEntity(), buyRequestDTO.getAmount(), userRialAccount, buyRequestDTO.getUniqueIdentifier(), walletAccountCurrencyService.findCurrency(buyRequestDTO.getCurrency()));
+        walletBuyLimitationService.checkDailyLimitation(buyRequestDTO.getChannel(), userRialAccount.getWalletEntity(), buyRequestDTO.getAmount(), userRialAccount, buyRequestDTO.getUniqueIdentifier(), walletAccountCurrencyService.findCurrency(buyRequestDTO.getCurrency()));
+        walletBuyLimitationService.checkMonthlyLimitation(buyRequestDTO.getChannel(), userRialAccount.getWalletEntity(), buyRequestDTO.getAmount(), userRialAccount, buyRequestDTO.getUniqueIdentifier(), walletAccountCurrencyService.findCurrency(buyRequestDTO.getCurrency()));
 
         return redisLockService.runAfterLock(buyRequestDTO.getWalletAccountNumber(), this.getClass(), () -> purchaseTransactionalService.processBuy(new PurchaseObjectDto(
                         buyRequestDTO.getChannel(),

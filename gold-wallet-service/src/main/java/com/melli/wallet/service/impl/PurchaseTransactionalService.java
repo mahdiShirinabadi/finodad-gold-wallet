@@ -95,8 +95,8 @@ public class PurchaseTransactionalService {
                 purchaseRequest, purchaseObjectDto.getUserRialAccount(), purchaseObjectDto.getUserCurrencyAccount(),
                 purchaseObjectDto.getMerchantRialAccount(), purchaseObjectDto.getMerchantCurrencyAccount(), purchaseObjectDto.getChannelCommissionAccount(), purchaseObjectDto.getCommission());
 
-        log.info("start updateBuyLimitation for uniqueIdentifier ({}), walletAccountId ({})", purchaseRequest.getRrnEntity().getUuid(), purchaseObjectDto.getUserRialAccount().getId());
-        walletBuyLimitationService.updateLimitation(purchaseObjectDto.getUserCurrencyAccount(), purchaseObjectDto.getPrice(), purchaseObjectDto.getQuantity(), purchaseObjectDto.getUniqueIdentifier());
+        log.info("start updateBuyLimitation for uniqueIdentifier ({}), walletAccountId ({})", purchaseRequest.getRrnEntity().getUuid(), purchaseRequest.getWalletAccount().getId());
+        walletBuyLimitationService.updateLimitation(purchaseObjectDto.getUserCurrencyAccount(), purchaseObjectDto.getPrice(), purchaseObjectDto.getQuantity(), purchaseObjectDto.getUniqueIdentifier(), purchaseRequest.getWalletAccount().getWalletAccountCurrencyEntity());
 
         // Finalize purchase
         purchaseRequest.setResult(StatusService.SUCCESSFUL);
@@ -130,7 +130,7 @@ public class PurchaseTransactionalService {
             request.setTerminalAmount(purchaseObjectDto.getQuantity().subtract(purchaseObjectDto.getCommission()));
         }
         request.setQuantity(purchaseObjectDto.getQuantity());
-        request.setWalletAccount(purchaseObjectDto.getUserRialAccount());
+        request.setWalletAccount(purchaseObjectDto.getUserCurrencyAccount());
         request.setMerchantEntity(purchaseObjectDto.getMerchant());
         request.setNationalCode(purchaseObjectDto.getNationalCode());
         request.setRrnEntity(rrnEntity);

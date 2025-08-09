@@ -5,6 +5,7 @@ import io.micrometer.core.aop.TimedAspect;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.ThreadContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -31,6 +32,7 @@ public class HubConfiguration {
 
     @Bean(name = "threadPoolExecutor")
     public ThreadPoolTaskExecutor getAsyncExecutor() {
+        ThreadContext.put("uuid",ThreadContext.get("uuid"));
         log.info("creating Async Task Executor");
         var executor = new ThreadPoolTaskExecutor();
         executor.setCorePoolSize(10);
