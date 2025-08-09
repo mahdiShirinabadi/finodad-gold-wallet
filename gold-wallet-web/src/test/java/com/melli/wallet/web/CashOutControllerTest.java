@@ -169,10 +169,7 @@ class CashOutControllerTest extends WalletApplicationTests {
         WalletAccountEntity walletAccountEntity = walletAccountService.findByAccountNumber(accountNumber);
         String cashInValue = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, accountNumber);
         if("false".equalsIgnoreCase(cashInValue)){
-            limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
-                    limitationGeneralService.getSetting(LimitationGeneralService.ENABLE_CASH_IN).getId(), walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
-                    walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
-                    "true","test cashOutSuccess");
+            setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, walletAccountEntity, "true");
         }
         
         // Step 4: Generate UUID for cash in operation
@@ -189,10 +186,7 @@ class CashOutControllerTest extends WalletApplicationTests {
         // Step 7: Enable cash out permission if disabled
         String cashOutValue = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_OUT, accountNumber);
         if("false".equalsIgnoreCase(cashOutValue)){
-            limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
-                    limitationGeneralService.getSetting(LimitationGeneralService.ENABLE_CASH_OUT).getId(), walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
-                    walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
-                    "true","test cashOutSuccess");
+            setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_OUT, walletAccountEntity, "true");
         }
         
         // Step 8: Generate UUID for cash out operation
@@ -261,10 +255,7 @@ class CashOutControllerTest extends WalletApplicationTests {
         // Step 3: Enable cash in permission if disabled
         String cashInValue = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, accountNumber);
         if("false".equalsIgnoreCase(cashInValue)){
-            limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
-                limitationGeneralService.getSetting(LimitationGeneralService.ENABLE_CASH_IN).getId(), walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
-                walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
-                "true","test cashOutFailInsufficientBalance");
+            setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, walletAccountEntity, "true"); //"test cashOutFailInsufficientBalance");
         }
         
         // Step 4: Generate UUID for cash in operation
@@ -347,10 +338,7 @@ class CashOutControllerTest extends WalletApplicationTests {
         WalletAccountEntity walletAccountEntity = walletAccountService.findByAccountNumber(accountNumber);
         String cashInValue = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, accountNumber);
         if("false".equalsIgnoreCase(cashInValue)){
-            limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
-                    limitationGeneralService.getSetting(LimitationGeneralService.ENABLE_CASH_IN).getId(), walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
-                    walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
-                    "true","test inquiryCashOutSuccess");
+            setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, walletAccountEntity, "true");
         }
         // Step 4: Generate UUID for cashIn
         BaseResponse<UuidResponse> cashInUuidResponse = generateCashInUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, cashInAmount, accountNumber, HttpStatus.OK, StatusService.SUCCESSFUL, true);
@@ -363,10 +351,7 @@ class CashOutControllerTest extends WalletApplicationTests {
         // Step 7: Enable cashout if disabled
         String cashOutValue = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_OUT, accountNumber);
         if("false".equalsIgnoreCase(cashOutValue)){
-            limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
-                    limitationGeneralService.getSetting(LimitationGeneralService.ENABLE_CASH_OUT).getId(), walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
-                    walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
-                    "true","test inquiryCashOutSuccess");
+            setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_OUT, walletAccountEntity, "true"); //"test inquiryCashOutSuccess");
         }
         // Step 8: Generate UUID for cash out
         BaseResponse<UuidResponse> uuidResponse = generateCashOutUuid(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, cashOutAmount, accountNumber, HttpStatus.OK, StatusService.SUCCESSFUL, true);
@@ -424,10 +409,7 @@ class CashOutControllerTest extends WalletApplicationTests {
         // Step 3: Enable cashIn if disabled
         String cashInValue = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, accountNumber);
         if("false".equalsIgnoreCase(cashInValue)){
-            limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
-                limitationGeneralService.getSetting(LimitationGeneralService.ENABLE_CASH_IN).getId(), walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
-                walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
-                "true","test cashOutFailInvalidIban");
+            setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, walletAccountEntity, "true"); //"test cashOutFailInvalidIban");
         }
         // Step 4: Generate UUID for cashIn
         BaseResponse<UuidResponse> cashInUuidResponse = generateCashInUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, cashInAmount, accountNumber, HttpStatus.OK, StatusService.SUCCESSFUL, true);
@@ -465,10 +447,7 @@ class CashOutControllerTest extends WalletApplicationTests {
         // Step 3: Enable cashIn if disabled
         String cashInValue = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, accountNumber);
         if("false".equalsIgnoreCase(cashInValue)){
-            limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
-                limitationGeneralService.getSetting(LimitationGeneralService.ENABLE_CASH_IN).getId(), walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
-                walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
-                "true","test cashOutFailAmountLessThanMinimum");
+            setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, walletAccountEntity, "true"); //"test cashOutFailAmountLessThanMinimum");
         }
         // Step 4: Generate UUID for cashIn
         BaseResponse<UuidResponse> cashInUuidResponse = generateCashInUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, cashInAmount, accountNumber, HttpStatus.OK, StatusService.SUCCESSFUL, true);
@@ -506,10 +485,7 @@ class CashOutControllerTest extends WalletApplicationTests {
         // Step 3: Enable cashIn if disabled
         String cashInValue = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, accountNumber);
         if("false".equalsIgnoreCase(cashInValue)){
-            limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
-                limitationGeneralService.getSetting(LimitationGeneralService.ENABLE_CASH_IN).getId(), walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
-                walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
-                "true","test cashOutFailAmountBiggerThanMaximum");
+            setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, walletAccountEntity, "true"); //"test cashOutFailAmountBiggerThanMaximum");
         }
         // Step 4: Generate UUID for cashIn
         BaseResponse<UuidResponse> cashInUuidResponse = generateCashInUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, cashInAmount, accountNumber, HttpStatus.OK, StatusService.SUCCESSFUL, true);
@@ -540,10 +516,7 @@ class CashOutControllerTest extends WalletApplicationTests {
         // Enable cashIn if disabled
         String cashInValue = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, accountNumber);
         if("false".equalsIgnoreCase(cashInValue)){
-            limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
-                limitationGeneralService.getSetting(LimitationGeneralService.ENABLE_CASH_IN).getId(), walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
-                walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
-                "true","test cashOutFailInvalidSign");
+            setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, walletAccountEntity, "true"); //"test cashOutFailInvalidSign");
         }
         
         // Generate UUID for cashIn
@@ -582,19 +555,13 @@ class CashOutControllerTest extends WalletApplicationTests {
         String accountNumber = walletAccountObject.getAccountNumber();
         WalletAccountEntity walletAccountEntity = walletAccountService.findByAccountNumber(accountNumber);
         // Step 2: Disable cashOut
-        limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
-            limitationGeneralService.getSetting(LimitationGeneralService.ENABLE_CASH_OUT).getId(), walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
-            walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
-            "false","test cashOutFailCashOutDisabled");
+        setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_OUT, walletAccountEntity, "false");
         // Step 3: Get minimum cash out amount
         String cashOutAmount = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_OUT, accountNumber);
         // Step 4: This should fail due to cashOut being disabled
         BaseResponse<UuidResponse> uuidResponse = generateCashOutUuid(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, cashOutAmount, accountNumber, HttpStatus.OK, StatusService.ACCOUNT_DONT_PERMISSION_FOR_CASH_OUT, false);
         // Step 5: Re-enable cashOut for other tests
-        limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
-            limitationGeneralService.getSetting(LimitationGeneralService.ENABLE_CASH_OUT).getId(), walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
-            walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
-            "true","re-enable cashOut after test");
+        setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_OUT, walletAccountEntity, "true"); //"re-enable cashOut after test");
     }
 
     /**
@@ -620,10 +587,7 @@ class CashOutControllerTest extends WalletApplicationTests {
         // Step 3: Enable cashIn if disabled
         String cashInValue = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, accountNumber);
         if("false".equalsIgnoreCase(cashInValue)){
-            limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
-                limitationGeneralService.getSetting(LimitationGeneralService.ENABLE_CASH_IN).getId(), walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
-                walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
-                "true","test cashOutFailInvalidNationalCode");
+            setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, walletAccountEntity, "true"); //"test cashOutFailInvalidNationalCode");
         }
         // Step 4: Generate UUID for cashIn
         BaseResponse<UuidResponse> cashInUuidResponse = generateCashInUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, cashInAmount, accountNumber, HttpStatus.OK, StatusService.SUCCESSFUL, true);
@@ -661,10 +625,7 @@ class CashOutControllerTest extends WalletApplicationTests {
         // Step 3: Enable cashIn if disabled
         String cashInValue = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, accountNumber);
         if("false".equalsIgnoreCase(cashInValue)){
-            limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
-                limitationGeneralService.getSetting(LimitationGeneralService.ENABLE_CASH_IN).getId(), walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
-                walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
-                "true","test cashOutFailInvalidAccountNumber");
+            setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, walletAccountEntity, "true"); //"test cashOutFailInvalidAccountNumber");
         }
         // Step 4: Generate UUID for cashIn
         BaseResponse<UuidResponse> cashInUuidResponse = generateCashInUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, cashInAmount, accountNumber, HttpStatus.OK, StatusService.SUCCESSFUL, true);

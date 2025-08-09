@@ -191,10 +191,7 @@ class PhysicalCashOutControllerTest extends WalletApplicationTests {
         WalletAccountEntity walletAccountEntity = walletAccountService.findByAccountNumber(accountNumber);
         String physicalCashOutValue = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.ENABLE_PHYSICAL_CASH_OUT, accountNumber);
         if("false".equalsIgnoreCase(physicalCashOutValue)){
-            limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
-                    limitationGeneralService.getSetting(LimitationGeneralService.ENABLE_PHYSICAL_CASH_OUT).getId(), walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
-                    walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
-                    "true","test physicalCashOutGenerateUuidSuccess");
+            setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_PHYSICAL_CASH_OUT, walletAccountEntity, "true");
         }
         
         // Generate UUID for physical cash out operation
@@ -239,10 +236,7 @@ class PhysicalCashOutControllerTest extends WalletApplicationTests {
         
         // Disable physical cash out permission to test failure scenario
         WalletAccountEntity walletAccountEntity = walletAccountService.findByAccountNumber(accountNumber);
-        limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
-                limitationGeneralService.getSetting(LimitationGeneralService.ENABLE_PHYSICAL_CASH_OUT).getId(), walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
-                walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
-                "false","test physicalCashOutGenerateUuidFailAccountNotPermission");
+        setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_PHYSICAL_CASH_OUT, walletAccountEntity, "false");
         
         // Attempt to generate UUID with disabled permission
         String quantity = "1.07";
@@ -278,20 +272,14 @@ class PhysicalCashOutControllerTest extends WalletApplicationTests {
         WalletAccountEntity goldWalletAccountEntity = walletAccountService.findByAccountNumber(goldAccountNumber);
         String physicalCashOutValue = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.ENABLE_PHYSICAL_CASH_OUT, goldAccountNumber);
         if("false".equalsIgnoreCase(physicalCashOutValue)){
-            limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
-                    limitationGeneralService.getSetting(LimitationGeneralService.ENABLE_PHYSICAL_CASH_OUT).getId(), goldWalletAccountEntity.getWalletEntity().getWalletLevelEntity(),
-                    goldWalletAccountEntity.getWalletAccountTypeEntity(), goldWalletAccountEntity.getWalletAccountCurrencyEntity(), goldWalletAccountEntity.getWalletEntity().getWalletTypeEntity(),
-                    "true","test physicalCashOutSuccess");
+            setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_PHYSICAL_CASH_OUT, goldWalletAccountEntity, "true"); //"test physicalCashOutSuccess");
         }
 
         // Step 4: Store original MAX_QUANTITY_PHYSICAL_CASH_OUT value for restoration
         String valueMaxDailyPrice = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.MAX_QUANTITY_PHYSICAL_CASH_OUT, goldAccountObject.getAccountNumber());
         
         // Step 5: Temporarily increase MAX_QUANTITY_PHYSICAL_CASH_OUT limit to allow operation
-        limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
-                limitationGeneralService.getSetting(LimitationGeneralService.MAX_QUANTITY_PHYSICAL_CASH_OUT).getId(), goldWalletAccountEntity.getWalletEntity().getWalletLevelEntity(),
-                goldWalletAccountEntity.getWalletAccountTypeEntity(), goldWalletAccountEntity.getWalletAccountCurrencyEntity(), goldWalletAccountEntity.getWalletEntity().getWalletTypeEntity(),
-                "10", "change MAX_QUANTITY_PHYSICAL_CASH_OUT to generate uuid");
+        setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MAX_QUANTITY_PHYSICAL_CASH_OUT, goldWalletAccountEntity, "10");
 
         // Step 6: Generate UUID for physical cash out operation
         String physicalCashOutQuantity = "5.05";
@@ -308,10 +296,7 @@ class PhysicalCashOutControllerTest extends WalletApplicationTests {
         log.info("Physical cash out completed successfully");
 
         // Step 8: Restore original MAX_QUANTITY_PHYSICAL_CASH_OUT limit
-        limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
-                limitationGeneralService.getSetting(LimitationGeneralService.MAX_QUANTITY_PHYSICAL_CASH_OUT).getId(), goldWalletAccountEntity.getWalletEntity().getWalletLevelEntity(),
-                goldWalletAccountEntity.getWalletAccountTypeEntity(), goldWalletAccountEntity.getWalletAccountCurrencyEntity(), goldWalletAccountEntity.getWalletEntity().getWalletTypeEntity(),
-                valueMaxDailyPrice, "change MAX_QUANTITY_PHYSICAL_CASH_OUT to initial value");
+        setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MAX_QUANTITY_PHYSICAL_CASH_OUT, goldWalletAccountEntity, valueMaxDailyPrice);
     }
 
     /**
@@ -352,10 +337,7 @@ class PhysicalCashOutControllerTest extends WalletApplicationTests {
         WalletAccountEntity walletAccountEntity = walletAccountService.findByAccountNumber(accountNumber);
         String physicalCashOutValue = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.ENABLE_PHYSICAL_CASH_OUT, accountNumber);
         if("false".equalsIgnoreCase(physicalCashOutValue)){
-            limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
-                limitationGeneralService.getSetting(LimitationGeneralService.ENABLE_PHYSICAL_CASH_OUT).getId(), walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
-                walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
-                "true","test physicalCashOutFailInvalidCommissionCurrency");
+            setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_PHYSICAL_CASH_OUT, walletAccountEntity, "true"); //"test physicalCashOutFailInvalidCommissionCurrency");
         }
         
         // Generate UUID for physical cash out operation
@@ -389,10 +371,7 @@ class PhysicalCashOutControllerTest extends WalletApplicationTests {
         WalletAccountEntity walletAccountEntity = walletAccountService.findByAccountNumber(accountNumber);
         String physicalCashOutValue = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.ENABLE_PHYSICAL_CASH_OUT, accountNumber);
         if("false".equalsIgnoreCase(physicalCashOutValue)){
-            limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
-                    limitationGeneralService.getSetting(LimitationGeneralService.ENABLE_PHYSICAL_CASH_OUT).getId(), walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
-                    walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
-                    "true","test physicalCashOutFailInvalidSign");
+            setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_PHYSICAL_CASH_OUT, walletAccountEntity, "true"); //"test physicalCashOutFailInvalidSign");
         }
         
         String quantity = "1.07";
@@ -430,10 +409,7 @@ class PhysicalCashOutControllerTest extends WalletApplicationTests {
         WalletAccountEntity walletAccountEntity = walletAccountService.findByAccountNumber(accountNumber);
         String physicalCashOutValue = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.ENABLE_PHYSICAL_CASH_OUT, accountNumber);
         if("false".equalsIgnoreCase(physicalCashOutValue)){
-            limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
-                    limitationGeneralService.getSetting(LimitationGeneralService.ENABLE_PHYSICAL_CASH_OUT).getId(), walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
-                    walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
-                    "true","test physicalCashOutFailBalanceNoEnough");
+            setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_PHYSICAL_CASH_OUT, walletAccountEntity, "true"); //"test physicalCashOutFailBalanceNoEnough");
         }
 
         // Store original MAX_QUANTITY_PHYSICAL_CASH_OUT value for restoration
@@ -441,10 +417,7 @@ class PhysicalCashOutControllerTest extends WalletApplicationTests {
         String valueMaxDailyPrice = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.MAX_QUANTITY_PHYSICAL_CASH_OUT, walletAccountObject.getAccountNumber());
 
         // Temporarily increase MAX_QUANTITY_PHYSICAL_CASH_OUT limit to allow UUID generation
-        limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
-                limitationGeneralService.getSetting(LimitationGeneralService.MAX_QUANTITY_PHYSICAL_CASH_OUT).getId(), walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
-                walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
-                quantity, "change MAX_QUANTITY_PHYSICAL_CASH_OUT to generate uuid");
+        setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MAX_QUANTITY_PHYSICAL_CASH_OUT, walletAccountEntity, quantity);
         
         // Generate UUID for physical cash out operation
         BaseResponse<UuidResponse> uuidResponse = generatePhysicalCashOutUuid(mockMvc, accessToken, NATIONAL_CODE_CORRECT, quantity, accountNumber, HttpStatus.OK, StatusService.SUCCESSFUL, true);
@@ -458,10 +431,7 @@ class PhysicalCashOutControllerTest extends WalletApplicationTests {
         Assert.assertSame(StatusService.BALANCE_IS_NOT_ENOUGH, response.getErrorDetail().getCode());
         
         // Restore original MAX_QUANTITY_PHYSICAL_CASH_OUT limit
-        limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
-                limitationGeneralService.getSetting(LimitationGeneralService.MAX_QUANTITY_PHYSICAL_CASH_OUT).getId(), walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
-                walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
-                valueMaxDailyPrice, "change MAX_QUANTITY_PHYSICAL_CASH_OUT to initial value");
+        setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MAX_QUANTITY_PHYSICAL_CASH_OUT, walletAccountEntity, valueMaxDailyPrice);
     }
 
     /**
@@ -492,18 +462,12 @@ class PhysicalCashOutControllerTest extends WalletApplicationTests {
         WalletAccountEntity goldWalletAccountEntity = walletAccountService.findByAccountNumber(goldAccountNumber);
         String physicalCashOutValue = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.ENABLE_PHYSICAL_CASH_OUT, goldAccountNumber);
         if("false".equalsIgnoreCase(physicalCashOutValue)){
-            limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
-                    limitationGeneralService.getSetting(LimitationGeneralService.ENABLE_PHYSICAL_CASH_OUT).getId(), goldWalletAccountEntity.getWalletEntity().getWalletLevelEntity(),
-                    goldWalletAccountEntity.getWalletAccountTypeEntity(), goldWalletAccountEntity.getWalletAccountCurrencyEntity(), goldWalletAccountEntity.getWalletEntity().getWalletTypeEntity(),
-                    "true","test physicalInquiryCashOutSuccess");
+            setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_PHYSICAL_CASH_OUT, goldWalletAccountEntity, "true"); //"test physicalInquiryCashOutSuccess");
         }
 
         // Step 4: Temporarily increase MAX_QUANTITY_PHYSICAL_CASH_OUT limit
         String physicalCashOutQuantity = "10.01";
-        limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
-                limitationGeneralService.getSetting(LimitationGeneralService.MAX_QUANTITY_PHYSICAL_CASH_OUT).getId(), goldWalletAccountEntity.getWalletEntity().getWalletLevelEntity(),
-                goldWalletAccountEntity.getWalletAccountTypeEntity(), goldWalletAccountEntity.getWalletAccountCurrencyEntity(), goldWalletAccountEntity.getWalletEntity().getWalletTypeEntity(),
-                physicalCashOutQuantity, "change MAX_QUANTITY_PHYSICAL_CASH_OUT to generate uuid");
+        setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MAX_QUANTITY_PHYSICAL_CASH_OUT, goldWalletAccountEntity, physicalCashOutQuantity);
         
         // Step 5: Generate UUID and perform physical cash out operation
         BaseResponse<UuidResponse> physicalCashOutUuidResponse = generatePhysicalCashOutUuid(mockMvc, accessToken, NATIONAL_CODE_CORRECT, physicalCashOutQuantity, goldAccountNumber, HttpStatus.OK, StatusService.SUCCESSFUL, true);

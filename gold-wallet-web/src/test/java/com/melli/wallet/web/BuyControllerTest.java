@@ -392,10 +392,7 @@ class BuyControllerTest extends WalletApplicationTests {
         String value = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, walletAccountObjectOptional.getAccountNumber());
         if ("false".equalsIgnoreCase(value)) {
             WalletAccountEntity walletAccountEntity = walletAccountService.findByAccountNumber(walletAccountObjectOptional.getAccountNumber());
-            limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
-                    limitationGeneralService.getSetting(LimitationGeneralService.ENABLE_CASH_IN).getId(), walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
-                    walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
-                    "true", "test buySuccess");
+            setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, walletAccountEntity, "true");
         }
 
         // Step 6: Generate UUID for cash in operation
@@ -436,8 +433,8 @@ class BuyControllerTest extends WalletApplicationTests {
      */
     @Test
     @Order(48)
-    @DisplayName("buyDailyLimitationFail-success")
-    void buyDailyLimitationFail() throws Exception {
+    @DisplayName("buyDailyLimitationFailOnGenerateUuid-fail")
+    void buyDailyLimitationFailOnGenerateUuid() throws Exception {
         // Step 1: Define test parameters
         String price = "100000";
         
@@ -455,32 +452,82 @@ class BuyControllerTest extends WalletApplicationTests {
         AggregationPurchaseDTO aggregationPurchaseDTO = requestService.findSumAmountByTransactionTypeBetweenDate(new long[]{walletAccountEntity.getId()}, TransactionTypeEnum.BUY.name(), new Date(), new Date());
 
         // Step 5: Temporarily set MAX_DAILY_COUNT_BUY to current count
-        limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
-                limitationGeneralService.getSetting(LimitationGeneralService.MAX_DAILY_COUNT_BUY).getId(), walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
-                walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
-                aggregationPurchaseDTO.getCountRecord(), "change MAX_DAILY_COUNT_BUY to generate uuid");
+        setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MAX_DAILY_COUNT_BUY, walletAccountEntity, aggregationPurchaseDTO.getCountRecord());
 
         // Step 6: Attempt to generate buy UUID - should fail due to daily count limitation
         generateBuyUuid(mockMvc, ACCESS_TOKEN, walletAccountObjectOptional.getAccountNumber(), price, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusService.BUY_EXCEEDED_COUNT_DAILY_LIMITATION, false, "1", "0.001", "GOLD");
 
         // Step 7: Restore original MAX_DAILY_COUNT_BUY limit
-        limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
-                limitationGeneralService.getSetting(LimitationGeneralService.MAX_DAILY_COUNT_BUY).getId(), walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
-                walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
-                valueMaxDailyCount, "change MAX_DAILY_COUNT_BUY");
+        setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MAX_DAILY_COUNT_BUY, walletAccountEntity, valueMaxDailyCount);
 
-        limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
-                limitationGeneralService.getSetting(LimitationGeneralService.MAX_DAILY_QUANTITY_BUY).getId(), walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
-                walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
-                aggregationPurchaseDTO.getSumQuantity(), "change MAX_DAILY_QUANTITY_BUY");
+        setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MAX_DAILY_QUANTITY_BUY, walletAccountEntity, aggregationPurchaseDTO.getSumQuantity());
 
         generateBuyUuid(mockMvc, ACCESS_TOKEN, walletAccountObjectOptional.getAccountNumber(), price, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusService.BUY_EXCEEDED_QUANTITY_DAILY_LIMITATION, false, "1", "0.001", "GOLD");
 
-        limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
-                limitationGeneralService.getSetting(LimitationGeneralService.MAX_DAILY_QUANTITY_BUY).getId(), walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
-                walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
-                valueMaxDailyPrice, "change MAX_DAILY_QUANTITY_BUY");
+        setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MAX_DAILY_QUANTITY_BUY, walletAccountEntity, valueMaxDailyPrice);
 
+    }
+
+
+    /**
+     * Test buy failure when daily count limitation is exceeded.
+     * This method:
+     * - Clears buy limitations for testing
+     * - Gets user's RIAL account number
+     * - Temporarily sets MAX_DAILY_COUNT_BUY to current count
+     * - Attempts to generate buy UUID
+     * - Expects BUY_EXCEEDED_COUNT_DAILY_LIMITATION error
+     * - Restores original MAX_DAILY_COUNT_BUY limit
+     */
+    @Test
+    @Order(49)
+    @DisplayName("buyDailyLimitationFailOnBuy-fail")
+    void buyDailyLimitationOnBuyFail() throws Exception {
+        // Step 1: Define test parameters
+        String price = "100000";
+        String quantity = "0.001";
+        String merchantId = "1";
+        String refNumber = new Date() + merchantId;
+        String buyCommission = "RIAL";
+        String commissionRialValue = "1000";
+        String currencyToBuy = "GOLD";
+
+        // Step 2: Clear buy limitations for testing
+        walletBuyLimitationService.deleteAll();
+
+        // Step 3: Get user's RIAL account number
+        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.RIAL);
+        WalletAccountObject walletAccountCurrencyObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.GOLD);
+
+        // Step 4: Get current buy statistics and limitation values
+        WalletAccountEntity walletAccountCurrencyEntity = walletAccountService.findByAccountNumber(walletAccountCurrencyObjectOptional.getAccountNumber());
+        String valueMaxDailyCount = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.MAX_DAILY_COUNT_BUY, walletAccountObjectOptional.getAccountNumber());
+        String valueMaxDailyQuantity = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.MAX_DAILY_QUANTITY_BUY, walletAccountObjectOptional.getAccountNumber());
+        AggregationPurchaseDTO aggregationPurchaseDTO = requestService.findSumAmountByTransactionTypeBetweenDate(new long[]{walletAccountCurrencyEntity.getId()}, TransactionTypeEnum.BUY.name(), new Date(), new Date());
+
+        // Step 5: Temporarily set MAX_DAILY_COUNT_BUY to current count we want generateUuid will be success
+        setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MAX_DAILY_COUNT_BUY, walletAccountCurrencyEntity, String.valueOf(Long.parseLong(aggregationPurchaseDTO.getCountRecord()) + 1));
+        // Step 6: Attempt to generate buy UUID - should success due to daily count limitation
+        BaseResponse<UuidResponse> uuidResponseBaseResponse = generateBuyUuid(mockMvc, ACCESS_TOKEN, walletAccountObjectOptional.getAccountNumber(), price, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusService.SUCCESSFUL, true, merchantId, quantity, currencyToBuy);
+
+        setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MAX_DAILY_COUNT_BUY, walletAccountCurrencyEntity, aggregationPurchaseDTO.getCountRecord());
+
+        buyDirect(mockMvc, refNumber, ACCESS_TOKEN, uuidResponseBaseResponse.getData().getUniqueIdentifier(), quantity, String.valueOf(Long.parseLong(price)), buyCommission, commissionRialValue, NATIONAL_CODE_CORRECT, currencyToBuy
+                , merchantId, walletAccountObjectOptional.getAccountNumber(), "", "", HttpStatus.OK, StatusService.BUY_EXCEEDED_COUNT_DAILY_LIMITATION, false);
+
+        // Step 7: Restore original MAX_DAILY_COUNT_BUY limit
+        setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MAX_DAILY_COUNT_BUY, walletAccountCurrencyEntity, valueMaxDailyCount);
+
+        // step 8: Temporarily set MAX_DAILY_QUANTITY_BUY to current quantity we want generateUuid will be success
+        setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MAX_DAILY_QUANTITY_BUY, walletAccountCurrencyEntity, String.valueOf(new BigDecimal(aggregationPurchaseDTO.getSumQuantity()).add(new BigDecimal(10))));
+        generateBuyUuid(mockMvc, ACCESS_TOKEN, walletAccountObjectOptional.getAccountNumber(), price, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusService.SUCCESSFUL, true, merchantId, quantity, currencyToBuy);
+        setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MAX_DAILY_QUANTITY_BUY, walletAccountCurrencyEntity, String.valueOf(aggregationPurchaseDTO.getSumQuantity()));
+
+        buyDirect(mockMvc, refNumber, ACCESS_TOKEN, uuidResponseBaseResponse.getData().getUniqueIdentifier(), quantity, String.valueOf(Long.parseLong(price)), buyCommission, commissionRialValue, NATIONAL_CODE_CORRECT, currencyToBuy
+                , merchantId, walletAccountObjectOptional.getAccountNumber(), "", "", HttpStatus.OK, StatusService.BUY_EXCEEDED_QUANTITY_DAILY_LIMITATION, false);
+
+        setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MAX_DAILY_QUANTITY_BUY, walletAccountCurrencyEntity, String.valueOf(valueMaxDailyQuantity));
+        setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MAX_DAILY_COUNT_BUY, walletAccountCurrencyEntity, String.valueOf(valueMaxDailyCount));
     }
 
 
@@ -496,7 +543,7 @@ class BuyControllerTest extends WalletApplicationTests {
      * - Restores original limitation values
      */
     @Test
-    @Order(49)
+    @Order(50)
     @DisplayName("buyMonthlyLimitationFail-success")
     void buyMonthlyLimitationFail() throws Exception {
         // Step 1: Define test parameters
@@ -518,29 +565,17 @@ class BuyControllerTest extends WalletApplicationTests {
         // Step 7: Get current monthly usage statistics
         AggregationPurchaseDTO aggregationPurchaseDTO = requestService.findSumAmountByTransactionTypeBetweenDate(new long[]{walletAccountEntity.getId()}, TransactionTypeEnum.BUY.name(), fromDate, untilDate);
         // Step 8: Set monthly count limitation to current usage to trigger failure
-        limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
-                limitationGeneralService.getSetting(LimitationGeneralService.MAX_MONTHLY_COUNT_BUY).getId(), walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
-                walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
-                aggregationPurchaseDTO.getCountRecord(), "change MAX_MONTHLY_COUNT_BUY");
+        setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MAX_MONTHLY_COUNT_BUY, walletAccountEntity, aggregationPurchaseDTO.getCountRecord());
         // Step 9: Test monthly count limitation failure
         generateBuyUuid(mockMvc, ACCESS_TOKEN, walletAccountObjectOptional.getAccountNumber(), price, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusService.BUY_EXCEEDED_COUNT_MONTHLY_LIMITATION, false, "1", "0.001", "GOLD");
         // Step 10: Restore original monthly count limitation
-        limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
-                limitationGeneralService.getSetting(LimitationGeneralService.MAX_MONTHLY_COUNT_BUY).getId(), walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
-                walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
-                valueMaxMonthlyCount, "change MAX_MONTHLY_COUNT_BUY");
+        setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MAX_MONTHLY_COUNT_BUY, walletAccountEntity, valueMaxMonthlyCount);
         // Step 11: Set monthly quantity limitation to current usage to trigger failure
-        limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
-                limitationGeneralService.getSetting(LimitationGeneralService.MAX_MONTHLY_QUANTITY_BUY).getId(), walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
-                walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
-                aggregationPurchaseDTO.getSumQuantity(), "change MAX_MONTHLY_COUNT_BUY");
+        setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MAX_MONTHLY_QUANTITY_BUY, walletAccountEntity, aggregationPurchaseDTO.getSumQuantity());
         // Step 12: Test monthly quantity limitation failure
         generateBuyUuid(mockMvc, ACCESS_TOKEN, walletAccountObjectOptional.getAccountNumber(), price, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusService.BUY_EXCEEDED_QUANTITY_MONTHLY_LIMITATION, false, "1", "0.001", "GOLD");
         // Step 13: Restore original monthly quantity limitation
-        limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
-                limitationGeneralService.getSetting(LimitationGeneralService.MAX_MONTHLY_QUANTITY_BUY).getId(), walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
-                walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
-                valueMaxMonthlyQuantity, "change MAX_MONTHLY_QUANTITY_BUY");
+        setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MAX_MONTHLY_QUANTITY_BUY, walletAccountEntity, valueMaxMonthlyQuantity);
     }
 
 
@@ -553,7 +588,7 @@ class BuyControllerTest extends WalletApplicationTests {
      * - Validates the buy direct response
      */
     @Test
-    @Order(50)
+    @Order(51)
     @DisplayName("buyDirect-success")
     void buyDirectSuccess() throws Exception {
         // Step 1: Define test parameters
@@ -577,10 +612,7 @@ class BuyControllerTest extends WalletApplicationTests {
         String value = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, walletAccountObjectOptional.getAccountNumber());
         if ("false".equalsIgnoreCase(value)) {
             WalletAccountEntity walletAccountEntity = walletAccountService.findByAccountNumber(walletAccountObjectOptional.getAccountNumber());
-            limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
-                    limitationGeneralService.getSetting(LimitationGeneralService.ENABLE_CASH_IN).getId(), walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
-                    walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
-                    "true", "test cashInFailMinAmount");
+            setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, walletAccountEntity, "true");
         }
         // Step 7: Increase merchant GOLD balance
         long finalId = id;
@@ -617,7 +649,7 @@ class BuyControllerTest extends WalletApplicationTests {
      * - Expects COMMISSION_CURRENCY_NOT_VALID error
      */
     @Test
-    @Order(51)
+    @Order(52)
     @DisplayName("buyDirectFail-InvalidCommissionCurrency")
     void buyDirectFailInvalidCommissionCurrency() throws Exception {
         log.info("start buyDirectFailInvalidCommissionCurrency test");
@@ -632,10 +664,7 @@ class BuyControllerTest extends WalletApplicationTests {
         WalletAccountEntity walletAccountEntity = walletAccountService.findByAccountNumber(walletAccountObjectOptional.getAccountNumber());
         String cashInValue = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, walletAccountObjectOptional.getAccountNumber());
         if("false".equalsIgnoreCase(cashInValue)){
-            limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
-                limitationGeneralService.getSetting(LimitationGeneralService.ENABLE_CASH_IN).getId(), walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
-                walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
-                "true","test buyDirectFailInvalidCommissionCurrency");
+            setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, walletAccountEntity, "true");
         }
         // Step 4: Perform cash-in operation
         BaseResponse<UuidResponse> cashInUuidResponse = generateCashInUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, cashInAmount, walletAccountObjectOptional.getAccountNumber(), HttpStatus.OK, StatusService.SUCCESSFUL, true);
@@ -667,7 +696,7 @@ class BuyControllerTest extends WalletApplicationTests {
      * - Expects UUID_NOT_FOUND error
      */
     @Test
-    @Order(52)
+    @Order(53)
     @DisplayName("buyDirectFail-InvalidUniqueIdentifier")
     void buyDirectFailInvalidUniqueIdentifier() throws Exception {
         log.info("start buyDirectFailInvalidUniqueIdentifier test");
@@ -696,7 +725,7 @@ class BuyControllerTest extends WalletApplicationTests {
      * - Expects MERCHANT_BALANCE_NOT_ENOUGH error
      */
     @Test
-    @Order(53)
+    @Order(54)
     @DisplayName("buyDirectFail-MerchantBalanceNotEnough")
     void buyDirectFailMerchantBalanceNotEnough() throws Exception {
         log.info("start buyDirectFailMerchantBalanceNotEnough test");
@@ -711,10 +740,7 @@ class BuyControllerTest extends WalletApplicationTests {
         WalletAccountEntity walletAccountEntity = walletAccountService.findByAccountNumber(walletAccountObjectOptional.getAccountNumber());
         String cashInValue = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, walletAccountObjectOptional.getAccountNumber());
         if("false".equalsIgnoreCase(cashInValue)){
-            limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
-                limitationGeneralService.getSetting(LimitationGeneralService.ENABLE_CASH_IN).getId(), walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
-                walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
-                "true","test buyDirectFailMerchantBalanceNotEnough");
+            setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, walletAccountEntity, "true");
         }
         // Step 4: Perform cash-in operation
         BaseResponse<UuidResponse> cashInUuidResponse = generateCashInUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, cashInAmount, walletAccountObjectOptional.getAccountNumber(), HttpStatus.OK, StatusService.SUCCESSFUL, true);
@@ -748,7 +774,7 @@ class BuyControllerTest extends WalletApplicationTests {
      * - Expects MERCHANT_NOT_FOUND error
      */
     @Test
-    @Order(54)
+    @Order(55)
     @DisplayName("buyDirectFail-InvalidMerchantId")
     void buyDirectFailInvalidMerchantId() throws Exception {
         log.info("start buyDirectFailInvalidMerchantId test");
@@ -763,10 +789,7 @@ class BuyControllerTest extends WalletApplicationTests {
         WalletAccountEntity walletAccountEntity = walletAccountService.findByAccountNumber(walletAccountObjectOptional.getAccountNumber());
         String cashInValue = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, walletAccountObjectOptional.getAccountNumber());
         if("false".equalsIgnoreCase(cashInValue)){
-            limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
-                limitationGeneralService.getSetting(LimitationGeneralService.ENABLE_CASH_IN).getId(), walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
-                walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
-                "true","test buyDirectFailInvalidMerchantId");
+            setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, walletAccountEntity, "true");
         }
         // Step 4: Perform cash-in operation
         BaseResponse<UuidResponse> cashInUuidResponse = generateCashInUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, cashInAmount, walletAccountObjectOptional.getAccountNumber(), HttpStatus.OK, StatusService.SUCCESSFUL, true);
@@ -799,7 +822,7 @@ class BuyControllerTest extends WalletApplicationTests {
      * - Expects WALLET_ACCOUNT_CURRENCY_NOT_FOUND error
      */
     @Test
-    @Order(55)
+    @Order(56)
     @DisplayName("buyDirectFail-InvalidCurrency")
     void buyDirectFailInvalidCurrency() throws Exception {
         log.info("start buyDirectFailInvalidCurrency test");
@@ -814,10 +837,7 @@ class BuyControllerTest extends WalletApplicationTests {
         WalletAccountEntity walletAccountEntity = walletAccountService.findByAccountNumber(walletAccountObjectOptional.getAccountNumber());
         String cashInValue = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, walletAccountObjectOptional.getAccountNumber());
         if("false".equalsIgnoreCase(cashInValue)){
-            limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
-                limitationGeneralService.getSetting(LimitationGeneralService.ENABLE_CASH_IN).getId(), walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
-                walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
-                "true","test buyDirectFailInvalidCurrency");
+            setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, walletAccountEntity, "true");
         }
         // Step 4: Perform cash-in operation
         BaseResponse<UuidResponse> cashInUuidResponse = generateCashInUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, cashInAmount, walletAccountObjectOptional.getAccountNumber(), HttpStatus.OK, StatusService.SUCCESSFUL, true);
@@ -856,10 +876,7 @@ class BuyControllerTest extends WalletApplicationTests {
         WalletAccountEntity walletAccountEntity = walletAccountService.findByAccountNumber(walletAccountObjectOptional.getAccountNumber());
         String cashInValue = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, walletAccountObjectOptional.getAccountNumber());
         if("false".equalsIgnoreCase(cashInValue)){
-            limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
-                limitationGeneralService.getSetting(LimitationGeneralService.ENABLE_CASH_IN).getId(), walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
-                walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
-                "true","test buyDirectFailInvalidSign");
+            setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, walletAccountEntity, "true");
         }
         BaseResponse<UuidResponse> cashInUuidResponse = generateCashInUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, cashInAmount, walletAccountObjectOptional.getAccountNumber(), HttpStatus.OK, StatusService.SUCCESSFUL, true);
         BaseResponse<CashInResponse> cashInResponse = cashIn(mockMvc, ACCESS_TOKEN, cashInUuidResponse.getData().getUniqueIdentifier(), refNumber, cashInAmount, NATIONAL_CODE_CORRECT, walletAccountObjectOptional.getAccountNumber(), "", "", "ACCOUNT_TO_ACCOUNT", HttpStatus.OK, StatusService.SUCCESSFUL, true);

@@ -287,10 +287,7 @@ class CashInControllerTest extends WalletApplicationTests {
         // Step 3: Enable cash in permission if disabled
         String value = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService,USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN,  walletAccountObjectOptional.getAccountNumber());
         if("false".equalsIgnoreCase(value)){
-            limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
-                    limitationGeneralService.getSetting(LimitationGeneralService.ENABLE_CASH_IN).getId(), walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
-                    walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
-                    "true","test cashInFailMinAmount");
+            setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, walletAccountEntity, "true");
         }
 
         // Step 4: Store original MIN_AMOUNT_CASH_IN value and temporarily decrease it
@@ -298,10 +295,7 @@ class CashInControllerTest extends WalletApplicationTests {
         boolean changeMinAmountCashIn = false;
         if( Long.parseLong(amount) >= Long.parseLong(valueMinAmountCashIn)){
             changeMinAmountCashIn = true;
-            limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
-                    limitationGeneralService.getSetting(LimitationGeneralService.MIN_AMOUNT_CASH_IN).getId(), walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
-                    walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
-                    String.valueOf(Long.parseLong(valueMinAmountCashIn) - 1),"change MIN_AMOUNT_CASH_IN to generate uuid");
+            setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_IN, walletAccountEntity, String.valueOf(Long.parseLong(valueMinAmountCashIn) - 1));
         }
         
         // Step 5: Attempt cash in with amount below minimum
@@ -309,10 +303,7 @@ class CashInControllerTest extends WalletApplicationTests {
         
         // Step 6: Restore original MIN_AMOUNT_CASH_IN limit
         if(changeMinAmountCashIn){
-            limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
-                    limitationGeneralService.getSetting(LimitationGeneralService.MIN_AMOUNT_CASH_IN).getId(), walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
-                    walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
-                    valueMinAmountCashIn,"change MIN_AMOUNT_CASH_IN to initial value");
+            setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_IN, walletAccountEntity, valueMinAmountCashIn);
         }
     }
 
@@ -341,10 +332,7 @@ class CashInControllerTest extends WalletApplicationTests {
         // Step 3: Enable cash in permission if disabled
         String value = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService,USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN,  walletAccountObjectOptional.getAccountNumber());
         if("false".equalsIgnoreCase(value)){
-            limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
-                    limitationGeneralService.getSetting(LimitationGeneralService.ENABLE_CASH_IN).getId(), walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
-                    walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
-                    "true","test cashInFailMaxAmount");
+            setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, walletAccountEntity, "true");
         }
 
         // Step 4: Store original MAX_AMOUNT_CASH_IN value and temporarily decrease it
@@ -352,10 +340,7 @@ class CashInControllerTest extends WalletApplicationTests {
         boolean changeMaxAmountCashIn = false;
         if( Long.parseLong(amount) <= Long.parseLong(valueMaxAmountCashIn)){
             changeMaxAmountCashIn = true;
-            limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
-                    limitationGeneralService.getSetting(LimitationGeneralService.MAX_WALLET_BALANCE).getId(), walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
-                    walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
-                    String.valueOf(Long.parseLong(amount) - 1),"change MAX_AMOUNT_CASH_IN to generate uuid");
+            setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MAX_WALLET_BALANCE, walletAccountEntity, String.valueOf(Long.parseLong(amount) - 1));
         }
         
         // Step 5: Attempt cash in with amount above maximum
@@ -364,10 +349,7 @@ class CashInControllerTest extends WalletApplicationTests {
         
         // Step 6: Restore original MAX_AMOUNT_CASH_IN limit
         if(changeMaxAmountCashIn){
-            limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
-                    limitationGeneralService.getSetting(LimitationGeneralService.MAX_WALLET_BALANCE).getId(), walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
-                    walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
-                    valueMaxAmountCashIn,"change MAX_AMOUNT_CASH_IN to initial value");
+            setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MAX_WALLET_BALANCE, walletAccountEntity, valueMaxAmountCashIn);
         }
     }
 
@@ -396,10 +378,7 @@ class CashInControllerTest extends WalletApplicationTests {
         // Step 3: Enable cash in permission if disabled
         String valueEnableCashIn = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService,USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN,  walletAccountObjectOptional.getAccountNumber());
         if("false".equalsIgnoreCase(valueEnableCashIn)){
-            limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
-                    limitationGeneralService.getSetting(LimitationGeneralService.ENABLE_CASH_IN).getId(), walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
-                    walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
-                    "true","test cashInFailMaxBalance");
+            setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, walletAccountEntity, "true");
         }
 
         // Step 4: Store original MAX_WALLET_BALANCE value and temporarily decrease it
@@ -407,10 +386,7 @@ class CashInControllerTest extends WalletApplicationTests {
         boolean changeMaxBalance = false;
         if( Long.parseLong(amount) <= Long.parseLong(valueMaxWalletBalance)){
             changeMaxBalance = true;
-            limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
-                    limitationGeneralService.getSetting(LimitationGeneralService.MAX_WALLET_BALANCE).getId(), walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
-                    walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
-                    String.valueOf(Long.parseLong(amount) - 1),"change MAX_WALLET_BALANCE to generate uuid");
+            setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MAX_WALLET_BALANCE, walletAccountEntity, String.valueOf(Long.parseLong(amount) - 1));
         }
         
         // Step 5: Attempt cash in that would exceed maximum balance
@@ -418,10 +394,7 @@ class CashInControllerTest extends WalletApplicationTests {
         
         // Step 6: Restore original MAX_WALLET_BALANCE limit
         if(changeMaxBalance){
-            limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
-                    limitationGeneralService.getSetting(LimitationGeneralService.MAX_WALLET_BALANCE).getId(), walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
-                    walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
-                    valueMaxWalletBalance,"change MAX_WALLET_BALANCE to initial value");
+            setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MAX_WALLET_BALANCE, walletAccountEntity, valueMaxWalletBalance);
         }
 
     }
@@ -455,10 +428,7 @@ class CashInControllerTest extends WalletApplicationTests {
         WalletAccountEntity walletAccountEntity = walletAccountService.findByAccountNumber(walletAccountObjectOptional.getAccountNumber());
         String value = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService,USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN,  walletAccountObjectOptional.getAccountNumber());
         if("false".equalsIgnoreCase(value)){
-            limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
-                    limitationGeneralService.getSetting(LimitationGeneralService.ENABLE_CASH_IN).getId(), walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
-                    walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
-                    "true","test cashInFailDuplicateRefnumber");
+            setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, walletAccountEntity, "true"); //"test cashInFailDuplicateRefnumber");
         }
         
         // Step 5: Perform first cash in operation successfully
@@ -497,10 +467,7 @@ class CashInControllerTest extends WalletApplicationTests {
         // Step 4: Enable cash in permission if disabled
         String value = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService,USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN,  walletAccountObjectOptional.getAccountNumber());
         if("false".equalsIgnoreCase(value)){
-            limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
-                    limitationGeneralService.getSetting(LimitationGeneralService.ENABLE_CASH_IN).getId(), walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
-                    walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
-                    "true","test cashInFailDuplicateRrn");
+            setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, walletAccountEntity, "true"); //"test cashInFailDuplicateRrn");
         }
         
         // Step 5: Get minimum amount and generate UUID for cash in operation
@@ -545,10 +512,7 @@ class CashInControllerTest extends WalletApplicationTests {
         WalletAccountEntity walletAccountEntity = walletAccountService.findByAccountNumber(walletAccountObjectOptional.getAccountNumber());
         String value = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService,USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN,  walletAccountObjectOptional.getAccountNumber());
         if("false".equalsIgnoreCase(value)){
-            limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
-                    limitationGeneralService.getSetting(LimitationGeneralService.ENABLE_CASH_IN).getId(), walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
-                    walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
-                    "true","test cashInSuccess");
+            setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, walletAccountEntity, "true"); //"test cashInSuccess");
         }
         
         // Step 6: Perform cash in operation successfully
@@ -587,10 +551,7 @@ class CashInControllerTest extends WalletApplicationTests {
         WalletAccountEntity walletAccountEntity = walletAccountService.findByAccountNumber(walletAccountObjectOptional.getAccountNumber());
         String value = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService,USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN,  walletAccountObjectOptional.getAccountNumber());
         if("false".equalsIgnoreCase(value)){
-            limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
-                    limitationGeneralService.getSetting(LimitationGeneralService.ENABLE_CASH_IN).getId(), walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
-                    walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
-                    "true","test cashInFailAmountUuidNotSame");
+            setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, walletAccountEntity, "true"); //"test cashInFailAmountUuidNotSame");
         }
         
         // Step 6: Attempt cash in with different amount than UUID - should fail
@@ -629,10 +590,7 @@ class CashInControllerTest extends WalletApplicationTests {
         WalletAccountEntity walletAccountEntity = walletAccountService.findByAccountNumber(walletAccountObjectOptional.getAccountNumber());
         String value = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService,USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN,  walletAccountObjectOptional.getAccountNumber());
         if("false".equalsIgnoreCase(value)){
-            limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
-                    limitationGeneralService.getSetting(LimitationGeneralService.ENABLE_CASH_IN).getId(), walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
-                    walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
-                    "true","test cashInFailAccountNotFound");
+            setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, walletAccountEntity, "true"); //"test cashInFailAccountNotFound");
         }
         
         // Step 6: Attempt cash in with different account number than UUID - should fail
@@ -665,10 +623,7 @@ class CashInControllerTest extends WalletApplicationTests {
         WalletAccountEntity walletAccountEntity = walletAccountService.findByAccountNumber(walletAccountObjectOptional.getAccountNumber());
         String value = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService,USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN,  walletAccountObjectOptional.getAccountNumber());
         if("false".equalsIgnoreCase(value)){
-            limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
-                    limitationGeneralService.getSetting(LimitationGeneralService.ENABLE_CASH_IN).getId(), walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
-                    walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
-                    "true","test cashInFailAccountNotFoundInUuid");
+            setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, walletAccountEntity, "true"); //"test cashInFailAccountNotFoundInUuid");
         }
     }
 
@@ -707,10 +662,7 @@ class CashInControllerTest extends WalletApplicationTests {
         // Step 5: Enable cash in permission if disabled
         String value = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService,USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN,  walletAccountObjectOptional.getAccountNumber());
         if("false".equalsIgnoreCase(value)){
-            limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
-                    limitationGeneralService.getSetting(LimitationGeneralService.ENABLE_CASH_IN).getId(), walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
-                    walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
-                    "true","test cashInFailAccountNotActive");
+            setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, walletAccountEntity, "true"); //"test cashInFailAccountNotActive");
         }
         
         // Step 6: Re-enable the account status
@@ -754,10 +706,7 @@ class CashInControllerTest extends WalletApplicationTests {
         // Step 5: Enable cash in permission if disabled
         String value = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService,USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN,  walletAccountObjectOptional.getAccountNumber());
         if("false".equalsIgnoreCase(value)){
-            limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
-                    limitationGeneralService.getSetting(LimitationGeneralService.ENABLE_CASH_IN).getId(), walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
-                    walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
-                    "true","test cashInFailWalletNotActive");
+            setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, walletAccountEntity, "true"); //"test cashInFailWalletNotActive");
         }
         
         // Step 6: Re-enable the wallet status

@@ -582,18 +582,12 @@ class SellControllerTest extends WalletApplicationTests {
         String maxDailyQuantity = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.MAX_DAILY_QUANTITY_SELL, walletAccountObjectOptional.getAccountNumber());
         WalletAccountEntity walletAccountEntity = walletAccountService.findByAccountNumber(walletAccountObjectOptional.getAccountNumber());
         // Step 6: Set a very low daily quantity limitation to trigger the error
-        limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
-                limitationGeneralService.getSetting(LimitationGeneralService.MAX_DAILY_QUANTITY_SELL).getId(), walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
-                walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
-                "0.5", "test daily quantity limitation");
+        setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MAX_DAILY_QUANTITY_SELL, walletAccountEntity, "0.5");
         // Step 7: Generate sell UUID - should fail due to daily quantity limitation
         BaseResponse<UuidResponse> uuidResponse = generateSellUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, quantity, walletAccountObjectOptional.getAccountNumber(), CURRENCY_GOLD, HttpStatus.OK, StatusService.SELL_EXCEEDED_AMOUNT_DAILY_LIMITATION, false);
         Assert.assertSame(StatusService.SELL_EXCEEDED_AMOUNT_DAILY_LIMITATION, uuidResponse.getErrorDetail().getCode());
         // Step 8: Restore original daily quantity limitation
-        limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
-                limitationGeneralService.getSetting(LimitationGeneralService.MAX_DAILY_QUANTITY_SELL).getId(), walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
-                walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
-                maxDailyQuantity, "test maxDailyQuantity");
+        setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MAX_DAILY_QUANTITY_SELL, walletAccountEntity, maxDailyQuantity);
     }
 
     /**
@@ -629,18 +623,12 @@ class SellControllerTest extends WalletApplicationTests {
         String maxDailyCount = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.MAX_DAILY_COUNT_SELL, walletAccountObjectOptional.getAccountNumber());
         WalletAccountEntity walletAccountEntity = walletAccountService.findByAccountNumber(walletAccountObjectOptional.getAccountNumber());
         // Step 6: Set a very low daily count limitation to trigger the error
-        limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
-                limitationGeneralService.getSetting(LimitationGeneralService.MAX_DAILY_COUNT_SELL).getId(), walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
-                walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
-                "1", "test daily count limitation");
+        setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MAX_DAILY_COUNT_SELL, walletAccountEntity, "1");
         // Step 7: Perform first sell operation (should succeed)
         BaseResponse<UuidResponse> uuidResponse2 = generateSellUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, quantity, walletAccountObjectOptional.getAccountNumber(), CURRENCY_GOLD, HttpStatus.OK, StatusService.SELL_EXCEEDED_COUNT_DAILY_LIMITATION, false);
         Assert.assertSame(StatusService.SELL_EXCEEDED_COUNT_DAILY_LIMITATION, uuidResponse2.getErrorDetail().getCode());
         // Step 8: Restore original daily count limitation
-        limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
-                limitationGeneralService.getSetting(LimitationGeneralService.MAX_DAILY_COUNT_SELL).getId(), walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
-                walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
-                maxDailyCount, "test monthly count limitation");
+        setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MAX_DAILY_COUNT_SELL, walletAccountEntity, maxDailyCount);
     }
 
     /**
@@ -676,17 +664,11 @@ class SellControllerTest extends WalletApplicationTests {
         String maxMonthlyQuantity = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.MAX_MONTHLY_QUANTITY_SELL, walletAccountObjectOptional.getAccountNumber());
         WalletAccountEntity walletAccountEntity = walletAccountService.findByAccountNumber(walletAccountObjectOptional.getAccountNumber());
         // Step 6: Set a very low monthly quantity limitation to trigger the error
-        limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
-                limitationGeneralService.getSetting(LimitationGeneralService.MAX_MONTHLY_QUANTITY_SELL).getId(), walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
-                walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
-                "0.5", "test monthly quantity limitation");
+        setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MAX_MONTHLY_QUANTITY_SELL, walletAccountEntity, "0.5");
         // Step 7: Generate sell UUID - should fail due to monthly quantity limitation
         generateSellUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, quantity, walletAccountObjectOptional.getAccountNumber(), CURRENCY_GOLD, HttpStatus.OK, StatusService.SELL_EXCEEDED_AMOUNT_MONTHLY_LIMITATION, false);
         // Step 8: Restore original monthly quantity limitation
-        limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
-                limitationGeneralService.getSetting(LimitationGeneralService.MAX_MONTHLY_QUANTITY_SELL).getId(), walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
-                walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
-                maxMonthlyQuantity, "test monthly count limitation");
+        setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MAX_MONTHLY_QUANTITY_SELL, walletAccountEntity, maxMonthlyQuantity);
     }
 
     /**
@@ -722,17 +704,11 @@ class SellControllerTest extends WalletApplicationTests {
         String maxMonthlyCountValue = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.MAX_MONTHLY_COUNT_SELL, walletAccountObjectOptional.getAccountNumber());
         WalletAccountEntity walletAccountEntity = walletAccountService.findByAccountNumber(walletAccountObjectOptional.getAccountNumber());
         // Step 6: Set a very low monthly count limitation to trigger the error
-        limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
-                limitationGeneralService.getSetting(LimitationGeneralService.MAX_MONTHLY_COUNT_SELL).getId(), walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
-                walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
-                "1", "test monthly count limitation");
+        setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MAX_MONTHLY_COUNT_SELL, walletAccountEntity, "1");
         // Step 7: Perform first sell operation (should succeed)
         generateSellUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, quantity, walletAccountObjectOptional.getAccountNumber(), CURRENCY_GOLD, HttpStatus.OK, StatusService.SELL_EXCEEDED_COUNT_MONTHLY_LIMITATION, false);
         // Step 8: Restore original monthly count limitation
-        limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
-                limitationGeneralService.getSetting(LimitationGeneralService.MAX_MONTHLY_COUNT_SELL).getId(), walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
-                walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
-                maxMonthlyCountValue, "test monthly count limitation");
+        setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MAX_MONTHLY_COUNT_SELL, walletAccountEntity, maxMonthlyCountValue);
     }
 
     /**
@@ -767,35 +743,17 @@ class SellControllerTest extends WalletApplicationTests {
         // Step 5: Set reasonable limitations that allow this transaction
         WalletAccountEntity walletAccountEntity = walletAccountService.findByAccountNumber(walletAccountObjectOptional.getAccountNumber());
         // Step 6: Set minimum quantity to allow this transaction
-        limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
-                limitationGeneralService.getSetting(LimitationGeneralService.MIN_QUANTITY_SELL).getId(), walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
-                walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
-                "0.1", "test min quantity sell");
+        setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MIN_QUANTITY_SELL, walletAccountEntity, "0.1");
         // Step 7: Set maximum quantity to allow this transaction
-        limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
-                limitationGeneralService.getSetting(LimitationGeneralService.MAX_QUANTITY_SELL).getId(), walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
-                walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
-                "10.0", "test max quantity sell");
+        setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MAX_QUANTITY_SELL, walletAccountEntity, "10.0");
         // Step 8: Set daily quantity limitation to allow this transaction
-        limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
-                limitationGeneralService.getSetting(LimitationGeneralService.MAX_DAILY_QUANTITY_SELL).getId(), walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
-                walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
-                "5.0", "test daily quantity sell");
+        setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MAX_DAILY_QUANTITY_SELL, walletAccountEntity, "5.0");
         // Step 9: Set daily count limitation to allow this transaction
-        limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
-                limitationGeneralService.getSetting(LimitationGeneralService.MAX_DAILY_COUNT_SELL).getId(), walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
-                walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
-                "10", "test daily count sell");
+        setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MAX_DAILY_COUNT_SELL, walletAccountEntity, "10");
         // Step 10: Set monthly quantity limitation to allow this transaction
-        limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
-                limitationGeneralService.getSetting(LimitationGeneralService.MAX_MONTHLY_QUANTITY_SELL).getId(), walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
-                walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
-                "50.0", "test monthly quantity sell");
+        setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MAX_MONTHLY_QUANTITY_SELL, walletAccountEntity, "50.0");
         // Step 11: Set monthly count limitation to allow this transaction
-        limitationGeneralCustomService.create(channelService.getChannel(USERNAME_CORRECT),
-                limitationGeneralService.getSetting(LimitationGeneralService.MAX_MONTHLY_COUNT_SELL).getId(), walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
-                walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
-                "100", "test monthly count sell");
+        setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MAX_MONTHLY_COUNT_SELL, walletAccountEntity, "100");
         // Step 12: Generate sell UUID
         BaseResponse<UuidResponse> uuidResponse = generateSellUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, quantity, walletAccountObjectOptional.getAccountNumber(), CURRENCY_GOLD, HttpStatus.OK, StatusService.SUCCESSFUL, true);
         String uniqueIdentifier = uuidResponse.getData().getUniqueIdentifier();

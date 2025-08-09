@@ -20,10 +20,8 @@ import com.melli.wallet.domain.response.purchase.PurchaseTrackResponse;
 import com.melli.wallet.domain.response.wallet.CreateWalletResponse;
 import com.melli.wallet.domain.response.wallet.WalletAccountObject;
 import com.melli.wallet.domain.response.wallet.WalletBalanceResponse;
-import com.melli.wallet.service.ChannelService;
-import com.melli.wallet.service.LimitationGeneralCustomService;
-import com.melli.wallet.service.StatusService;
-import com.melli.wallet.service.WalletAccountService;
+import com.melli.wallet.exception.InternalServiceException;
+import com.melli.wallet.service.*;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -115,6 +113,13 @@ public class WalletApplicationTests {
     @Autowired
     private WebApplicationContext webApplicationContext;
 
+    @Autowired
+    private LimitationGeneralCustomService limitationGeneralCustomService;
+    @Autowired
+    private LimitationGeneralService limitationGeneralService;
+    @Autowired
+    private ChannelService channelService;
+
 
 
     private static MockMvc mockMvc;
@@ -159,6 +164,13 @@ public class WalletApplicationTests {
             requestBuilder.content(body);
         }
         return requestBuilder;
+    }
+
+    public void setLimitationGeneralCustomValue(String channelName, String limitationGeneralName, WalletAccountEntity walletAccountEntity, String newValue) throws InternalServiceException {
+        limitationGeneralCustomService.create(channelService.getChannel(channelName),
+                limitationGeneralService.getSetting(limitationGeneralName).getId(), walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
+                walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
+                newValue, "change " + limitationGeneralName + " to " +  newValue);
     }
 
     public MockHttpServletRequestBuilder buildGetRequest(String token, String path, Object... uriVariables) {
