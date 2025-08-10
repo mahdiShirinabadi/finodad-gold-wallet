@@ -15,7 +15,6 @@ import com.melli.wallet.utils.Helper;
 import com.melli.wallet.utils.RedisLockService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.apache.logging.log4j.ThreadContext;
 import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -119,7 +118,7 @@ public class WalletBuyLimitationServiceImplementation implements WalletBuyLimita
 
             String currentDate = DateUtils.getLocaleDate(DateUtils.ENGLISH_LOCALE, new Date(), "MMdd", false);
 
-            String walletLimitationId = generateDailyLimitationKey(walletAccount, walletAccountCurrencyEntity);
+            String walletLimitationId = helper.generateDailyLimitationKey(walletAccount);
 
             WalletDailyBuyLimitationRedis walletDailyBuyLimitationRedis = findDailyById(walletLimitationId);
             if (walletDailyBuyLimitationRedis == null) {
@@ -164,8 +163,14 @@ public class WalletBuyLimitationServiceImplementation implements WalletBuyLimita
 
         String key = walletAccount.getAccountNumber();
 
+        Boolean checkMonthly = Boolean.parseBoolean(limitationGeneralCustomService.getSetting(channel, LimitationGeneralService.MONTHLY_VALIDATION_CHECK_BUY, walletLevelEntity, walletAccountTypeEntity, walletAccountCurrencyEntity, walletTypeEntity));
         BigDecimal maxCountMonthly = new BigDecimal(limitationGeneralCustomService.getSetting(channel, LimitationGeneralService.MAX_MONTHLY_COUNT_BUY, walletLevelEntity, walletAccountTypeEntity, walletAccountCurrencyEntity, walletTypeEntity));
         BigDecimal maxQuantityMonthly = new BigDecimal(limitationGeneralCustomService.getSetting(channel, LimitationGeneralService.MAX_MONTHLY_QUANTITY_BUY, walletLevelEntity, walletAccountTypeEntity, walletAccountCurrencyEntity, walletTypeEntity));
+
+        if(Boolean.FALSE.equals(checkMonthly)){
+            log.info("MONTHLY_VALIDATION_CHECK_BUY is set to ({}) and system skip check monthly validation", checkMonthly);
+            return;
+        }
 
 
         redisLockService.runAfterLock(key, this.getClass(), () -> {
@@ -175,7 +180,7 @@ public class WalletBuyLimitationServiceImplementation implements WalletBuyLimita
                 return null;
             }
 
-            String walletLimitationId = generateMonthlyLimitationKey(walletAccount, walletAccountCurrencyEntity);
+            String walletLimitationId = helper.generateMonthlyLimitationKey(walletAccount);
 
             WalletMonthlyBuyLimitationRedis walletMonthlyBuyLimitationRedis = findMonthlyById(walletLimitationId);
             if (walletMonthlyBuyLimitationRedis == null) {
@@ -219,11 +224,11 @@ public class WalletBuyLimitationServiceImplementation implements WalletBuyLimita
     }
 
 
-    private void updateBuyDailyLimitation(WalletAccountEntity walletAccount, BigDecimal amount, BigDecimal quantity, String uniqueIdentifier, WalletAccountCurrencyEntity walletAccountCurrencyEntity) throws InternalServiceException {
+    private void updateBuyDailyLimitation(WalletAccountEntity walletAccount, BigDecimal amount, BigDecimal quantity, String uniqueIdentifier) throws InternalServiceException {
         log.info("start updating updateBuyDailyLimitation for walletAccount({}) ...", walletAccount.getAccountNumber());
         String key = walletAccount.getAccountNumber();
         redisLockService.runAfterLock(key, this.getClass(), () -> {
-            String walletLimitationId = generateDailyLimitationKey(walletAccount, walletAccountCurrencyEntity);
+            String walletLimitationId = helper.generateDailyLimitationKey(walletAccount);
 
             WalletDailyBuyLimitationRedis walletDailyBuyLimitationRedis = findDailyById(walletLimitationId);
 
@@ -250,39 +255,28 @@ public class WalletBuyLimitationServiceImplementation implements WalletBuyLimita
 
     }
 
-    private String generateDailyLimitationKey(WalletAccountEntity walletAccount, WalletAccountCurrencyEntity walletAccountCurrencyEntity) {
-        String currentDate = DateUtils.getLocaleDate(DateUtils.ENGLISH_LOCALE, new Date(), "MMdd", false);
-        String key = walletAccount.getWalletEntity().getNationalCode()+"-"+ walletAccountCurrencyEntity.getName() +"-"+ currentDate;
-        log.info("generate key ({})", key);
-        return key;
-    }
-
-    private String generateMonthlyLimitationKey(WalletAccountEntity walletAccount, WalletAccountCurrencyEntity walletAccountCurrencyEntity) {
-        String currentPersianMonth = String.valueOf(helper.convertDateToMonth(new Date()));
-        return walletAccount.getWalletEntity().getNationalCode()+"-"+ walletAccountCurrencyEntity.getName() +"-"+ currentPersianMonth;
-    }
 
     @Override
     @Async("threadPoolExecutor")
-    public void updateLimitation(WalletAccountEntity walletAccount, BigDecimal amount, BigDecimal quantity, String uniqueIdentifier, WalletAccountCurrencyEntity walletAccountCurrencyEntity) throws InternalServiceException {
+    public void updateLimitation(WalletAccountEntity walletAccount, BigDecimal amount, BigDecimal quantity, String uniqueIdentifier, WalletAccountCurrencyEntity walletAccountCurrencyEntity) {
         try {
             log.info("start update monthlyLimitation for walletAccount ({}), amount ({})", walletAccount.getAccountNumber(), amount);
-            updateBuyMonthlyLimitation(walletAccount, amount, quantity, uniqueIdentifier, walletAccountCurrencyEntity);
+            updateBuyMonthlyLimitation(walletAccount, amount, quantity, uniqueIdentifier);
             log.info("finish update monthlyLimitation for walletAccount ({}), amount ({})", walletAccount.getAccountNumber(), amount);
             log.info("start update dailyLimitation for walletAccount ({}), amount ({})", walletAccount.getAccountNumber(), amount);
-            updateBuyDailyLimitation(walletAccount, amount, quantity, uniqueIdentifier, walletAccountCurrencyEntity);
+            updateBuyDailyLimitation(walletAccount, amount, quantity, uniqueIdentifier);
             log.info("finish update dailyLimitation for walletAccount ({}), amount ({})", walletAccount.getAccountNumber(), amount);
         } catch (InternalServiceException e) {
             log.error("there is something wrong !!!! in updateBuyLimitation ==> ({})", e.getMessage());
         }
     }
 
-    private void updateBuyMonthlyLimitation(WalletAccountEntity walletAccount, BigDecimal amount, BigDecimal quantity, String uniqueIdentifier, WalletAccountCurrencyEntity walletAccountCurrencyEntity) throws InternalServiceException {
+    private void updateBuyMonthlyLimitation(WalletAccountEntity walletAccount, BigDecimal amount, BigDecimal quantity, String uniqueIdentifier) throws InternalServiceException {
 
         log.info("start updating updateBuyMonthlyLimitation for walletAccount({}) ...", walletAccount.getAccountNumber());
         String key = walletAccount.getAccountNumber();
         redisLockService.runAfterLock(key, this.getClass(), () -> {
-            String walletLimitationId = generateMonthlyLimitationKey(walletAccount, walletAccountCurrencyEntity);
+            String walletLimitationId = helper.generateMonthlyLimitationKey(walletAccount);
 
             WalletMonthlyBuyLimitationRedis walletMonthlyBuyLimitationRedis = findMonthlyById(walletLimitationId);
 

@@ -15,7 +15,6 @@ import com.melli.wallet.utils.Helper;
 import com.melli.wallet.utils.RedisLockService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.apache.logging.log4j.ThreadContext;
 import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -106,8 +105,14 @@ public class WalletSellLimitationServiceImplementation implements WalletSellLimi
 
         String key = walletAccount.getAccountNumber();
 
+        boolean checkMonthly = Boolean.getBoolean(limitationGeneralCustomService.getSetting(channel, LimitationGeneralService.MONTHLY_VALIDATION_CHECK_SELL, walletLevelEntity, walletAccountTypeEntity, walletAccountCurrencyEntity, walletTypeEntity));
         BigDecimal maxQuantityDaily = new BigDecimal(limitationGeneralCustomService.getSetting(channel, LimitationGeneralService.MAX_DAILY_QUANTITY_SELL, walletLevelEntity, walletAccountTypeEntity, walletAccountCurrencyEntity, walletTypeEntity));
         BigDecimal maxCountDaily = new BigDecimal(limitationGeneralCustomService.getSetting(channel, LimitationGeneralService.MAX_DAILY_COUNT_SELL, walletLevelEntity, walletAccountTypeEntity, walletAccountCurrencyEntity, walletTypeEntity));
+
+        if(!checkMonthly){
+            log.info("MONTHLY_VALIDATION_CHECK_SELL is set to ({}) and system skip check monthly validation", false);
+            return;
+        }
 
 
         redisLockService.runAfterLock(key, this.getClass(), () -> {
@@ -119,7 +124,7 @@ public class WalletSellLimitationServiceImplementation implements WalletSellLimi
 
             String currentDate = DateUtils.getLocaleDate(DateUtils.ENGLISH_LOCALE, new Date(), "MMdd", false);
 
-            String walletLimitationId = generateDailyLimitationKey(walletAccount);
+            String walletLimitationId = helper.generateDailyLimitationKey(walletAccount);
 
             WalletDailySellLimitationRedis walletDailySellLimitationRedis = findDailyById(walletLimitationId);
             if (walletDailySellLimitationRedis == null) {
@@ -176,7 +181,7 @@ public class WalletSellLimitationServiceImplementation implements WalletSellLimi
                 return null;
             }
 
-            String walletLimitationId = generateMonthlyLimitationKey(walletAccount);
+            String walletLimitationId = helper.generateMonthlyLimitationKey(walletAccount);
 
             WalletMonthlySellLimitationRedis walletMonthlySellLimitationRedis = findMonthlyById(walletLimitationId);
             if (walletMonthlySellLimitationRedis == null) {
@@ -223,7 +228,7 @@ public class WalletSellLimitationServiceImplementation implements WalletSellLimi
         log.info("start updating walletDailySellLimitationRedis for walletAccount({}) ...", walletAccount.getAccountNumber());
         String key = walletAccount.getAccountNumber();
         redisLockService.runAfterLock(key, this.getClass(), () -> {
-            String walletLimitationId = generateDailyLimitationKey(walletAccount);
+            String walletLimitationId = helper.generateDailyLimitationKey(walletAccount);
 
             WalletDailySellLimitationRedis walletDailySellLimitationRedis = findDailyById(walletLimitationId);
 
@@ -248,19 +253,10 @@ public class WalletSellLimitationServiceImplementation implements WalletSellLimi
 
     }
 
-    private String generateDailyLimitationKey(WalletAccountEntity walletAccount) {
-        String currentDate = DateUtils.getLocaleDate(DateUtils.ENGLISH_LOCALE, new Date(), "MMdd", false);
-        return walletAccount.getAccountNumber() + currentDate;
-    }
-
-    private String generateMonthlyLimitationKey(WalletAccountEntity walletAccount) {
-        String currentPersianMonth = String.valueOf(helper.convertDateToMonth(new Date()));
-        return walletAccount.getAccountNumber() + currentPersianMonth;
-    }
 
     @Override
     @Async("threadPoolExecutor")
-    public void updateLimitation(WalletAccountEntity walletAccount, BigDecimal amount, BigDecimal quantity, String uniqueIdentifier) throws InternalServiceException {
+    public void updateLimitation(WalletAccountEntity walletAccount, BigDecimal amount, BigDecimal quantity, String uniqueIdentifier) {
         try {
             log.info("start update monthlyLimitation for walletAccount ({}), amount ({})", walletAccount.getAccountNumber(), amount);
             updateMonthlyLimitation(walletAccount, amount, quantity, uniqueIdentifier);
@@ -278,7 +274,7 @@ public class WalletSellLimitationServiceImplementation implements WalletSellLimi
         log.info("start updating updateSellMonthlyLimitation for walletAccount({}) ...", walletAccount.getAccountNumber());
         String key = walletAccount.getAccountNumber();
         redisLockService.runAfterLock(key, this.getClass(), () -> {
-            String walletLimitationId = generateMonthlyLimitationKey(walletAccount);
+            String walletLimitationId = helper.generateMonthlyLimitationKey(walletAccount);
 
             WalletMonthlySellLimitationRedis walletMonthlySellLimitationRedis = findMonthlyById(walletLimitationId);
 

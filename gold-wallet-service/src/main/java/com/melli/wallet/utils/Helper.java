@@ -67,6 +67,18 @@ public class Helper {
         return loginResponse;
     }
 
+    public String generateDailyLimitationKey(WalletAccountEntity walletAccount) {
+        String currentDate = DateUtils.getLocaleDate(DateUtils.ENGLISH_LOCALE, new Date(), "MMdd", false);
+        String key = walletAccount.getWalletEntity().getNationalCode()+"-"+ walletAccount.getWalletAccountCurrencyEntity().getName() +"-"+ currentDate;
+        log.info("generate key ({})", key);
+        return key;
+    }
+
+    public String generateMonthlyLimitationKey(WalletAccountEntity walletAccount) {
+        String currentPersianMonth = String.valueOf(convertDateToMonth(new Date()));
+        return walletAccount.getWalletEntity().getNationalCode()+"-"+ walletAccount.getWalletAccountCurrencyEntity().getName() +"-"+ currentPersianMonth;
+    }
+
 
     public CashInTrackResponse fillCashInTrackResponse(CashInRequestEntity cashInRequestEntity, StatusService statusService) {
         StatusEntity statusEntity = statusService.findByCode(String.valueOf(cashInRequestEntity.getResult()));

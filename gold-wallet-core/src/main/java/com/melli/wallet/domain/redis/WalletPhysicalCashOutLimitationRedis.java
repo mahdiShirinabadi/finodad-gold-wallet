@@ -17,6 +17,6 @@ public class WalletPhysicalCashOutLimitationRedis implements Serializable {
 	@Id
 	private String id; // walletAccountId + date
 
-	private BigDecimal cashOutDailyAmount;
+	private BigDecimal cashOutDailyQuantity;
 	private long cashOutDailyCount;
 }

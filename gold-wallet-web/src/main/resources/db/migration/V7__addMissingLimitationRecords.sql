@@ -98,3 +98,11 @@ CREATE TABLE if not exists physical_cash_out_request
     additional_data   VARCHAR(500)
 );
 create unique index rrn_id_physical_cash_out_request_unique_idx on physical_cash_out_request (rrn_id);
+
+INSERT INTO limitation_general(created_by, created_at, name, value, additional_data)
+VALUES ('System', now(), 'MONTHLY_VALIDATION_CHECK_SELL', 'false', 'چک کردن محدودیت ماهانه در فروش')
+on conflict do nothing;
+
+INSERT INTO limitation_general(created_by, created_at, name, value, additional_data)
+VALUES ('System', now(), 'MONTHLY_VALIDATION_CHECK_BUY', 'false', 'چک کردن محدودیت ماهانه در خرید')
+on conflict do nothing;

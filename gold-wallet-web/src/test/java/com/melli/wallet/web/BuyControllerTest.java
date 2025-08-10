@@ -31,6 +31,13 @@ import org.springframework.web.context.WebApplicationContext;
 import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
+import java.util.ArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.stream.Collectors;
 
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 
@@ -197,7 +204,7 @@ class BuyControllerTest extends WalletApplicationTests {
         String price="10000000";
 
         // Step 2: Get user's RIAL account number
-        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.RIAL);
+        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.GOLD);
         
         // Step 3: Get minimum quantity and calculate quantity below minimum
         String minAmount = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.MIN_QUANTITY_BUY, walletAccountObjectOptional.getAccountNumber());
@@ -230,7 +237,7 @@ class BuyControllerTest extends WalletApplicationTests {
         String price="10000000";
 
         // Step 2: Get user's RIAL account number
-        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.RIAL);
+        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.GOLD);
         
         // Step 3: Get maximum quantity and calculate quantity above maximum
         String minAmount = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.MAX_QUANTITY_BUY, walletAccountObjectOptional.getAccountNumber());
@@ -287,7 +294,7 @@ class BuyControllerTest extends WalletApplicationTests {
         String currency = "GOLD";
         
         // Step 2: Get user's RIAL account number
-        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.RIAL);
+        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.GOLD);
         
         // Step 3: Generate buy UUID successfully
         generateBuyUuid(mockMvc, ACCESS_TOKEN, walletAccountObjectOptional.getAccountNumber(), price, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusService.SUCCESSFUL, true, merchantId, quantity, currency);
@@ -316,7 +323,7 @@ class BuyControllerTest extends WalletApplicationTests {
         String additionalData = "differentAmount";
         
         // Step 2: Get user's RIAL account number
-        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.RIAL);
+        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.GOLD);
         
         // Step 3: Generate buy UUID with specific amount
         BaseResponse<UuidResponse> uuidResponseBaseResponse = generateBuyUuid(mockMvc, ACCESS_TOKEN, walletAccountObjectOptional.getAccountNumber(), price, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusService.SUCCESSFUL, true, merchantId, "0.001", currency);
@@ -350,7 +357,7 @@ class BuyControllerTest extends WalletApplicationTests {
         String additionalData = "differentAmount";
         
         // Step 2: Get user's RIAL account number
-        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.RIAL);
+        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.GOLD);
         
         // Step 3: Generate buy UUID with valid currency
         BaseResponse<UuidResponse> uuidResponseBaseResponse = generateBuyUuid(mockMvc, ACCESS_TOKEN, walletAccountObjectOptional.getAccountNumber(), price, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusService.SUCCESSFUL, true, merchantId, "0.001", currency);
@@ -383,8 +390,9 @@ class BuyControllerTest extends WalletApplicationTests {
         walletBuyLimitationService.deleteAll();
         
         // Step 3: Get user's RIAL account number
-        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.RIAL);
-        
+        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.GOLD);
+        WalletAccountObject walletAccountObjectOptionalRial = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.RIAL);
+
         // Step 4: Update balance merchant wallet-account
         increaseMerchantBalance("1.07", WalletAccountCurrencyService.GOLD, "1111111111");
 
@@ -395,12 +403,18 @@ class BuyControllerTest extends WalletApplicationTests {
             setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, walletAccountEntity, "true");
         }
 
+        String valueRial = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, walletAccountObjectOptionalRial.getAccountNumber());
+        if ("false".equalsIgnoreCase(valueRial)) {
+            WalletAccountEntity walletAccountEntity = walletAccountService.findByAccountNumber(walletAccountObjectOptionalRial.getAccountNumber());
+            setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, walletAccountEntity, "true");
+        }
+
         // Step 6: Generate UUID for cash in operation
-        BaseResponse<UuidResponse> uniqueIdentifierCashIn = generateCashInUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, price, walletAccountObjectOptional.getAccountNumber(), HttpStatus.OK, StatusService.SUCCESSFUL, true);
+        BaseResponse<UuidResponse> uniqueIdentifierCashIn = generateCashInUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, price, walletAccountObjectOptionalRial.getAccountNumber(), HttpStatus.OK, StatusService.SUCCESSFUL, true);
         log.info("generate uuid " + uniqueIdentifierCashIn);
         
         // Step 7: Perform cash in operation to charge account
-        cashIn(mockMvc, ACCESS_TOKEN, uniqueIdentifierCashIn.getData().getUniqueIdentifier(), String.valueOf(new Date().getTime()), price, NATIONAL_CODE_CORRECT, walletAccountObjectOptional.getAccountNumber(), "", "", "ACCOUNT_TO_ACCOUNT", HttpStatus.OK, StatusService.SUCCESSFUL, true);
+        cashIn(mockMvc, ACCESS_TOKEN, uniqueIdentifierCashIn.getData().getUniqueIdentifier(), String.valueOf(new Date().getTime()), price, NATIONAL_CODE_CORRECT, walletAccountObjectOptionalRial.getAccountNumber(), "", "", "ACCOUNT_TO_ACCOUNT", HttpStatus.OK, StatusService.SUCCESSFUL, true);
 
         // Step 8: Define buy operation parameters
         String merchantId = "1";
@@ -442,27 +456,26 @@ class BuyControllerTest extends WalletApplicationTests {
         walletBuyLimitationService.deleteAll();
         
         // Step 3: Get user's RIAL account number
-        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.RIAL);
         WalletAccountObject walletAccountCurrencyObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.GOLD);
 
         // Step 4: Get current buy statistics and limitation values
         WalletAccountEntity walletAccountEntity = walletAccountService.findByAccountNumber(walletAccountCurrencyObjectOptional.getAccountNumber());
-        String valueMaxDailyCount = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.MAX_DAILY_COUNT_BUY, walletAccountObjectOptional.getAccountNumber());
-        String valueMaxDailyPrice = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.MAX_DAILY_QUANTITY_BUY, walletAccountObjectOptional.getAccountNumber());
+        String valueMaxDailyCount = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.MAX_DAILY_COUNT_BUY, walletAccountCurrencyObjectOptional.getAccountNumber());
+        String valueMaxDailyPrice = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.MAX_DAILY_QUANTITY_BUY, walletAccountCurrencyObjectOptional.getAccountNumber());
         AggregationPurchaseDTO aggregationPurchaseDTO = requestService.findSumAmountByTransactionTypeBetweenDate(new long[]{walletAccountEntity.getId()}, TransactionTypeEnum.BUY.name(), new Date(), new Date());
 
         // Step 5: Temporarily set MAX_DAILY_COUNT_BUY to current count
         setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MAX_DAILY_COUNT_BUY, walletAccountEntity, aggregationPurchaseDTO.getCountRecord());
 
         // Step 6: Attempt to generate buy UUID - should fail due to daily count limitation
-        generateBuyUuid(mockMvc, ACCESS_TOKEN, walletAccountObjectOptional.getAccountNumber(), price, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusService.BUY_EXCEEDED_COUNT_DAILY_LIMITATION, false, "1", "0.001", "GOLD");
+        generateBuyUuid(mockMvc, ACCESS_TOKEN, walletAccountCurrencyObjectOptional.getAccountNumber(), price, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusService.BUY_EXCEEDED_COUNT_DAILY_LIMITATION, false, "1", "0.001", "GOLD");
 
         // Step 7: Restore original MAX_DAILY_COUNT_BUY limit
         setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MAX_DAILY_COUNT_BUY, walletAccountEntity, valueMaxDailyCount);
 
         setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MAX_DAILY_QUANTITY_BUY, walletAccountEntity, aggregationPurchaseDTO.getSumQuantity());
 
-        generateBuyUuid(mockMvc, ACCESS_TOKEN, walletAccountObjectOptional.getAccountNumber(), price, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusService.BUY_EXCEEDED_QUANTITY_DAILY_LIMITATION, false, "1", "0.001", "GOLD");
+        generateBuyUuid(mockMvc, ACCESS_TOKEN, walletAccountCurrencyObjectOptional.getAccountNumber(), price, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusService.BUY_EXCEEDED_QUANTITY_DAILY_LIMITATION, false, "1", "0.001", "GOLD");
 
         setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MAX_DAILY_QUANTITY_BUY, walletAccountEntity, valueMaxDailyPrice);
 
@@ -496,35 +509,34 @@ class BuyControllerTest extends WalletApplicationTests {
         walletBuyLimitationService.deleteAll();
 
         // Step 3: Get user's RIAL account number
-        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.RIAL);
         WalletAccountObject walletAccountCurrencyObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.GOLD);
 
         // Step 4: Get current buy statistics and limitation values
         WalletAccountEntity walletAccountCurrencyEntity = walletAccountService.findByAccountNumber(walletAccountCurrencyObjectOptional.getAccountNumber());
-        String valueMaxDailyCount = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.MAX_DAILY_COUNT_BUY, walletAccountObjectOptional.getAccountNumber());
-        String valueMaxDailyQuantity = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.MAX_DAILY_QUANTITY_BUY, walletAccountObjectOptional.getAccountNumber());
+        String valueMaxDailyCount = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.MAX_DAILY_COUNT_BUY, walletAccountCurrencyObjectOptional.getAccountNumber());
+        String valueMaxDailyQuantity = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.MAX_DAILY_QUANTITY_BUY, walletAccountCurrencyObjectOptional.getAccountNumber());
         AggregationPurchaseDTO aggregationPurchaseDTO = requestService.findSumAmountByTransactionTypeBetweenDate(new long[]{walletAccountCurrencyEntity.getId()}, TransactionTypeEnum.BUY.name(), new Date(), new Date());
 
         // Step 5: Temporarily set MAX_DAILY_COUNT_BUY to current count we want generateUuid will be success
         setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MAX_DAILY_COUNT_BUY, walletAccountCurrencyEntity, String.valueOf(Long.parseLong(aggregationPurchaseDTO.getCountRecord()) + 1));
         // Step 6: Attempt to generate buy UUID - should success due to daily count limitation
-        BaseResponse<UuidResponse> uuidResponseBaseResponse = generateBuyUuid(mockMvc, ACCESS_TOKEN, walletAccountObjectOptional.getAccountNumber(), price, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusService.SUCCESSFUL, true, merchantId, quantity, currencyToBuy);
+        BaseResponse<UuidResponse> uuidResponseBaseResponse = generateBuyUuid(mockMvc, ACCESS_TOKEN, walletAccountCurrencyObjectOptional.getAccountNumber(), price, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusService.SUCCESSFUL, true, merchantId, quantity, currencyToBuy);
 
         setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MAX_DAILY_COUNT_BUY, walletAccountCurrencyEntity, aggregationPurchaseDTO.getCountRecord());
 
         buyDirect(mockMvc, refNumber, ACCESS_TOKEN, uuidResponseBaseResponse.getData().getUniqueIdentifier(), quantity, String.valueOf(Long.parseLong(price)), buyCommission, commissionRialValue, NATIONAL_CODE_CORRECT, currencyToBuy
-                , merchantId, walletAccountObjectOptional.getAccountNumber(), "", "", HttpStatus.OK, StatusService.BUY_EXCEEDED_COUNT_DAILY_LIMITATION, false);
+                , merchantId, walletAccountCurrencyObjectOptional.getAccountNumber(), "", "", HttpStatus.OK, StatusService.BUY_EXCEEDED_COUNT_DAILY_LIMITATION, false);
 
         // Step 7: Restore original MAX_DAILY_COUNT_BUY limit
         setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MAX_DAILY_COUNT_BUY, walletAccountCurrencyEntity, valueMaxDailyCount);
 
         // step 8: Temporarily set MAX_DAILY_QUANTITY_BUY to current quantity we want generateUuid will be success
         setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MAX_DAILY_QUANTITY_BUY, walletAccountCurrencyEntity, String.valueOf(new BigDecimal(aggregationPurchaseDTO.getSumQuantity()).add(new BigDecimal(10))));
-        generateBuyUuid(mockMvc, ACCESS_TOKEN, walletAccountObjectOptional.getAccountNumber(), price, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusService.SUCCESSFUL, true, merchantId, quantity, currencyToBuy);
+        generateBuyUuid(mockMvc, ACCESS_TOKEN, walletAccountCurrencyObjectOptional.getAccountNumber(), price, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusService.SUCCESSFUL, true, merchantId, quantity, currencyToBuy);
         setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MAX_DAILY_QUANTITY_BUY, walletAccountCurrencyEntity, String.valueOf(aggregationPurchaseDTO.getSumQuantity()));
 
         buyDirect(mockMvc, refNumber, ACCESS_TOKEN, uuidResponseBaseResponse.getData().getUniqueIdentifier(), quantity, String.valueOf(Long.parseLong(price)), buyCommission, commissionRialValue, NATIONAL_CODE_CORRECT, currencyToBuy
-                , merchantId, walletAccountObjectOptional.getAccountNumber(), "", "", HttpStatus.OK, StatusService.BUY_EXCEEDED_QUANTITY_DAILY_LIMITATION, false);
+                , merchantId, walletAccountCurrencyObjectOptional.getAccountNumber(), "", "", HttpStatus.OK, StatusService.BUY_EXCEEDED_QUANTITY_DAILY_LIMITATION, false);
 
         setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MAX_DAILY_QUANTITY_BUY, walletAccountCurrencyEntity, String.valueOf(valueMaxDailyQuantity));
         setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MAX_DAILY_COUNT_BUY, walletAccountCurrencyEntity, String.valueOf(valueMaxDailyCount));
@@ -551,13 +563,13 @@ class BuyControllerTest extends WalletApplicationTests {
         // Step 2: Clear buy limitation cache to start fresh
         walletBuyLimitationService.deleteAll();
         // Step 3: Get user's RIAL account number
-        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.RIAL);
         WalletAccountObject walletAccountCurrencyObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.GOLD);
         // Step 4: Update balance merchant wallet-account
         WalletAccountEntity walletAccountEntity = walletAccountService.findByAccountNumber(walletAccountCurrencyObjectOptional.getAccountNumber());
         // Step 5: Get current monthly limitation values for backup
-        String valueMaxMonthlyCount = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.MAX_MONTHLY_COUNT_BUY, walletAccountObjectOptional.getAccountNumber());
-        String valueMaxMonthlyQuantity = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.MAX_MONTHLY_QUANTITY_BUY, walletAccountObjectOptional.getAccountNumber());
+        String valueMaxMonthlyCount = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.MAX_MONTHLY_COUNT_BUY, walletAccountEntity.getAccountNumber());
+        String valueMaxMonthlyQuantity = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.MAX_MONTHLY_QUANTITY_BUY, walletAccountEntity.getAccountNumber());
+        String valueCheckMonthly = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.MONTHLY_VALIDATION_CHECK_BUY, walletAccountEntity.getAccountNumber());
         // Step 6: Calculate current monthly usage period
         Date fromDate = DateUtils.findFirstDateOfPersianMonth(new Date());
         Date untilDate = new Date();
@@ -567,15 +579,18 @@ class BuyControllerTest extends WalletApplicationTests {
         // Step 8: Set monthly count limitation to current usage to trigger failure
         setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MAX_MONTHLY_COUNT_BUY, walletAccountEntity, aggregationPurchaseDTO.getCountRecord());
         // Step 9: Test monthly count limitation failure
-        generateBuyUuid(mockMvc, ACCESS_TOKEN, walletAccountObjectOptional.getAccountNumber(), price, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusService.BUY_EXCEEDED_COUNT_MONTHLY_LIMITATION, false, "1", "0.001", "GOLD");
+        setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MONTHLY_VALIDATION_CHECK_BUY, walletAccountEntity,"true");
+        generateBuyUuid(mockMvc, ACCESS_TOKEN, walletAccountEntity.getAccountNumber(), price, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusService.BUY_EXCEEDED_COUNT_MONTHLY_LIMITATION, false, "1", "0.001", "GOLD");
         // Step 10: Restore original monthly count limitation
         setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MAX_MONTHLY_COUNT_BUY, walletAccountEntity, valueMaxMonthlyCount);
         // Step 11: Set monthly quantity limitation to current usage to trigger failure
         setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MAX_MONTHLY_QUANTITY_BUY, walletAccountEntity, aggregationPurchaseDTO.getSumQuantity());
         // Step 12: Test monthly quantity limitation failure
-        generateBuyUuid(mockMvc, ACCESS_TOKEN, walletAccountObjectOptional.getAccountNumber(), price, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusService.BUY_EXCEEDED_QUANTITY_MONTHLY_LIMITATION, false, "1", "0.001", "GOLD");
+        generateBuyUuid(mockMvc, ACCESS_TOKEN, walletAccountEntity.getAccountNumber(), price, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusService.BUY_EXCEEDED_QUANTITY_MONTHLY_LIMITATION, false, "1", "0.001", "GOLD");
         // Step 13: Restore original monthly quantity limitation
         setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MAX_MONTHLY_QUANTITY_BUY, walletAccountEntity, valueMaxMonthlyQuantity);
+
+        setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MONTHLY_VALIDATION_CHECK_BUY, walletAccountEntity,valueCheckMonthly);
     }
 
 
@@ -597,7 +612,8 @@ class BuyControllerTest extends WalletApplicationTests {
         // Step 2: Clear buy limitation cache to start fresh
         walletBuyLimitationService.deleteAll();
         // Step 3: Get user's RIAL account number
-        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.RIAL);
+        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.GOLD);
+        WalletAccountObject walletAccountObjectOptionalRial = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.RIAL);
         // Step 4: Update balance merchant wallet-account
         WalletEntity walletMerchantEntity = walletService.findByNationalCodeAndWalletTypeId("1111111111", walletTypeService.getByName(WalletTypeService.MERCHANT).getId());
         List<WalletAccountEntity> walletAccountEntityList = walletAccountService.findByWallet(walletMerchantEntity);
@@ -609,11 +625,15 @@ class BuyControllerTest extends WalletApplicationTests {
             log.error("walletAccountCurrencyEntityGold not found", ex);
         }
         // Step 6: Enable cash-in if disabled
-        String value = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, walletAccountObjectOptional.getAccountNumber());
-        if ("false".equalsIgnoreCase(value)) {
+        String valueCashInGold = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, walletAccountObjectOptional.getAccountNumber());
+        if ("false".equalsIgnoreCase(valueCashInGold)) {
             WalletAccountEntity walletAccountEntity = walletAccountService.findByAccountNumber(walletAccountObjectOptional.getAccountNumber());
             setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, walletAccountEntity, "true");
+
         }
+        WalletAccountEntity walletAccountEntityRial = walletAccountService.findByAccountNumber(walletAccountObjectOptionalRial.getAccountNumber());
+        setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, walletAccountEntityRial, "true");
+
         // Step 7: Increase merchant GOLD balance
         long finalId = id;
         WalletAccountEntity walletAccountEntity = walletAccountEntityList.stream().filter(
@@ -630,7 +650,7 @@ class BuyControllerTest extends WalletApplicationTests {
         String commissionType = "RIAL";
         String currency = CURRENCY_GOLD;
         String sign = "";
-        String additionalData = "differentAmount";
+        String additionalData = "";
         // Step 10: Generate buy UUID
         BaseResponse<UuidResponse> uuidResponseBaseResponse = generateBuyUuid(mockMvc, ACCESS_TOKEN, walletAccountObjectOptional.getAccountNumber(), price, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusService.SUCCESSFUL, true, merchantId, "0.001", currency);
         // Step 11: Perform buy direct operation
@@ -657,7 +677,7 @@ class BuyControllerTest extends WalletApplicationTests {
         String price = "100000";
         String quantity = "1.07";
         // Step 2: Get user's RIAL account number
-        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.RIAL);
+        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.GOLD);
         // Step 3: Charge account first
         String refNumber = new Date().getTime() + "";
         String cashInAmount = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_IN, walletAccountObjectOptional.getAccountNumber());
@@ -709,7 +729,7 @@ class BuyControllerTest extends WalletApplicationTests {
         String commissionType = "RIAL";
         String invalidUuid = "invalid_uuid";
         // Step 2: Get user's RIAL account number
-        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.RIAL);
+        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.GOLD);
         String sign = "";
         String additionalData = "test invalid uuid";
         // Step 3: Test with invalid UUID
@@ -733,7 +753,7 @@ class BuyControllerTest extends WalletApplicationTests {
         String price = "100000";
         String quantity = "1.07";
         // Step 2: Get user's RIAL account number
-        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.RIAL);
+        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.GOLD);
         // Step 3: Charge account first
         String refNumber = new Date().getTime() + "";
         String cashInAmount = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_IN, walletAccountObjectOptional.getAccountNumber());
@@ -782,7 +802,7 @@ class BuyControllerTest extends WalletApplicationTests {
         String price = "100000";
         String quantity = "1.07";
         // Step 2: Get user's RIAL account number
-        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.RIAL);
+        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.GOLD);
         // Step 3: Charge account first
         String refNumber = new Date().getTime() + "";
         String cashInAmount = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_IN, walletAccountObjectOptional.getAccountNumber());
@@ -830,7 +850,7 @@ class BuyControllerTest extends WalletApplicationTests {
         String price = "100000";
         String quantity = "1.07";
         // Step 2: Get user's RIAL account number
-        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.RIAL);
+        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.GOLD);
         // Step 3: Charge account first
         String refNumber = new Date().getTime() + "";
         String cashInAmount = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_IN, walletAccountObjectOptional.getAccountNumber());
@@ -859,6 +879,671 @@ class BuyControllerTest extends WalletApplicationTests {
         // Step 8: Test with invalid currency
         BaseResponse<PurchaseResponse> response = buyDirect(mockMvc, refNumber, ACCESS_TOKEN, uniqueIdentifier, quantity, String.valueOf(Long.parseLong(price)), commissionType, commission, NATIONAL_CODE_CORRECT, invalidCurrency, merchantId, walletAccountObjectOptional.getAccountNumber(), sign, additionalData, HttpStatus.OK, StatusService.WALLET_ACCOUNT_CURRENCY_NOT_FOUND, false);
         Assert.assertSame(StatusService.WALLET_ACCOUNT_CURRENCY_NOT_FOUND, response.getErrorDetail().getCode());
+    }
+
+    /**
+     * Simple test to verify buyDirect method works before attempting concurrency
+     */
+    @Test
+    @Order(56)
+    @DisplayName("simple buyDirect test - verify method works")
+    void simpleBuyDirectTest() throws Exception {
+        log.info("Testing simple buyDirect functionality...");
+        
+        // Setup
+        String price = "100000";
+        String quantity = "0.1";
+        String merchantId = "1";
+        String commission = "1000";
+        String commissionType = "RIAL";
+        String currency = "GOLD";
+        String sign = "";
+        String additionalData = "simple test";
+        
+        // Get account
+        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.GOLD);
+        
+        // Setup merchant balance
+        increaseMerchantBalance("5.0", WalletAccountCurrencyService.GOLD, "1111111111");
+        
+        // Generate UUID and test buyDirect
+        BaseResponse<UuidResponse> uuidResponse = generateBuyUuid(mockMvc, ACCESS_TOKEN, walletAccountObjectOptional.getAccountNumber(), price, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusService.SUCCESSFUL, true, merchantId, "0.001", currency);
+        String uniqueIdentifier = uuidResponse.getData().getUniqueIdentifier();
+        
+        BaseResponse<PurchaseResponse> response = buyDirect(mockMvc, "SIMPLE_TEST_" + new Date().getTime(), ACCESS_TOKEN, uniqueIdentifier, quantity, price, commissionType, commission, NATIONAL_CODE_CORRECT, currency, merchantId, walletAccountObjectOptional.getAccountNumber(), sign, additionalData, HttpStatus.OK, StatusService.SUCCESSFUL, true);
+        
+        log.info("Simple buyDirect test result: Success={}, ErrorCode={}", response.getSuccess(), response.getErrorDetail() != null ? response.getErrorDetail().getCode() : "N/A");
+        Assert.assertTrue("Simple buyDirect should succeed", response.getSuccess());
+    }
+
+        /**
+     * Ultra-minimal test to identify the exact issue
+     */
+    @Test
+    @Order(57)
+    @DisplayName("ultra-minimal test")
+    void ultraMinimalTest() throws Exception {
+        log.info("=== Starting Ultra-Minimal Test ===");
+        
+        // Test 1: Can we create threads at all?
+        log.info("Test 1: Basic thread creation");
+        ExecutorService executor = Executors.newFixedThreadPool(1);
+        final CountDownLatch latch = new CountDownLatch(1);
+        final boolean[] threadExecuted = {false};
+        
+        executor.submit(() -> {
+            log.info("Basic thread is running!");
+            threadExecuted[0] = true;
+            latch.countDown();
+        });
+        
+        latch.await(5, TimeUnit.SECONDS);
+        executor.shutdown();
+        log.info("Basic thread executed: {}", threadExecuted[0]);
+        Assert.assertTrue("Basic thread should execute", threadExecuted[0]);
+        
+        // Test 2: Can we call buyDirect in a thread?
+        log.info("Test 2: buyDirect in thread");
+        executor = Executors.newFixedThreadPool(1);
+        final CountDownLatch latch1 = new CountDownLatch(1);
+        final BaseResponse<PurchaseResponse>[] threadResponse = new BaseResponse[1];
+        final Exception[] threadException = new Exception[1];
+        
+        executor.submit(() -> {
+            try {
+                log.info("Thread starting buyDirect call...");
+                
+                // Setup
+                String price = "100000";
+                String quantity = "0.1";
+                String merchantId = "1";
+                String commission = "1000";
+                String commissionType = "RIAL";
+                String currency = "GOLD";
+                String sign = "";
+                String additionalData = "ultra minimal test";
+                
+                WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.GOLD);
+                increaseMerchantBalance("5.0", WalletAccountCurrencyService.GOLD, "1111111111");
+                
+                BaseResponse<UuidResponse> uuidResponse = generateBuyUuid(mockMvc, ACCESS_TOKEN, walletAccountObjectOptional.getAccountNumber(), price, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusService.SUCCESSFUL, true, merchantId, "0.001", currency);
+                String uniqueIdentifier = uuidResponse.getData().getUniqueIdentifier();
+                
+                log.info("Thread calling buyDirect with UUID: {}", uniqueIdentifier);
+                threadResponse[0] = buyDirect(mockMvc, "ULTRA_" + System.currentTimeMillis(), ACCESS_TOKEN, uniqueIdentifier, quantity, price, commissionType, commission, NATIONAL_CODE_CORRECT, currency, merchantId, walletAccountObjectOptional.getAccountNumber(), sign, additionalData, HttpStatus.OK, StatusService.SUCCESSFUL, true);
+                log.info("Thread completed buyDirect call successfully");
+                
+            } catch (Exception e) {
+                log.error("Thread encountered exception: {}", e.getMessage(), e);
+                threadException[0] = e;
+            } finally {
+                latch1.countDown();
+            }
+        });
+        
+        latch1.await(10, TimeUnit.SECONDS);
+        executor.shutdown();
+        
+        if (threadException[0] != null) {
+            log.error("Thread failed with exception: {}", threadException[0].getMessage());
+            Assert.fail("Thread failed: " + threadException[0].getMessage());
+        }
+        
+        if (threadResponse[0] != null) {
+            log.info("Thread response: Success={}", threadResponse[0].getSuccess());
+        } else {
+            log.error("Thread response is null!");
+            Assert.fail("Thread response is null");
+        }
+        
+        log.info("=== Ultra-Minimal Test Completed ===");
+    }
+
+    /**
+     * Test without ExecutorService - using raw Threads
+     */
+    @Test
+    @Order(58)
+    @DisplayName("concurrent test without ExecutorService")
+    void concurrentTestWithoutExecutorService() throws Exception {
+        log.info("=== Starting Concurrent Test Without ExecutorService ===");
+        
+        // Setup
+        String price = "100000";
+        String quantity = "0.1";
+        String merchantId = "1";
+        String commission = "1000";
+        String commissionType = "RIAL";
+        String currency = "GOLD";
+        String sign = "";
+        String additionalData = "no executor test";
+        
+        // Get account and setup
+        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.GOLD);
+        increaseMerchantBalance("5.0", WalletAccountCurrencyService.GOLD, "1111111111");
+        
+        // Generate UUID
+        BaseResponse<UuidResponse> uuidResponse = generateBuyUuid(mockMvc, ACCESS_TOKEN, walletAccountObjectOptional.getAccountNumber(), price, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusService.SUCCESSFUL, true, merchantId, "0.001", currency);
+        String sharedUniqueIdentifier = uuidResponse.getData().getUniqueIdentifier();
+        log.info("Generated UUID: {}", sharedUniqueIdentifier);
+        
+        // Test with 2 threads using raw Thread objects
+        final CountDownLatch latch = new CountDownLatch(2);
+        final List<BuyResult> results = new ArrayList<>();
+        
+        // Thread 1
+        Thread thread1 = new Thread(() -> {
+            try {
+                log.info("Raw Thread 1 starting...");
+                String ref1 = "THREAD1_" + System.currentTimeMillis();
+                BaseResponse<PurchaseResponse> response1 = buyDirectWithoutCheckResult(mockMvc, ref1, ACCESS_TOKEN, sharedUniqueIdentifier, quantity, price, commissionType, commission, NATIONAL_CODE_CORRECT, currency, merchantId, walletAccountObjectOptional.getAccountNumber(), sign, additionalData + "_1");
+                
+                BuyResult result1 = new BuyResult();
+                result1.threadId = 1;
+                result1.success = response1.getSuccess();
+                result1.errorCode = response1.getSuccess() ? StatusService.SUCCESSFUL : response1.getErrorDetail().getCode();
+                result1.response = response1;
+                
+                synchronized (results) {
+                    results.add(result1);
+                    log.info("Raw Thread 1 added result to collection. Collection size now: {}", results.size());
+                }
+                log.info("Raw Thread 1 completed: Success={}, ErrorCode={}", result1.success, result1.errorCode);
+                
+            } catch (Exception e) {
+                log.error("Raw Thread 1 exception: {}", e.getMessage(), e);
+                BuyResult result1 = new BuyResult();
+                result1.threadId = 1;
+                result1.success = false;
+                result1.errorCode = -999;
+                result1.exception = e;
+                synchronized (results) {
+                    results.add(result1);
+                    log.info("Raw Thread 1 added exception result to collection. Collection size now: {}", results.size());
+                }
+            } finally {
+                latch.countDown();
+                log.info("Raw Thread 1 countDown called");
+            }
+        });
+        
+        // Thread 2
+        Thread thread2 = new Thread(() -> {
+            try {
+                log.info("Raw Thread 2 starting...");
+                String ref2 = "THREAD2_" + System.currentTimeMillis();
+                BaseResponse<PurchaseResponse> response2 = buyDirectWithoutCheckResult(mockMvc, ref2, ACCESS_TOKEN, sharedUniqueIdentifier, quantity, price, commissionType, commission, NATIONAL_CODE_CORRECT, currency, merchantId, walletAccountObjectOptional.getAccountNumber(), sign, additionalData + "_2");
+                
+                BuyResult result2 = new BuyResult();
+                result2.threadId = 2;
+                result2.success = response2.getSuccess();
+                result2.errorCode = response2.getSuccess() ? StatusService.SUCCESSFUL : response2.getErrorDetail().getCode();
+                result2.response = response2;
+                
+                synchronized (results) {
+                    results.add(result2);
+                    log.info("Raw Thread 2 added result to collection. Collection size now: {}", results.size());
+                }
+                log.info("Raw Thread 2 completed: Success={}, ErrorCode={}", result2.success, result2.errorCode);
+                
+            } catch (Exception e) {
+                log.error("Raw Thread 2 exception: {}", e.getMessage(), e);
+                BuyResult result2 = new BuyResult();
+                result2.threadId = 2;
+                result2.success = false;
+                result2.errorCode = -999;
+                result2.exception = e;
+                synchronized (results) {
+                    results.add(result2);
+                    log.info("Raw Thread 2 added exception result to collection. Collection size now: {}", results.size());
+                }
+            } finally {
+                latch.countDown();
+                log.info("Raw Thread 2 countDown called");
+            }
+        });
+        
+        // Start both threads
+        log.info("Starting both raw threads...");
+        thread1.start();
+        thread2.start();
+        
+        // Wait and analyze
+        log.info("Waiting for threads to complete...");
+        latch.await();
+        
+        log.info("All threads completed, Results collection size: {}", results.size());
+        
+        // Log all results
+        for (BuyResult result : results) {
+            log.info("Result: Thread={}, Success={}, ErrorCode={}", result.threadId, result.success, result.errorCode);
+        }
+        
+        // Validation
+        Assert.assertTrue("Should have exactly 2 results", results.size() == 2);
+        
+        // Check concurrency behavior: one should succeed, one should fail with duplicate UUID error
+        long successCount = results.stream().filter(r -> r.success).count();
+        long failureCount = results.stream().filter(r -> !r.success).count();
+        
+        log.info("Success count: {}, Failure count: {}", successCount, failureCount);
+        Assert.assertTrue("Should have exactly 1 success and 1 failure", successCount == 1 && failureCount == 1);
+        
+        // Verify the failure is due to duplicate UUID
+        BuyResult failedResult = results.stream().filter(r -> !r.success).findFirst().orElse(null);
+        Assert.assertNotNull("Should have a failed result", failedResult);
+        Assert.assertEquals(StatusService.DUPLICATE_UUID, failedResult.errorCode);
+        log.info("Failed result error code: {}", failedResult.errorCode);
+        
+                log.info("=== Concurrent Test Without ExecutorService Completed ===");
+    }
+
+    /**
+     * Test concurrent buyDirect operations with same paymentId (refNumber) to ensure proper concurrency control.
+     * This test covers scenario 1: two different UUIDs with same refNumber sent simultaneously.
+     * This method:
+     * - Sets up wallet and merchant balance
+     * - Generates DIFFERENT UUIDs for buyDirect operations
+     * - Runs multiple concurrent buyDirect requests with SAME refNumber but different UUIDs
+     * - Verifies only one succeeds and others fail with appropriate error codes
+     */
+    @Test
+    @Order(58)
+    @DisplayName("concurrent buy operations with same paymentId (refNumber) - scenario 1")
+    void concurrentBuyWithSamePaymentId() throws Exception {
+        log.info("start concurrentBuyWithSamePaymentId test");
+        
+        // Step 1: Define test parameters
+        String price = "100000";
+        String quantity = "0.3";
+        String merchantId = "1";
+        String commission = "2000";
+        String commissionType = "RIAL";
+        String currency = "GOLD";
+        String sign = "";
+        String additionalData = "concurrent test same paymentId";
+        String sharedRefNumber = "PAY_" + new Date().getTime(); // Same payment reference for all threads
+        
+        // Step 2: Clear buy limitations for testing
+        walletBuyLimitationService.deleteAll();
+        
+        // Step 3: Get user's GOLD account number (only GOLD needed for buyDirect)
+        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.GOLD);
+        
+        // Step 4: Increase merchant balance with sufficient amount for multiple transactions
+        increaseMerchantBalance("10.0", WalletAccountCurrencyService.GOLD, "1111111111");
+        
+        // Step 5: Generate multiple UUIDs for concurrent operations (each thread gets its own UUID, no cashIn needed for buyDirect)
+        int numberOfThreads = 5;
+        List<String> uniqueIdentifiers = new ArrayList<>();
+        for (int i = 0; i < numberOfThreads; i++) {
+            BaseResponse<UuidResponse> uuidResponse = generateBuyUuid(mockMvc, ACCESS_TOKEN, walletAccountObjectOptional.getAccountNumber(), price, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusService.SUCCESSFUL, true, merchantId, "0.001", currency);
+            uniqueIdentifiers.add(uuidResponse.getData().getUniqueIdentifier());
+        }
+        
+        // Step 8: Create multiple concurrent buy requests using the same refNumber but different UUIDs
+        CountDownLatch latch = new CountDownLatch(numberOfThreads);
+        List<BuyResult> results = new ArrayList<>();
+        List<Thread> threads = new ArrayList<>();
+        
+        for (int i = 0; i < numberOfThreads; i++) {
+            final int threadId = i;
+            final String uniqueIdentifier = uniqueIdentifiers.get(i);
+            
+            Thread thread = new Thread(() -> {
+                try {
+                    // All threads use the same refNumber to test payment ID concurrency
+                    BaseResponse<PurchaseResponse> response = buyDirectWithoutCheckResult(mockMvc, sharedRefNumber, ACCESS_TOKEN, uniqueIdentifier, quantity, price, commissionType, commission, NATIONAL_CODE_CORRECT, currency, merchantId, walletAccountObjectOptional.getAccountNumber(), sign, additionalData + "_" + threadId);
+                    
+                    BuyResult result = new BuyResult();
+                    result.threadId = threadId;
+                    result.success = response.getSuccess();
+                    result.errorCode = response.getSuccess() ? StatusService.SUCCESSFUL : response.getErrorDetail().getCode();
+                    result.response = response;
+                    
+                    synchronized (results) {
+                        results.add(result);
+                        log.info("Thread {} added result. Collection size now: {}", threadId, results.size());
+                    }
+                    
+                } catch (Exception e) {
+                    log.error("Thread {} encountered exception: {}", threadId, e.getMessage());
+                    BuyResult result = new BuyResult();
+                    result.threadId = threadId;
+                    result.success = false;
+                    result.errorCode = -999; // Exception occurred
+                    result.exception = e;
+                    synchronized (results) {
+                        results.add(result);
+                        log.info("Thread {} added exception result. Collection size now: {}", threadId, results.size());
+                    }
+                } finally {
+                    latch.countDown();
+                    log.info("Thread {} countDown called", threadId);
+                }
+            });
+            
+            threads.add(thread);
+        }
+        
+        // Start all threads
+        log.info("Starting {} threads...", numberOfThreads);
+        for (Thread thread : threads) {
+            thread.start();
+        }
+        
+        // Step 9: Wait for all threads to complete
+        latch.await();
+        
+        // Step 10: Analyze results
+        long successCount = results.stream().filter(r -> r.success).count();
+        long failureCount = results.stream().filter(r -> !r.success).count();
+        
+        log.info("Concurrent test results: {} successes, {} failures out of {} threads", successCount, failureCount, numberOfThreads);
+        
+        // Step 11: Log detailed results for debugging
+        logDetailedResults(new ConcurrentLinkedQueue<>(results), "Same RefNumber Test");
+        
+        // Step 12: Verify that only one transaction succeeded (to prevent duplicate payments)
+        Assert.assertEquals("Only one buy operation should succeed with the same payment reference", 1, successCount);
+        Assert.assertEquals("Other operations should fail", numberOfThreads - 1, failureCount);
+        
+        // Step 13: Verify that failed operations have appropriate error codes
+        List<BuyResult> failedResults = results.stream().filter(r -> !r.success).toList();
+        for (BuyResult failedResult : failedResults) {
+            log.info("Failed thread {}: error code = {}", failedResult.threadId, failedResult.errorCode);
+            // Common error codes for duplicate payment reference: REF_NUMBER_USED_BEFORE, etc.
+            Assert.assertEquals("Failed operation should have a valid error code", StatusService.REF_NUMBER_USED_BEFORE, failedResult.errorCode);
+        }
+        
+        log.info("Concurrent paymentId test completed successfully");
+    }
+
+    /**
+     * Comprehensive test for both concurrency scenarios:
+     * Scenario 1: Two different UUIDs with same refNumber sent simultaneously
+     * Scenario 2: Same UUID sent to method simultaneously
+     * This test runs both scenarios in sequence to verify proper concurrency control.
+     */
+    @Test
+    @Order(59)
+    @DisplayName("comprehensive concurrent buy test - both scenarios")
+    void comprehensiveConcurrentBuyTest() throws Exception {
+        log.info("start comprehensiveConcurrentBuyTest");
+        
+        // Common setup
+        String price = "100000";
+        String quantity = "0.2";
+        String merchantId = "1";
+        String commission = "1000";
+        String commissionType = "RIAL";
+        String currency = "GOLD";
+        String sign = "";
+        String additionalData = "comprehensive concurrent test";
+        
+        // Clear limitations
+        walletBuyLimitationService.deleteAll();
+        
+        // Get account number (only GOLD needed for buyDirect)
+        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.GOLD);
+        
+        // Setup sufficient merchant balance (no cashIn needed for buyDirect)
+        increaseMerchantBalance("20.0", WalletAccountCurrencyService.GOLD, "1111111111");
+        
+        // SCENARIO 1: Different UUIDs with same refNumber
+        log.info("Testing Scenario 1: Different UUIDs with same refNumber");
+        testScenario1_DifferentUuidsWithSameRefNumber(price, quantity, merchantId, commission, commissionType, currency, sign, additionalData, walletAccountObjectOptional);
+        
+        // Wait a bit between scenarios
+        Thread.sleep(1000);
+        
+        // SCENARIO 2: Same UUID with different refNumbers
+        log.info("Testing Scenario 2: Same UUID with different refNumbers");
+        testScenario2_SameUuidWithDifferentRefNumbers(price, quantity, merchantId, commission, commissionType, currency, sign, additionalData, walletAccountObjectOptional);
+        
+        log.info("Comprehensive concurrent test completed successfully");
+    }
+
+    /**
+     * Test Scenario 1: Two different UUIDs with same refNumber sent simultaneously
+     * This should fail for all but one transaction due to duplicate payment reference
+     */
+    private void testScenario1_DifferentUuidsWithSameRefNumber(String price, String quantity, String merchantId, 
+            String commission, String commissionType, String currency, String sign, String additionalData,
+            WalletAccountObject walletAccountObjectOptional) throws Exception {
+        
+        log.info("Executing Scenario 1: Different UUIDs with same refNumber");
+        
+        int numberOfThreads = 3;
+        String sharedRefNumber = "SCENARIO1_" + new Date().getTime();
+        
+        // Generate different UUIDs for each thread
+        List<String> uniqueIdentifiers = new ArrayList<>();
+        for (int i = 0; i < numberOfThreads; i++) {
+            BaseResponse<UuidResponse> uuidResponse = generateBuyUuid(mockMvc, ACCESS_TOKEN, walletAccountObjectOptional.getAccountNumber(), price, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusService.SUCCESSFUL, true, merchantId, "0.001", currency);
+            uniqueIdentifiers.add(uuidResponse.getData().getUniqueIdentifier());
+        }
+        
+        CountDownLatch latch = new CountDownLatch(numberOfThreads);
+        List<BuyResult> results = new ArrayList<>();
+        List<Thread> threads = new ArrayList<>();
+        
+        // Execute concurrent requests with different UUIDs but same refNumber
+        for (int i = 0; i < numberOfThreads; i++) {
+            final int threadId = i;
+            final String uniqueIdentifier = uniqueIdentifiers.get(i);
+            
+            Thread thread = new Thread(() -> {
+                try {
+                    BaseResponse<PurchaseResponse> response = buyDirectWithoutCheckResult(mockMvc, sharedRefNumber, ACCESS_TOKEN, uniqueIdentifier, quantity, price, commissionType, commission, NATIONAL_CODE_CORRECT, currency, merchantId, walletAccountObjectOptional.getAccountNumber(), sign, additionalData + "_scenario1_" + threadId);
+                    
+                    BuyResult result = new BuyResult();
+                    result.threadId = threadId;
+                    result.success = response.getSuccess();
+                    result.errorCode = response.getSuccess() ? StatusService.SUCCESSFUL : response.getErrorDetail().getCode();
+                    result.response = response;
+                    
+                    synchronized (results) {
+                        results.add(result);
+                        log.info("Scenario 1 - Thread {} added result. Collection size now: {}", threadId, results.size());
+                    }
+                    
+                } catch (Exception e) {
+                    log.error("Scenario 1 - Thread {} encountered exception: {}", threadId, e.getMessage());
+                    BuyResult result = new BuyResult();
+                    result.threadId = threadId;
+                    result.success = false;
+                    result.errorCode = -999;
+                    result.exception = e;
+                    synchronized (results) {
+                        results.add(result);
+                        log.info("Scenario 1 - Thread {} added exception result. Collection size now: {}", threadId, results.size());
+                    }
+                } finally {
+                    latch.countDown();
+                    log.info("Scenario 1 - Thread {} countDown called", threadId);
+                }
+            });
+            
+            threads.add(thread);
+        }
+        
+        // Start all threads
+        log.info("Starting {} threads for Scenario 1...", numberOfThreads);
+        for (Thread thread : threads) {
+            thread.start();
+        }
+        
+        latch.await();
+        
+        // Analyze results for Scenario 1
+        long successCount = results.stream().filter(r -> r.success).count();
+        long failureCount = results.stream().filter(r -> !r.success).count();
+        
+        log.info("Scenario 1 results: {} successes, {} failures out of {} threads", successCount, failureCount, numberOfThreads);
+        logDetailedResults(new ConcurrentLinkedQueue<>(results), "Scenario 1 - Different UUIDs, Same RefNumber");
+        
+        // Verify that only one transaction succeeded (due to duplicate refNumber prevention)
+        Assert.assertEquals("Scenario 1: Only one buy operation should succeed with the same refNumber", 1, successCount);
+        Assert.assertEquals("Scenario 1: Other operations should fail", numberOfThreads - 1, failureCount);
+        
+        // Verify failed operations have appropriate error codes
+        List<BuyResult> failedResults = results.stream().filter(r -> !r.success).toList();
+        for (BuyResult failedResult : failedResults) {
+            log.debug("Scenario 1 - Thread {}: error code = {}, exception = {}", 
+                failedResult.threadId, failedResult.errorCode, 
+                failedResult.exception != null ? failedResult.exception.getMessage() : "none");
+            Assert.assertTrue("Scenario 1: Failed operation should have error code indicating duplicate refNumber", 
+                failedResult.errorCode == StatusService.REF_NUMBER_USED_BEFORE && failedResult.errorCode > 0);
+        }
+    }
+
+    /**
+     * Test Scenario 2: Same UUID sent to method simultaneously
+     * This should fail for all but one transaction due to UUID reuse
+     */
+    private void testScenario2_SameUuidWithDifferentRefNumbers(String price, String quantity, String merchantId,
+            String commission, String commissionType, String currency, String sign, String additionalData,
+            WalletAccountObject walletAccountObjectOptional) throws Exception {
+        
+        log.info("Executing Scenario 2: Same UUID with different refNumbers");
+        
+        int numberOfThreads = 3;
+        
+        // Generate single UUID for all threads
+        BaseResponse<UuidResponse> uuidResponse = generateBuyUuid(mockMvc, ACCESS_TOKEN, walletAccountObjectOptional.getAccountNumber(), price, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusService.SUCCESSFUL, true, merchantId, "0.001", currency);
+        String sharedUniqueIdentifier = uuidResponse.getData().getUniqueIdentifier();
+        
+        CountDownLatch latch = new CountDownLatch(numberOfThreads);
+        List<BuyResult> results = new ArrayList<>();
+        List<Thread> threads = new ArrayList<>();
+        
+        // Execute concurrent requests with same UUID but different refNumbers
+        for (int i = 0; i < numberOfThreads; i++) {
+            final int threadId = i;
+            
+            Thread thread = new Thread(() -> {
+                try {
+                    String threadRefNumber = "SCENARIO2_" + new Date().getTime() + "_thread_" + threadId;
+                    BaseResponse<PurchaseResponse> response = buyDirectWithoutCheckResult(mockMvc, threadRefNumber, ACCESS_TOKEN, sharedUniqueIdentifier, quantity, price, commissionType, commission, NATIONAL_CODE_CORRECT, currency, merchantId, walletAccountObjectOptional.getAccountNumber(), sign, additionalData + "_scenario2_" + threadId);
+                    
+                    BuyResult result = new BuyResult();
+                    result.threadId = threadId;
+                    result.success = response.getSuccess();
+                    result.errorCode = response.getSuccess() ? StatusService.SUCCESSFUL : response.getErrorDetail().getCode();
+                    result.response = response;
+                    
+                    synchronized (results) {
+                        results.add(result);
+                        log.info("Scenario 2 - Thread {} added result. Collection size now: {}", threadId, results.size());
+                    }
+                    
+                } catch (Exception e) {
+                    log.error("Scenario 2 - Thread {} encountered exception: {}", threadId, e.getMessage());
+                    BuyResult result = new BuyResult();
+                    result.threadId = threadId;
+                    result.success = false;
+                    result.errorCode = -999;
+                    result.exception = e;
+                    synchronized (results) {
+                        results.add(result);
+                        log.info("Scenario 2 - Thread {} added exception result. Collection size now: {}", threadId, results.size());
+                    }
+                } finally {
+                    latch.countDown();
+                    log.info("Scenario 2 - Thread {} countDown called", threadId);
+                }
+            });
+            
+            threads.add(thread);
+        }
+        
+        // Start all threads
+        log.info("Starting {} threads for Scenario 2...", numberOfThreads);
+        for (Thread thread : threads) {
+            thread.start();
+        }
+        
+        latch.await();
+        
+        // Analyze results for Scenario 2
+        long successCount = results.stream().filter(r -> r.success).count();
+        long failureCount = results.stream().filter(r -> !r.success).count();
+        
+        log.info("Scenario 2 results: {} successes, {} failures out of {} threads", successCount, failureCount, numberOfThreads);
+        logDetailedResults(new ConcurrentLinkedQueue<>(results), "Scenario 2 - Same UUID, Different RefNumbers");
+        
+        // Verify that only one transaction succeeded (due to UUID reuse prevention)
+        Assert.assertEquals("Scenario 2: Only one buy operation should succeed with the same UUID", 1, successCount);
+        Assert.assertEquals("Scenario 2: Other operations should fail", numberOfThreads - 1, failureCount);
+        
+        // Verify failed operations have appropriate error codes
+        List<BuyResult> failedResults = results.stream().filter(r -> !r.success).toList();
+        for (BuyResult failedResult : failedResults) {
+            log.debug("Scenario 2 - Thread {}: error code = {}, exception = {}", 
+                failedResult.threadId, failedResult.errorCode, 
+                failedResult.exception != null ? failedResult.exception.getMessage() : "none");
+            Assert.assertTrue("Scenario 2: Failed operation should have error code indicating UUID reuse",
+                    failedResult.errorCode == StatusService.DUPLICATE_UUID && failedResult.errorCode > 0);
+        }
+    }
+    
+    /**
+     * Helper method to log detailed results of concurrent operations for debugging
+     */
+    private void logDetailedResults(ConcurrentLinkedQueue<BuyResult> results, String testName) {
+        log.info("=== Detailed Results for {} ===", testName);
+        
+        // Log successful results
+        List<BuyResult> successfulResults = results.stream().filter(r -> r.success).toList();
+        for (BuyResult result : successfulResults) {
+            log.info("✓ Thread {}: SUCCESS - Transaction completed successfully", result.threadId);
+            if (result.response != null && result.response.getData() != null) {
+                log.debug("  └─ Response data: {}", result.response.getData());
+            }
+        }
+        
+        // Log failed results
+        List<BuyResult> failedResults = results.stream().filter(r -> !r.success).toList();
+        for (BuyResult result : failedResults) {
+            log.info("✗ Thread {}: FAILED - Error code: {}", result.threadId, result.errorCode);
+            if (result.exception != null) {
+                log.debug("  └─ Exception: {}", result.exception.getMessage());
+            }
+            if (result.response != null && result.response.getErrorDetail() != null) {
+                log.debug("  └─ Error detail: {}", result.response.getErrorDetail());
+            }
+        }
+        
+        log.info("=== End of Detailed Results ===");
+    }
+
+    /**
+     * Helper class to store the results of concurrent buy operations.
+     * This class captures all relevant information from each concurrent thread execution
+     * for analysis, debugging, and test validation.
+     */
+    private static class BuyResult {
+        /** The ID of the thread that executed this operation */
+        int threadId;
+        
+        /** Whether the operation was successful */
+        boolean success;
+        
+        /** The error code returned (0 for success, positive for specific errors) */
+        int errorCode;
+        
+        /** The complete response object from the buyDirect operation */
+        BaseResponse<PurchaseResponse> response;
+        
+        /** Any exception that occurred during execution */
+        Exception exception;
+        
+        @Override
+        public String toString() {
+            return String.format("BuyResult{threadId=%d, success=%s, errorCode=%d, hasException=%s}", 
+                threadId, success, errorCode, exception != null);
+        }
     }
 
     /*@Test

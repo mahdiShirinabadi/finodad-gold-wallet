@@ -218,6 +218,16 @@ public class WalletApplicationTests {
         return response;
     }
 
+    public String performTestWithoutCheckResult(MockMvc mockMvc, MockHttpServletRequestBuilder getRequest) throws Exception {
+
+        MvcResult mvcResult = mockMvc.perform(getRequest)
+                .andDo(print())
+                .andReturn();
+        String response = mvcResult.getResponse().getContentAsString(StandardCharsets.UTF_8);
+        log.info("finish with response({})", response);
+        return response;
+    }
+
     public BaseResponse<ObjectUtils.Null> logout(MockMvc mockMvc, String accessToken, HttpStatus httpStatus, int errorCode, boolean success) throws Exception {
         MockHttpServletRequestBuilder postRequest = buildPostRequest(accessToken, LOGOUT_PATH);
         String response = performTest(mockMvc, postRequest, httpStatus, success, errorCode);
@@ -378,6 +388,27 @@ public class WalletApplicationTests {
 
         MockHttpServletRequestBuilder postRequest = buildPostRequest(token, BUY_DIRECT_IN_PATH, mapToJson(requestJson));
         String response = performTest(mockMvc, postRequest, httpStatus, success, errorCode);
+        TypeReference<BaseResponse<PurchaseResponse>> typeReference = new TypeReference<>() {
+        };
+        return objectMapper.readValue(response, typeReference);
+    }
+
+    public BaseResponse<PurchaseResponse> buyDirectWithoutCheckResult(MockMvc mockMvc, String refNumber, String token, String uniqueIdentifier, String quantity, String price, String commissionCurrency, String commission, String nationalCode, String currency, String merchantId, String walletAccountNumber, String sign, String additionalData) throws Exception {
+        BuyDirectWalletRequestJson requestJson = new BuyDirectWalletRequestJson();
+        requestJson.setUniqueIdentifier(uniqueIdentifier);
+        requestJson.setQuantity(quantity);
+        requestJson.setTotalPrice(price);
+        requestJson.setCommissionObject(new CommissionObject(commissionCurrency, commission));
+        requestJson.setNationalCode(nationalCode);
+        requestJson.setCurrency(currency);
+        requestJson.setMerchantId(merchantId);
+        requestJson.setWalletAccountNumber(walletAccountNumber);
+        requestJson.setAdditionalData(additionalData);
+        requestJson.setSign(sign);
+        requestJson.setRefNumber(refNumber);
+
+        MockHttpServletRequestBuilder postRequest = buildPostRequest(token, BUY_DIRECT_IN_PATH, mapToJson(requestJson));
+        String response = performTestWithoutCheckResult(mockMvc, postRequest);
         TypeReference<BaseResponse<PurchaseResponse>> typeReference = new TypeReference<>() {
         };
         return objectMapper.readValue(response, typeReference);
