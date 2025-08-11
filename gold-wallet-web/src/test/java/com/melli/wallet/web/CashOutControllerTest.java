@@ -23,7 +23,13 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
+import java.math.BigDecimal;
 import java.util.Date;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 
@@ -610,8 +616,343 @@ class CashOutControllerTest extends WalletApplicationTests {
      * - Attempts to generate UUID with invalid account number
      * - Expects INPUT_PARAMETER_NOT_VALID error
      */
+    /**
+     * Test concurrent cash out operations with same UUID to ensure proper concurrency control.
+     * This test verifies that when the same UUID is used simultaneously, only one operation succeeds.
+     */
     @Test
-    @Order(33)
+    @Order(34)
+    @DisplayName("concurrent cash out operations with same UUID")
+    void concurrentCashOutWithSameUuid() throws Exception {
+        log.info("=== Starting Concurrent Cash Out Test with Same UUID ===");
+        
+        // Setup
+        String amount = "100000";
+        String iban = VALID_IBAN;
+        String sign = VALID_SIGN;
+        String additionalData = "concurrent cash out test";
+        
+        // Get account and setup balance
+        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.RIAL);
+        
+        // Ensure user has enough RIAL balance for cash out
+        WalletAccountEntity rialWalletAccountEntity = walletAccountService.findByAccountNumber(walletAccountObjectOptional.getAccountNumber());
+        walletAccountService.increaseBalance(rialWalletAccountEntity.getId(), new BigDecimal("500000"));
+        
+        // Generate UUID
+        BaseResponse<UuidResponse> uuidResponse = generateCashOutUuid(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, amount, walletAccountObjectOptional.getAccountNumber(), HttpStatus.OK, StatusService.SUCCESSFUL, true);
+        String sharedUniqueIdentifier = uuidResponse.getData().getUniqueIdentifier();
+        log.info("Generated UUID: {}", sharedUniqueIdentifier);
+        
+        // Test with 2 threads using the same UUID
+        final CountDownLatch latch = new CountDownLatch(2);
+        final List<CashOutResult> results = new ArrayList<>();
+        
+        // Thread 1
+        Thread thread1 = new Thread(() -> {
+            try {
+                log.info("Cash Out Thread 1 starting...");
+                BaseResponse<CashOutResponse> response1 = cashOutWithoutCheckResult(mockMvc, ACCESS_TOKEN, sharedUniqueIdentifier, amount, NATIONAL_CODE_CORRECT, walletAccountObjectOptional.getAccountNumber(), iban, sign, additionalData + "_1");
+                CashOutResult result1 = new CashOutResult();
+                result1.threadId = 1;
+                result1.success = response1.getSuccess();
+                result1.errorCode = response1.getSuccess() ? StatusService.SUCCESSFUL : response1.getErrorDetail().getCode();
+                result1.response = response1;
+                
+                synchronized (results) {
+                    results.add(result1);
+                    log.info("Cash Out Thread 1 added result to collection. Collection size now: {}", results.size());
+                }
+                log.info("Cash Out Thread 1 completed: Success={}, ErrorCode={}", result1.success, result1.errorCode);
+                
+            } catch (Exception e) {
+                log.error("Cash Out Thread 1 exception: {}", e.getMessage(), e);
+                CashOutResult result1 = new CashOutResult();
+                result1.threadId = 1;
+                result1.success = false;
+                result1.errorCode = -999;
+                result1.exception = e;
+                synchronized (results) {
+                    results.add(result1);
+                    log.info("Cash Out Thread 1 added exception result to collection. Collection size now: {}", results.size());
+                }
+            } finally {
+                latch.countDown();
+                log.info("Cash Out Thread 1 countDown called");
+            }
+        });
+        
+        // Thread 2
+        Thread thread2 = new Thread(() -> {
+            try {
+                log.info("Cash Out Thread 2 starting...");
+                BaseResponse<CashOutResponse> response2 = cashOutWithoutCheckResult(mockMvc, ACCESS_TOKEN, sharedUniqueIdentifier, amount, NATIONAL_CODE_CORRECT, walletAccountObjectOptional.getAccountNumber(),iban, sign, additionalData + "_2");
+                
+                CashOutResult result2 = new CashOutResult();
+                result2.threadId = 2;
+                result2.success = response2.getSuccess();
+                result2.errorCode = response2.getSuccess() ? StatusService.SUCCESSFUL : response2.getErrorDetail().getCode();
+                result2.response = response2;
+                
+                synchronized (results) {
+                    results.add(result2);
+                    log.info("Cash Out Thread 2 added result to collection. Collection size now: {}", results.size());
+                }
+                log.info("Cash Out Thread 2 completed: Success={}, ErrorCode={}", result2.success, result2.errorCode);
+                
+            } catch (Exception e) {
+                log.error("Cash Out Thread 2 exception: {}", e.getMessage(), e);
+                CashOutResult result2 = new CashOutResult();
+                result2.threadId = 2;
+                result2.success = false;
+                result2.errorCode = -999;
+                result2.exception = e;
+                synchronized (results) {
+                    results.add(result2);
+                    log.info("Cash Out Thread 2 added exception result to collection. Collection size now: {}", results.size());
+                }
+            } finally {
+                latch.countDown();
+                log.info("Cash Out Thread 2 countDown called");
+            }
+        });
+        
+        // Start both threads
+        log.info("Starting both cash out threads...");
+        thread1.start();
+        thread2.start();
+        
+        // Wait and analyze
+        log.info("Waiting for threads to complete...");
+        latch.await();
+        
+        log.info("All threads completed, Results collection size: {}", results.size());
+        
+        // Log all results
+        for (CashOutResult result : results) {
+            log.info("Result: Thread={}, Success={}, ErrorCode={}", result.threadId, result.success, result.errorCode);
+        }
+        
+        // Validation
+        Assert.assertTrue("Should have exactly 2 results", results.size() == 2);
+        
+        // Check concurrency behavior: one should succeed, one should fail with duplicate UUID error
+        long successCount = results.stream().filter(r -> r.success).count();
+        long failureCount = results.stream().filter(r -> !r.success).count();
+        
+        log.info("Success count: {}, Failure count: {}", successCount, failureCount);
+        Assert.assertTrue("Should have exactly 1 success and 1 failure", successCount == 1 && failureCount == 1);
+        
+        // Verify the failure is due to duplicate UUID
+        CashOutResult failedResult = results.stream().filter(r -> !r.success).findFirst().orElse(null);
+        Assert.assertNotNull("Should have a failed result", failedResult);
+        Assert.assertEquals(StatusService.DUPLICATE_UUID, failedResult.errorCode);
+        log.info("Failed result error code: {}", failedResult.errorCode);
+        
+        log.info("=== Concurrent Cash Out Test Completed ===");
+    }
+
+    /**
+     * Test concurrent cash out UUID generation to ensure proper concurrency control.
+     * This test verifies that multiple UUID generation requests work correctly.
+     */
+    @Test
+    @Order(35)
+    @DisplayName("concurrent cash out UUID generation")
+    void concurrentCashOutUuidGeneration() throws Exception {
+        log.info("=== Starting Concurrent Cash Out UUID Generation Test ===");
+        
+        // Setup
+        String amount = "100000";
+        String iban = VALID_IBAN;
+        
+        // Get account
+        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.RIAL);
+        
+        // Test with 3 threads generating UUIDs simultaneously
+        final CountDownLatch latch = new CountDownLatch(3);
+        final List<CashOutUuidResult> results = new ArrayList<>();
+        
+        // Thread 1
+        Thread thread1 = new Thread(() -> {
+            try {
+                log.info("Cash Out UUID Thread 1 starting...");
+                BaseResponse<UuidResponse> response1 = generateCashOutUuid(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, amount, walletAccountObjectOptional.getAccountNumber(), HttpStatus.OK, StatusService.SUCCESSFUL, true);
+                
+                CashOutUuidResult result1 = new CashOutUuidResult();
+                result1.threadId = 1;
+                result1.success = response1.getSuccess();
+                result1.errorCode = response1.getSuccess() ? StatusService.SUCCESSFUL : response1.getErrorDetail().getCode();
+                result1.uuid = response1.getSuccess() ? response1.getData().getUniqueIdentifier() : null;
+                result1.response = response1;
+                
+                synchronized (results) {
+                    results.add(result1);
+                    log.info("Cash Out UUID Thread 1 added result to collection. Collection size now: {}", results.size());
+                }
+                log.info("Cash Out UUID Thread 1 completed: Success={}, ErrorCode={}, UUID={}", result1.success, result1.errorCode, result1.uuid);
+                
+            } catch (Exception e) {
+                log.error("Cash Out UUID Thread 1 exception: {}", e.getMessage(), e);
+                CashOutUuidResult result1 = new CashOutUuidResult();
+                result1.threadId = 1;
+                result1.success = false;
+                result1.errorCode = -999;
+                result1.exception = e;
+                synchronized (results) {
+                    results.add(result1);
+                    log.info("Cash Out UUID Thread 1 added exception result to collection. Collection size now: {}", results.size());
+                }
+            } finally {
+                latch.countDown();
+                log.info("Cash Out UUID Thread 1 countDown called");
+            }
+        });
+        
+        // Thread 2
+        Thread thread2 = new Thread(() -> {
+            try {
+                log.info("Cash Out UUID Thread 2 starting...");
+                BaseResponse<UuidResponse> response2 = generateCashOutUuid(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, amount, walletAccountObjectOptional.getAccountNumber(), HttpStatus.OK, StatusService.SUCCESSFUL, true);
+                
+                CashOutUuidResult result2 = new CashOutUuidResult();
+                result2.threadId = 2;
+                result2.success = response2.getSuccess();
+                result2.errorCode = response2.getSuccess() ? StatusService.SUCCESSFUL : response2.getErrorDetail().getCode();
+                result2.uuid = response2.getSuccess() ? response2.getData().getUniqueIdentifier() : null;
+                result2.response = response2;
+                
+                synchronized (results) {
+                    results.add(result2);
+                    log.info("Cash Out UUID Thread 2 added result to collection. Collection size now: {}", results.size());
+                }
+                log.info("Cash Out UUID Thread 2 completed: Success={}, ErrorCode={}, UUID={}", result2.success, result2.errorCode, result2.uuid);
+                
+            } catch (Exception e) {
+                log.error("Cash Out UUID Thread 2 exception: {}", e.getMessage(), e);
+                CashOutUuidResult result2 = new CashOutUuidResult();
+                result2.threadId = 2;
+                result2.success = false;
+                result2.errorCode = -999;
+                result2.exception = e;
+                synchronized (results) {
+                    results.add(result2);
+                    log.info("Cash Out UUID Thread 2 added exception result to collection. Collection size now: {}", results.size());
+                }
+            } finally {
+                latch.countDown();
+                log.info("Cash Out UUID Thread 2 countDown called");
+            }
+        });
+        
+        // Thread 3
+        Thread thread3 = new Thread(() -> {
+            try {
+                log.info("Cash Out UUID Thread 3 starting...");
+                BaseResponse<UuidResponse> response3 = generateCashOutUuid(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, amount, walletAccountObjectOptional.getAccountNumber(), HttpStatus.OK, StatusService.SUCCESSFUL, true);
+                
+                CashOutUuidResult result3 = new CashOutUuidResult();
+                result3.threadId = 3;
+                result3.success = response3.getSuccess();
+                result3.errorCode = response3.getSuccess() ? StatusService.SUCCESSFUL : response3.getErrorDetail().getCode();
+                result3.uuid = response3.getSuccess() ? response3.getData().getUniqueIdentifier() : null;
+                result3.response = response3;
+                
+                synchronized (results) {
+                    results.add(result3);
+                    log.info("Cash Out UUID Thread 3 added result to collection. Collection size now: {}", results.size());
+                }
+                log.info("Cash Out UUID Thread 3 completed: Success={}, ErrorCode={}, UUID={}", result3.success, result3.errorCode, result3.uuid);
+                
+            } catch (Exception e) {
+                log.error("Cash Out UUID Thread 3 exception: {}", e.getMessage(), e);
+                CashOutUuidResult result3 = new CashOutUuidResult();
+                result3.threadId = 3;
+                result3.success = false;
+                result3.errorCode = -999;
+                result3.exception = e;
+                synchronized (results) {
+                    results.add(result3);
+                    log.info("Cash Out UUID Thread 3 added exception result to collection. Collection size now: {}", results.size());
+                }
+            } finally {
+                latch.countDown();
+                log.info("Cash Out UUID Thread 3 countDown called");
+            }
+        });
+        
+        // Start all threads
+        log.info("Starting all cash out UUID generation threads...");
+        thread1.start();
+        thread2.start();
+        thread3.start();
+        
+        // Wait and analyze
+        log.info("Waiting for threads to complete...");
+        latch.await();
+        
+        log.info("All threads completed, Results collection size: {}", results.size());
+        
+        // Log all results
+        for (CashOutUuidResult result : results) {
+            log.info("Result: Thread={}, Success={}, ErrorCode={}, UUID={}", result.threadId, result.success, result.errorCode, result.uuid);
+        }
+        
+        // Validation
+        Assert.assertTrue("Should have exactly 3 results", results.size() == 3);
+        
+        // All should succeed and generate different UUIDs
+        long successCount = results.stream().filter(r -> r.success).count();
+        Assert.assertEquals("All UUID generation should succeed", 3, successCount);
+        
+        // Verify all UUIDs are different
+        List<String> uuids = results.stream()
+                .filter(r -> r.success && r.uuid != null)
+                .map(r -> r.uuid)
+                .toList();
+        Assert.assertEquals("Should have 3 unique UUIDs", 3, uuids.size());
+        Assert.assertEquals("All UUIDs should be unique", 3, uuids.stream().distinct().count());
+        
+        log.info("=== Concurrent Cash Out UUID Generation Test Completed ===");
+    }
+
+    /**
+     * Result class for capturing cash out operation results from concurrent threads
+     */
+    private static class CashOutResult {
+        int threadId;
+        boolean success;
+        int errorCode;
+        BaseResponse<CashOutResponse> response;
+        Exception exception;
+
+        @Override
+        public String toString() {
+            return String.format("CashOutResult{threadId=%d, success=%s, errorCode=%d, hasResponse=%s, hasException=%s}",
+                    threadId, success, errorCode, response != null, exception != null);
+        }
+    }
+
+    /**
+     * Result class for capturing cash out UUID generation results from concurrent threads
+     */
+    private static class CashOutUuidResult {
+        int threadId;
+        boolean success;
+        int errorCode;
+        String uuid;
+        BaseResponse<UuidResponse> response;
+        Exception exception;
+
+        @Override
+        public String toString() {
+            return String.format("CashOutUuidResult{threadId=%d, success=%s, errorCode=%d, uuid=%s, hasResponse=%s, hasException=%s}",
+                    threadId, success, errorCode, uuid, response != null, exception != null);
+        }
+    }
+
+    @Test
+    @Order(36)
     @DisplayName("cashOutFail-InvalidAccountNumber")
     void cashOutFailInvalidAccountNumber() throws Exception {
         log.info("start cashOutFailInvalidAccountNumber test");

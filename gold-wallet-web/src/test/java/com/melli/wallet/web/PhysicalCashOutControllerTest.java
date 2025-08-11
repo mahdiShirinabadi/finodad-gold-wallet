@@ -25,6 +25,9 @@ import org.springframework.web.context.WebApplicationContext;
 import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
+import java.util.ArrayList;
+import java.util.concurrent.CountDownLatch;
+
 
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 
@@ -272,7 +275,7 @@ class PhysicalCashOutControllerTest extends WalletApplicationTests {
         WalletAccountEntity goldWalletAccountEntity = walletAccountService.findByAccountNumber(goldAccountNumber);
         String physicalCashOutValue = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.ENABLE_PHYSICAL_CASH_OUT, goldAccountNumber);
         if("false".equalsIgnoreCase(physicalCashOutValue)){
-            setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_PHYSICAL_CASH_OUT, goldWalletAccountEntity, "true"); //"test physicalCashOutSuccess");
+            setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_PHYSICAL_CASH_OUT, goldWalletAccountEntity, "true");
         }
 
         // Step 4: Store original MAX_QUANTITY_PHYSICAL_CASH_OUT value for restoration
@@ -337,7 +340,7 @@ class PhysicalCashOutControllerTest extends WalletApplicationTests {
         WalletAccountEntity walletAccountEntity = walletAccountService.findByAccountNumber(accountNumber);
         String physicalCashOutValue = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.ENABLE_PHYSICAL_CASH_OUT, accountNumber);
         if("false".equalsIgnoreCase(physicalCashOutValue)){
-            setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_PHYSICAL_CASH_OUT, walletAccountEntity, "true"); //"test physicalCashOutFailInvalidCommissionCurrency");
+            setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_PHYSICAL_CASH_OUT, walletAccountEntity, "true");
         }
         
         // Generate UUID for physical cash out operation
@@ -350,6 +353,7 @@ class PhysicalCashOutControllerTest extends WalletApplicationTests {
         Assert.assertSame(StatusService.COMMISSION_CURRENCY_NOT_VALID, response.getErrorDetail().getCode());
     }
 
+    /*
     /**
      * Test physical cash out failure with invalid sign.
      * This method is currently commented out but would:
@@ -409,7 +413,7 @@ class PhysicalCashOutControllerTest extends WalletApplicationTests {
         WalletAccountEntity walletAccountEntity = walletAccountService.findByAccountNumber(accountNumber);
         String physicalCashOutValue = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.ENABLE_PHYSICAL_CASH_OUT, accountNumber);
         if("false".equalsIgnoreCase(physicalCashOutValue)){
-            setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_PHYSICAL_CASH_OUT, walletAccountEntity, "true"); //"test physicalCashOutFailBalanceNoEnough");
+            setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_PHYSICAL_CASH_OUT, walletAccountEntity, "true");
         }
 
         // Store original MAX_QUANTITY_PHYSICAL_CASH_OUT value for restoration
@@ -462,7 +466,7 @@ class PhysicalCashOutControllerTest extends WalletApplicationTests {
         WalletAccountEntity goldWalletAccountEntity = walletAccountService.findByAccountNumber(goldAccountNumber);
         String physicalCashOutValue = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.ENABLE_PHYSICAL_CASH_OUT, goldAccountNumber);
         if("false".equalsIgnoreCase(physicalCashOutValue)){
-            setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_PHYSICAL_CASH_OUT, goldWalletAccountEntity, "true"); //"test physicalInquiryCashOutSuccess");
+            setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_PHYSICAL_CASH_OUT, goldWalletAccountEntity, "true");
         }
 
         // Step 4: Temporarily increase MAX_QUANTITY_PHYSICAL_CASH_OUT limit
@@ -486,12 +490,500 @@ class PhysicalCashOutControllerTest extends WalletApplicationTests {
      * This method:
      * - Attempts inquiry with a non-existent UUID
      * - Expects UUID_NOT_FOUND error
+     * Test concurrent physical cash out operations with same UUID to ensure proper concurrency control.
+     * This test verifies that when the same UUID is used simultaneously, only one operation succeeds.
      */
     @Test
-    @Order(51)
+    @Order(52)
+    @DisplayName("concurrent physical cash out operations with same UUID")
+    void concurrentPhysicalCashOutWithSameUuid() throws Exception {
+        log.info("=== Starting Concurrent Physical Cash Out Test with Same UUID ===");
+        
+        // Setup
+        String quantity = "5";
+        String commission = "0.1";
+        String commissionType = "GOLD";
+        String currency = "GOLD";
+        String sign = VALID_SIGN;
+        String additionalData = "concurrent physical cash out test";
+        
+        // Get account and setup balance
+        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, accessToken, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.GOLD);
+        
+        // Ensure user has enough GOLD balance for physical cash out
+        WalletAccountEntity goldWalletAccountEntity = walletAccountService.findByAccountNumber(walletAccountObjectOptional.getAccountNumber());
+        walletAccountService.increaseBalance(goldWalletAccountEntity.getId(), new BigDecimal("5"));
+        
+        // Generate UUID
+        BaseResponse<UuidResponse> uuidResponse = generatePhysicalCashOutUuid(mockMvc, accessToken, NATIONAL_CODE_CORRECT, quantity, walletAccountObjectOptional.getAccountNumber(), HttpStatus.OK, StatusService.SUCCESSFUL, true);
+        String sharedUniqueIdentifier = uuidResponse.getData().getUniqueIdentifier();
+        log.info("Generated UUID: {}", sharedUniqueIdentifier);
+        
+        // Test with 2 threads using the same UUID
+        final CountDownLatch latch = new CountDownLatch(2);
+        final List<PhysicalCashOutResult> results = new ArrayList<>();
+        
+        // Thread 1
+        Thread thread1 = new Thread(() -> {
+            try {
+                log.info("Physical Cash Out Thread 1 starting...");
+                BaseResponse<PhysicalCashOutResponse> response1 = physicalCashOutWithoutCheckResult(mockMvc, accessToken, sharedUniqueIdentifier, quantity,NATIONAL_CODE_CORRECT, walletAccountObjectOptional.getAccountNumber(), additionalData + "_1",sign,"", currency, commission,commissionType);
+                
+                PhysicalCashOutResult result1 = new PhysicalCashOutResult();
+                result1.threadId = 1;
+                result1.success = response1.getSuccess();
+                result1.errorCode = response1.getSuccess() ? StatusService.SUCCESSFUL : response1.getErrorDetail().getCode();
+                result1.response = response1;
+                
+                synchronized (results) {
+                    results.add(result1);
+                    log.info("Physical Cash Out Thread 1 added result to collection. Collection size now: {}", results.size());
+                }
+                log.info("Physical Cash Out Thread 1 completed: Success={}, ErrorCode={}", result1.success, result1.errorCode);
+                
+            } catch (Exception e) {
+                log.error("Physical Cash Out Thread 1 exception: {}", e.getMessage(), e);
+                PhysicalCashOutResult result1 = new PhysicalCashOutResult();
+                result1.threadId = 1;
+                result1.success = false;
+                result1.errorCode = -999;
+                result1.exception = e;
+                synchronized (results) {
+                    results.add(result1);
+                    log.info("Physical Cash Out Thread 1 added exception result to collection. Collection size now: {}", results.size());
+                }
+            } finally {
+                latch.countDown();
+                log.info("Physical Cash Out Thread 1 countDown called");
+            }
+        });
+        
+        // Thread 2
+        Thread thread2 = new Thread(() -> {
+            try {
+                log.info("Physical Cash Out Thread 2 starting...");
+                BaseResponse<PhysicalCashOutResponse> response2 = physicalCashOutWithoutCheckResult(mockMvc, accessToken, sharedUniqueIdentifier, quantity,NATIONAL_CODE_CORRECT, walletAccountObjectOptional.getAccountNumber(), additionalData + "_2",sign,"", currency, commission,commissionType);
+                
+                PhysicalCashOutResult result2 = new PhysicalCashOutResult();
+                result2.threadId = 2;
+                result2.success = response2.getSuccess();
+                result2.errorCode = response2.getSuccess() ? StatusService.SUCCESSFUL : response2.getErrorDetail().getCode();
+                result2.response = response2;
+                
+                synchronized (results) {
+                    results.add(result2);
+                    log.info("Physical Cash Out Thread 2 added result to collection. Collection size now: {}", results.size());
+                }
+                log.info("Physical Cash Out Thread 2 completed: Success={}, ErrorCode={}", result2.success, result2.errorCode);
+                
+            } catch (Exception e) {
+                log.error("Physical Cash Out Thread 2 exception: {}", e.getMessage(), e);
+                PhysicalCashOutResult result2 = new PhysicalCashOutResult();
+                result2.threadId = 2;
+                result2.success = false;
+                result2.errorCode = -999;
+                result2.exception = e;
+                synchronized (results) {
+                    results.add(result2);
+                    log.info("Physical Cash Out Thread 2 added exception result to collection. Collection size now: {}", results.size());
+                }
+            } finally {
+                latch.countDown();
+                log.info("Physical Cash Out Thread 2 countDown called");
+            }
+        });
+        
+        // Start both threads
+        log.info("Starting both physical cash out threads...");
+        thread1.start();
+        thread2.start();
+        
+        // Wait and analyze
+        log.info("Waiting for threads to complete...");
+        latch.await();
+        
+        log.info("All threads completed, Results collection size: {}", results.size());
+        
+        // Log all results
+        for (PhysicalCashOutResult result : results) {
+            log.info("Result: Thread={}, Success={}, ErrorCode={}", result.threadId, result.success, result.errorCode);
+        }
+        
+        // Validation
+        Assert.assertTrue("Should have exactly 2 results", results.size() == 2);
+        
+        // Check concurrency behavior: one should succeed, one should fail with duplicate UUID error
+        long successCount = results.stream().filter(r -> r.success).count();
+        long failureCount = results.stream().filter(r -> !r.success).count();
+        
+        log.info("Success count: {}, Failure count: {}", successCount, failureCount);
+        Assert.assertTrue("Should have exactly 1 success and 1 failure", successCount == 1 && failureCount == 1);
+        
+        // Verify the failure is due to duplicate UUID
+        PhysicalCashOutResult failedResult = results.stream().filter(r -> !r.success).findFirst().orElse(null);
+        Assert.assertNotNull("Should have a failed result", failedResult);
+        Assert.assertEquals(StatusService.DUPLICATE_UUID, failedResult.errorCode);
+        log.info("Failed result error code: {}", failedResult.errorCode);
+        
+        log.info("=== Concurrent Physical Cash Out Test Completed ===");
+    }
+
+    /**
+     * Test concurrent physical cash out UUID generation to ensure proper concurrency control.
+     * This test verifies that multiple UUID generation requests work correctly.
+     */
+    @Test
+    @Order(53)
+    @DisplayName("concurrent physical cash out on one account generation")
+    void concurrentPhysicalCashOutUuidGeneration() throws Exception {
+        log.info("=== Starting Concurrent Physical Cash Out UUID Generation Test ===");
+        
+        // Setup
+        String quantity = "5";
+        String currency = "GOLD";
+        
+        // Get account
+        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, accessToken, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.GOLD);
+        
+        // Test with 3 threads generating UUIDs simultaneously
+        final CountDownLatch latch = new CountDownLatch(3);
+        final List<PhysicalCashOutUuidResult> results = new ArrayList<>();
+        
+        // Thread 1
+        Thread thread1 = new Thread(() -> {
+            try {
+                log.info("Physical Cash Out UUID Thread 1 starting...");
+                BaseResponse<UuidResponse> response1 = generatePhysicalCashOutUuid(mockMvc, accessToken, NATIONAL_CODE_CORRECT, quantity, walletAccountObjectOptional.getAccountNumber(), HttpStatus.OK, StatusService.SUCCESSFUL, true);
+                
+                PhysicalCashOutUuidResult result1 = new PhysicalCashOutUuidResult();
+                result1.threadId = 1;
+                result1.success = response1.getSuccess();
+                result1.errorCode = response1.getSuccess() ? StatusService.SUCCESSFUL : response1.getErrorDetail().getCode();
+                result1.uuid = response1.getSuccess() ? response1.getData().getUniqueIdentifier() : null;
+                result1.response = response1;
+                
+                synchronized (results) {
+                    results.add(result1);
+                    log.info("Physical Cash Out UUID Thread 1 added result to collection. Collection size now: {}", results.size());
+                }
+                log.info("Physical Cash Out UUID Thread 1 completed: Success={}, ErrorCode={}, UUID={}", result1.success, result1.errorCode, result1.uuid);
+                
+            } catch (Exception e) {
+                log.error("Physical Cash Out UUID Thread 1 exception: {}", e.getMessage(), e);
+                PhysicalCashOutUuidResult result1 = new PhysicalCashOutUuidResult();
+                result1.threadId = 1;
+                result1.success = false;
+                result1.errorCode = -999;
+                result1.exception = e;
+                synchronized (results) {
+                    results.add(result1);
+                    log.info("Physical Cash Out UUID Thread 1 added exception result to collection. Collection size now: {}", results.size());
+                }
+            } finally {
+                latch.countDown();
+                log.info("Physical Cash Out UUID Thread 1 countDown called");
+            }
+        });
+        
+        // Thread 2
+        Thread thread2 = new Thread(() -> {
+            try {
+                log.info("Physical Cash Out UUID Thread 2 starting...");
+                BaseResponse<UuidResponse> response2 = generatePhysicalCashOutUuid(mockMvc, accessToken, NATIONAL_CODE_CORRECT, quantity, walletAccountObjectOptional.getAccountNumber(), HttpStatus.OK, StatusService.SUCCESSFUL, true);
+                
+                PhysicalCashOutUuidResult result2 = new PhysicalCashOutUuidResult();
+                result2.threadId = 2;
+                result2.success = response2.getSuccess();
+                result2.errorCode = response2.getSuccess() ? StatusService.SUCCESSFUL : response2.getErrorDetail().getCode();
+                result2.uuid = response2.getSuccess() ? response2.getData().getUniqueIdentifier() : null;
+                result2.response = response2;
+                
+                synchronized (results) {
+                    results.add(result2);
+                    log.info("Physical Cash Out UUID Thread 2 added result to collection. Collection size now: {}", results.size());
+                }
+                log.info("Physical Cash Out UUID Thread 2 completed: Success={}, ErrorCode={}, UUID={}", result2.success, result2.errorCode, result2.uuid);
+                
+            } catch (Exception e) {
+                log.error("Physical Cash Out UUID Thread 2 exception: {}", e.getMessage(), e);
+                PhysicalCashOutUuidResult result2 = new PhysicalCashOutUuidResult();
+                result2.threadId = 2;
+                result2.success = false;
+                result2.errorCode = -999;
+                result2.exception = e;
+                synchronized (results) {
+                    results.add(result2);
+                    log.info("Physical Cash Out UUID Thread 2 added exception result to collection. Collection size now: {}", results.size());
+                }
+            } finally {
+                latch.countDown();
+                log.info("Physical Cash Out UUID Thread 2 countDown called");
+            }
+        });
+        
+        // Thread 3
+        Thread thread3 = new Thread(() -> {
+            try {
+                log.info("Physical Cash Out UUID Thread 3 starting...");
+                BaseResponse<UuidResponse> response3 = generatePhysicalCashOutUuid(mockMvc, accessToken, NATIONAL_CODE_CORRECT, quantity, walletAccountObjectOptional.getAccountNumber(), HttpStatus.OK, StatusService.SUCCESSFUL, true);
+                
+                PhysicalCashOutUuidResult result3 = new PhysicalCashOutUuidResult();
+                result3.threadId = 3;
+                result3.success = response3.getSuccess();
+                result3.errorCode = response3.getSuccess() ? StatusService.SUCCESSFUL : response3.getErrorDetail().getCode();
+                result3.uuid = response3.getSuccess() ? response3.getData().getUniqueIdentifier() : null;
+                result3.response = response3;
+                
+                synchronized (results) {
+                    results.add(result3);
+                    log.info("Physical Cash Out UUID Thread 3 added result to collection. Collection size now: {}", results.size());
+                }
+                log.info("Physical Cash Out UUID Thread 3 completed: Success={}, ErrorCode={}, UUID={}", result3.success, result3.errorCode, result3.uuid);
+                
+            } catch (Exception e) {
+                log.error("Physical Cash Out UUID Thread 3 exception: {}", e.getMessage(), e);
+                PhysicalCashOutUuidResult result3 = new PhysicalCashOutUuidResult();
+                result3.threadId = 3;
+                result3.success = false;
+                result3.errorCode = -999;
+                result3.exception = e;
+                synchronized (results) {
+                    results.add(result3);
+                    log.info("Physical Cash Out UUID Thread 3 added exception result to collection. Collection size now: {}", results.size());
+                }
+            } finally {
+                latch.countDown();
+                log.info("Physical Cash Out UUID Thread 3 countDown called");
+            }
+        });
+        
+        // Start all threads
+        log.info("Starting all physical cash out UUID generation threads...");
+        thread1.start();
+        thread2.start();
+        thread3.start();
+        
+        // Wait and analyze
+        log.info("Waiting for threads to complete...");
+        latch.await();
+        
+        log.info("All threads completed, Results collection size: {}", results.size());
+        
+        // Log all results
+        for (PhysicalCashOutUuidResult result : results) {
+            log.info("Result: Thread={}, Success={}, ErrorCode={}, UUID={}", result.threadId, result.success, result.errorCode, result.uuid);
+        }
+        
+        // Validation
+        Assert.assertEquals("Should have exactly 3 results", 3, results.size());
+        
+        // All should succeed and generate different UUIDs
+        long successCount = results.stream().filter(r -> r.success).count();
+        Assert.assertEquals("All UUID generation should succeed", 3, successCount);
+        
+        // Verify all UUIDs are different
+        List<String> uuids = results.stream()
+                .filter(r -> r.success && r.uuid != null)
+                .map(r -> r.uuid)
+                .toList();
+        Assert.assertEquals("Should have 3 unique UUIDs", 3, uuids.size());
+        Assert.assertEquals("All UUIDs should be unique", 3, uuids.stream().distinct().count());
+        
+        log.info("=== Concurrent Physical Cash Out UUID Generation Test Completed ===");
+    }
+
+
+    /**
+     * Test concurrent physical cash out UUID generation to ensure proper concurrency control.
+     * This test verifies that multiple UUID generation requests work correctly.
+     */
+    @Test
+    @Order(54)
+    @DisplayName("concurrent physical cash out one account for check balance")
+    void concurrentPhysicalCashOutGeneration() throws Exception {
+        log.info("=== Starting Concurrent Physical Cash Out UUID Generation Test ===");
+
+        // Setup
+        String quantity = "5";
+        String currency = "GOLD";
+
+        // Get account
+        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, accessToken, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, currency);
+        setupBalancesForSellToZero(walletAccountObjectOptional);
+        setupBalancesForSell(walletAccountObjectOptional,"10","1000000");
+
+        int numberOfThreads = 10;
+        // Test with 3 threads generating UUIDs simultaneously
+        final CountDownLatch latch = new CountDownLatch(numberOfThreads);
+        final List<PhysicalCashOutResult> results = new ArrayList<>();
+
+        // Generate different UUIDs for each thread
+        List<String> uniqueIdentifiers = new ArrayList<>();
+        for (int i = 0; i < numberOfThreads; i++) {
+            BaseResponse<UuidResponse> uuidResponse = generatePhysicalCashOutUuid(mockMvc, accessToken, NATIONAL_CODE_CORRECT, quantity, walletAccountObjectOptional.getAccountNumber(), HttpStatus.OK, StatusService.SUCCESSFUL, true);
+            uniqueIdentifiers.add(uuidResponse.getData().getUniqueIdentifier());
+        }
+
+        List<Thread> threads = new ArrayList<>();
+
+        for(int i=0; i< numberOfThreads;i++){
+            final int threadId = i;
+            Thread thread = new Thread(() -> {
+                try {
+                    log.info("Physical Cash Out UUID Thread 1 starting...");
+                    BaseResponse<PhysicalCashOutResponse> response = physicalCashOutWithoutCheckResult(mockMvc, accessToken, uniqueIdentifiers.get(threadId), quantity, NATIONAL_CODE_CORRECT, walletAccountObjectOptional.getAccountNumber(),"","","", currency, "0.05",currency);
+
+                    PhysicalCashOutResult result = new PhysicalCashOutResult();
+                    result.threadId = 1;
+                    result.success = response.getSuccess();
+                    result.errorCode = response.getSuccess() ? StatusService.SUCCESSFUL : response.getErrorDetail().getCode();
+                    result.response = response;
+                    result.uuid = uniqueIdentifiers.get(threadId);
+
+                    synchronized (results) {
+                        results.add(result);
+                        log.info("Physical Cash Out UUID Thread ({}) added result to collection. Collection size now: {}", threadId, results.size());
+                    }
+                    log.info("Physical Cash Out Thread ({}) completed: Success={}, ErrorCode={}", threadId, result.success, result.errorCode);
+
+                } catch (Exception e) {
+                    log.error("Physical Cash Out UUID Thread 1 exception: {}", e.getMessage(), e);
+                    PhysicalCashOutResult result = new PhysicalCashOutResult();
+                    result.threadId = threadId;
+                    result.success = false;
+                    result.errorCode = -999;
+                    result.exception = e;
+                    result.uuid = uniqueIdentifiers.get(threadId);
+                    synchronized (results) {
+                        results.add(result);
+                        log.info("Physical Cash Out Thread ({}) added exception result to collection. Collection size now: {}", threadId, results.size());
+                    }
+                } finally {
+                    latch.countDown();
+                    log.info("Physical Cash Out Thread countDown called");
+                }
+            });
+            threads.add(thread);
+        }
+
+        // Thread 1
+
+
+
+
+
+
+        // Start all threads
+        log.info("Starting all physical cash out threads...");
+        // Start all threads
+        log.info("Starting {} threads for Scenario 2...", numberOfThreads);
+        for (Thread thread : threads) {
+            thread.start();
+        }
+
+        // Wait and analyze
+        log.info("Waiting for threads to complete...");
+        latch.await();
+
+        log.info("All threads completed, Results collection size: {}", results.size());
+
+        // Log all results
+        for (PhysicalCashOutResult result : results) {
+            log.info("Result: Thread={}, Success={}, ErrorCode={}", result.threadId, result.success, result.errorCode);
+        }
+
+        // Validation
+        Assert.assertEquals("Should have exactly 10 results", 10, results.size());
+
+        // All should succeed and generate different UUIDs
+        long successCount = results.stream().filter(r -> r.success).count();
+        Assert.assertEquals("All UUID generation should succeed", 2, successCount);
+
+        // Verify failed operations have appropriate error codes
+        List<PhysicalCashOutResult> failedResults = results.stream().filter(r -> !r.success).toList();
+        for (PhysicalCashOutResult failedResult : failedResults) {
+            log.debug("Scenario 2 - Thread {}: error code = {}, exception = {}, uuid = {}",
+                    failedResult.threadId, failedResult.errorCode,
+                    failedResult.exception != null ? failedResult.exception.getMessage() : "none", failedResult.uuid);
+            Assert.assertEquals("Scenario 2: Failed operation should have error code indicating UUID reuse", StatusService.BALANCE_IS_NOT_ENOUGH, failedResult.errorCode);
+        }
+
+        log.info("=== Concurrent Physical Cash Out UUID Generation Test Completed ===");
+    }
+
+    /**
+     * Result class for capturing physical cash out operation results from concurrent threads
+     */
+    private static class PhysicalCashOutResult {
+        int threadId;
+        boolean success;
+        int errorCode;
+        String uuid;
+        BaseResponse<PhysicalCashOutResponse> response;
+        Exception exception;
+
+        @Override
+        public String toString() {
+            return String.format("PhysicalCashOutResult{threadId=%d, success=%s, errorCode=%d, hasResponse=%s, hasException=%s}",
+                    threadId, success, errorCode, response != null, exception != null);
+        }
+    }
+
+    /**
+     * Result class for capturing physical cash out UUID generation results from concurrent threads
+     */
+    private static class PhysicalCashOutUuidResult {
+        int threadId;
+        boolean success;
+        int errorCode;
+        String uuid;
+        BaseResponse<UuidResponse> response;
+        Exception exception;
+
+        @Override
+        public String toString() {
+            return String.format("PhysicalCashOutUuidResult{threadId=%d, success=%s, errorCode=%d, uuid=%s, hasResponse=%s, hasException=%s}",
+                    threadId, success, errorCode, uuid, response != null, exception != null);
+        }
+    }
+
+    @Test
+    @Order(54)
     @DisplayName("physicalInquiryCashOut-fail-invalidUniqueIdentifier")
     void physicalInquiryCashOutFailInvalidUniqueIdentifier() throws Exception {
         log.info("start physicalInquiryCashOutFailInvalidUniqueIdentifier test");
         physicalInquiryCashOut(mockMvc, accessToken, "invalid_uuid", HttpStatus.OK, StatusService.UUID_NOT_FOUND, false);
+    }
+
+
+
+
+
+    /**
+     * Helper method to setup balances for sell operations
+     */
+    private void setupBalancesForSell(WalletAccountObject walletAccountObjectOptional, String goldAmount, String rialAmount) {
+        // Ensure user has enough GOLD balance for selling
+        WalletAccountEntity goldWalletAccountEntity = walletAccountService.findByAccountNumber(walletAccountObjectOptional.getAccountNumber());
+        walletAccountService.increaseBalance(goldWalletAccountEntity.getId(), new BigDecimal(goldAmount));
+
+        // Ensure merchant has enough RIAL balance for buying
+        WalletEntity walletMerchantEntity = walletService.findByNationalCodeAndWalletTypeId("1111111111", walletTypeService.getByName(WalletTypeService.MERCHANT).getId());
+        List<WalletAccountEntity> merchantAccounts = walletAccountService.findByWallet(walletMerchantEntity);
+        WalletAccountEntity merchantRialAccount = merchantAccounts.stream()
+                .filter(x -> x.getWalletAccountCurrencyEntity().getName().equals(WalletAccountCurrencyService.RIAL))
+                .findFirst().orElse(null);
+        walletAccountService.increaseBalance(merchantRialAccount.getId(), new BigDecimal(rialAmount));
+    }
+
+
+    /**
+     * Helper method to setup balances for sell operations
+     */
+    private void setupBalancesForSellToZero(WalletAccountObject walletAccountObjectOptional) {
+        // Ensure user has enough GOLD balance for selling
+        WalletAccountEntity goldWalletAccountEntity = walletAccountService.findByAccountNumber(walletAccountObjectOptional.getAccountNumber());
+        BigDecimal balance = walletAccountService.getBalance(goldWalletAccountEntity.getId());
+        walletAccountService.decreaseBalance(goldWalletAccountEntity.getId(), balance);
     }
 } 

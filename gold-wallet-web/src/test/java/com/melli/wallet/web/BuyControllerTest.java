@@ -37,7 +37,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.stream.Collectors;
 
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 
@@ -45,10 +44,8 @@ import static org.springframework.security.test.web.servlet.setup.SecurityMockMv
  * Class Name: BuyControllerTest
  * Author: Mahdi Shirinabadi
  * Date: 4/7/2025
- * 
  * This test class contains comprehensive end-to-end tests for Buy operations.
  * It tests the complete flow from wallet creation to buy execution and validation.
- * 
  * Test Coverage:
  * - Wallet creation and setup
  * - Buy UUID generation (success and failure scenarios)
@@ -1120,7 +1117,7 @@ class BuyControllerTest extends WalletApplicationTests {
         }
         
         // Validation
-        Assert.assertTrue("Should have exactly 2 results", results.size() == 2);
+        Assert.assertEquals("Should have exactly 2 results", 2, results.size());
         
         // Check concurrency behavior: one should succeed, one should fail with duplicate UUID error
         long successCount = results.stream().filter(r -> r.success).count();

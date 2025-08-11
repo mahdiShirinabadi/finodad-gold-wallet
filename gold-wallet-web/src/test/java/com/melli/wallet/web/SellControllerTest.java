@@ -26,6 +26,10 @@ import org.springframework.web.context.WebApplicationContext;
 import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
+import java.util.ArrayList;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 
@@ -565,7 +569,6 @@ class SellControllerTest extends WalletApplicationTests {
         log.info("start sellFailDailyQuantityLimitation test");
         // Step 1: Define test parameters
         String quantity = "1.07";
-        String price = "100000";
         // Step 2: Get user's GOLD account number
         WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.GOLD);
         // Step 3: Ensure user has enough GOLD to sell
@@ -584,7 +587,7 @@ class SellControllerTest extends WalletApplicationTests {
         // Step 6: Set a very low daily quantity limitation to trigger the error
         setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MAX_DAILY_QUANTITY_SELL, goldWalletAccountEntity, "0.5");
         // Step 7: Generate sell UUID - should fail due to daily quantity limitation
-        BaseResponse<UuidResponse> uuidResponse = generateSellUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, quantity, walletAccountObjectOptional.getAccountNumber(), CURRENCY_GOLD, HttpStatus.OK, StatusService.SELL_EXCEEDED_AMOUNT_DAILY_LIMITATION, false);
+        BaseResponse<UuidResponse> uuidResponse = generateSellUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, quantity, goldWalletAccountEntity.getAccountNumber(), CURRENCY_GOLD, HttpStatus.OK, StatusService.SELL_EXCEEDED_AMOUNT_DAILY_LIMITATION, false);
         Assert.assertSame(StatusService.SELL_EXCEEDED_AMOUNT_DAILY_LIMITATION, uuidResponse.getErrorDetail().getCode());
         // Step 8: Restore original daily quantity limitation
         setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MAX_DAILY_QUANTITY_SELL, goldWalletAccountEntity, maxDailyQuantity);
@@ -662,13 +665,14 @@ class SellControllerTest extends WalletApplicationTests {
         walletAccountService.increaseBalance(merchantRialAccount.getId(), new BigDecimal("1000000"));
         // Step 5: Get current monthly quantity limitation
         String maxMonthlyQuantity = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.MAX_MONTHLY_QUANTITY_SELL, walletAccountObjectOptional.getAccountNumber());
-        WalletAccountEntity walletAccountEntity = walletAccountService.findByAccountNumber(walletAccountObjectOptional.getAccountNumber());
         // Step 6: Set a very low monthly quantity limitation to trigger the error
-        setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MAX_MONTHLY_QUANTITY_SELL, walletAccountEntity, "0.5");
+        setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MAX_MONTHLY_QUANTITY_SELL, goldWalletAccountEntity, "0.5");
+        setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MONTHLY_VALIDATION_CHECK_SELL, goldWalletAccountEntity, "true");
         // Step 7: Generate sell UUID - should fail due to monthly quantity limitation
-        generateSellUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, quantity, walletAccountObjectOptional.getAccountNumber(), CURRENCY_GOLD, HttpStatus.OK, StatusService.SELL_EXCEEDED_AMOUNT_MONTHLY_LIMITATION, false);
+        generateSellUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, quantity, goldWalletAccountEntity.getAccountNumber(), CURRENCY_GOLD, HttpStatus.OK, StatusService.SELL_EXCEEDED_AMOUNT_MONTHLY_LIMITATION, false);
         // Step 8: Restore original monthly quantity limitation
-        setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MAX_MONTHLY_QUANTITY_SELL, walletAccountEntity, maxMonthlyQuantity);
+        setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MAX_MONTHLY_QUANTITY_SELL, goldWalletAccountEntity, maxMonthlyQuantity);
+        setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MONTHLY_VALIDATION_CHECK_SELL, goldWalletAccountEntity, "false");
     }
 
     /**
@@ -705,10 +709,12 @@ class SellControllerTest extends WalletApplicationTests {
         WalletAccountEntity walletAccountEntity = walletAccountService.findByAccountNumber(walletAccountObjectOptional.getAccountNumber());
         // Step 6: Set a very low monthly count limitation to trigger the error
         setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MAX_MONTHLY_COUNT_SELL, walletAccountEntity, "1");
+        setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MONTHLY_VALIDATION_CHECK_SELL, walletAccountEntity, "true");
         // Step 7: Perform first sell operation (should succeed)
         generateSellUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, quantity, walletAccountObjectOptional.getAccountNumber(), CURRENCY_GOLD, HttpStatus.OK, StatusService.SELL_EXCEEDED_COUNT_MONTHLY_LIMITATION, false);
         // Step 8: Restore original monthly count limitation
         setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MAX_MONTHLY_COUNT_SELL, walletAccountEntity, maxMonthlyCountValue);
+        setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MONTHLY_VALIDATION_CHECK_SELL, walletAccountEntity, "false");
     }
 
     /**
@@ -720,8 +726,547 @@ class SellControllerTest extends WalletApplicationTests {
      * - Performs sell operation successfully
      * - Validates the sell response
      */
+    /**
+     * Test concurrent sell operations with same UUID to ensure proper concurrency control.
+     * This test verifies that when the same UUID is used simultaneously, only one operation succeeds.
+     */
     @Test
-    @Order(96)
+    @Order(97)
+    @DisplayName("concurrent sell operations with same UUID")
+    void concurrentSellWithSameUuid() throws Exception {
+        log.info("=== Starting Concurrent Sell Test with Same UUID ===");
+        
+        // Setup
+        String quantity = "0.1";
+        String price = "100000";
+        String commission = "1000";
+        String commissionType = "GOLD";
+        String currency = "GOLD";
+        String sign = "";
+        String additionalData = "concurrent sell test";
+        
+        // Get account and setup
+        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.GOLD);
+        
+        // Ensure user has enough GOLD balance for selling
+        WalletAccountEntity goldWalletAccountEntity = walletAccountService.findByAccountNumber(walletAccountObjectOptional.getAccountNumber());
+        walletAccountService.increaseBalance(goldWalletAccountEntity.getId(), new BigDecimal("5.0"));
+        
+        // Ensure merchant has enough RIAL balance for buying
+        WalletEntity walletMerchantEntity = walletService.findByNationalCodeAndWalletTypeId("1111111111", walletTypeService.getByName(WalletTypeService.MERCHANT).getId());
+        List<WalletAccountEntity> merchantAccounts = walletAccountService.findByWallet(walletMerchantEntity);
+        WalletAccountEntity merchantRialAccount = merchantAccounts.stream()
+                .filter(x -> x.getWalletAccountCurrencyEntity().getName().equals(WalletAccountCurrencyService.RIAL))
+                .findFirst().orElse(null);
+        walletAccountService.increaseBalance(merchantRialAccount.getId(), new BigDecimal("500000"));
+        
+        // Generate UUID
+        BaseResponse<UuidResponse> uuidResponse = generateSellUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, quantity, walletAccountObjectOptional.getAccountNumber(), currency, HttpStatus.OK, StatusService.SUCCESSFUL, true);
+        String sharedUniqueIdentifier = uuidResponse.getData().getUniqueIdentifier();
+        log.info("Generated UUID: {}", sharedUniqueIdentifier);
+        
+        // Test with 2 threads using the same UUID
+        final CountDownLatch latch = new CountDownLatch(2);
+        final List<SellResult> results = new ArrayList<>();
+        
+        // Thread 1
+        Thread thread1 = new Thread(() -> {
+            try {
+                log.info("Sell Thread 1 starting...");
+                String ref1 = "SELL_THREAD1_" + System.currentTimeMillis();
+                BaseResponse<PurchaseResponse> response1 = sellWithoutCheckResult(mockMvc, ACCESS_TOKEN, sharedUniqueIdentifier, quantity, price, currency, commission, NATIONAL_CODE_CORRECT, commissionType, "1", walletAccountObjectOptional.getAccountNumber(), sign, additionalData + "_1");
+                
+                SellResult result1 = new SellResult();
+                result1.threadId = 1;
+                result1.success = response1.getSuccess();
+                result1.errorCode = response1.getSuccess() ? StatusService.SUCCESSFUL : response1.getErrorDetail().getCode();
+                result1.response = response1;
+                
+                synchronized (results) {
+                    results.add(result1);
+                    log.info("Sell Thread 1 added result to collection. Collection size now: {}", results.size());
+                }
+                log.info("Sell Thread 1 completed: Success={}, ErrorCode={}", result1.success, result1.errorCode);
+                
+            } catch (Exception e) {
+                log.error("Sell Thread 1 exception: {}", e.getMessage(), e);
+                SellResult result1 = new SellResult();
+                result1.threadId = 1;
+                result1.success = false;
+                result1.errorCode = -999;
+                result1.exception = e;
+                synchronized (results) {
+                    results.add(result1);
+                    log.info("Sell Thread 1 added exception result to collection. Collection size now: {}", results.size());
+                }
+            } finally {
+                latch.countDown();
+                log.info("Sell Thread 1 countDown called");
+            }
+        });
+        
+        // Thread 2
+        Thread thread2 = new Thread(() -> {
+            try {
+                log.info("Sell Thread 2 starting...");
+                String ref2 = "SELL_THREAD2_" + System.currentTimeMillis();
+                BaseResponse<PurchaseResponse> response2 = sellWithoutCheckResult(mockMvc, ACCESS_TOKEN, sharedUniqueIdentifier, quantity, price, currency, commission, NATIONAL_CODE_CORRECT, commissionType, "1", walletAccountObjectOptional.getAccountNumber(), sign, additionalData + "_2");
+                
+                SellResult result2 = new SellResult();
+                result2.threadId = 2;
+                result2.success = response2.getSuccess();
+                result2.errorCode = response2.getSuccess() ? StatusService.SUCCESSFUL : response2.getErrorDetail().getCode();
+                result2.response = response2;
+                
+                synchronized (results) {
+                    results.add(result2);
+                    log.info("Sell Thread 2 added result to collection. Collection size now: {}", results.size());
+                }
+                log.info("Sell Thread 2 completed: Success={}, ErrorCode={}", result2.success, result2.errorCode);
+                
+            } catch (Exception e) {
+                log.error("Sell Thread 2 exception: {}", e.getMessage(), e);
+                SellResult result2 = new SellResult();
+                result2.threadId = 2;
+                result2.success = false;
+                result2.errorCode = -999;
+                result2.exception = e;
+                synchronized (results) {
+                    results.add(result2);
+                    log.info("Sell Thread 2 added exception result to collection. Collection size now: {}", results.size());
+                }
+            } finally {
+                latch.countDown();
+                log.info("Sell Thread 2 countDown called");
+            }
+        });
+        
+        // Start both threads
+        log.info("Starting both sell threads...");
+        thread1.start();
+        thread2.start();
+        
+        // Wait and analyze
+        log.info("Waiting for threads to complete...");
+        latch.await();
+        
+        log.info("All threads completed, Results collection size: {}", results.size());
+        
+        // Log all results
+        for (SellResult result : results) {
+            log.info("Result: Thread={}, Success={}, ErrorCode={}", result.threadId, result.success, result.errorCode);
+        }
+        
+        // Validation
+        Assert.assertTrue("Should have exactly 2 results", results.size() == 2);
+        
+        // Check concurrency behavior: one should succeed, one should fail with duplicate UUID error
+        long successCount = results.stream().filter(r -> r.success).count();
+        long failureCount = results.stream().filter(r -> !r.success).count();
+        
+        log.info("Success count: {}, Failure count: {}", successCount, failureCount);
+        Assert.assertTrue("Should have exactly 1 success and 1 failure", successCount == 1 && failureCount == 1);
+        
+        // Verify the failure is due to duplicate UUID
+        SellResult failedResult = results.stream().filter(r -> !r.success).findFirst().orElse(null);
+        Assert.assertNotNull("Should have a failed result", failedResult);
+        Assert.assertEquals(StatusService.DUPLICATE_UUID, failedResult.errorCode);
+        log.info("Failed result error code: {}", failedResult.errorCode);
+        
+        log.info("=== Concurrent Sell Test Completed ===");
+    }
+
+    /**
+     * Test concurrent sell UUID generation to ensure proper concurrency control.
+     * This test verifies that multiple UUID generation requests work correctly.
+     */
+    @Test
+    @Order(98)
+    @DisplayName("concurrent sell UUID generation")
+    void concurrentSellUuidGeneration() throws Exception {
+        log.info("=== Starting Concurrent Sell UUID Generation Test ===");
+        
+        // Setup
+        String quantity = "0.1";
+        String currency = "GOLD";
+        
+        // Get account
+        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.GOLD);
+        
+        // Test with 3 threads generating UUIDs simultaneously
+        final CountDownLatch latch = new CountDownLatch(3);
+        final List<UuidResult> results = new ArrayList<>();
+        
+        // Thread 1
+        Thread thread1 = new Thread(() -> {
+            try {
+                log.info("UUID Thread 1 starting...");
+                BaseResponse<UuidResponse> response1 = generateSellUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, quantity, walletAccountObjectOptional.getAccountNumber(), currency, HttpStatus.OK, StatusService.SUCCESSFUL, true);
+                
+                UuidResult result1 = new UuidResult();
+                result1.threadId = 1;
+                result1.success = response1.getSuccess();
+                result1.errorCode = response1.getSuccess() ? StatusService.SUCCESSFUL : response1.getErrorDetail().getCode();
+                result1.uuid = response1.getSuccess() ? response1.getData().getUniqueIdentifier() : null;
+                result1.response = response1;
+                
+                synchronized (results) {
+                    results.add(result1);
+                    log.info("UUID Thread 1 added result to collection. Collection size now: {}", results.size());
+                }
+                log.info("UUID Thread 1 completed: Success={}, ErrorCode={}, UUID={}", result1.success, result1.errorCode, result1.uuid);
+                
+            } catch (Exception e) {
+                log.error("UUID Thread 1 exception: {}", e.getMessage(), e);
+                UuidResult result1 = new UuidResult();
+                result1.threadId = 1;
+                result1.success = false;
+                result1.errorCode = -999;
+                result1.exception = e;
+                synchronized (results) {
+                    results.add(result1);
+                    log.info("UUID Thread 1 added exception result to collection. Collection size now: {}", results.size());
+                }
+            } finally {
+                latch.countDown();
+                log.info("UUID Thread 1 countDown called");
+            }
+        });
+        
+        // Thread 2
+        Thread thread2 = new Thread(() -> {
+            try {
+                log.info("UUID Thread 2 starting...");
+                BaseResponse<UuidResponse> response2 = generateSellUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, quantity, walletAccountObjectOptional.getAccountNumber(), currency, HttpStatus.OK, StatusService.SUCCESSFUL, true);
+                
+                UuidResult result2 = new UuidResult();
+                result2.threadId = 2;
+                result2.success = response2.getSuccess();
+                result2.errorCode = response2.getSuccess() ? StatusService.SUCCESSFUL : response2.getErrorDetail().getCode();
+                result2.uuid = response2.getSuccess() ? response2.getData().getUniqueIdentifier() : null;
+                result2.response = response2;
+                
+                synchronized (results) {
+                    results.add(result2);
+                    log.info("UUID Thread 2 added result to collection. Collection size now: {}", results.size());
+                }
+                log.info("UUID Thread 2 completed: Success={}, ErrorCode={}, UUID={}", result2.success, result2.errorCode, result2.uuid);
+                
+            } catch (Exception e) {
+                log.error("UUID Thread 2 exception: {}", e.getMessage(), e);
+                UuidResult result2 = new UuidResult();
+                result2.threadId = 2;
+                result2.success = false;
+                result2.errorCode = -999;
+                result2.exception = e;
+                synchronized (results) {
+                    results.add(result2);
+                    log.info("UUID Thread 2 added exception result to collection. Collection size now: {}", results.size());
+                }
+            } finally {
+                latch.countDown();
+                log.info("UUID Thread 2 countDown called");
+            }
+        });
+        
+        // Thread 3
+        Thread thread3 = new Thread(() -> {
+            try {
+                log.info("UUID Thread 3 starting...");
+                BaseResponse<UuidResponse> response3 = generateSellUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, quantity, walletAccountObjectOptional.getAccountNumber(), currency, HttpStatus.OK, StatusService.SUCCESSFUL, true);
+                
+                UuidResult result3 = new UuidResult();
+                result3.threadId = 3;
+                result3.success = response3.getSuccess();
+                result3.errorCode = response3.getSuccess() ? StatusService.SUCCESSFUL : response3.getErrorDetail().getCode();
+                result3.uuid = response3.getSuccess() ? response3.getData().getUniqueIdentifier() : null;
+                result3.response = response3;
+                
+                synchronized (results) {
+                    results.add(result3);
+                    log.info("UUID Thread 3 added result to collection. Collection size now: {}", results.size());
+                }
+                log.info("UUID Thread 3 completed: Success={}, ErrorCode={}, UUID={}", result3.success, result3.errorCode, result3.uuid);
+                
+            } catch (Exception e) {
+                log.error("UUID Thread 3 exception: {}", e.getMessage(), e);
+                UuidResult result3 = new UuidResult();
+                result3.threadId = 3;
+                result3.success = false;
+                result3.errorCode = -999;
+                result3.exception = e;
+                synchronized (results) {
+                    results.add(result3);
+                    log.info("UUID Thread 3 added exception result to collection. Collection size now: {}", results.size());
+                }
+            } finally {
+                latch.countDown();
+                log.info("UUID Thread 3 countDown called");
+            }
+        });
+        
+        // Start all threads
+        log.info("Starting all UUID generation threads...");
+        thread1.start();
+        thread2.start();
+        thread3.start();
+        
+        // Wait and analyze
+        log.info("Waiting for threads to complete...");
+        latch.await();
+        
+        log.info("All threads completed, Results collection size: {}", results.size());
+        
+        // Log all results
+        for (UuidResult result : results) {
+            log.info("Result: Thread={}, Success={}, ErrorCode={}, UUID={}", result.threadId, result.success, result.errorCode, result.uuid);
+        }
+        
+        // Validation
+        Assert.assertTrue("Should have exactly 3 results", results.size() == 3);
+        
+        // All should succeed and generate different UUIDs
+        long successCount = results.stream().filter(r -> r.success).count();
+        Assert.assertEquals("All UUID generation should succeed", 3, successCount);
+        
+        // Verify all UUIDs are different
+        List<String> uuids = results.stream()
+                .filter(r -> r.success && r.uuid != null)
+                .map(r -> r.uuid)
+                .toList();
+        Assert.assertEquals("Should have 3 unique UUIDs", 3, uuids.size());
+        Assert.assertEquals("All UUIDs should be unique", 3, uuids.stream().distinct().count());
+        
+        log.info("=== Concurrent Sell UUID Generation Test Completed ===");
+    }
+
+    /**
+     * Comprehensive concurrent sell test - both scenarios
+     * Scenario 1: Different UUIDs with same refNumber sent simultaneously
+     * Scenario 2: Same UUID sent to method simultaneously
+     */
+    @Test
+    @Order(99)
+    @DisplayName("comprehensive concurrent sell test - balance for account")
+    void comprehensiveConcurrentSellTest() throws Exception {
+        log.info("start comprehensiveConcurrentSellTest");
+
+        // Common setup
+        String quantity = "1";
+        String price = "100000";
+        String commission = "1000";
+        String commissionType = "GOLD";
+        String currency = "GOLD";
+        String sign = "";
+        String additionalData = "comprehensive concurrent sell test";
+
+        // Get account number
+        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.GOLD);
+
+        setupBalancesForSellToZero(walletAccountObjectOptional);
+        // Setup sufficient balances
+        setupBalancesForSell(walletAccountObjectOptional, "2", "2000000");
+
+        // SCENARIO 1: Different UUIDs with same refNumber
+        log.info("Testing Scenario 1: Different UUIDs with same refNumber");
+
+        // SCENARIO 2: Same UUID with different refNumbers
+        log.info("Testing Scenario 2: Same UUID with different refNumbers");
+        testScenario2_SameUuidWithDifferentRefNumbers(quantity, price, commission, commissionType, currency, sign, additionalData, walletAccountObjectOptional);
+
+        log.info("Comprehensive concurrent sell test completed successfully");
+    }
+
+
+    /**
+     * Test Scenario 2: Same UUID sent to method simultaneously
+     * This should fail for all but one transaction due to UUID reuse
+     */
+    private void testScenario2_SameUuidWithDifferentRefNumbers(String quantity, String price, String commission,
+            String commissionType, String currency, String sign, String additionalData,
+            WalletAccountObject walletAccountObjectOptional) throws Exception {
+        
+        log.info("Executing Scenario 2: Same UUID with different refNumbers");
+        
+        int numberOfThreads = 3;
+        
+        // Generate single UUID for all threads
+        // Generate different UUIDs for each thread
+        List<String> uniqueIdentifiers = new ArrayList<>();
+        for (int i = 0; i < numberOfThreads; i++) {
+            BaseResponse<UuidResponse> uuidResponse = generateSellUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, quantity, walletAccountObjectOptional.getAccountNumber(), currency, HttpStatus.OK, StatusService.SUCCESSFUL, true);
+            uniqueIdentifiers.add(uuidResponse.getData().getUniqueIdentifier());
+        }
+
+
+        CountDownLatch latch = new CountDownLatch(numberOfThreads);
+        List<SellResult> results = new ArrayList<>();
+        List<Thread> threads = new ArrayList<>();
+        
+        // Execute concurrent requests with same UUID but different refNumbers
+        for (int i = 0; i < numberOfThreads; i++) {
+            final int threadId = i;
+            
+            Thread thread = new Thread(() -> {
+                try {
+                    BaseResponse<PurchaseResponse> response = sellWithoutCheckResult(mockMvc, ACCESS_TOKEN, uniqueIdentifiers.get(threadId), quantity, price, currency, commission, NATIONAL_CODE_CORRECT,
+                            commissionType, "1", walletAccountObjectOptional.getAccountNumber(), sign, additionalData + "_scenario2_" + threadId);
+                    
+                    SellResult result = new SellResult();
+                    result.threadId = threadId;
+                    result.success = response.getSuccess();
+                    result.errorCode = response.getSuccess() ? StatusService.SUCCESSFUL : response.getErrorDetail().getCode();
+                    result.response = response;
+                    
+                    synchronized (results) {
+                        results.add(result);
+                        log.info("Scenario 2 - Thread {} added result. Collection size now: {}", threadId, results.size());
+                    }
+                    
+                } catch (Exception e) {
+                    log.error("Scenario 2 - Thread {} encountered exception: {}", threadId, e.getMessage());
+                    SellResult result = new SellResult();
+                    result.threadId = threadId;
+                    result.success = false;
+                    result.errorCode = -999;
+                    result.exception = e;
+                    synchronized (results) {
+                        results.add(result);
+                        log.info("Scenario 2 - Thread {} added exception result. Collection size now: {}", threadId, results.size());
+                    }
+                } finally {
+                    latch.countDown();
+                    log.info("Scenario 2 - Thread {} countDown called", threadId);
+                }
+            });
+            
+            threads.add(thread);
+        }
+        
+        // Start all threads
+        log.info("Starting {} threads for Scenario 2...", numberOfThreads);
+        for (Thread thread : threads) {
+            thread.start();
+        }
+        
+        latch.await();
+        
+        // Analyze results for Scenario 2
+        long successCount = results.stream().filter(r -> r.success).count();
+        long failureCount = results.stream().filter(r -> !r.success).count();
+        
+        log.info("Scenario 2 results: {} successes, {} failures out of {} threads", successCount, failureCount, numberOfThreads);
+        logDetailedResults(new ConcurrentLinkedQueue<>(results), "Scenario 2 - Same UUID, Different RefNumbers");
+        
+        // Verify that only one transaction succeeded (due to UUID reuse prevention)
+        Assert.assertEquals("Scenario 2: three sell operation should succeed with the same UUID", 2, successCount);
+
+        // Verify failed operations have appropriate error codes
+        List<SellResult> failedResults = results.stream().filter(r -> !r.success).toList();
+        for (SellResult failedResult : failedResults) {
+            log.debug("Scenario 2 - Thread {}: error code = {}, exception = {}", 
+                failedResult.threadId, failedResult.errorCode, 
+                failedResult.exception != null ? failedResult.exception.getMessage() : "none");
+            Assert.assertTrue("Scenario 2: Failed operation should have error code indicating UUID reuse",
+                    failedResult.errorCode == StatusService.BALANCE_IS_NOT_ENOUGH && failedResult.errorCode > 0);
+        }
+    }
+
+    /**
+     * Helper method to setup balances for sell operations
+     */
+    private void setupBalancesForSell(WalletAccountObject walletAccountObjectOptional, String goldAmount, String rialAmount) {
+        // Ensure user has enough GOLD balance for selling
+        WalletAccountEntity goldWalletAccountEntity = walletAccountService.findByAccountNumber(walletAccountObjectOptional.getAccountNumber());
+        walletAccountService.increaseBalance(goldWalletAccountEntity.getId(), new BigDecimal(goldAmount));
+        
+        // Ensure merchant has enough RIAL balance for buying
+        WalletEntity walletMerchantEntity = walletService.findByNationalCodeAndWalletTypeId("1111111111", walletTypeService.getByName(WalletTypeService.MERCHANT).getId());
+        List<WalletAccountEntity> merchantAccounts = walletAccountService.findByWallet(walletMerchantEntity);
+        WalletAccountEntity merchantRialAccount = merchantAccounts.stream()
+                .filter(x -> x.getWalletAccountCurrencyEntity().getName().equals(WalletAccountCurrencyService.RIAL))
+                .findFirst().orElse(null);
+        walletAccountService.increaseBalance(merchantRialAccount.getId(), new BigDecimal(rialAmount));
+    }
+
+
+    /**
+     * Helper method to setup balances for sell operations
+     */
+    private void setupBalancesForSellToZero(WalletAccountObject walletAccountObjectOptional) {
+        // Ensure user has enough GOLD balance for selling
+        WalletAccountEntity goldWalletAccountEntity = walletAccountService.findByAccountNumber(walletAccountObjectOptional.getAccountNumber());
+        BigDecimal balance = walletAccountService.getBalance(goldWalletAccountEntity.getId());
+        walletAccountService.decreaseBalance(goldWalletAccountEntity.getId(), balance);
+    }
+
+    /**
+     * Helper method to log detailed results of concurrent operations for debugging
+     */
+    private void logDetailedResults(ConcurrentLinkedQueue<SellResult> results, String testName) {
+        log.info("=== Detailed Results for {} ===", testName);
+        
+        // Log successful results
+        List<SellResult> successfulResults = results.stream().filter(r -> r.success).toList();
+        for (SellResult result : successfulResults) {
+            log.info("✓ Thread {}: SUCCESS - Transaction completed successfully", result.threadId);
+            if (result.response != null && result.response.getData() != null) {
+                log.debug("  └─ Response data: {}", result.response.getData());
+            }
+        }
+        
+        // Log failed results
+        List<SellResult> failedResults = results.stream().filter(r -> !r.success).toList();
+        for (SellResult result : failedResults) {
+            log.info("✗ Thread {}: FAILED - Error code: {}", result.threadId, result.errorCode);
+            if (result.exception != null) {
+                log.debug("  └─ Exception: {}", result.exception.getMessage());
+            }
+            if (result.response != null && result.response.getErrorDetail() != null) {
+                log.debug("  └─ Error detail: {}", result.response.getErrorDetail());
+            }
+        }
+        
+        log.info("=== End Detailed Results for {} ===", testName);
+    }
+
+    /**
+     * Result class for capturing sell operation results from concurrent threads
+     */
+    private static class SellResult {
+        int threadId;
+        boolean success;
+        int errorCode;
+        BaseResponse<PurchaseResponse> response;
+        Exception exception;
+
+        @Override
+        public String toString() {
+            return String.format("SellResult{threadId=%d, success=%s, errorCode=%d, hasResponse=%s, hasException=%s}",
+                    threadId, success, errorCode, response != null, exception != null);
+        }
+    }
+
+    /**
+     * Result class for capturing UUID generation results from concurrent threads
+     */
+    private static class UuidResult {
+        int threadId;
+        boolean success;
+        int errorCode;
+        String uuid;
+        BaseResponse<UuidResponse> response;
+        Exception exception;
+
+        @Override
+        public String toString() {
+            return String.format("UuidResult{threadId=%d, success=%s, errorCode=%d, uuid=%s, hasResponse=%s, hasException=%s}",
+                    threadId, success, errorCode, uuid, response != null, exception != null);
+        }
+    }
+
+    @Test
+    @Order(100)
     @DisplayName("sell-Success-WithinLimitations")
     void sellSuccessWithinLimitations() throws Exception {
         log.info("start sellSuccessWithinLimitations test");
@@ -747,7 +1292,7 @@ class SellControllerTest extends WalletApplicationTests {
         // Step 7: Set maximum quantity to allow this transaction
         setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MAX_QUANTITY_SELL, walletAccountEntity, "10.0");
         // Step 8: Set daily quantity limitation to allow this transaction
-        setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MAX_DAILY_QUANTITY_SELL, walletAccountEntity, "5.0");
+        setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MAX_DAILY_QUANTITY_SELL, walletAccountEntity, "6.0");
         // Step 9: Set daily count limitation to allow this transaction
         setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MAX_DAILY_COUNT_SELL, walletAccountEntity, "10");
         // Step 10: Set monthly quantity limitation to allow this transaction

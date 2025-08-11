@@ -105,14 +105,9 @@ public class WalletSellLimitationServiceImplementation implements WalletSellLimi
 
         String key = walletAccount.getAccountNumber();
 
-        boolean checkMonthly = Boolean.getBoolean(limitationGeneralCustomService.getSetting(channel, LimitationGeneralService.MONTHLY_VALIDATION_CHECK_SELL, walletLevelEntity, walletAccountTypeEntity, walletAccountCurrencyEntity, walletTypeEntity));
+
         BigDecimal maxQuantityDaily = new BigDecimal(limitationGeneralCustomService.getSetting(channel, LimitationGeneralService.MAX_DAILY_QUANTITY_SELL, walletLevelEntity, walletAccountTypeEntity, walletAccountCurrencyEntity, walletTypeEntity));
         BigDecimal maxCountDaily = new BigDecimal(limitationGeneralCustomService.getSetting(channel, LimitationGeneralService.MAX_DAILY_COUNT_SELL, walletLevelEntity, walletAccountTypeEntity, walletAccountCurrencyEntity, walletTypeEntity));
-
-        if(!checkMonthly){
-            log.info("MONTHLY_VALIDATION_CHECK_SELL is set to ({}) and system skip check monthly validation", false);
-            return;
-        }
 
 
         redisLockService.runAfterLock(key, this.getClass(), () -> {
@@ -170,9 +165,14 @@ public class WalletSellLimitationServiceImplementation implements WalletSellLimi
 
         String key = walletAccount.getAccountNumber();
 
+        boolean checkMonthly = Boolean.parseBoolean(limitationGeneralCustomService.getSetting(channel, LimitationGeneralService.MONTHLY_VALIDATION_CHECK_SELL, walletLevelEntity, walletAccountTypeEntity, walletAccountCurrencyEntity, walletTypeEntity));
         BigDecimal maxCountMonthly = new BigDecimal(limitationGeneralCustomService.getSetting(channel, LimitationGeneralService.MAX_MONTHLY_COUNT_SELL, walletLevelEntity, walletAccountTypeEntity, walletAccountCurrencyEntity, walletTypeEntity));
         BigDecimal maxQuantityMonthly = new BigDecimal(limitationGeneralCustomService.getSetting(channel, LimitationGeneralService.MAX_MONTHLY_QUANTITY_SELL, walletLevelEntity, walletAccountTypeEntity, walletAccountCurrencyEntity, walletTypeEntity));
 
+        if(!checkMonthly){
+            log.info("MONTHLY_VALIDATION_CHECK_SELL is set to ({}) and system skip check monthly validation", false);
+            return;
+        }
 
         redisLockService.runAfterLock(key, this.getClass(), () -> {
 

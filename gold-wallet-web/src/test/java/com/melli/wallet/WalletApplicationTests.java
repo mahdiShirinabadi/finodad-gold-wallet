@@ -425,10 +425,28 @@ public class WalletApplicationTests {
         requestJson.setMerchantId(merchantId);
         requestJson.setWalletAccountNumber(walletAccountNumber);
         requestJson.setAdditionalData(additionalData);
-        requestJson.setIban(iban);
         requestJson.setSign(sign);
         MockHttpServletRequestBuilder postRequest = buildPostRequest(token, SELL_IN_PATH, mapToJson(requestJson));
         String response = performTest(mockMvc, postRequest, httpStatus, success, errorCode);
+        TypeReference<BaseResponse<PurchaseResponse>> typeReference = new TypeReference<>() {
+        };
+        return objectMapper.readValue(response, typeReference);
+    }
+
+    public  BaseResponse<PurchaseResponse> sellWithoutCheckResult(MockMvc mockMvc, String token, String uniqueIdentifier, String quantity, String price, String commissionCurrency, String commission, String nationalCode, String currency, String merchantId, String walletAccountNumber, String sign, String additionalData) throws Exception {
+        SellWalletRequestJson requestJson = new SellWalletRequestJson();
+        requestJson.setUniqueIdentifier(uniqueIdentifier);
+        requestJson.setQuantity(quantity);
+        requestJson.setPrice(price);
+        requestJson.setCommissionObject(new CommissionObject(commissionCurrency, commission));
+        requestJson.setNationalCode(nationalCode);
+        requestJson.setCurrency(currency);
+        requestJson.setMerchantId(merchantId);
+        requestJson.setWalletAccountNumber(walletAccountNumber);
+        requestJson.setAdditionalData(additionalData);
+        requestJson.setSign(sign);
+        MockHttpServletRequestBuilder postRequest = buildPostRequest(token, SELL_IN_PATH, mapToJson(requestJson));
+        String response = performTestWithoutCheckResult(mockMvc, postRequest);
         TypeReference<BaseResponse<PurchaseResponse>> typeReference = new TypeReference<>() {
         };
         return objectMapper.readValue(response, typeReference);
@@ -559,6 +577,21 @@ public class WalletApplicationTests {
         return objectMapper.readValue(response, typeReference);
     }
 
+    public BaseResponse<CashOutResponse> cashOutWithoutCheckResult(MockMvc mockMvc, String token, String uniqueIdentifier, String amount, String nationalCode, String accountNumber, String iban, String sign, String additionalData) throws Exception {
+        CashOutWalletRequestJson requestJson = new CashOutWalletRequestJson();
+        requestJson.setUniqueIdentifier(uniqueIdentifier);
+        requestJson.setAmount(amount);
+        requestJson.setNationalCode(nationalCode);
+        requestJson.setAccountNumber(accountNumber);
+        requestJson.setIban(iban);
+        requestJson.setSign(sign);
+        requestJson.setAdditionalData(additionalData);
+        MockHttpServletRequestBuilder postRequest = buildPostRequest(token, CASH_OUT_PATH, mapToJson(requestJson));
+        String response = performTestWithoutCheckResult(mockMvc, postRequest);
+        TypeReference<BaseResponse<CashOutResponse>> typeReference = new TypeReference<>() {};
+        return objectMapper.readValue(response, typeReference);
+    }
+
     public BaseResponse<CashOutTrackResponse> inquiryCashOut(MockMvc mockMvc, String token, String uniqueIdentifier, HttpStatus httpStatus, int errorCode, boolean success) throws Exception {
         MockHttpServletRequestBuilder getRequest = buildGetRequest(token, CASH_OUT_INQUIRY_PATH + "?uniqueIdentifier=" + uniqueIdentifier);
         String response = performTest(mockMvc, getRequest, httpStatus, success, errorCode);
@@ -590,6 +623,23 @@ public class WalletApplicationTests {
         requestJson.setCommissionObject(new CommissionObject(commissionCurrency, commissionAmount));
         MockHttpServletRequestBuilder postRequest = buildPostRequest(token, PHYSICAL_CASH_OUT_DO_PATH, mapToJson(requestJson));
         String response = performTest(mockMvc, postRequest, httpStatus, success, errorCode);
+        TypeReference<BaseResponse<PhysicalCashOutResponse>> typeReference = new TypeReference<>() {};
+        return objectMapper.readValue(response, typeReference);
+    }
+
+
+    public BaseResponse<PhysicalCashOutResponse> physicalCashOutWithoutCheckResult(MockMvc mockMvc, String token, String uniqueIdentifier, String quantity, String nationalCode, String accountNumber, String additionalData, String sign, String additionalDataParam, String currency, String commissionAmount, String commissionCurrency) throws Exception {
+        PhysicalCashOutWalletRequestJson requestJson = new PhysicalCashOutWalletRequestJson();
+        requestJson.setUniqueIdentifier(uniqueIdentifier);
+        requestJson.setQuantity(quantity);
+        requestJson.setNationalCode(nationalCode);
+        requestJson.setAccountNumber(accountNumber);
+        requestJson.setAdditionalData(additionalDataParam);
+        requestJson.setSign(sign);
+        requestJson.setCurrency(currency);
+        requestJson.setCommissionObject(new CommissionObject(commissionCurrency, commissionAmount));
+        MockHttpServletRequestBuilder postRequest = buildPostRequest(token, PHYSICAL_CASH_OUT_DO_PATH, mapToJson(requestJson));
+        String response = performTestWithoutCheckResult(mockMvc, postRequest);
         TypeReference<BaseResponse<PhysicalCashOutResponse>> typeReference = new TypeReference<>() {};
         return objectMapper.readValue(response, typeReference);
     }
