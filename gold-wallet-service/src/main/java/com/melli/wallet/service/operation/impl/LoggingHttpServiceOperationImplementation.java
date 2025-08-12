@@ -49,6 +49,7 @@ public class LoggingHttpServiceOperationImplementation implements LoggingHttpOpe
             respMessage.append(" ResponseHeaders = [").append(headers).append("]");
         }
         if (body != null && body.toString().contains("HELP lettuce_command_completion_seconds_max Latency between command send and command")) {
+            //do nothing
         } else {
             respMessage.append(" responseBody = [").append(Utility.mapToJsonOrNull(body)).append("]");
         }

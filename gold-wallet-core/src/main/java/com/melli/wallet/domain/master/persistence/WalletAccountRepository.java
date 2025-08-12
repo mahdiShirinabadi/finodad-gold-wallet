@@ -1,6 +1,7 @@
 package com.melli.wallet.domain.master.persistence;
 
 import com.melli.wallet.domain.dto.BalanceObjectDTO;
+import com.melli.wallet.domain.enumaration.WalletStatusEnum;
 import com.melli.wallet.domain.master.entity.WalletAccountEntity;
 import com.melli.wallet.domain.master.entity.WalletEntity;
 import org.springframework.data.domain.Pageable;
@@ -28,7 +29,7 @@ public interface WalletAccountRepository extends CrudRepository<WalletAccountEnt
 
     WalletAccountEntity findByAccountNumber(String account);
 
-    WalletAccountEntity findById(int id);
+    WalletAccountEntity findById(long id);
 
     @Query(value = "select balance from {h-schema}wallet_account where id = :id", nativeQuery = true)
     BigDecimal getBalance(@Param("id") long id);
@@ -49,10 +50,10 @@ public interface WalletAccountRepository extends CrudRepository<WalletAccountEnt
     @Query(value = "update {h-schema}wallet_account  set block_amount= block_amount - :amount where id = :id", nativeQuery = true)
     void unblockAmount(@Param("id") long id, @Param("amount") long amount);
 
-    List<WalletAccountEntity> findAllByStatus(int status);
+    List<WalletAccountEntity> findAllByStatus(WalletStatusEnum status);
 
-    WalletAccountEntity findFirstByWalletEntityAndWalletAccountTypeEntityId(WalletEntity wallet, int accountTypeId);
-    List<WalletAccountEntity> findAllByWalletEntityAndWalletAccountTypeEntityId(WalletEntity wallet, int accountTypeId);
+    WalletAccountEntity findFirstByWalletEntityAndWalletAccountTypeEntityId(WalletEntity wallet, long accountTypeId);
+    List<WalletAccountEntity> findAllByWalletEntityAndWalletAccountTypeEntityId(WalletEntity wallet, long accountTypeId);
 
     @Query(value = "SELECT w.balance AS balance, w.block_amount AS blockAmount  FROM {h-schema}wallet_account w where id=:id", nativeQuery = true)
     BalanceObjectDTO getBalanceById(@Param("id") long id);

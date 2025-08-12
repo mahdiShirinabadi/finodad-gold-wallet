@@ -222,7 +222,7 @@ public class DateUtils {
 
         difference = (untilDate.getTime() - fromDate.getTime());
 
-        return (int) Math.ceil(difference / (1000 * 60 * 60 * 24));
+        return (int) Math.ceil((double) difference / (1000 * 60 * 60 * 24));
     }
 
     /**
@@ -580,9 +580,8 @@ public class DateUtils {
 
         if (month <= 6) {
             day = 31;
-        } else if (month > 6 && month < 12) {
-            day = 30;
-        } else if (month == 12) {
+        } else if (month < 12) {
+        } else {
             day = 29;
         }
 
@@ -651,7 +650,7 @@ public class DateUtils {
 
         if (month <= 6) {
             day = 31;
-        } else if (month > 6 && month < 12) {
+        } else if (month < 12) {
             day = 30;
         } else if (month == 12) {
             if (PersianCalendar.isLeapYear(year)) {

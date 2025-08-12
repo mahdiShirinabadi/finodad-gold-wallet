@@ -1,5 +1,6 @@
 package com.melli.wallet.domain.master.persistence;
 
+import com.melli.wallet.domain.enumaration.WalletStatusEnum;
 import com.melli.wallet.domain.master.entity.WalletEntity;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
@@ -13,16 +14,16 @@ public interface WalletRepository extends CrudRepository<WalletEntity, Long> {
 
 	WalletEntity findByNationalCodeAndWalletTypeEntityIdAndEndTimeIsNull(String nationalCode, long walletTypeEntityId);
 
-	WalletEntity findByNationalCodeAndIdAndEndTimeIsNotNull(String nationalCode,Integer id);
-	WalletEntity findByNationalCodeAndId(String nationalCode,Integer id);
+	WalletEntity findByNationalCodeAndIdAndEndTimeIsNotNull(String nationalCode,Long id);
+	WalletEntity findByNationalCodeAndId(String nationalCode,Long id);
 
-	WalletEntity findByNationalCodeAndStatus(String nationalCode, int status);
+	WalletEntity findByNationalCodeAndStatus(String nationalCode, WalletStatusEnum status);
 
-	WalletEntity findById(Integer walletId);
+	WalletEntity findById(long id);
 
-	List<WalletEntity> findAllByStatus(int status);
+	List<WalletEntity> findAllByStatus(WalletStatusEnum status);
 
-	WalletEntity findByIdAndEndTimeIsNotNull(Integer walletId);
+	WalletEntity findByIdAndEndTimeIsNotNull(long walletId);
 
 
 	@Query(value="select count(*) from wallet where mobile like '9%'", nativeQuery = true)

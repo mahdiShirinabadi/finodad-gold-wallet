@@ -1,6 +1,7 @@
 package com.melli.wallet.service.repository.impl;
 
 import com.melli.wallet.ConstantRedisName;
+import com.melli.wallet.domain.enumaration.WalletStatusEnum;
 import com.melli.wallet.domain.master.entity.WalletEntity;
 import com.melli.wallet.domain.master.persistence.WalletRepository;
 import com.melli.wallet.exception.InternalServiceException;
@@ -64,8 +65,8 @@ public class WalletRepositoryServiceImplementation implements WalletRepositorySe
     }
 
     @Override
-    public List<WalletEntity> findAllByStatus(int status) {
-        return walletRepository.findAllByStatus(status);
+    public List<WalletEntity> findAllByStatus(String status) {
+        return walletRepository.findAllByStatus(WalletStatusEnum.valueOf(status));
     }
 
 }

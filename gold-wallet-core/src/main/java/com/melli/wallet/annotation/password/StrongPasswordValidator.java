@@ -67,40 +67,4 @@ public class StrongPasswordValidator implements ConstraintValidator<StrongPasswo
 
         return password.matches(patternRegx.toString());
     }
-
-    public static void main(String[] args) {
-        boolean allowLowerCase=true;
-        boolean allowUpperCase=true;
-        boolean allowNOSpace=true;
-        boolean allowOneDigit=true;
-        boolean allowSpecialCharacter=true;
-        int minLength=8;
-        int maxLength=20;
-
-        String password = "M@HDi123";
-
-        StringBuilder patternRegx= new StringBuilder();
-        patternRegx.append("^");
-
-        if(allowLowerCase){
-            patternRegx.append("(?=.*[a-z])");
-        }
-        if(allowUpperCase){
-            patternRegx.append("(?=.*[A-Z])");
-        }
-        if(allowOneDigit){
-            patternRegx.append("(?=.*[0-9])");
-        }
-        if(allowSpecialCharacter){
-            patternRegx.append("(?=.*[@#$%^&+=])");
-        }
-        if(allowNOSpace){
-            patternRegx.append("(?=\\S+$)");
-        }
-        patternRegx.append(".{").append(minLength).append(",").append(maxLength).append("}").append("$");
-
-        System.out.println(patternRegx.toString());
-
-        System.out.println(password.matches(patternRegx.toString()));
-    }
 }

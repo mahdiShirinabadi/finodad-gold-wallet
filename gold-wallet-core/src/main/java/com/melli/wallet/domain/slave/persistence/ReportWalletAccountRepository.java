@@ -1,6 +1,7 @@
 package com.melli.wallet.domain.slave.persistence;
 
 import com.melli.wallet.domain.dto.BalanceObjectDTO;
+import com.melli.wallet.domain.enumaration.WalletStatusEnum;
 import com.melli.wallet.domain.slave.entity.ReportWalletAccountEntity;
 import com.melli.wallet.domain.slave.entity.ReportWalletEntity;
 import org.springframework.data.domain.Pageable;
@@ -28,7 +29,7 @@ public interface ReportWalletAccountRepository extends CrudRepository<ReportWall
 
     ReportWalletAccountEntity findByAccountNumber(String account);
 
-    ReportWalletAccountEntity findById(int id);
+    ReportWalletAccountEntity findById(long id);
 
     @Query(value = "select balance from {h-schema}wallet_account where id = :id", nativeQuery = true)
     BigDecimal getBalance(@Param("id") long id);
@@ -49,10 +50,10 @@ public interface ReportWalletAccountRepository extends CrudRepository<ReportWall
     @Query(value = "update {h-schema}wallet_account  set block_amount= block_amount - :amount where id = :id", nativeQuery = true)
     void unblockAmount(@Param("id") long id, @Param("amount") long amount);
 
-    List<ReportWalletAccountEntity> findAllByStatus(int status);
+    List<ReportWalletAccountEntity> findAllByStatus(WalletStatusEnum status);
 
-    ReportWalletAccountEntity findFirstByWalletEntityAndWalletAccountTypeEntityId(ReportWalletEntity wallet, int accountTypeId);
-    List<ReportWalletAccountEntity> findAllByWalletEntityAndWalletAccountTypeEntityId(ReportWalletEntity wallet, int accountTypeId);
+    ReportWalletAccountEntity findFirstByWalletEntityAndWalletAccountTypeEntityId(ReportWalletEntity wallet, long accountTypeId);
+    List<ReportWalletAccountEntity> findAllByWalletEntityAndWalletAccountTypeEntityId(ReportWalletEntity wallet, long accountTypeId);
 
     @Query(value = "SELECT w.balance AS balance, w.block_amount AS blockAmount  FROM {h-schema}wallet_account w where id=:id", nativeQuery = true)
     BalanceObjectDTO getBalanceById(@Param("id") long id);

@@ -28,11 +28,11 @@ public class Utility {
     private static Random random = new Random();
 
     public static String pad(String number, int len) {
-        String normal = number;
+        StringBuilder normal = new StringBuilder(number);
         while (normal.length() < len) {
-            normal = "0" + normal;
+            normal.insert(0, "0");
         }
-        return normal;
+        return normal.toString();
     }
 
     public static boolean isAllowedList(String allowedList, String value) {
@@ -196,7 +196,7 @@ public class Utility {
 
         try {
             PrivateKey privateKey = readPrivateKey(privateKeyStr);
-            byte[] sign = new byte[0];
+            byte[] sign;
             sign = sign(privateKey, input);
             return org.apache.commons.codec.binary.Base64.encodeBase64String(sign);
         } catch (Exception e) {

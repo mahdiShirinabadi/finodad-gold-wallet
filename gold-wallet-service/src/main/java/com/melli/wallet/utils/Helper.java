@@ -413,7 +413,7 @@ public class Helper {
             log.info("allewdList is empty !!!");
             return false;
         }
-        boolean isExist = false;
+        boolean isExist;
         List<String> ipList = new LinkedList<>(Arrays.asList(allowedList.split(";")));
         for (String validIp : ipList) {
             IpAddressMatcher ipAddressMatcher = new IpAddressMatcher(validIp);

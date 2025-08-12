@@ -127,12 +127,12 @@ public class Validator {
 
     public static String padWithZero(String command, int length) {
 
-        String padMessage = command;
+        StringBuilder padMessage = new StringBuilder(command);
 
         while (padMessage.length() < length) {
-            padMessage = "0" + padMessage;
+            padMessage.insert(0, "0");
         }
-        return padMessage;
+        return padMessage.toString();
     }
 
     public static String cleanBody(String body) {

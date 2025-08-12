@@ -23,7 +23,7 @@ public interface WalletRepositoryService {
 
     void save(WalletEntity wallet);
 
-    List<WalletEntity> findAllByStatus(int status);
+    List<WalletEntity> findAllByStatus(String status);
 
     void clearAllCache();
 }
