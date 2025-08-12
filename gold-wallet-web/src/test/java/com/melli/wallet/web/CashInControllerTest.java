@@ -11,7 +11,7 @@ import com.melli.wallet.domain.response.base.BaseResponse;
 import com.melli.wallet.domain.response.login.LoginResponse;
 import com.melli.wallet.domain.response.wallet.CreateWalletResponse;
 import com.melli.wallet.domain.response.wallet.WalletAccountObject;
-import com.melli.wallet.service.*;
+import com.melli.wallet.service.repository.*;
 import lombok.extern.log4j.Log4j2;
 import org.flywaydb.core.Flyway;
 import org.junit.Assert;
@@ -67,17 +67,17 @@ class CashInControllerTest extends WalletApplicationTests {
     @Autowired
     private WebApplicationContext webApplicationContext;
     @Autowired
-    private WalletAccountService walletAccountService;
+    private WalletAccountRepositoryService walletAccountRepositoryService;
     @Autowired
-    private WalletService walletService;
+    private WalletRepositoryService walletRepositoryService;
     @Autowired
-    private WalletTypeService walletTypeService;
+    private WalletTypeRepositoryService walletTypeRepositoryService;
     @Autowired
-    private LimitationGeneralCustomService limitationGeneralCustomService;
+    private LimitationGeneralCustomRepositoryService limitationGeneralCustomRepositoryService;
     @Autowired
     private LimitationGeneralService limitationGeneralService;
     @Autowired
-    private ChannelService channelService;
+    private ChannelRepositoryService channelRepositoryService;
     @Autowired
     private CacheClearService cacheClearService;
     @Autowired
@@ -120,7 +120,7 @@ class CashInControllerTest extends WalletApplicationTests {
     void login_success() throws Exception {
         log.info("start login_success test");
         BaseResponse<LoginResponse> response = login(mockMvc, USERNAME_CORRECT, PASSWORD_CORRECT, HttpStatus.OK,
-                StatusService.SUCCESSFUL, true);
+                StatusRepositoryService.SUCCESSFUL, true);
         ACCESS_TOKEN = response.getData().getAccessTokenObject().getToken();
         REFRESH_TOKEN = response.getData().getRefreshTokenObject().getToken();
     }
@@ -135,7 +135,7 @@ class CashInControllerTest extends WalletApplicationTests {
     @Order(15)
     @DisplayName("get balance fail- wallet not found")
     void getBalanceFail() throws Exception {
-        balance(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusService.WALLET_NOT_FOUND, false);
+        balance(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusRepositoryService.WALLET_NOT_FOUND, false);
     }
     /**
      * Test balance retrieval failure with invalid national code.
@@ -147,7 +147,7 @@ class CashInControllerTest extends WalletApplicationTests {
     @Order(16)
     @DisplayName("get balance fail- invalid nationalCode")
     void getBalanceFailInvalidNationalCode() throws Exception {
-        balance(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_INCORRECT, HttpStatus.OK, StatusService.INPUT_PARAMETER_NOT_VALID, false);
+        balance(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_INCORRECT, HttpStatus.OK, StatusRepositoryService.INPUT_PARAMETER_NOT_VALID, false);
     }
     /**
      * Test balance retrieval failure with national code shorter than standard.
@@ -159,7 +159,7 @@ class CashInControllerTest extends WalletApplicationTests {
     @Order(17)
     @DisplayName("get balance fail- NationalCodeLessStandard")
     void getBalanceFailNationalCodeLessStandard() throws Exception {
-        balance(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_LENGTH_LESS_THAN_STANDARD, HttpStatus.OK, StatusService.INPUT_PARAMETER_NOT_VALID, false);
+        balance(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_LENGTH_LESS_THAN_STANDARD, HttpStatus.OK, StatusRepositoryService.INPUT_PARAMETER_NOT_VALID, false);
     }
     /**
      * Test balance retrieval failure with national code longer than standard.
@@ -171,7 +171,7 @@ class CashInControllerTest extends WalletApplicationTests {
     @Order(18)
     @DisplayName("get balance fail- NationalCodeBiggerStandard")
     void getBalanceFailNationalCodeBiggerStandard() throws Exception {
-        balance(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_LENGTH_BIGGER_THAN_STANDARD, HttpStatus.OK, StatusService.INPUT_PARAMETER_NOT_VALID, false);
+        balance(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_LENGTH_BIGGER_THAN_STANDARD, HttpStatus.OK, StatusRepositoryService.INPUT_PARAMETER_NOT_VALID, false);
     }
 
     /**
@@ -186,10 +186,10 @@ class CashInControllerTest extends WalletApplicationTests {
     @DisplayName("create wallet- success")
     void createWalletSuccess() throws Exception {
         // Step 1: Create wallet for the test user
-        BaseResponse<CreateWalletResponse> response = createWallet(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, MOBILE_CORRECT, HttpStatus.OK, StatusService.SUCCESSFUL, true);
+        BaseResponse<CreateWalletResponse> response = createWallet(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, MOBILE_CORRECT, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
         
         // Step 2: Validate wallet creation and verify national code
-        WalletEntity walletEntity = walletService.findById(Long.parseLong(response.getData().getWalletId()));
+        WalletEntity walletEntity = walletRepositoryService.findById(Long.parseLong(response.getData().getWalletId()));
         if (!walletEntity.getNationalCode().equalsIgnoreCase(NATIONAL_CODE_CORRECT)) {
             log.error("wallet create not same with national code ({})", NATIONAL_CODE_CORRECT);
             throw new Exception("wallet create not same with national code ({})");
@@ -208,18 +208,18 @@ class CashInControllerTest extends WalletApplicationTests {
     @DisplayName("create wallet duplicate - success")
     void createWalletDuplicateSuccess() throws Exception {
         // Step 1: Get wallet type for normal user
-        List<WalletTypeEntity> walletTypeEntityList = walletTypeService.getAll();
+        List<WalletTypeEntity> walletTypeEntityList = walletTypeRepositoryService.getAll();
 
-        WalletTypeEntity walletTypeEntity = walletTypeEntityList.stream().filter(x -> x.getName().equalsIgnoreCase(WalletTypeService.NORMAL_USER)).findFirst().orElseThrow(() -> {
+        WalletTypeEntity walletTypeEntity = walletTypeEntityList.stream().filter(x -> x.getName().equalsIgnoreCase(WalletTypeRepositoryService.NORMAL_USER)).findFirst().orElseThrow(() -> {
             log.error("walletType not found");
             return new Exception("walletType not found");
         });
 
         // Step 2: Find existing wallet for the user
-        WalletEntity walletExistEntity = walletService.findByNationalCodeAndWalletTypeId(NATIONAL_CODE_CORRECT, walletTypeEntity.getId());
+        WalletEntity walletExistEntity = walletRepositoryService.findByNationalCodeAndWalletTypeId(NATIONAL_CODE_CORRECT, walletTypeEntity.getId());
 
         // Step 3: Attempt to create duplicate wallet and validate same ID is returned
-        BaseResponse<CreateWalletResponse> response = createWallet(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, MOBILE_CORRECT, HttpStatus.OK, StatusService.SUCCESSFUL, true);
+        BaseResponse<CreateWalletResponse> response = createWallet(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, MOBILE_CORRECT, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
         if (walletExistEntity.getId() != Long.parseLong(response.getData().getWalletId())) {
             log.error("create new wallet not same with created wallet!!!");
             throw new Exception("create new wallet not same with created wallet!!!");
@@ -236,7 +236,7 @@ class CashInControllerTest extends WalletApplicationTests {
     @Order(25)
     @DisplayName("get balance success")
     void getBalanceSuccess() throws Exception {
-        balance(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusService.SUCCESSFUL, true);
+        balance(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
     }
 
     /**
@@ -255,10 +255,10 @@ class CashInControllerTest extends WalletApplicationTests {
         String amount = "1000000";
         
         // Step 2: Get user's RIAL account number
-        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.RIAL);
+        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.RIAL);
         
         // Step 3: Attempt to generate cash in UUID without permission
-        BaseResponse<UuidResponse> responseUuid = generateCashInUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, amount, walletAccountObjectOptional.getAccountNumber(), HttpStatus.OK, StatusService.ACCOUNT_DONT_PERMISSION_FOR_CASH_IN, false);
+        BaseResponse<UuidResponse> responseUuid = generateCashInUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, amount, walletAccountObjectOptional.getAccountNumber(), HttpStatus.OK, StatusRepositoryService.ACCOUNT_DONT_PERMISSION_FOR_CASH_IN, false);
     }
 
 
@@ -281,17 +281,17 @@ class CashInControllerTest extends WalletApplicationTests {
         String amount = "10";
         
         // Step 2: Get user's RIAL account number
-        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.RIAL);
-        WalletAccountEntity walletAccountEntity = walletAccountService.findByAccountNumber(walletAccountObjectOptional.getAccountNumber());
+        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.RIAL);
+        WalletAccountEntity walletAccountEntity = walletAccountRepositoryService.findByAccountNumber(walletAccountObjectOptional.getAccountNumber());
         
         // Step 3: Enable cash in permission if disabled
-        String value = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService,USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN,  walletAccountObjectOptional.getAccountNumber());
+        String value = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService,USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN,  walletAccountObjectOptional.getAccountNumber());
         if("false".equalsIgnoreCase(value)){
             setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, walletAccountEntity, "true");
         }
 
         // Step 4: Store original MIN_AMOUNT_CASH_IN value and temporarily decrease it
-        String valueMinAmountCashIn = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService,USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_IN,  walletAccountObjectOptional.getAccountNumber());
+        String valueMinAmountCashIn = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService,USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_IN,  walletAccountObjectOptional.getAccountNumber());
         boolean changeMinAmountCashIn = false;
         if( Long.parseLong(amount) >= Long.parseLong(valueMinAmountCashIn)){
             changeMinAmountCashIn = true;
@@ -299,7 +299,7 @@ class CashInControllerTest extends WalletApplicationTests {
         }
         
         // Step 5: Attempt cash in with amount below minimum
-        generateCashInUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, amount, walletAccountObjectOptional.getAccountNumber(), HttpStatus.OK, StatusService.AMOUNT_LESS_THAN_MIN, false);
+        generateCashInUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, amount, walletAccountObjectOptional.getAccountNumber(), HttpStatus.OK, StatusRepositoryService.AMOUNT_LESS_THAN_MIN, false);
         
         // Step 6: Restore original MIN_AMOUNT_CASH_IN limit
         if(changeMinAmountCashIn){
@@ -326,17 +326,17 @@ class CashInControllerTest extends WalletApplicationTests {
         String amount = "1000000000";
         
         // Step 2: Get user's RIAL account number
-        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.RIAL);
-        WalletAccountEntity walletAccountEntity = walletAccountService.findByAccountNumber(walletAccountObjectOptional.getAccountNumber());
+        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.RIAL);
+        WalletAccountEntity walletAccountEntity = walletAccountRepositoryService.findByAccountNumber(walletAccountObjectOptional.getAccountNumber());
         
         // Step 3: Enable cash in permission if disabled
-        String value = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService,USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN,  walletAccountObjectOptional.getAccountNumber());
+        String value = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService,USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN,  walletAccountObjectOptional.getAccountNumber());
         if("false".equalsIgnoreCase(value)){
             setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, walletAccountEntity, "true");
         }
 
         // Step 4: Store original MAX_AMOUNT_CASH_IN value and temporarily decrease it
-        String valueMaxAmountCashIn = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService,USERNAME_CORRECT, LimitationGeneralService.MAX_AMOUNT_CASH_IN,  walletAccountObjectOptional.getAccountNumber());
+        String valueMaxAmountCashIn = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService,USERNAME_CORRECT, LimitationGeneralService.MAX_AMOUNT_CASH_IN,  walletAccountObjectOptional.getAccountNumber());
         boolean changeMaxAmountCashIn = false;
         if( Long.parseLong(amount) <= Long.parseLong(valueMaxAmountCashIn)){
             changeMaxAmountCashIn = true;
@@ -345,7 +345,7 @@ class CashInControllerTest extends WalletApplicationTests {
         
         // Step 5: Attempt cash in with amount above maximum
         log.info("start get balance test");
-        generateCashInUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, amount, walletAccountObjectOptional.getAccountNumber(), HttpStatus.OK, StatusService.AMOUNT_BIGGER_THAN_MAX, false);
+        generateCashInUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, amount, walletAccountObjectOptional.getAccountNumber(), HttpStatus.OK, StatusRepositoryService.AMOUNT_BIGGER_THAN_MAX, false);
         
         // Step 6: Restore original MAX_AMOUNT_CASH_IN limit
         if(changeMaxAmountCashIn){
@@ -372,17 +372,17 @@ class CashInControllerTest extends WalletApplicationTests {
         String amount ="100000";
         
         // Step 2: Get user's RIAL account number
-        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.RIAL);
-        WalletAccountEntity walletAccountEntity = walletAccountService.findByAccountNumber(walletAccountObjectOptional.getAccountNumber());
+        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.RIAL);
+        WalletAccountEntity walletAccountEntity = walletAccountRepositoryService.findByAccountNumber(walletAccountObjectOptional.getAccountNumber());
 
         // Step 3: Enable cash in permission if disabled
-        String valueEnableCashIn = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService,USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN,  walletAccountObjectOptional.getAccountNumber());
+        String valueEnableCashIn = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService,USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN,  walletAccountObjectOptional.getAccountNumber());
         if("false".equalsIgnoreCase(valueEnableCashIn)){
             setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, walletAccountEntity, "true");
         }
 
         // Step 4: Store original MAX_WALLET_BALANCE value and temporarily decrease it
-        String valueMaxWalletBalance = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService,USERNAME_CORRECT, LimitationGeneralService.MAX_WALLET_BALANCE,  walletAccountObjectOptional.getAccountNumber());
+        String valueMaxWalletBalance = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService,USERNAME_CORRECT, LimitationGeneralService.MAX_WALLET_BALANCE,  walletAccountObjectOptional.getAccountNumber());
         boolean changeMaxBalance = false;
         if( Long.parseLong(amount) <= Long.parseLong(valueMaxWalletBalance)){
             changeMaxBalance = true;
@@ -390,7 +390,7 @@ class CashInControllerTest extends WalletApplicationTests {
         }
         
         // Step 5: Attempt cash in that would exceed maximum balance
-        generateCashInUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, amount, walletAccountObjectOptional.getAccountNumber(), HttpStatus.OK, StatusService.BALANCE_MORE_THAN_STANDARD, false);
+        generateCashInUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, amount, walletAccountObjectOptional.getAccountNumber(), HttpStatus.OK, StatusRepositoryService.BALANCE_MORE_THAN_STANDARD, false);
         
         // Step 6: Restore original MAX_WALLET_BALANCE limit
         if(changeMaxBalance){
@@ -418,24 +418,24 @@ class CashInControllerTest extends WalletApplicationTests {
         String amount = "10000";
         
         // Step 2: Get user's RIAL account number
-        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.RIAL);
+        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.RIAL);
         
         // Step 3: Generate two UUIDs for cash in operations
-        BaseResponse<UuidResponse> uniqueIdentifier1 = generateCashInUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, amount, walletAccountObjectOptional.getAccountNumber(), HttpStatus.OK, StatusService.SUCCESSFUL, true);
-        BaseResponse<UuidResponse> uniqueIdentifier2 = generateCashInUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, amount, walletAccountObjectOptional.getAccountNumber(), HttpStatus.OK, StatusService.SUCCESSFUL, true);
+        BaseResponse<UuidResponse> uniqueIdentifier1 = generateCashInUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, amount, walletAccountObjectOptional.getAccountNumber(), HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
+        BaseResponse<UuidResponse> uniqueIdentifier2 = generateCashInUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, amount, walletAccountObjectOptional.getAccountNumber(), HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
         
         // Step 4: Enable cash in permission if disabled
-        WalletAccountEntity walletAccountEntity = walletAccountService.findByAccountNumber(walletAccountObjectOptional.getAccountNumber());
-        String value = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService,USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN,  walletAccountObjectOptional.getAccountNumber());
+        WalletAccountEntity walletAccountEntity = walletAccountRepositoryService.findByAccountNumber(walletAccountObjectOptional.getAccountNumber());
+        String value = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService,USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN,  walletAccountObjectOptional.getAccountNumber());
         if("false".equalsIgnoreCase(value)){
             setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, walletAccountEntity, "true"); //"test cashInFailDuplicateRefnumber");
         }
         
         // Step 5: Perform first cash in operation successfully
-        cashIn(mockMvc, ACCESS_TOKEN, uniqueIdentifier1.getData().getUniqueIdentifier(), refNumber, amount, NATIONAL_CODE_CORRECT, walletAccountObjectOptional.getAccountNumber(), "", "", "ACCOUNT_TO_ACCOUNT", HttpStatus.OK, StatusService.SUCCESSFUL, true);
+        cashIn(mockMvc, ACCESS_TOKEN, uniqueIdentifier1.getData().getUniqueIdentifier(), refNumber, amount, NATIONAL_CODE_CORRECT, walletAccountObjectOptional.getAccountNumber(), "", "", "ACCOUNT_TO_ACCOUNT", HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
         
         // Step 6: Attempt duplicate cash in with same reference number - should fail
-        cashIn(mockMvc, ACCESS_TOKEN, uniqueIdentifier2.getData().getUniqueIdentifier(), refNumber, amount, NATIONAL_CODE_CORRECT, walletAccountObjectOptional.getAccountNumber(), "", "", "ACCOUNT_TO_ACCOUNT", HttpStatus.OK, StatusService.REF_NUMBER_USED_BEFORE, false);
+        cashIn(mockMvc, ACCESS_TOKEN, uniqueIdentifier2.getData().getUniqueIdentifier(), refNumber, amount, NATIONAL_CODE_CORRECT, walletAccountObjectOptional.getAccountNumber(), "", "", "ACCOUNT_TO_ACCOUNT", HttpStatus.OK, StatusRepositoryService.REF_NUMBER_USED_BEFORE, false);
     }
 
     /**
@@ -457,28 +457,28 @@ class CashInControllerTest extends WalletApplicationTests {
         String refNumber = new Date().getTime() + "";
         
         // Step 2: Get user's RIAL account number
-        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.RIAL);
+        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.RIAL);
         BigDecimal balance = BigDecimal.valueOf(Float.parseFloat(walletAccountObjectOptional.getBalance()));
 
         // Step 3: Decrease account balance to ensure sufficient space
-        WalletAccountEntity walletAccountEntity = walletAccountService.findByAccountNumber(walletAccountObjectOptional.getAccountNumber());
-        walletAccountService.decreaseBalance(walletAccountEntity.getId(), balance);
+        WalletAccountEntity walletAccountEntity = walletAccountRepositoryService.findByAccountNumber(walletAccountObjectOptional.getAccountNumber());
+        walletAccountRepositoryService.decreaseBalance(walletAccountEntity.getId(), balance);
 
         // Step 4: Enable cash in permission if disabled
-        String value = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService,USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN,  walletAccountObjectOptional.getAccountNumber());
+        String value = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService,USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN,  walletAccountObjectOptional.getAccountNumber());
         if("false".equalsIgnoreCase(value)){
             setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, walletAccountEntity, "true"); //"test cashInFailDuplicateRrn");
         }
         
         // Step 5: Get minimum amount and generate UUID for cash in operation
-        String minAmount = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService,USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_IN, walletAccountObjectOptional.getAccountNumber());
-        BaseResponse<UuidResponse> uniqueIdentifier1 = generateCashInUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, String.valueOf(Long.parseLong(minAmount) + 1), walletAccountObjectOptional.getAccountNumber(), HttpStatus.OK, StatusService.SUCCESSFUL, true);
+        String minAmount = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService,USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_IN, walletAccountObjectOptional.getAccountNumber());
+        BaseResponse<UuidResponse> uniqueIdentifier1 = generateCashInUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, String.valueOf(Long.parseLong(minAmount) + 1), walletAccountObjectOptional.getAccountNumber(), HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
         
         // Step 6: Perform first cash in operation successfully
-        cashIn(mockMvc, ACCESS_TOKEN, uniqueIdentifier1.getData().getUniqueIdentifier(), refNumber, String.valueOf(Long.parseLong(minAmount) + 1), NATIONAL_CODE_CORRECT, walletAccountObjectOptional.getAccountNumber(), "", "", "ACCOUNT_TO_ACCOUNT", HttpStatus.OK, StatusService.SUCCESSFUL, true);
+        cashIn(mockMvc, ACCESS_TOKEN, uniqueIdentifier1.getData().getUniqueIdentifier(), refNumber, String.valueOf(Long.parseLong(minAmount) + 1), NATIONAL_CODE_CORRECT, walletAccountObjectOptional.getAccountNumber(), "", "", "ACCOUNT_TO_ACCOUNT", HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
         
         // Step 7: Attempt duplicate cash in with same UUID but different ref number - should fail
-        cashIn(mockMvc, ACCESS_TOKEN, uniqueIdentifier1.getData().getUniqueIdentifier(), new Date().getTime() + "", String.valueOf(Long.parseLong(minAmount) + 1), NATIONAL_CODE_CORRECT, walletAccountObjectOptional.getAccountNumber(), "", "", "ACCOUNT_TO_ACCOUNT", HttpStatus.OK, StatusService.DUPLICATE_UUID, false);
+        cashIn(mockMvc, ACCESS_TOKEN, uniqueIdentifier1.getData().getUniqueIdentifier(), new Date().getTime() + "", String.valueOf(Long.parseLong(minAmount) + 1), NATIONAL_CODE_CORRECT, walletAccountObjectOptional.getAccountNumber(), "", "", "ACCOUNT_TO_ACCOUNT", HttpStatus.OK, StatusRepositoryService.DUPLICATE_UUID, false);
     }
 
     /**
@@ -499,24 +499,24 @@ class CashInControllerTest extends WalletApplicationTests {
         String refNumber = new Date().getTime() + "";
         
         // Step 2: Get user's RIAL account number
-        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.RIAL);
+        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.RIAL);
         
         // Step 3: Get minimum amount for cash in operation
-        String amount = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService,USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_IN, walletAccountObjectOptional.getAccountNumber());
+        String amount = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService,USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_IN, walletAccountObjectOptional.getAccountNumber());
         
         // Step 4: Generate UUID for cash in operation
-        BaseResponse<UuidResponse> uniqueIdentifier1 = generateCashInUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, String.valueOf(amount), walletAccountObjectOptional.getAccountNumber(), HttpStatus.OK, StatusService.SUCCESSFUL, true);
+        BaseResponse<UuidResponse> uniqueIdentifier1 = generateCashInUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, String.valueOf(amount), walletAccountObjectOptional.getAccountNumber(), HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
         log.info("generate uuid " + uniqueIdentifier1);
         
         // Step 5: Enable cash in permission if disabled
-        WalletAccountEntity walletAccountEntity = walletAccountService.findByAccountNumber(walletAccountObjectOptional.getAccountNumber());
-        String value = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService,USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN,  walletAccountObjectOptional.getAccountNumber());
+        WalletAccountEntity walletAccountEntity = walletAccountRepositoryService.findByAccountNumber(walletAccountObjectOptional.getAccountNumber());
+        String value = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService,USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN,  walletAccountObjectOptional.getAccountNumber());
         if("false".equalsIgnoreCase(value)){
             setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, walletAccountEntity, "true"); //"test cashInSuccess");
         }
         
         // Step 6: Perform cash in operation successfully
-        cashIn(mockMvc, ACCESS_TOKEN, uniqueIdentifier1.getData().getUniqueIdentifier(), refNumber, amount, NATIONAL_CODE_CORRECT, walletAccountObjectOptional.getAccountNumber(), "", "", "ACCOUNT_TO_ACCOUNT", HttpStatus.OK, StatusService.SUCCESSFUL, true);
+        cashIn(mockMvc, ACCESS_TOKEN, uniqueIdentifier1.getData().getUniqueIdentifier(), refNumber, amount, NATIONAL_CODE_CORRECT, walletAccountObjectOptional.getAccountNumber(), "", "", "ACCOUNT_TO_ACCOUNT", HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
     }
 
 
@@ -538,24 +538,24 @@ class CashInControllerTest extends WalletApplicationTests {
         String refNumber = new Date().getTime() + "";
         
         // Step 2: Get user's RIAL account number
-        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.RIAL);
+        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.RIAL);
         
         // Step 3: Get minimum amount for cash in operation
-        String amount = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService,USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_IN, walletAccountObjectOptional.getAccountNumber());
+        String amount = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService,USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_IN, walletAccountObjectOptional.getAccountNumber());
         
         // Step 4: Generate UUID for cash in operation
-        BaseResponse<UuidResponse> uniqueIdentifier1 = generateCashInUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, String.valueOf(amount), walletAccountObjectOptional.getAccountNumber(), HttpStatus.OK, StatusService.SUCCESSFUL, true);
+        BaseResponse<UuidResponse> uniqueIdentifier1 = generateCashInUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, String.valueOf(amount), walletAccountObjectOptional.getAccountNumber(), HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
         log.info("generate uuid " + uniqueIdentifier1);
         
         // Step 5: Enable cash in permission if disabled
-        WalletAccountEntity walletAccountEntity = walletAccountService.findByAccountNumber(walletAccountObjectOptional.getAccountNumber());
-        String value = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService,USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN,  walletAccountObjectOptional.getAccountNumber());
+        WalletAccountEntity walletAccountEntity = walletAccountRepositoryService.findByAccountNumber(walletAccountObjectOptional.getAccountNumber());
+        String value = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService,USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN,  walletAccountObjectOptional.getAccountNumber());
         if("false".equalsIgnoreCase(value)){
             setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, walletAccountEntity, "true"); //"test cashInFailAmountUuidNotSame");
         }
         
         // Step 6: Attempt cash in with different amount than UUID - should fail
-        cashIn(mockMvc, ACCESS_TOKEN, uniqueIdentifier1.getData().getUniqueIdentifier(), refNumber, String.valueOf(Long.parseLong(amount) + 1), NATIONAL_CODE_CORRECT, walletAccountObjectOptional.getAccountNumber(), "", "", "ACCOUNT_TO_ACCOUNT", HttpStatus.OK, StatusService.PRICE_NOT_SAME_WITH_UUID, false);
+        cashIn(mockMvc, ACCESS_TOKEN, uniqueIdentifier1.getData().getUniqueIdentifier(), refNumber, String.valueOf(Long.parseLong(amount) + 1), NATIONAL_CODE_CORRECT, walletAccountObjectOptional.getAccountNumber(), "", "", "ACCOUNT_TO_ACCOUNT", HttpStatus.OK, StatusRepositoryService.PRICE_NOT_SAME_WITH_UUID, false);
     }
 
 
@@ -577,24 +577,24 @@ class CashInControllerTest extends WalletApplicationTests {
         String refNumber = new Date().getTime() + "";
         
         // Step 2: Get user's RIAL account number
-        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.RIAL);
+        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.RIAL);
         
         // Step 3: Get minimum amount for cash in operation
-        String amount = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService,USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_IN, walletAccountObjectOptional.getAccountNumber());
+        String amount = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService,USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_IN, walletAccountObjectOptional.getAccountNumber());
         
         // Step 4: Generate UUID for cash in operation
-        BaseResponse<UuidResponse> uniqueIdentifier1 = generateCashInUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, String.valueOf(amount), walletAccountObjectOptional.getAccountNumber(), HttpStatus.OK, StatusService.SUCCESSFUL, true);
+        BaseResponse<UuidResponse> uniqueIdentifier1 = generateCashInUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, String.valueOf(amount), walletAccountObjectOptional.getAccountNumber(), HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
         log.info("generate uuid " + uniqueIdentifier1);
         
         // Step 5: Enable cash in permission if disabled
-        WalletAccountEntity walletAccountEntity = walletAccountService.findByAccountNumber(walletAccountObjectOptional.getAccountNumber());
-        String value = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService,USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN,  walletAccountObjectOptional.getAccountNumber());
+        WalletAccountEntity walletAccountEntity = walletAccountRepositoryService.findByAccountNumber(walletAccountObjectOptional.getAccountNumber());
+        String value = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService,USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN,  walletAccountObjectOptional.getAccountNumber());
         if("false".equalsIgnoreCase(value)){
             setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, walletAccountEntity, "true"); //"test cashInFailAccountNotFound");
         }
         
         // Step 6: Attempt cash in with different account number than UUID - should fail
-        cashIn(mockMvc, ACCESS_TOKEN, uniqueIdentifier1.getData().getUniqueIdentifier(), refNumber, String.valueOf(Long.parseLong(amount)), NATIONAL_CODE_CORRECT, walletAccountObjectOptional.getAccountNumber()+"1", "", "", "ACCOUNT_TO_ACCOUNT", HttpStatus.OK, StatusService.ACCOUNT_NUMBER_NOT_SAME_WITH_UUID, false);
+        cashIn(mockMvc, ACCESS_TOKEN, uniqueIdentifier1.getData().getUniqueIdentifier(), refNumber, String.valueOf(Long.parseLong(amount)), NATIONAL_CODE_CORRECT, walletAccountObjectOptional.getAccountNumber()+"1", "", "", "ACCOUNT_TO_ACCOUNT", HttpStatus.OK, StatusRepositoryService.ACCOUNT_NUMBER_NOT_SAME_WITH_UUID, false);
     }
 
 
@@ -611,17 +611,17 @@ class CashInControllerTest extends WalletApplicationTests {
     @DisplayName("cashInFailWalletAccountNotFound")
     void cashInFailAccountNotFoundInUuid() throws Exception {
         // Step 1: Get user's RIAL account number
-        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.RIAL);
+        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.RIAL);
         
         // Step 2: Get minimum amount for cash in operation
-        String amount = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService,USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_IN, walletAccountObjectOptional.getAccountNumber());
+        String amount = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService,USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_IN, walletAccountObjectOptional.getAccountNumber());
         
         // Step 3: Attempt to generate UUID with non-existent account number - should fail
-        generateCashInUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, String.valueOf(amount), walletAccountObjectOptional.getAccountNumber()+"1", HttpStatus.OK, StatusService.WALLET_ACCOUNT_NOT_FOUND, false);
+        generateCashInUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, String.valueOf(amount), walletAccountObjectOptional.getAccountNumber()+"1", HttpStatus.OK, StatusRepositoryService.WALLET_ACCOUNT_NOT_FOUND, false);
         
         // Step 4: Enable cash in permission if disabled (for cleanup)
-        WalletAccountEntity walletAccountEntity = walletAccountService.findByAccountNumber(walletAccountObjectOptional.getAccountNumber());
-        String value = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService,USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN,  walletAccountObjectOptional.getAccountNumber());
+        WalletAccountEntity walletAccountEntity = walletAccountRepositoryService.findByAccountNumber(walletAccountObjectOptional.getAccountNumber());
+        String value = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService,USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN,  walletAccountObjectOptional.getAccountNumber());
         if("false".equalsIgnoreCase(value)){
             setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, walletAccountEntity, "true"); //"test cashInFailAccountNotFoundInUuid");
         }
@@ -645,31 +645,31 @@ class CashInControllerTest extends WalletApplicationTests {
     void cashInFailAccountNotActive() throws Exception {
 
         // Step 1: Get user's RIAL account number
-        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.RIAL);
+        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.RIAL);
         
         // Step 2: Get minimum amount for cash in operation
-        String amount = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService,USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_IN, walletAccountObjectOptional.getAccountNumber());
+        String amount = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService,USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_IN, walletAccountObjectOptional.getAccountNumber());
         
         // Step 3: Disable the account status
-        WalletAccountEntity walletAccountEntity = walletAccountService.findByAccountNumber(walletAccountObjectOptional.getAccountNumber());
+        WalletAccountEntity walletAccountEntity = walletAccountRepositoryService.findByAccountNumber(walletAccountObjectOptional.getAccountNumber());
         walletAccountEntity.setStatus(WalletStatusEnum.DISABLE);
-        walletAccountService.save(walletAccountEntity);
-        walletAccountService.clearCache(walletAccountObjectOptional.getAccountNumber());
+        walletAccountRepositoryService.save(walletAccountEntity);
+        walletAccountRepositoryService.clearCache(walletAccountObjectOptional.getAccountNumber());
         
         // Step 4: Attempt to generate UUID for cash in operation - should fail
-        generateCashInUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, String.valueOf(amount), walletAccountObjectOptional.getAccountNumber(), HttpStatus.OK, StatusService.WALLET_ACCOUNT_IS_NOT_ACTIVE, false);
+        generateCashInUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, String.valueOf(amount), walletAccountObjectOptional.getAccountNumber(), HttpStatus.OK, StatusRepositoryService.WALLET_ACCOUNT_IS_NOT_ACTIVE, false);
 
         // Step 5: Enable cash in permission if disabled
-        String value = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService,USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN,  walletAccountObjectOptional.getAccountNumber());
+        String value = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService,USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN,  walletAccountObjectOptional.getAccountNumber());
         if("false".equalsIgnoreCase(value)){
             setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, walletAccountEntity, "true"); //"test cashInFailAccountNotActive");
         }
         
         // Step 6: Re-enable the account status
-        walletAccountEntity = walletAccountService.findByAccountNumber(walletAccountObjectOptional.getAccountNumber());
+        walletAccountEntity = walletAccountRepositoryService.findByAccountNumber(walletAccountObjectOptional.getAccountNumber());
         walletAccountEntity.setStatus(WalletStatusEnum.ACTIVE);
-        walletAccountService.save(walletAccountEntity);
-        walletAccountService.clearCache(walletAccountObjectOptional.getAccountNumber());
+        walletAccountRepositoryService.save(walletAccountEntity);
+        walletAccountRepositoryService.clearCache(walletAccountObjectOptional.getAccountNumber());
     }
 
 
@@ -689,30 +689,30 @@ class CashInControllerTest extends WalletApplicationTests {
     void cashInFailWalletNotActive() throws Exception {
 
         // Step 1: Get user's RIAL account number
-        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.RIAL);
+        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.RIAL);
         
         // Step 2: Get minimum amount for cash in operation
-        String amount = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService,USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_IN, walletAccountObjectOptional.getAccountNumber());
+        String amount = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService,USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_IN, walletAccountObjectOptional.getAccountNumber());
 
         // Step 3: Disable the wallet status
-        WalletAccountEntity walletAccountEntity = walletAccountService.findByAccountNumber(walletAccountObjectOptional.getAccountNumber());
+        WalletAccountEntity walletAccountEntity = walletAccountRepositoryService.findByAccountNumber(walletAccountObjectOptional.getAccountNumber());
         walletAccountEntity.getWalletEntity().setStatus(WalletStatusEnum.DISABLE);
-        walletService.save(walletAccountEntity.getWalletEntity());
-        walletService.clearAllCache();
+        walletRepositoryService.save(walletAccountEntity.getWalletEntity());
+        walletRepositoryService.clearAllCache();
 
         // Step 4: Attempt to generate UUID for cash in operation - should fail
-        generateCashInUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, String.valueOf(amount), walletAccountObjectOptional.getAccountNumber(), HttpStatus.OK, StatusService.WALLET_IS_NOT_ACTIVE, false);
+        generateCashInUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, String.valueOf(amount), walletAccountObjectOptional.getAccountNumber(), HttpStatus.OK, StatusRepositoryService.WALLET_IS_NOT_ACTIVE, false);
 
         // Step 5: Enable cash in permission if disabled
-        String value = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService,USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN,  walletAccountObjectOptional.getAccountNumber());
+        String value = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService,USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN,  walletAccountObjectOptional.getAccountNumber());
         if("false".equalsIgnoreCase(value)){
             setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, walletAccountEntity, "true"); //"test cashInFailWalletNotActive");
         }
         
         // Step 6: Re-enable the wallet status
         walletAccountEntity.getWalletEntity().setStatus(WalletStatusEnum.ACTIVE);
-        walletService.save(walletAccountEntity.getWalletEntity());
-        walletService.clearAllCache();
+        walletRepositoryService.save(walletAccountEntity.getWalletEntity());
+        walletRepositoryService.clearAllCache();
 
     }
 
@@ -729,19 +729,19 @@ class CashInControllerTest extends WalletApplicationTests {
     @DisplayName("cashInFailInvalidNationalCode")
     void cashInFailInvalidNationalCode() throws Exception {
         // Step 1: Get user's RIAL account number
-        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.RIAL);
+        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.RIAL);
         
         // Step 2: Get minimum amount for cash in operation
-        String amount = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService,USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_IN, walletAccountObjectOptional.getAccountNumber());
+        String amount = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService,USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_IN, walletAccountObjectOptional.getAccountNumber());
         
         // Step 3: Disable wallet status for testing
-        WalletAccountEntity walletAccountEntity = walletAccountService.findByAccountNumber(walletAccountObjectOptional.getAccountNumber());
+        WalletAccountEntity walletAccountEntity = walletAccountRepositoryService.findByAccountNumber(walletAccountObjectOptional.getAccountNumber());
         walletAccountEntity.getWalletEntity().setStatus(WalletStatusEnum.DISABLE);
-        walletService.save(walletAccountEntity.getWalletEntity());
-        walletService.clearAllCache();
+        walletRepositoryService.save(walletAccountEntity.getWalletEntity());
+        walletRepositoryService.clearAllCache();
         
         // Step 4: Attempt to generate UUID with invalid national code - should fail
-        generateCashInUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_INCORRECT, String.valueOf(amount), walletAccountObjectOptional.getAccountNumber(), HttpStatus.OK, StatusService.INPUT_PARAMETER_NOT_VALID, false);
+        generateCashInUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_INCORRECT, String.valueOf(amount), walletAccountObjectOptional.getAccountNumber(), HttpStatus.OK, StatusRepositoryService.INPUT_PARAMETER_NOT_VALID, false);
     }
 
     /**
@@ -757,16 +757,16 @@ class CashInControllerTest extends WalletApplicationTests {
     @DisplayName("cashInFailInvalidAmount")
     void cashInFailInvalidAmount() throws Exception {
         // Step 1: Get user's RIAL account number
-        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.RIAL);
+        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.RIAL);
         
         // Step 2: Disable wallet status for testing
-        WalletAccountEntity walletAccountEntity = walletAccountService.findByAccountNumber(walletAccountObjectOptional.getAccountNumber());
+        WalletAccountEntity walletAccountEntity = walletAccountRepositoryService.findByAccountNumber(walletAccountObjectOptional.getAccountNumber());
         walletAccountEntity.getWalletEntity().setStatus(WalletStatusEnum.DISABLE);
-        walletService.save(walletAccountEntity.getWalletEntity());
-        walletService.clearAllCache();
+        walletRepositoryService.save(walletAccountEntity.getWalletEntity());
+        walletRepositoryService.clearAllCache();
         
         // Step 3: Attempt to generate UUID with invalid amount format - should fail
-        generateCashInUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, String.valueOf("aa"), walletAccountObjectOptional.getAccountNumber(), HttpStatus.OK, StatusService.INPUT_PARAMETER_NOT_VALID, false);
+        generateCashInUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, String.valueOf("aa"), walletAccountObjectOptional.getAccountNumber(), HttpStatus.OK, StatusRepositoryService.INPUT_PARAMETER_NOT_VALID, false);
     }
 
     /**
@@ -783,19 +783,19 @@ class CashInControllerTest extends WalletApplicationTests {
     @DisplayName("cashInFailInvalidAccountNumber")
     void cashInFailInvalidAccountNumber() throws Exception {
         // Step 1: Get user's RIAL account number
-        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.RIAL);
+        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.RIAL);
         
         // Step 2: Get minimum amount for cash in operation
-        String amount = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService,USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_IN, walletAccountObjectOptional.getAccountNumber());
+        String amount = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService,USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_IN, walletAccountObjectOptional.getAccountNumber());
         
         // Step 3: Disable wallet status for testing
-        WalletAccountEntity walletAccountEntity = walletAccountService.findByAccountNumber(walletAccountObjectOptional.getAccountNumber());
+        WalletAccountEntity walletAccountEntity = walletAccountRepositoryService.findByAccountNumber(walletAccountObjectOptional.getAccountNumber());
         walletAccountEntity.getWalletEntity().setStatus(WalletStatusEnum.DISABLE);
-        walletService.save(walletAccountEntity.getWalletEntity());
-        walletService.clearAllCache();
+        walletRepositoryService.save(walletAccountEntity.getWalletEntity());
+        walletRepositoryService.clearAllCache();
         
         // Step 4: Attempt to generate UUID with invalid account number format - should fail
-        generateCashInUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, String.valueOf(amount), "546fgdgdfg5", HttpStatus.OK, StatusService.INPUT_PARAMETER_NOT_VALID, false);
+        generateCashInUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, String.valueOf(amount), "546fgdgdfg5", HttpStatus.OK, StatusRepositoryService.INPUT_PARAMETER_NOT_VALID, false);
     }
 
     //

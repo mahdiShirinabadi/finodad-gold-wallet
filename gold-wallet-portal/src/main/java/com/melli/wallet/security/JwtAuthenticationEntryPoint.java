@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.melli.wallet.domain.master.entity.StatusEntity;
 import com.melli.wallet.domain.response.base.ErrorDetail;
-import com.melli.wallet.service.StatusService;
+import com.melli.wallet.service.repository.StatusRepositoryService;
 import com.melli.wallet.utils.Helper;
 import io.micrometer.core.annotation.Timed;
 import jakarta.servlet.http.HttpServletRequest;
@@ -28,12 +28,12 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint, Se
 
 
     private final Helper helper;
-    private final StatusService statusService;
+    private final StatusRepositoryService statusRepositoryService;
 
     @Autowired
-    public JwtAuthenticationEntryPoint(Helper helper, StatusService statusService) {
+    public JwtAuthenticationEntryPoint(Helper helper, StatusRepositoryService statusRepositoryService) {
         this.helper = helper;
-        this.statusService = statusService;
+        this.statusRepositoryService = statusRepositoryService;
     }
 
     @Override
@@ -45,8 +45,8 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint, Se
         ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
         response.setCharacterEncoding(StandardCharsets.UTF_8.toString());
 
-        StatusEntity statusEntity = statusService.findByCode(String.valueOf(StatusService.TOKEN_NOT_VALID));
-        ErrorDetail errorDetail = new ErrorDetail(statusEntity.getPersianDescription(), StatusService.TOKEN_NOT_VALID);
+        StatusEntity statusEntity = statusRepositoryService.findByCode(String.valueOf(StatusRepositoryService.TOKEN_NOT_VALID));
+        ErrorDetail errorDetail = new ErrorDetail(statusEntity.getPersianDescription(), StatusRepositoryService.TOKEN_NOT_VALID);
 
         response.getWriter().print(ow.writeValueAsString(helper.fillBaseResponse(false, errorDetail)));
     }

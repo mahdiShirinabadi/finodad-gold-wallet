@@ -1,6 +1,6 @@
 package com.melli.wallet.config;
 
-import com.melli.wallet.service.LoggingHttpService;
+import com.melli.wallet.service.operation.LoggingHttpOperationService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.core.MethodParameter;
 import org.springframework.http.HttpInputMessage;
@@ -14,12 +14,12 @@ import java.lang.reflect.Type;
 public class RequestBodyInterceptor extends RequestBodyAdviceAdapter {
 
     final
-    LoggingHttpService loggingService;
+    LoggingHttpOperationService loggingService;
 
     final
     HttpServletRequest request;
 
-    public RequestBodyInterceptor(LoggingHttpService loggingService, HttpServletRequest request) {
+    public RequestBodyInterceptor(LoggingHttpOperationService loggingService, HttpServletRequest request) {
         this.loggingService = loggingService;
         this.request = request;
     }

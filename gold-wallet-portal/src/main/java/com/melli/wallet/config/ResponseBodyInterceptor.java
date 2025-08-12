@@ -1,6 +1,6 @@
 package com.melli.wallet.config;
 
-import com.melli.wallet.service.LoggingHttpService;
+import com.melli.wallet.service.operation.LoggingHttpOperationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.MethodParameter;
 import org.springframework.http.MediaType;
@@ -17,7 +17,7 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyAdvice;
 public class ResponseBodyInterceptor implements ResponseBodyAdvice<Object> {
 
 
-    private final LoggingHttpService loggingService;
+    private final LoggingHttpOperationService loggingService;
 
 
     @Override

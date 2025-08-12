@@ -11,7 +11,7 @@ import com.melli.wallet.domain.response.cash.CashOutTrackResponse;
 import com.melli.wallet.domain.response.login.LoginResponse;
 import com.melli.wallet.domain.response.wallet.CreateWalletResponse;
 import com.melli.wallet.domain.response.wallet.WalletAccountObject;
-import com.melli.wallet.service.*;
+import com.melli.wallet.service.repository.*;
 import lombok.extern.log4j.Log4j2;
 import org.flywaydb.core.Flyway;
 import org.junit.Assert;
@@ -28,8 +28,6 @@ import java.util.Date;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.ConcurrentLinkedQueue;
 
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 
@@ -73,15 +71,15 @@ class CashOutControllerTest extends WalletApplicationTests {
     @Autowired
     private WebApplicationContext webApplicationContext;
     @Autowired
-    private WalletAccountService walletAccountService;
+    private WalletAccountRepositoryService walletAccountRepositoryService;
     @Autowired
-    private WalletService walletService;
+    private WalletRepositoryService walletRepositoryService;
     @Autowired
-    private LimitationGeneralCustomService limitationGeneralCustomService;
+    private LimitationGeneralCustomRepositoryService limitationGeneralCustomRepositoryService;
     @Autowired
     private LimitationGeneralService limitationGeneralService;
     @Autowired
-    private ChannelService channelService;
+    private ChannelRepositoryService channelRepositoryService;
     @Autowired
     private CacheClearService cacheClearService;
     @Autowired
@@ -123,7 +121,7 @@ class CashOutControllerTest extends WalletApplicationTests {
     void login_success() throws Exception {
         log.info("start login_success test");
         BaseResponse<LoginResponse> response = login(mockMvc, USERNAME_CORRECT, PASSWORD_CORRECT, HttpStatus.OK,
-                StatusService.SUCCESSFUL, true);
+                StatusRepositoryService.SUCCESSFUL, true);
         ACCESS_TOKEN = response.getData().getAccessTokenObject().getToken();
         REFRESH_TOKEN = response.getData().getRefreshTokenObject().getToken();
     }
@@ -142,7 +140,7 @@ class CashOutControllerTest extends WalletApplicationTests {
         log.info("start createWalletForTesting test");
         
         // Create wallet for testing
-        BaseResponse<CreateWalletResponse> response = createWallet(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, MOBILE_CORRECT, HttpStatus.OK, StatusService.SUCCESSFUL, true);
+        BaseResponse<CreateWalletResponse> response = createWallet(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, MOBILE_CORRECT, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
         Assert.assertNotNull(response.getData());
         log.info("Wallet created successfully for testing");
     }
@@ -164,43 +162,43 @@ class CashOutControllerTest extends WalletApplicationTests {
         log.info("start cashOutSuccess test");
         
         // Step 1: Get user's RIAL account number
-        WalletAccountObject walletAccountObject = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.RIAL);
+        WalletAccountObject walletAccountObject = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.RIAL);
         String accountNumber = walletAccountObject.getAccountNumber();
         
         // Step 2: Charge the account with cash in to ensure sufficient balance
         String refNumber = new Date().getTime() + "";
-        String cashInAmount = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_IN, accountNumber);
+        String cashInAmount = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_IN, accountNumber);
         
         // Step 3: Enable cash in permission if disabled
-        WalletAccountEntity walletAccountEntity = walletAccountService.findByAccountNumber(accountNumber);
-        String cashInValue = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, accountNumber);
+        WalletAccountEntity walletAccountEntity = walletAccountRepositoryService.findByAccountNumber(accountNumber);
+        String cashInValue = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, accountNumber);
         if("false".equalsIgnoreCase(cashInValue)){
             setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, walletAccountEntity, "true");
         }
         
         // Step 4: Generate UUID for cash in operation
-        BaseResponse<UuidResponse> cashInUuidResponse = generateCashInUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, cashInAmount, accountNumber, HttpStatus.OK, StatusService.SUCCESSFUL, true);
+        BaseResponse<UuidResponse> cashInUuidResponse = generateCashInUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, cashInAmount, accountNumber, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
         
         // Step 5: Perform cash in to charge the account
-        BaseResponse<CashInResponse> cashInResponse = cashIn(mockMvc, ACCESS_TOKEN, cashInUuidResponse.getData().getUniqueIdentifier(), refNumber, cashInAmount, NATIONAL_CODE_CORRECT, accountNumber, "", "", "ACCOUNT_TO_ACCOUNT", HttpStatus.OK, StatusService.SUCCESSFUL, true);
+        BaseResponse<CashInResponse> cashInResponse = cashIn(mockMvc, ACCESS_TOKEN, cashInUuidResponse.getData().getUniqueIdentifier(), refNumber, cashInAmount, NATIONAL_CODE_CORRECT, accountNumber, "", "", "ACCOUNT_TO_ACCOUNT", HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
         Assert.assertNotNull(cashInResponse.getData());
         log.info("Account charged successfully with amount: {}", cashInAmount);
         
         // Step 6: Get amount for cash out operation
-        String cashOutAmount = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_OUT, accountNumber);
+        String cashOutAmount = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_OUT, accountNumber);
         
         // Step 7: Enable cash out permission if disabled
-        String cashOutValue = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_OUT, accountNumber);
+        String cashOutValue = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_OUT, accountNumber);
         if("false".equalsIgnoreCase(cashOutValue)){
             setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_OUT, walletAccountEntity, "true");
         }
         
         // Step 8: Generate UUID for cash out operation
-        BaseResponse<UuidResponse> uuidResponse = generateCashOutUuid(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, cashOutAmount, accountNumber, HttpStatus.OK, StatusService.SUCCESSFUL, true);
+        BaseResponse<UuidResponse> uuidResponse = generateCashOutUuid(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, cashOutAmount, accountNumber, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
         String uniqueIdentifier = uuidResponse.getData().getUniqueIdentifier();
         
         // Step 9: Perform cash out operation
-        BaseResponse<CashOutResponse> response = cashOut(mockMvc, ACCESS_TOKEN, uniqueIdentifier, cashOutAmount, NATIONAL_CODE_CORRECT, accountNumber, VALID_IBAN, VALID_SIGN, ADDITIONAL_DATA, HttpStatus.OK, StatusService.SUCCESSFUL, true);
+        BaseResponse<CashOutResponse> response = cashOut(mockMvc, ACCESS_TOKEN, uniqueIdentifier, cashOutAmount, NATIONAL_CODE_CORRECT, accountNumber, VALID_IBAN, VALID_SIGN, ADDITIONAL_DATA, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
         Assert.assertNotNull(response.getData());
         Assert.assertEquals(NATIONAL_CODE_CORRECT, response.getData().getNationalCode());
         Assert.assertEquals(accountNumber, response.getData().getWalletAccountNumber());
@@ -224,13 +222,13 @@ class CashOutControllerTest extends WalletApplicationTests {
         log.info("start cashOutFailInvalidUniqueIdentifier test");
         
         // Step 1: Get user's RIAL account number
-        WalletAccountObject walletAccountObject = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.RIAL);
+        WalletAccountObject walletAccountObject = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.RIAL);
         
         // Step 2: Get minimum amount for cash out operation
-        String amount = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_OUT, walletAccountObject.getAccountNumber());
+        String amount = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_OUT, walletAccountObject.getAccountNumber());
         
         // Step 3: Attempt cash out with invalid UUID - should fail
-        cashOut(mockMvc, ACCESS_TOKEN, "invalid_uuid", amount, NATIONAL_CODE_CORRECT, walletAccountObject.getAccountNumber(), VALID_IBAN, VALID_SIGN, ADDITIONAL_DATA, HttpStatus.OK, StatusService.UUID_NOT_FOUND, false);
+        cashOut(mockMvc, ACCESS_TOKEN, "invalid_uuid", amount, NATIONAL_CODE_CORRECT, walletAccountObject.getAccountNumber(), VALID_IBAN, VALID_SIGN, ADDITIONAL_DATA, HttpStatus.OK, StatusRepositoryService.UUID_NOT_FOUND, false);
     }
 
 
@@ -250,25 +248,25 @@ class CashOutControllerTest extends WalletApplicationTests {
         log.info("start cashOutFailInsufficientBalance test");
         
         // Step 1: Get user's RIAL account number
-        WalletAccountObject walletAccountObject = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.RIAL);
+        WalletAccountObject walletAccountObject = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.RIAL);
         String accountNumber = walletAccountObject.getAccountNumber();
         
         // Step 2: Charge the account with cash in to have some balance
         String refNumber = new Date().getTime() + "";
-        String cashInAmount = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_IN, accountNumber);
-        WalletAccountEntity walletAccountEntity = walletAccountService.findByAccountNumber(accountNumber);
+        String cashInAmount = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_IN, accountNumber);
+        WalletAccountEntity walletAccountEntity = walletAccountRepositoryService.findByAccountNumber(accountNumber);
         
         // Step 3: Enable cash in permission if disabled
-        String cashInValue = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, accountNumber);
+        String cashInValue = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, accountNumber);
         if("false".equalsIgnoreCase(cashInValue)){
             setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, walletAccountEntity, "true"); //"test cashOutFailInsufficientBalance");
         }
         
         // Step 4: Generate UUID for cash in operation
-        BaseResponse<UuidResponse> cashInUuidResponse = generateCashInUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, cashInAmount, accountNumber, HttpStatus.OK, StatusService.SUCCESSFUL, true);
+        BaseResponse<UuidResponse> cashInUuidResponse = generateCashInUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, cashInAmount, accountNumber, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
         
         // Step 5: Perform cash in to charge the account
-        BaseResponse<CashInResponse> cashInResponse = cashIn(mockMvc, ACCESS_TOKEN, cashInUuidResponse.getData().getUniqueIdentifier(), refNumber, cashInAmount, NATIONAL_CODE_CORRECT, accountNumber, "", "", "ACCOUNT_TO_ACCOUNT", HttpStatus.OK, StatusService.SUCCESSFUL, true);
+        BaseResponse<CashInResponse> cashInResponse = cashIn(mockMvc, ACCESS_TOKEN, cashInUuidResponse.getData().getUniqueIdentifier(), refNumber, cashInAmount, NATIONAL_CODE_CORRECT, accountNumber, "", "", "ACCOUNT_TO_ACCOUNT", HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
         Assert.assertNotNull(cashInResponse.getData());
         log.info("Account charged successfully with amount: {}", cashInAmount);
         
@@ -277,11 +275,11 @@ class CashOutControllerTest extends WalletApplicationTests {
         log.info("Attempting cashOut with amount: {} (original amount + 1)", cashOutAmount);
         
         // Step 7: Generate UUID for cash out operation
-        BaseResponse<UuidResponse> uuidResponse = generateCashOutUuid(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, cashOutAmount, accountNumber, HttpStatus.OK, StatusService.SUCCESSFUL, true);
+        BaseResponse<UuidResponse> uuidResponse = generateCashOutUuid(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, cashOutAmount, accountNumber, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
         String uniqueIdentifier = uuidResponse.getData().getUniqueIdentifier();
         
         // Step 8: Attempt cash out - should fail due to insufficient balance
-        cashOut(mockMvc, ACCESS_TOKEN, uniqueIdentifier, cashOutAmount, NATIONAL_CODE_CORRECT, accountNumber, VALID_IBAN, VALID_SIGN, ADDITIONAL_DATA, HttpStatus.OK, StatusService.BALANCE_IS_NOT_ENOUGH, false);
+        cashOut(mockMvc, ACCESS_TOKEN, uniqueIdentifier, cashOutAmount, NATIONAL_CODE_CORRECT, accountNumber, VALID_IBAN, VALID_SIGN, ADDITIONAL_DATA, HttpStatus.OK, StatusRepositoryService.BALANCE_IS_NOT_ENOUGH, false);
     }
 
     /**
@@ -301,21 +299,21 @@ class CashOutControllerTest extends WalletApplicationTests {
         log.info("start cashOutFailDuplicateRequest test");
         
         // Step 1: Get user's RIAL account number
-        WalletAccountObject walletAccountObject = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.RIAL);
+        WalletAccountObject walletAccountObject = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.RIAL);
         
         // Step 2: Get minimum amount for cash out operation
-        String amount = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_OUT, walletAccountObject.getAccountNumber());
+        String amount = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_OUT, walletAccountObject.getAccountNumber());
         
         // Step 3: Generate UUID for cash out operation
-        BaseResponse<UuidResponse> uuidResponse = generateCashOutUuid(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, amount, walletAccountObject.getAccountNumber(), HttpStatus.OK, StatusService.SUCCESSFUL, true);
+        BaseResponse<UuidResponse> uuidResponse = generateCashOutUuid(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, amount, walletAccountObject.getAccountNumber(), HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
         String uniqueIdentifier = uuidResponse.getData().getUniqueIdentifier();
         
         // Step 4: Perform first cash out successfully
-        BaseResponse<CashOutResponse> firstResponse = cashOut(mockMvc, ACCESS_TOKEN, uniqueIdentifier, amount, NATIONAL_CODE_CORRECT, walletAccountObject.getAccountNumber(), VALID_IBAN, VALID_SIGN, ADDITIONAL_DATA, HttpStatus.OK, StatusService.SUCCESSFUL, true);
+        BaseResponse<CashOutResponse> firstResponse = cashOut(mockMvc, ACCESS_TOKEN, uniqueIdentifier, amount, NATIONAL_CODE_CORRECT, walletAccountObject.getAccountNumber(), VALID_IBAN, VALID_SIGN, ADDITIONAL_DATA, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
         Assert.assertNotNull(firstResponse.getData());
         
         // Step 5: Attempt second cash out with same UUID - should fail
-        cashOut(mockMvc, ACCESS_TOKEN, uniqueIdentifier, amount, NATIONAL_CODE_CORRECT, walletAccountObject.getAccountNumber(), VALID_IBAN, VALID_SIGN, ADDITIONAL_DATA, HttpStatus.OK, StatusService.DUPLICATE_UUID, false);
+        cashOut(mockMvc, ACCESS_TOKEN, uniqueIdentifier, amount, NATIONAL_CODE_CORRECT, walletAccountObject.getAccountNumber(), VALID_IBAN, VALID_SIGN, ADDITIONAL_DATA, HttpStatus.OK, StatusRepositoryService.DUPLICATE_UUID, false);
     }
 
     /**
@@ -335,43 +333,43 @@ class CashOutControllerTest extends WalletApplicationTests {
     void inquiryCashOutSuccess() throws Exception {
         log.info("start inquiryCashOutSuccess test");
         // Step 1: Get account number
-        WalletAccountObject walletAccountObject = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.RIAL);
+        WalletAccountObject walletAccountObject = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.RIAL);
         String accountNumber = walletAccountObject.getAccountNumber();
         // Step 2: First, charge the account with cashIn to have sufficient balance
         String refNumber = new Date().getTime() + "";
-        String cashInAmount = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_IN, accountNumber);
+        String cashInAmount = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_IN, accountNumber);
         // Step 3: Enable cashIn if disabled
-        WalletAccountEntity walletAccountEntity = walletAccountService.findByAccountNumber(accountNumber);
-        String cashInValue = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, accountNumber);
+        WalletAccountEntity walletAccountEntity = walletAccountRepositoryService.findByAccountNumber(accountNumber);
+        String cashInValue = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, accountNumber);
         if("false".equalsIgnoreCase(cashInValue)){
             setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, walletAccountEntity, "true");
         }
         // Step 4: Generate UUID for cashIn
-        BaseResponse<UuidResponse> cashInUuidResponse = generateCashInUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, cashInAmount, accountNumber, HttpStatus.OK, StatusService.SUCCESSFUL, true);
+        BaseResponse<UuidResponse> cashInUuidResponse = generateCashInUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, cashInAmount, accountNumber, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
         // Step 5: Perform cashIn to charge the account
-        BaseResponse<CashInResponse> cashInResponse = cashIn(mockMvc, ACCESS_TOKEN, cashInUuidResponse.getData().getUniqueIdentifier(), refNumber, cashInAmount, NATIONAL_CODE_CORRECT, accountNumber, "", "", "ACCOUNT_TO_ACCOUNT", HttpStatus.OK, StatusService.SUCCESSFUL, true);
+        BaseResponse<CashInResponse> cashInResponse = cashIn(mockMvc, ACCESS_TOKEN, cashInUuidResponse.getData().getUniqueIdentifier(), refNumber, cashInAmount, NATIONAL_CODE_CORRECT, accountNumber, "", "", "ACCOUNT_TO_ACCOUNT", HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
         Assert.assertNotNull(cashInResponse.getData());
         log.info("Account charged successfully with amount: {}", cashInAmount);
         // Step 6: Now perform a successful cashout
-        String cashOutAmount = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_OUT, accountNumber);
+        String cashOutAmount = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_OUT, accountNumber);
         // Step 7: Enable cashout if disabled
-        String cashOutValue = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_OUT, accountNumber);
+        String cashOutValue = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_OUT, accountNumber);
         if("false".equalsIgnoreCase(cashOutValue)){
             setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_OUT, walletAccountEntity, "true"); //"test inquiryCashOutSuccess");
         }
         // Step 8: Generate UUID for cash out
-        BaseResponse<UuidResponse> uuidResponse = generateCashOutUuid(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, cashOutAmount, accountNumber, HttpStatus.OK, StatusService.SUCCESSFUL, true);
+        BaseResponse<UuidResponse> uuidResponse = generateCashOutUuid(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, cashOutAmount, accountNumber, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
         String uniqueIdentifier = uuidResponse.getData().getUniqueIdentifier();
         // Step 9: Perform cash out operation
-        BaseResponse<CashOutResponse> cashOutResponse = cashOut(mockMvc, ACCESS_TOKEN, uniqueIdentifier, cashOutAmount, NATIONAL_CODE_CORRECT, accountNumber, VALID_IBAN, VALID_SIGN, ADDITIONAL_DATA, HttpStatus.OK, StatusService.SUCCESSFUL, true);
+        BaseResponse<CashOutResponse> cashOutResponse = cashOut(mockMvc, ACCESS_TOKEN, uniqueIdentifier, cashOutAmount, NATIONAL_CODE_CORRECT, accountNumber, VALID_IBAN, VALID_SIGN, ADDITIONAL_DATA, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
         Assert.assertNotNull(cashOutResponse.getData());
         // Step 10: Now inquiry the cashout
-        BaseResponse<CashOutTrackResponse> response = inquiryCashOut(mockMvc, ACCESS_TOKEN, uniqueIdentifier, HttpStatus.OK, StatusService.SUCCESSFUL, true);
+        BaseResponse<CashOutTrackResponse> response = inquiryCashOut(mockMvc, ACCESS_TOKEN, uniqueIdentifier, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
         Assert.assertNotNull(response.getData());
         Assert.assertEquals(NATIONAL_CODE_CORRECT, response.getData().getNationalCode());
         Assert.assertEquals(Long.parseLong(cashOutAmount), response.getData().getAmount());
         Assert.assertEquals(uniqueIdentifier, response.getData().getUniqueIdentifier());
-        Assert.assertEquals(StatusService.SUCCESSFUL, response.getData().getResult());
+        Assert.assertEquals(StatusRepositoryService.SUCCESSFUL, response.getData().getResult());
         log.info("Cashout inquiry completed successfully");
     }
 
@@ -387,7 +385,7 @@ class CashOutControllerTest extends WalletApplicationTests {
     void inquiryCashOutFailInvalidUniqueIdentifier() throws Exception {
         log.info("start inquiryCashOutFailInvalidUniqueIdentifier test");
         // Step 1: Test with invalid UUID
-        inquiryCashOut(mockMvc, ACCESS_TOKEN, "invalid_uuid", HttpStatus.OK, StatusService.UUID_NOT_FOUND, false);
+        inquiryCashOut(mockMvc, ACCESS_TOKEN, "invalid_uuid", HttpStatus.OK, StatusRepositoryService.UUID_NOT_FOUND, false);
     }
 
     /**
@@ -406,28 +404,28 @@ class CashOutControllerTest extends WalletApplicationTests {
     void cashOutFailInvalidIban() throws Exception {
         log.info("start cashOutFailInvalidIban test");
         // Step 1: Get user's RIAL account number
-        WalletAccountObject walletAccountObject = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.RIAL);
+        WalletAccountObject walletAccountObject = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.RIAL);
         String accountNumber = walletAccountObject.getAccountNumber();
         // Step 2: First, charge the account with cashIn
         String refNumber = new Date().getTime() + "";
-        String cashInAmount = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_IN, accountNumber);
-        WalletAccountEntity walletAccountEntity = walletAccountService.findByAccountNumber(accountNumber);
+        String cashInAmount = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_IN, accountNumber);
+        WalletAccountEntity walletAccountEntity = walletAccountRepositoryService.findByAccountNumber(accountNumber);
         // Step 3: Enable cashIn if disabled
-        String cashInValue = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, accountNumber);
+        String cashInValue = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, accountNumber);
         if("false".equalsIgnoreCase(cashInValue)){
             setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, walletAccountEntity, "true"); //"test cashOutFailInvalidIban");
         }
         // Step 4: Generate UUID for cashIn
-        BaseResponse<UuidResponse> cashInUuidResponse = generateCashInUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, cashInAmount, accountNumber, HttpStatus.OK, StatusService.SUCCESSFUL, true);
+        BaseResponse<UuidResponse> cashInUuidResponse = generateCashInUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, cashInAmount, accountNumber, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
         // Step 5: Perform cashIn to charge the account
-        BaseResponse<CashInResponse> cashInResponse = cashIn(mockMvc, ACCESS_TOKEN, cashInUuidResponse.getData().getUniqueIdentifier(), refNumber, cashInAmount, NATIONAL_CODE_CORRECT, accountNumber, "", "", "ACCOUNT_TO_ACCOUNT", HttpStatus.OK, StatusService.SUCCESSFUL, true);
+        BaseResponse<CashInResponse> cashInResponse = cashIn(mockMvc, ACCESS_TOKEN, cashInUuidResponse.getData().getUniqueIdentifier(), refNumber, cashInAmount, NATIONAL_CODE_CORRECT, accountNumber, "", "", "ACCOUNT_TO_ACCOUNT", HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
         Assert.assertNotNull(cashInResponse.getData());
         // Step 6: Now try to cashOut with invalid IBAN
-        String cashOutAmount = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_OUT, accountNumber);
-        BaseResponse<UuidResponse> uuidResponse = generateCashOutUuid(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, cashOutAmount, accountNumber, HttpStatus.OK, StatusService.SUCCESSFUL, true);
+        String cashOutAmount = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_OUT, accountNumber);
+        BaseResponse<UuidResponse> uuidResponse = generateCashOutUuid(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, cashOutAmount, accountNumber, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
         String uniqueIdentifier = uuidResponse.getData().getUniqueIdentifier();
         // Step 7: This should fail due to invalid IBAN
-        cashOut(mockMvc, ACCESS_TOKEN, uniqueIdentifier, cashOutAmount, NATIONAL_CODE_CORRECT, accountNumber, "INVALID_IBAN", VALID_SIGN, ADDITIONAL_DATA, HttpStatus.OK, StatusService.INPUT_PARAMETER_NOT_VALID, false);
+        cashOut(mockMvc, ACCESS_TOKEN, uniqueIdentifier, cashOutAmount, NATIONAL_CODE_CORRECT, accountNumber, "INVALID_IBAN", VALID_SIGN, ADDITIONAL_DATA, HttpStatus.OK, StatusRepositoryService.INPUT_PARAMETER_NOT_VALID, false);
     }
 
     /**
@@ -444,28 +442,28 @@ class CashOutControllerTest extends WalletApplicationTests {
     void cashOutFailAmountLessThanMinimum() throws Exception {
         log.info("start cashOutFailAmountLessThanMinimum test");
         // Step 1: Get user's RIAL account number
-        WalletAccountObject walletAccountObject = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.RIAL);
+        WalletAccountObject walletAccountObject = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.RIAL);
         String accountNumber = walletAccountObject.getAccountNumber();
         // Step 2: First, charge the account with cashIn
         String refNumber = new Date().getTime() + "";
-        String cashInAmount = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_IN, accountNumber);
-        WalletAccountEntity walletAccountEntity = walletAccountService.findByAccountNumber(accountNumber);
+        String cashInAmount = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_IN, accountNumber);
+        WalletAccountEntity walletAccountEntity = walletAccountRepositoryService.findByAccountNumber(accountNumber);
         // Step 3: Enable cashIn if disabled
-        String cashInValue = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, accountNumber);
+        String cashInValue = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, accountNumber);
         if("false".equalsIgnoreCase(cashInValue)){
             setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, walletAccountEntity, "true"); //"test cashOutFailAmountLessThanMinimum");
         }
         // Step 4: Generate UUID for cashIn
-        BaseResponse<UuidResponse> cashInUuidResponse = generateCashInUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, cashInAmount, accountNumber, HttpStatus.OK, StatusService.SUCCESSFUL, true);
+        BaseResponse<UuidResponse> cashInUuidResponse = generateCashInUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, cashInAmount, accountNumber, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
         // Step 5: Perform cashIn to charge the account
-        BaseResponse<CashInResponse> cashInResponse = cashIn(mockMvc, ACCESS_TOKEN, cashInUuidResponse.getData().getUniqueIdentifier(), refNumber, cashInAmount, NATIONAL_CODE_CORRECT, accountNumber, "", "", "ACCOUNT_TO_ACCOUNT", HttpStatus.OK, StatusService.SUCCESSFUL, true);
+        BaseResponse<CashInResponse> cashInResponse = cashIn(mockMvc, ACCESS_TOKEN, cashInUuidResponse.getData().getUniqueIdentifier(), refNumber, cashInAmount, NATIONAL_CODE_CORRECT, accountNumber, "", "", "ACCOUNT_TO_ACCOUNT", HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
         Assert.assertNotNull(cashInResponse.getData());
         // Step 6: Now try to cashOut with amount less than minimum
-        String minAmount = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_OUT, accountNumber);
+        String minAmount = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_OUT, accountNumber);
         String cashOutAmount = String.valueOf(Long.parseLong(minAmount) - 1);
         log.info("Attempting cashOut with amount: {} (less than minimum: {})", cashOutAmount, minAmount);
         // Step 7: This should fail due to amount less than minimum
-        BaseResponse<UuidResponse> uuidResponse = generateCashOutUuid(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, cashOutAmount, accountNumber, HttpStatus.OK, StatusService.AMOUNT_LESS_THAN_MIN, false);
+        BaseResponse<UuidResponse> uuidResponse = generateCashOutUuid(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, cashOutAmount, accountNumber, HttpStatus.OK, StatusRepositoryService.AMOUNT_LESS_THAN_MIN, false);
     }
 
     /**
@@ -482,28 +480,28 @@ class CashOutControllerTest extends WalletApplicationTests {
     void cashOutFailAmountBiggerThanMaximum() throws Exception {
         log.info("start cashOutFailAmountBiggerThanMaximum test");
         // Step 1: Get user's RIAL account number
-        WalletAccountObject walletAccountObject = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.RIAL);
+        WalletAccountObject walletAccountObject = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.RIAL);
         String accountNumber = walletAccountObject.getAccountNumber();
         // Step 2: First, charge the account with cashIn
         String refNumber = new Date().getTime() + "";
-        String cashInAmount = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_IN, accountNumber);
-        WalletAccountEntity walletAccountEntity = walletAccountService.findByAccountNumber(accountNumber);
+        String cashInAmount = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_IN, accountNumber);
+        WalletAccountEntity walletAccountEntity = walletAccountRepositoryService.findByAccountNumber(accountNumber);
         // Step 3: Enable cashIn if disabled
-        String cashInValue = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, accountNumber);
+        String cashInValue = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, accountNumber);
         if("false".equalsIgnoreCase(cashInValue)){
             setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, walletAccountEntity, "true"); //"test cashOutFailAmountBiggerThanMaximum");
         }
         // Step 4: Generate UUID for cashIn
-        BaseResponse<UuidResponse> cashInUuidResponse = generateCashInUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, cashInAmount, accountNumber, HttpStatus.OK, StatusService.SUCCESSFUL, true);
+        BaseResponse<UuidResponse> cashInUuidResponse = generateCashInUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, cashInAmount, accountNumber, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
         // Step 5: Perform cashIn to charge the account
-        BaseResponse<CashInResponse> cashInResponse = cashIn(mockMvc, ACCESS_TOKEN, cashInUuidResponse.getData().getUniqueIdentifier(), refNumber, cashInAmount, NATIONAL_CODE_CORRECT, accountNumber, "", "", "ACCOUNT_TO_ACCOUNT", HttpStatus.OK, StatusService.SUCCESSFUL, true);
+        BaseResponse<CashInResponse> cashInResponse = cashIn(mockMvc, ACCESS_TOKEN, cashInUuidResponse.getData().getUniqueIdentifier(), refNumber, cashInAmount, NATIONAL_CODE_CORRECT, accountNumber, "", "", "ACCOUNT_TO_ACCOUNT", HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
         Assert.assertNotNull(cashInResponse.getData());
         // Step 6: Now try to cashOut with amount bigger than maximum
-        String maxAmount = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.MAX_AMOUNT_CASH_OUT, accountNumber);
+        String maxAmount = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.MAX_AMOUNT_CASH_OUT, accountNumber);
         String cashOutAmount = String.valueOf(Long.parseLong(maxAmount) + 1);
         log.info("Attempting cashOut with amount: {} (bigger than maximum: {})", cashOutAmount, maxAmount);
         // Step 7: This should fail due to amount bigger than maximum
-        BaseResponse<UuidResponse> uuidResponse = generateCashOutUuid(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, cashOutAmount, accountNumber, HttpStatus.OK, StatusService.AMOUNT_BIGGER_THAN_MAX, false);
+        BaseResponse<UuidResponse> uuidResponse = generateCashOutUuid(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, cashOutAmount, accountNumber, HttpStatus.OK, StatusRepositoryService.AMOUNT_BIGGER_THAN_MAX, false);
     }
 
     /*@Test
@@ -557,15 +555,15 @@ class CashOutControllerTest extends WalletApplicationTests {
     void cashOutFailCashOutDisabled() throws Exception {
         log.info("start cashOutFailCashOutDisabled test");
         // Step 1: Get user's RIAL account number
-        WalletAccountObject walletAccountObject = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.RIAL);
+        WalletAccountObject walletAccountObject = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.RIAL);
         String accountNumber = walletAccountObject.getAccountNumber();
-        WalletAccountEntity walletAccountEntity = walletAccountService.findByAccountNumber(accountNumber);
+        WalletAccountEntity walletAccountEntity = walletAccountRepositoryService.findByAccountNumber(accountNumber);
         // Step 2: Disable cashOut
         setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_OUT, walletAccountEntity, "false");
         // Step 3: Get minimum cash out amount
-        String cashOutAmount = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_OUT, accountNumber);
+        String cashOutAmount = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_OUT, accountNumber);
         // Step 4: This should fail due to cashOut being disabled
-        BaseResponse<UuidResponse> uuidResponse = generateCashOutUuid(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, cashOutAmount, accountNumber, HttpStatus.OK, StatusService.ACCOUNT_DONT_PERMISSION_FOR_CASH_OUT, false);
+        BaseResponse<UuidResponse> uuidResponse = generateCashOutUuid(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, cashOutAmount, accountNumber, HttpStatus.OK, StatusRepositoryService.ACCOUNT_DONT_PERMISSION_FOR_CASH_OUT, false);
         // Step 5: Re-enable cashOut for other tests
         setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_OUT, walletAccountEntity, "true"); //"re-enable cashOut after test");
     }
@@ -584,28 +582,28 @@ class CashOutControllerTest extends WalletApplicationTests {
     void cashOutFailInvalidNationalCode() throws Exception {
         log.info("start cashOutFailInvalidNationalCode test");
         // Step 1: Get user's RIAL account number
-        WalletAccountObject walletAccountObject = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.RIAL);
+        WalletAccountObject walletAccountObject = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.RIAL);
         String accountNumber = walletAccountObject.getAccountNumber();
         // Step 2: First, charge the account with cashIn
         String refNumber = new Date().getTime() + "";
-        String cashInAmount = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_IN, accountNumber);
-        WalletAccountEntity walletAccountEntity = walletAccountService.findByAccountNumber(accountNumber);
+        String cashInAmount = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_IN, accountNumber);
+        WalletAccountEntity walletAccountEntity = walletAccountRepositoryService.findByAccountNumber(accountNumber);
         // Step 3: Enable cashIn if disabled
-        String cashInValue = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, accountNumber);
+        String cashInValue = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, accountNumber);
         if("false".equalsIgnoreCase(cashInValue)){
             setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, walletAccountEntity, "true"); //"test cashOutFailInvalidNationalCode");
         }
         // Step 4: Generate UUID for cashIn
-        BaseResponse<UuidResponse> cashInUuidResponse = generateCashInUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, cashInAmount, accountNumber, HttpStatus.OK, StatusService.SUCCESSFUL, true);
+        BaseResponse<UuidResponse> cashInUuidResponse = generateCashInUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, cashInAmount, accountNumber, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
         // Step 5: Perform cashIn to charge the account
-        BaseResponse<CashInResponse> cashInResponse = cashIn(mockMvc, ACCESS_TOKEN, cashInUuidResponse.getData().getUniqueIdentifier(), refNumber, cashInAmount, NATIONAL_CODE_CORRECT, accountNumber, "", "", "ACCOUNT_TO_ACCOUNT", HttpStatus.OK, StatusService.SUCCESSFUL, true);
+        BaseResponse<CashInResponse> cashInResponse = cashIn(mockMvc, ACCESS_TOKEN, cashInUuidResponse.getData().getUniqueIdentifier(), refNumber, cashInAmount, NATIONAL_CODE_CORRECT, accountNumber, "", "", "ACCOUNT_TO_ACCOUNT", HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
         Assert.assertNotNull(cashInResponse.getData());
         // Step 6: Now try to cashOut with invalid national code
-        String cashOutAmount = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_OUT, accountNumber);
-        BaseResponse<UuidResponse> uuidResponse = generateCashOutUuid(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, cashOutAmount, accountNumber, HttpStatus.OK, StatusService.SUCCESSFUL, true);
+        String cashOutAmount = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_OUT, accountNumber);
+        BaseResponse<UuidResponse> uuidResponse = generateCashOutUuid(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, cashOutAmount, accountNumber, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
         String uniqueIdentifier = uuidResponse.getData().getUniqueIdentifier();
         // Step 7: This should fail due to invalid national code
-        cashOut(mockMvc, ACCESS_TOKEN, uniqueIdentifier, cashOutAmount, NATIONAL_CODE_INCORRECT, accountNumber, VALID_IBAN, VALID_SIGN, ADDITIONAL_DATA, HttpStatus.OK, StatusService.INPUT_PARAMETER_NOT_VALID, false);
+        cashOut(mockMvc, ACCESS_TOKEN, uniqueIdentifier, cashOutAmount, NATIONAL_CODE_INCORRECT, accountNumber, VALID_IBAN, VALID_SIGN, ADDITIONAL_DATA, HttpStatus.OK, StatusRepositoryService.INPUT_PARAMETER_NOT_VALID, false);
     }
 
     /**
@@ -633,14 +631,14 @@ class CashOutControllerTest extends WalletApplicationTests {
         String additionalData = "concurrent cash out test";
         
         // Get account and setup balance
-        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.RIAL);
+        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.RIAL);
         
         // Ensure user has enough RIAL balance for cash out
-        WalletAccountEntity rialWalletAccountEntity = walletAccountService.findByAccountNumber(walletAccountObjectOptional.getAccountNumber());
-        walletAccountService.increaseBalance(rialWalletAccountEntity.getId(), new BigDecimal("500000"));
+        WalletAccountEntity rialWalletAccountEntity = walletAccountRepositoryService.findByAccountNumber(walletAccountObjectOptional.getAccountNumber());
+        walletAccountRepositoryService.increaseBalance(rialWalletAccountEntity.getId(), new BigDecimal("500000"));
         
         // Generate UUID
-        BaseResponse<UuidResponse> uuidResponse = generateCashOutUuid(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, amount, walletAccountObjectOptional.getAccountNumber(), HttpStatus.OK, StatusService.SUCCESSFUL, true);
+        BaseResponse<UuidResponse> uuidResponse = generateCashOutUuid(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, amount, walletAccountObjectOptional.getAccountNumber(), HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
         String sharedUniqueIdentifier = uuidResponse.getData().getUniqueIdentifier();
         log.info("Generated UUID: {}", sharedUniqueIdentifier);
         
@@ -656,7 +654,7 @@ class CashOutControllerTest extends WalletApplicationTests {
                 CashOutResult result1 = new CashOutResult();
                 result1.threadId = 1;
                 result1.success = response1.getSuccess();
-                result1.errorCode = response1.getSuccess() ? StatusService.SUCCESSFUL : response1.getErrorDetail().getCode();
+                result1.errorCode = response1.getSuccess() ? StatusRepositoryService.SUCCESSFUL : response1.getErrorDetail().getCode();
                 result1.response = response1;
                 
                 synchronized (results) {
@@ -691,7 +689,7 @@ class CashOutControllerTest extends WalletApplicationTests {
                 CashOutResult result2 = new CashOutResult();
                 result2.threadId = 2;
                 result2.success = response2.getSuccess();
-                result2.errorCode = response2.getSuccess() ? StatusService.SUCCESSFUL : response2.getErrorDetail().getCode();
+                result2.errorCode = response2.getSuccess() ? StatusRepositoryService.SUCCESSFUL : response2.getErrorDetail().getCode();
                 result2.response = response2;
                 
                 synchronized (results) {
@@ -746,7 +744,7 @@ class CashOutControllerTest extends WalletApplicationTests {
         // Verify the failure is due to duplicate UUID
         CashOutResult failedResult = results.stream().filter(r -> !r.success).findFirst().orElse(null);
         Assert.assertNotNull("Should have a failed result", failedResult);
-        Assert.assertEquals(StatusService.DUPLICATE_UUID, failedResult.errorCode);
+        Assert.assertEquals(StatusRepositoryService.DUPLICATE_UUID, failedResult.errorCode);
         log.info("Failed result error code: {}", failedResult.errorCode);
         
         log.info("=== Concurrent Cash Out Test Completed ===");
@@ -767,7 +765,7 @@ class CashOutControllerTest extends WalletApplicationTests {
         String iban = VALID_IBAN;
         
         // Get account
-        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.RIAL);
+        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.RIAL);
         
         // Test with 3 threads generating UUIDs simultaneously
         final CountDownLatch latch = new CountDownLatch(3);
@@ -777,12 +775,12 @@ class CashOutControllerTest extends WalletApplicationTests {
         Thread thread1 = new Thread(() -> {
             try {
                 log.info("Cash Out UUID Thread 1 starting...");
-                BaseResponse<UuidResponse> response1 = generateCashOutUuid(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, amount, walletAccountObjectOptional.getAccountNumber(), HttpStatus.OK, StatusService.SUCCESSFUL, true);
+                BaseResponse<UuidResponse> response1 = generateCashOutUuid(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, amount, walletAccountObjectOptional.getAccountNumber(), HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
                 
                 CashOutUuidResult result1 = new CashOutUuidResult();
                 result1.threadId = 1;
                 result1.success = response1.getSuccess();
-                result1.errorCode = response1.getSuccess() ? StatusService.SUCCESSFUL : response1.getErrorDetail().getCode();
+                result1.errorCode = response1.getSuccess() ? StatusRepositoryService.SUCCESSFUL : response1.getErrorDetail().getCode();
                 result1.uuid = response1.getSuccess() ? response1.getData().getUniqueIdentifier() : null;
                 result1.response = response1;
                 
@@ -813,12 +811,12 @@ class CashOutControllerTest extends WalletApplicationTests {
         Thread thread2 = new Thread(() -> {
             try {
                 log.info("Cash Out UUID Thread 2 starting...");
-                BaseResponse<UuidResponse> response2 = generateCashOutUuid(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, amount, walletAccountObjectOptional.getAccountNumber(), HttpStatus.OK, StatusService.SUCCESSFUL, true);
+                BaseResponse<UuidResponse> response2 = generateCashOutUuid(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, amount, walletAccountObjectOptional.getAccountNumber(), HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
                 
                 CashOutUuidResult result2 = new CashOutUuidResult();
                 result2.threadId = 2;
                 result2.success = response2.getSuccess();
-                result2.errorCode = response2.getSuccess() ? StatusService.SUCCESSFUL : response2.getErrorDetail().getCode();
+                result2.errorCode = response2.getSuccess() ? StatusRepositoryService.SUCCESSFUL : response2.getErrorDetail().getCode();
                 result2.uuid = response2.getSuccess() ? response2.getData().getUniqueIdentifier() : null;
                 result2.response = response2;
                 
@@ -849,12 +847,12 @@ class CashOutControllerTest extends WalletApplicationTests {
         Thread thread3 = new Thread(() -> {
             try {
                 log.info("Cash Out UUID Thread 3 starting...");
-                BaseResponse<UuidResponse> response3 = generateCashOutUuid(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, amount, walletAccountObjectOptional.getAccountNumber(), HttpStatus.OK, StatusService.SUCCESSFUL, true);
+                BaseResponse<UuidResponse> response3 = generateCashOutUuid(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, amount, walletAccountObjectOptional.getAccountNumber(), HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
                 
                 CashOutUuidResult result3 = new CashOutUuidResult();
                 result3.threadId = 3;
                 result3.success = response3.getSuccess();
-                result3.errorCode = response3.getSuccess() ? StatusService.SUCCESSFUL : response3.getErrorDetail().getCode();
+                result3.errorCode = response3.getSuccess() ? StatusRepositoryService.SUCCESSFUL : response3.getErrorDetail().getCode();
                 result3.uuid = response3.getSuccess() ? response3.getData().getUniqueIdentifier() : null;
                 result3.response = response3;
                 
@@ -957,28 +955,28 @@ class CashOutControllerTest extends WalletApplicationTests {
     void cashOutFailInvalidAccountNumber() throws Exception {
         log.info("start cashOutFailInvalidAccountNumber test");
         // Step 1: Get user's RIAL account number
-        WalletAccountObject walletAccountObject = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeService.NORMAL, WalletAccountCurrencyService.RIAL);
+        WalletAccountObject walletAccountObject = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.RIAL);
         String accountNumber = walletAccountObject.getAccountNumber();
         // Step 2: First, charge the account with cashIn
         String refNumber = new Date().getTime() + "";
-        String cashInAmount = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_IN, accountNumber);
-        WalletAccountEntity walletAccountEntity = walletAccountService.findByAccountNumber(accountNumber);
+        String cashInAmount = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_IN, accountNumber);
+        WalletAccountEntity walletAccountEntity = walletAccountRepositoryService.findByAccountNumber(accountNumber);
         // Step 3: Enable cashIn if disabled
-        String cashInValue = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, accountNumber);
+        String cashInValue = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, accountNumber);
         if("false".equalsIgnoreCase(cashInValue)){
             setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, walletAccountEntity, "true"); //"test cashOutFailInvalidAccountNumber");
         }
         // Step 4: Generate UUID for cashIn
-        BaseResponse<UuidResponse> cashInUuidResponse = generateCashInUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, cashInAmount, accountNumber, HttpStatus.OK, StatusService.SUCCESSFUL, true);
+        BaseResponse<UuidResponse> cashInUuidResponse = generateCashInUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, cashInAmount, accountNumber, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
         // Step 5: Perform cashIn to charge the account
-        BaseResponse<CashInResponse> cashInResponse = cashIn(mockMvc, ACCESS_TOKEN, cashInUuidResponse.getData().getUniqueIdentifier(), refNumber, cashInAmount, NATIONAL_CODE_CORRECT, accountNumber, "", "", "ACCOUNT_TO_ACCOUNT", HttpStatus.OK, StatusService.SUCCESSFUL, true);
+        BaseResponse<CashInResponse> cashInResponse = cashIn(mockMvc, ACCESS_TOKEN, cashInUuidResponse.getData().getUniqueIdentifier(), refNumber, cashInAmount, NATIONAL_CODE_CORRECT, accountNumber, "", "", "ACCOUNT_TO_ACCOUNT", HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
         Assert.assertNotNull(cashInResponse.getData());
         // Step 6: Now try to cashOut with invalid account number
-        String cashOutAmount = getSettingValue(walletAccountService, limitationGeneralCustomService, channelService, USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_OUT, accountNumber);
-        BaseResponse<UuidResponse> uuidResponse = generateCashOutUuid(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, cashOutAmount, accountNumber, HttpStatus.OK, StatusService.SUCCESSFUL, true);
+        String cashOutAmount = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_OUT, accountNumber);
+        BaseResponse<UuidResponse> uuidResponse = generateCashOutUuid(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, cashOutAmount, accountNumber, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
         String uniqueIdentifier = uuidResponse.getData().getUniqueIdentifier();
         // Step 7: This should fail due to invalid account number
-        cashOut(mockMvc, ACCESS_TOKEN, uniqueIdentifier, cashOutAmount, NATIONAL_CODE_CORRECT, "INVALID_ACCOUNT_NUMBER", VALID_IBAN, VALID_SIGN, ADDITIONAL_DATA, HttpStatus.OK, StatusService.INPUT_PARAMETER_NOT_VALID, false);
+        cashOut(mockMvc, ACCESS_TOKEN, uniqueIdentifier, cashOutAmount, NATIONAL_CODE_CORRECT, "INVALID_ACCOUNT_NUMBER", VALID_IBAN, VALID_SIGN, ADDITIONAL_DATA, HttpStatus.OK, StatusRepositoryService.INPUT_PARAMETER_NOT_VALID, false);
     }
 
 }

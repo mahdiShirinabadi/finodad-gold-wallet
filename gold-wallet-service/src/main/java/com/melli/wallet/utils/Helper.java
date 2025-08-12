@@ -17,7 +17,7 @@ import com.melli.wallet.domain.slave.entity.ReportCashOutRequestEntity;
 import com.melli.wallet.domain.slave.entity.ReportPhysicalCashOutRequestEntity;
 import com.melli.wallet.domain.slave.entity.ReportPurchaseRequestEntity;
 import com.melli.wallet.exception.InternalServiceException;
-import com.melli.wallet.service.*;
+import com.melli.wallet.service.repository.*;
 import com.melli.wallet.util.StringUtils;
 import com.melli.wallet.util.date.DateUtils;
 import lombok.extern.log4j.Log4j2;
@@ -40,15 +40,15 @@ import java.util.*;
 @Log4j2
 public class Helper {
 
-    private final WalletTypeService walletTypeService;
+    private final WalletTypeRepositoryService walletTypeRepositoryService;
 
     public static final String FORMAT_DATE_RESPONSE = "yyyy/MM/dd HH:mm:ss";
 
     private static String SALT_UPDATE_PASSWORD = "108bc591f8d9e09327133e02fd64d23f67f8f52439374bb6c56510b8ad453f7d9c87860126b5811879d9a9628650a6a5";
     public static int WALLET_ACCOUNT_LENGTH = 8;
 
-    public Helper(WalletTypeService walletTypeService) {
-        this.walletTypeService = walletTypeService;
+    public Helper(WalletTypeRepositoryService walletTypeRepositoryService) {
+        this.walletTypeRepositoryService = walletTypeRepositoryService;
     }
 
     public BaseResponse<ObjectUtils.Null> fillBaseResponse(boolean result, ErrorDetail errorDetail) {
@@ -56,9 +56,9 @@ public class Helper {
         return response;
     }
 
-    public Pageable getPageableConfig(SettingGeneralService settingGeneralService, Integer page, Integer size) {
-        SettingGeneralEntity settingPage = settingGeneralService.getSetting(SettingGeneralService.SETTLE_DEFAULT_PAGE);
-        SettingGeneralEntity settingSize = settingGeneralService.getSetting(SettingGeneralService.SETTLE_DEFAULT_SIZE);
+    public Pageable getPageableConfig(SettingGeneralRepositoryService settingGeneralRepositoryService, Integer page, Integer size) {
+        SettingGeneralEntity settingPage = settingGeneralRepositoryService.getSetting(SettingGeneralRepositoryService.SETTLE_DEFAULT_PAGE);
+        SettingGeneralEntity settingSize = settingGeneralRepositoryService.getSetting(SettingGeneralRepositoryService.SETTLE_DEFAULT_SIZE);
         return PageRequest.of(page == null ? Integer.parseInt(settingPage.getValue()) : page, size == null ? Integer.parseInt(settingSize.getValue()) : size);
     }
 
@@ -83,8 +83,8 @@ public class Helper {
     }
 
 
-    public CashInTrackResponse fillCashInTrackResponse(CashInRequestEntity cashInRequestEntity, StatusService statusService) {
-        StatusEntity statusEntity = statusService.findByCode(String.valueOf(cashInRequestEntity.getResult()));
+    public CashInTrackResponse fillCashInTrackResponse(CashInRequestEntity cashInRequestEntity, StatusRepositoryService statusRepositoryService) {
+        StatusEntity statusEntity = statusRepositoryService.findByCode(String.valueOf(cashInRequestEntity.getResult()));
         CashInTrackResponse response = new CashInTrackResponse();
         response.setId(cashInRequestEntity.getId());
         response.setNationalCode(cashInRequestEntity.getWalletAccount().getWalletEntity().getNationalCode());
@@ -100,8 +100,8 @@ public class Helper {
         return response;
     }
 
-    public CashOutTrackResponse fillCashOutTrackResponse(ReportCashOutRequestEntity cashOutRequestEntity, StatusService statusService) {
-        StatusEntity statusEntity = statusService.findByCode(String.valueOf(cashOutRequestEntity.getResult()));
+    public CashOutTrackResponse fillCashOutTrackResponse(ReportCashOutRequestEntity cashOutRequestEntity, StatusRepositoryService statusRepositoryService) {
+        StatusEntity statusEntity = statusRepositoryService.findByCode(String.valueOf(cashOutRequestEntity.getResult()));
         CashOutTrackResponse response = new CashOutTrackResponse();
         response.setId(cashOutRequestEntity.getId());
         response.setNationalCode(cashOutRequestEntity.getWalletAccountEntity().getWalletEntity().getNationalCode());
@@ -115,8 +115,8 @@ public class Helper {
         return response;
     }
 
-    public PhysicalCashOutTrackResponse fillPhysicalCashOutTrackResponse(ReportPhysicalCashOutRequestEntity physicalCashOutRequestEntity, StatusService statusService) {
-        StatusEntity statusEntity = statusService.findByCode(String.valueOf(physicalCashOutRequestEntity.getResult()));
+    public PhysicalCashOutTrackResponse fillPhysicalCashOutTrackResponse(ReportPhysicalCashOutRequestEntity physicalCashOutRequestEntity, StatusRepositoryService statusRepositoryService) {
+        StatusEntity statusEntity = statusRepositoryService.findByCode(String.valueOf(physicalCashOutRequestEntity.getResult()));
         PhysicalCashOutTrackResponse response = new PhysicalCashOutTrackResponse();
         response.setId(physicalCashOutRequestEntity.getId());
         response.setNationalCode(physicalCashOutRequestEntity.getWalletAccountEntity().getWalletEntity().getNationalCode());
@@ -140,8 +140,8 @@ public class Helper {
         return new MerchantObject(String.valueOf(merchantEntity.getId()), merchantEntity.getName(), merchantEntity.getLogo());
     }
 
-    public PurchaseTrackResponse fillPurchaseTrackResponse(ReportPurchaseRequestEntity purchaseRequestEntity, StatusService statusService) {
-        StatusEntity statusEntity = statusService.findByCode(String.valueOf(purchaseRequestEntity.getResult()));
+    public PurchaseTrackResponse fillPurchaseTrackResponse(ReportPurchaseRequestEntity purchaseRequestEntity, StatusRepositoryService statusRepositoryService) {
+        StatusEntity statusEntity = statusRepositoryService.findByCode(String.valueOf(purchaseRequestEntity.getResult()));
         PurchaseTrackObject response = new PurchaseTrackObject();
         response.setNationalCode(purchaseRequestEntity.getWalletAccount().getWalletEntity().getNationalCode());
         response.setAmount(String.valueOf(purchaseRequestEntity.getQuantity()));
@@ -264,7 +264,7 @@ public class Helper {
         return new PhysicalCashOutResponse(nationalCode, balance, uuid, accountNumber);
     }
 
-    public CreateWalletResponse fillCreateWalletResponse(WalletEntity walletEntity, List<WalletAccountEntity> walletAccountEntityList, WalletAccountService walletAccountService) {
+    public CreateWalletResponse fillCreateWalletResponse(WalletEntity walletEntity, List<WalletAccountEntity> walletAccountEntityList, WalletAccountRepositoryService walletAccountRepositoryService) {
         CreateWalletResponse response = new CreateWalletResponse();
         List<WalletAccountObject> walletAccountObjectList = new ArrayList<>();
         response.setMobile(walletEntity.getMobile());
@@ -278,7 +278,7 @@ public class Helper {
             walletAccountObject.setWalletAccountCurrencyObject(SubHelper.convertWalletAccountCurrencyEntityToObject(walletAccountEntity.getWalletAccountCurrencyEntity()));
             walletAccountObject.setAccountNumber(walletAccountEntity.getAccountNumber());
             walletAccountObject.setStatus(String.valueOf(walletAccountEntity.getStatus()));
-            walletAccountObject.setBalance(String.valueOf(walletAccountService.getBalance(walletAccountEntity.getId())));
+            walletAccountObject.setBalance(String.valueOf(walletAccountRepositoryService.getBalance(walletAccountEntity.getId())));
             walletAccountObject.setStatus(walletAccountEntity.getStatus().getText());
             walletAccountObject.setStatusDescription(walletAccountEntity.getStatus().getPersianDescription());
             walletAccountObjectList.add(walletAccountObject);
@@ -287,7 +287,7 @@ public class Helper {
         return response;
     }
 
-    public WalletBalanceResponse fillWalletBalanceResponse(List<WalletAccountEntity> walletAccountEntityList, WalletAccountService walletAccountService) {
+    public WalletBalanceResponse fillWalletBalanceResponse(List<WalletAccountEntity> walletAccountEntityList, WalletAccountRepositoryService walletAccountRepositoryService) {
         WalletBalanceResponse response = new WalletBalanceResponse();
         List<WalletAccountObject> walletAccountObjectList = new ArrayList<>();
         for (WalletAccountEntity walletAccountEntity : walletAccountEntityList) {
@@ -296,7 +296,7 @@ public class Helper {
             walletAccountObject.setWalletAccountCurrencyObject(SubHelper.convertWalletAccountCurrencyEntityToObject(walletAccountEntity.getWalletAccountCurrencyEntity()));
             walletAccountObject.setAccountNumber(walletAccountEntity.getAccountNumber());
             walletAccountObject.setStatus(String.valueOf(walletAccountEntity.getStatus()));
-            walletAccountObject.setBalance(String.valueOf(walletAccountService.getBalance(walletAccountEntity.getId())));
+            walletAccountObject.setBalance(String.valueOf(walletAccountRepositoryService.getBalance(walletAccountEntity.getId())));
             walletAccountObject.setStatus(walletAccountEntity.getStatus().getText());
             walletAccountObject.setStatusDescription(walletAccountEntity.getStatus().getPersianDescription());
             walletAccountObjectList.add(walletAccountObject);
@@ -316,42 +316,42 @@ public class Helper {
     }
 
 
-    public WalletAccountEntity checkWalletAndWalletAccount(WalletService walletService, String nationalCode, WalletAccountService walletAccountService, String accountNumber, WalletTypeEntity walletTypeEntity) throws InternalServiceException {
+    public WalletAccountEntity checkWalletAndWalletAccount(WalletRepositoryService walletRepositoryService, String nationalCode, WalletAccountRepositoryService walletAccountRepositoryService, String accountNumber, WalletTypeEntity walletTypeEntity) throws InternalServiceException {
 
-        WalletEntity walletEntity = checkWallet(walletService, nationalCode, walletTypeEntity);
+        WalletEntity walletEntity = checkWallet(walletRepositoryService, nationalCode, walletTypeEntity);
 
-        WalletAccountEntity walletAccount = walletAccountService.findByWalletAndAccount(walletEntity, accountNumber);
+        WalletAccountEntity walletAccount = walletAccountRepositoryService.findByWalletAndAccount(walletEntity, accountNumber);
 
         if (walletAccount == null) {
             log.error("error find walletAccount for account ({})", accountNumber);
-            throw new InternalServiceException("walletAccount for nationalCode (" + nationalCode + ") is not found!!", StatusService.WALLET_ACCOUNT_NOT_FOUND, HttpStatus.OK);
+            throw new InternalServiceException("walletAccount for nationalCode (" + nationalCode + ") is not found!!", StatusRepositoryService.WALLET_ACCOUNT_NOT_FOUND, HttpStatus.OK);
         }
 
         if (!walletAccount.getStatus().getText().equalsIgnoreCase(WalletStatusEnum.ACTIVE.getText())) {
             log.error("wallet account {} is disable", walletAccount.getAccountNumber());
-            throw new InternalServiceException("walletAccount for nationalCode (" + nationalCode + ") is not found!!", StatusService.WALLET_ACCOUNT_IS_NOT_ACTIVE, HttpStatus.OK);
+            throw new InternalServiceException("walletAccount for nationalCode (" + nationalCode + ") is not found!!", StatusRepositoryService.WALLET_ACCOUNT_IS_NOT_ACTIVE, HttpStatus.OK);
         }
 
         return walletAccount;
     }
 
 
-    public WalletAccountEntity checkWalletAndWalletAccountForNormalUser(WalletService walletService, String nationalCode, WalletAccountService walletAccountService, String accountNumber) throws InternalServiceException {
+    public WalletAccountEntity checkWalletAndWalletAccountForNormalUser(WalletRepositoryService walletRepositoryService, String nationalCode, WalletAccountRepositoryService walletAccountRepositoryService, String accountNumber) throws InternalServiceException {
 
-        WalletTypeEntity walletTypeEntity = walletTypeService.getAll().stream().filter(x -> x.getName().equals(WalletTypeService.NORMAL_USER)).findFirst().orElseThrow(()->{
-            log.error("wallet type for ({}) not found", WalletTypeService.NORMAL_USER);
-            return new InternalServiceException("wallet type not found", StatusService.WALLET_TYPE_NOT_FOUND, HttpStatus.OK);
+        WalletTypeEntity walletTypeEntity = walletTypeRepositoryService.getAll().stream().filter(x -> x.getName().equals(WalletTypeRepositoryService.NORMAL_USER)).findFirst().orElseThrow(()->{
+            log.error("wallet type for ({}) not found", WalletTypeRepositoryService.NORMAL_USER);
+            return new InternalServiceException("wallet type not found", StatusRepositoryService.WALLET_TYPE_NOT_FOUND, HttpStatus.OK);
         });
 
-        WalletEntity walletEntity = checkWallet(walletService, nationalCode, walletTypeEntity);
-        WalletAccountEntity walletAccount = walletAccountService.findByWalletAndAccount(walletEntity, accountNumber);
+        WalletEntity walletEntity = checkWallet(walletRepositoryService, nationalCode, walletTypeEntity);
+        WalletAccountEntity walletAccount = walletAccountRepositoryService.findByWalletAndAccount(walletEntity, accountNumber);
         if (walletAccount == null) {
             log.error("error find walletAccount for account ({})", accountNumber);
-            throw new InternalServiceException("walletAccount for nationalCode (" + nationalCode + ") is not found!!", StatusService.WALLET_ACCOUNT_NOT_FOUND, HttpStatus.OK);
+            throw new InternalServiceException("walletAccount for nationalCode (" + nationalCode + ") is not found!!", StatusRepositoryService.WALLET_ACCOUNT_NOT_FOUND, HttpStatus.OK);
         }
         if (!walletAccount.getStatus().getText().equalsIgnoreCase(WalletStatusEnum.ACTIVE.getText())) {
             log.error("wallet account {} is disable", walletAccount.getAccountNumber());
-            throw new InternalServiceException("walletAccount for nationalCode (" + nationalCode + ") is not found!!", StatusService.WALLET_ACCOUNT_IS_NOT_ACTIVE, HttpStatus.OK);
+            throw new InternalServiceException("walletAccount for nationalCode (" + nationalCode + ") is not found!!", StatusRepositoryService.WALLET_ACCOUNT_IS_NOT_ACTIVE, HttpStatus.OK);
         }
 
         return walletAccount;
@@ -362,18 +362,18 @@ public class Helper {
         return Integer.parseInt(persianDate);
     }
 
-    public WalletEntity checkWallet(WalletService walletService, String nationalCode, WalletTypeEntity walletTypeEntity) throws InternalServiceException {
+    public WalletEntity checkWallet(WalletRepositoryService walletRepositoryService, String nationalCode, WalletTypeEntity walletTypeEntity) throws InternalServiceException {
 
-        WalletEntity walletEntity = walletService.findByNationalCodeAndWalletTypeId(nationalCode, walletTypeEntity.getId());
+        WalletEntity walletEntity = walletRepositoryService.findByNationalCodeAndWalletTypeId(nationalCode, walletTypeEntity.getId());
 
         if (walletEntity == null) {
             log.error("wallet for nationalCode ({}) is not found!", nationalCode);
-            throw new InternalServiceException("wallet for nationalCode (" + nationalCode + ") is not found!!", StatusService.WALLET_NOT_FOUND, HttpStatus.OK);
+            throw new InternalServiceException("wallet for nationalCode (" + nationalCode + ") is not found!!", StatusRepositoryService.WALLET_NOT_FOUND, HttpStatus.OK);
         }
 
         if (walletEntity.getStatus().getText() != WalletStatusEnum.ACTIVE.getText()) {
             log.error("wallet for nationalCode {} is not active and status is ({})!!!", nationalCode, walletEntity.getStatus().getText());
-            throw new InternalServiceException("wallet for nationalCode (" + nationalCode + ") is not active!!", StatusService.WALLET_IS_NOT_ACTIVE, HttpStatus.OK);
+            throw new InternalServiceException("wallet for nationalCode (" + nationalCode + ") is not active!!", StatusRepositoryService.WALLET_IS_NOT_ACTIVE, HttpStatus.OK);
         }
         return walletEntity;
     }
@@ -403,7 +403,7 @@ public class Helper {
     public static void checkGenerateHashForForgetPassword(PasswordEncoder passwordEncoder, String username, String registerHash) throws InternalServiceException {
         if (!passwordEncoder.matches(username + SALT_UPDATE_PASSWORD, registerHash)) {
             log.error("invalid access to resource, hashString is changed!!!");
-            throw new InternalServiceException("invalid access to resource, hashString is changed", StatusService.GENERAL_ERROR, HttpStatus.FORBIDDEN, null);
+            throw new InternalServiceException("invalid access to resource, hashString is changed", StatusRepositoryService.GENERAL_ERROR, HttpStatus.FORBIDDEN, null);
         }
     }
 

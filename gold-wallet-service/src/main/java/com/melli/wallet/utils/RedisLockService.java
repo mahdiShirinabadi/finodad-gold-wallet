@@ -2,7 +2,7 @@ package com.melli.wallet.utils;
 
 
 import com.melli.wallet.exception.InternalServiceException;
-import com.melli.wallet.service.StatusService;
+import com.melli.wallet.service.repository.StatusRepositoryService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.http.HttpStatus;
@@ -40,11 +40,11 @@ public class RedisLockService {
                 return action.get();
             } else {
                 log.error("system can not luck lockKey {}, traceId ({}), class ({})", lockKey, traceNumber, tClass.getSimpleName());
-                throw new InternalServiceException("general error", StatusService.ERROR_IN_LOCK, HttpStatus.OK);
+                throw new InternalServiceException("general error", StatusRepositoryService.ERROR_IN_LOCK, HttpStatus.OK);
             }
         } catch (InterruptedException e) {
             log.error("interrupt exception for try lock lockKey {} and error is {} , traceId ({}), class ({})", lockKey, e.getMessage(), traceNumber, tClass.getSimpleName());
-            throw new InternalServiceException("general error for try lock with lockKey " + lockKey, StatusService.ERROR_IN_LOCK, HttpStatus.OK);
+            throw new InternalServiceException("general error for try lock with lockKey " + lockKey, StatusRepositoryService.ERROR_IN_LOCK, HttpStatus.OK);
         } finally {
             if (lockSuccess) {
                 log.info("start unlock lockKey {} in class {}, traceNumber ({}) ", lockKey, tClass.getSimpleName(), traceNumber);

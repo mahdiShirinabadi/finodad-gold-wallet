@@ -9,9 +9,9 @@ import com.melli.wallet.domain.response.cash.CashInResponse;
 import com.melli.wallet.domain.response.cash.CashInTrackResponse;
 import com.melli.wallet.exception.InternalServiceException;
 import com.melli.wallet.security.RequestContext;
-import com.melli.wallet.service.CashInService;
-import com.melli.wallet.service.ResourceService;
-import com.melli.wallet.service.SecurityService;
+import com.melli.wallet.service.operation.CashInOperationService;
+import com.melli.wallet.service.repository.ResourceRepositoryService;
+import com.melli.wallet.service.operation.SecurityOperationService;
 import io.micrometer.core.annotation.Timed;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -38,31 +38,31 @@ import org.springframework.web.bind.annotation.*;
 public class CashInController extends WebController {
 
     private final RequestContext requestContext;
-    private final CashInService cashInService;
-    private final SecurityService securityService;
+    private final CashInOperationService cashInOperationService;
+    private final SecurityOperationService securityOperationService;
 
     @Timed(description = "Time taken to create wallet")
     @PostMapping(path = "/generate/uuid", produces = {MediaType.APPLICATION_JSON_VALUE})
     @Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "ایجاد شناسه یکتا")
-    @PreAuthorize("hasAuthority(\""+ ResourceService.CASH_IN +"\")")
+    @PreAuthorize("hasAuthority(\""+ ResourceRepositoryService.CASH_IN +"\")")
     public ResponseEntity<BaseResponse<UuidResponse>> generateUuid(@Valid @RequestBody CashGenerateUuidRequestJson requestJson) throws InternalServiceException {
         log.info("start call cashIn uuid nationalCode ===> {}", requestJson.getNationalCode());
-        UuidResponse response = cashInService.generateUuid(requestContext.getChannelEntity(), requestJson.getNationalCode(), requestJson.getAmount(), requestJson.getAccountNumber());
+        UuidResponse response = cashInOperationService.generateUuid(requestContext.getChannelEntity(), requestJson.getNationalCode(), requestJson.getAmount(), requestJson.getAccountNumber());
         return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse<>(true,response));
     }
 
     @Timed(description = "CashEndPoint.cashIn")
     @PostMapping(path = "/charge", produces = {MediaType.APPLICATION_JSON_VALUE})
     @Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "افزایش موجودی کیف پول")
-    @PreAuthorize("hasAuthority(\""+ ResourceService.CASH_IN +"\")")
+    @PreAuthorize("hasAuthority(\""+ ResourceRepositoryService.CASH_IN +"\")")
     public ResponseEntity<BaseResponse<CashInResponse>> cashIn(@Valid @RequestBody CashInWalletRequestJson requestJson) throws InternalServiceException {
         String channelIp = requestContext.getClientIp();
         String username = requestContext.getChannelEntity().getUsername();
 
-        securityService.checkSign(requestContext.getChannelEntity(), requestJson.getSign(), requestJson.getDataString());
+        securityOperationService.checkSign(requestContext.getChannelEntity(), requestJson.getSign(), requestJson.getDataString());
 
         log.info("start call cashIn in username ===> {}, nationalCode ===> {}, from ip ===> {}", username, requestJson.getNationalCode(), channelIp);
-        CashInResponse cashInResponse = cashInService.charge(new ChargeObjectDTO(requestContext.getChannelEntity(), requestJson.getNationalCode(),  requestJson.getUniqueIdentifier(),requestJson.getAmount(), requestJson.getReferenceNumber(),
+        CashInResponse cashInResponse = cashInOperationService.charge(new ChargeObjectDTO(requestContext.getChannelEntity(), requestJson.getNationalCode(),  requestJson.getUniqueIdentifier(),requestJson.getAmount(), requestJson.getReferenceNumber(),
                requestJson.getAccountNumber(), requestJson.getAdditionalData(), requestContext.getClientIp(), requestJson.getCashInType()));
         return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse<>(true,cashInResponse));
     }
@@ -70,12 +70,12 @@ public class CashInController extends WebController {
     @Timed(description = "CashEndPoint.inquiry")
     @GetMapping(path = "/inquiry", produces = {MediaType.APPLICATION_JSON_VALUE})
     @Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "پیگیری افزایش موجودی کیف پول")
-    @PreAuthorize("hasAuthority(\""+ ResourceService.CASH_IN +"\")")
+    @PreAuthorize("hasAuthority(\""+ ResourceRepositoryService.CASH_IN +"\")")
     public ResponseEntity<BaseResponse<CashInTrackResponse>> inquiryCashIn(@Valid @RequestParam("uniqueIdentifier") String uniqueIdentifier) throws InternalServiceException {
         String channelIp = requestContext.getClientIp();
         String username = requestContext.getChannelEntity().getUsername();
         log.info("start call inquiry cashIn in username ===> {}, nationalCode ===> {}, from ip ===> {}", username, uniqueIdentifier, channelIp);
-        CashInTrackResponse cashInResponse = cashInService.inquiry(requestContext.getChannelEntity(), uniqueIdentifier, requestContext.getClientIp());
+        CashInTrackResponse cashInResponse = cashInOperationService.inquiry(requestContext.getChannelEntity(), uniqueIdentifier, requestContext.getClientIp());
         return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse<>(true,cashInResponse));
     }
 }

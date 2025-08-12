@@ -1,7 +1,7 @@
 package com.melli.wallet.security;
 
 import com.melli.wallet.domain.master.entity.ChannelEntity;
-import com.melli.wallet.service.ChannelAccessTokenService;
+import com.melli.wallet.service.repository.ChannelAccessTokenRepositoryService;
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -26,13 +26,13 @@ public class JwtRequestFilter extends OncePerRequestFilter {
     private final JwtChannelDetailsService jwtChannelDetailsService;
     private final JwtTokenUtil jwtTokenUtil;
     private final RequestContext requestContext;
-    private final ChannelAccessTokenService channelAccessTokenService;
+    private final ChannelAccessTokenRepositoryService channelAccessTokenRepositoryService;
 
-    public JwtRequestFilter(JwtChannelDetailsService jwtChannelDetailsService, JwtTokenUtil jwtTokenUtil, RequestContext requestContext, ChannelAccessTokenService channelAccessTokenService) {
+    public JwtRequestFilter(JwtChannelDetailsService jwtChannelDetailsService, JwtTokenUtil jwtTokenUtil, RequestContext requestContext, ChannelAccessTokenRepositoryService channelAccessTokenRepositoryService) {
         this.jwtChannelDetailsService = jwtChannelDetailsService;
         this.jwtTokenUtil = jwtTokenUtil;
         this.requestContext = requestContext;
-        this.channelAccessTokenService = channelAccessTokenService;
+        this.channelAccessTokenRepositoryService = channelAccessTokenRepositoryService;
     }
 
     @Override

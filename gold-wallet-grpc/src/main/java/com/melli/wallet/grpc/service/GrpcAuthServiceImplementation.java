@@ -3,10 +3,11 @@ package com.melli.wallet.grpc.service;
 import com.melli.wallet.domain.master.entity.ChannelAccessTokenEntity;
 import com.melli.wallet.domain.master.entity.ChannelEntity;
 import com.melli.wallet.domain.response.login.LoginResponse;
-import com.melli.wallet.grpc.*;
 import com.melli.wallet.grpc.exception.GrpcErrorHandler;
 import com.melli.wallet.grpc.security.JwtTokenUtil;
-import com.melli.wallet.service.*;
+import com.melli.wallet.service.operation.SecurityOperationService;
+import com.melli.wallet.service.repository.*;
+import com.melli.wallet.service.operation.AuthenticateOperationService;
 import io.grpc.stub.StreamObserver;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -30,12 +31,12 @@ import java.util.Map;
 public class GrpcAuthServiceImplementation extends AuthServiceGrpc.AuthServiceImplBase {
 
     private final AuthenticationManager authenticationManager;
-    private final ChannelService channelService;
+    private final ChannelRepositoryService channelRepositoryService;
     private final JwtTokenUtil jwtTokenUtil;
-    private final SecurityService securityService;
-    private final ChannelAccessTokenService channelAccessTokenService;
-    private final SettingGeneralService settingGeneralService;
-    private final AuthenticateService authenticateService;
+    private final SecurityOperationService securityOperationService;
+    private final ChannelAccessTokenRepositoryService channelAccessTokenRepositoryService;
+    private final SettingGeneralRepositoryService settingGeneralRepositoryService;
+    private final AuthenticateOperationService authenticateOperationService;
     private final GrpcErrorHandler exceptionHandler;
 
     @Override
@@ -46,11 +47,11 @@ public class GrpcAuthServiceImplementation extends AuthServiceGrpc.AuthServiceIm
             log.info("Start login for username: {}", username);
 
             authenticate(username, password);
-            boolean isAfter = checkExpiration(channelService.findByUsername(username));
-            Map<String, String> accessToken = jwtTokenUtil.generateToken(username, Long.parseLong(settingGeneralService.getSetting(SettingGeneralService.DURATION_ACCESS_TOKEN_PROFILE).getValue()));
-            Map<String, String> refreshToken = jwtTokenUtil.generateRefreshToken(username, Long.parseLong(settingGeneralService.getSetting(SettingGeneralService.DURATION_REFRESH_TOKEN_PROFILE).getValue()));
+            boolean isAfter = checkExpiration(channelRepositoryService.findByUsername(username));
+            Map<String, String> accessToken = jwtTokenUtil.generateToken(username, Long.parseLong(settingGeneralRepositoryService.getSetting(SettingGeneralRepositoryService.DURATION_ACCESS_TOKEN_PROFILE).getValue()));
+            Map<String, String> refreshToken = jwtTokenUtil.generateRefreshToken(username, Long.parseLong(settingGeneralRepositoryService.getSetting(SettingGeneralRepositoryService.DURATION_REFRESH_TOKEN_PROFILE).getValue()));
 
-            LoginResponse loginResponse = authenticateService.login(username, ThreadContext.get("ip"), isAfter, accessToken, refreshToken);
+            LoginResponse loginResponse = authenticateOperationService.login(username, ThreadContext.get("ip"), isAfter, accessToken, refreshToken);
             BaseResponseGrpc response = BaseResponseGrpc.newBuilder()
                     .setSuccess(true)
                     .setLoginResponse(convertToProtoLoginResponse(loginResponse))
@@ -73,11 +74,11 @@ public class GrpcAuthServiceImplementation extends AuthServiceGrpc.AuthServiceIm
             String refreshToken = request.getRefreshToken();
             log.info("Start refreshToken for username: {}", username);
 
-            boolean isAfter = checkExpiration(channelService.findByUsername(username));
-            Map<String, String> accessToken = jwtTokenUtil.generateToken(username, Long.parseLong(settingGeneralService.getSetting(SettingGeneralService.DURATION_ACCESS_TOKEN_PROFILE).getValue()));
-            Map<String, String> newRefreshToken = jwtTokenUtil.generateRefreshToken(username, Long.parseLong(settingGeneralService.getSetting(SettingGeneralService.DURATION_REFRESH_TOKEN_PROFILE).getValue()));
+            boolean isAfter = checkExpiration(channelRepositoryService.findByUsername(username));
+            Map<String, String> accessToken = jwtTokenUtil.generateToken(username, Long.parseLong(settingGeneralRepositoryService.getSetting(SettingGeneralRepositoryService.DURATION_ACCESS_TOKEN_PROFILE).getValue()));
+            Map<String, String> newRefreshToken = jwtTokenUtil.generateRefreshToken(username, Long.parseLong(settingGeneralRepositoryService.getSetting(SettingGeneralRepositoryService.DURATION_REFRESH_TOKEN_PROFILE).getValue()));
 
-            LoginResponse loginResponse = authenticateService.generateRefreshToken(refreshToken, username, ThreadContext.get("ip"), isAfter, accessToken, newRefreshToken);
+            LoginResponse loginResponse = authenticateOperationService.generateRefreshToken(refreshToken, username, ThreadContext.get("ip"), isAfter, accessToken, newRefreshToken);
             BaseResponseGrpc response = BaseResponseGrpc.newBuilder()
                     .setSuccess(true)
                     .setLoginResponse(convertToProtoLoginResponse(loginResponse))
@@ -99,7 +100,7 @@ public class GrpcAuthServiceImplementation extends AuthServiceGrpc.AuthServiceIm
             String username = ThreadContext.get("username");
             log.info("Start logout for username: {}, ip: {}", username, ThreadContext.get("ip"));
 
-            authenticateService.logout(channelService.findByUsername(username));
+            authenticateOperationService.logout(channelRepositoryService.findByUsername(username));
             BaseResponseGrpc response = BaseResponseGrpc.newBuilder()
                     .setSuccess(true)
                     .setEmpty(Empty.newBuilder().build())
@@ -121,14 +122,14 @@ public class GrpcAuthServiceImplementation extends AuthServiceGrpc.AuthServiceIm
             log.info("Success authenticate for username: {}", username);
         } catch (BadCredentialsException ex) {
             log.error("Failed authenticate for username: {}, error: {}", username, ex.getMessage());
-            securityService.increaseFailLogin(channelService.findByUsername(username));
+            securityOperationService.increaseFailLogin(channelRepositoryService.findByUsername(username));
             throw new BadCredentialsException("INVALID_CREDENTIALS for username: " + username, ex);
         }
     }
 
     private boolean checkExpiration(ChannelEntity channelEntity) {
         log.info("Start check expiration for username: {}", channelEntity.getUsername());
-        ChannelAccessTokenEntity tokenEntity = channelAccessTokenService.findTopByChannelEntityAndEndTimeIsnUll(channelEntity);
+        ChannelAccessTokenEntity tokenEntity = channelAccessTokenRepositoryService.findTopByChannelEntityAndEndTimeIsnUll(channelEntity);
         if (tokenEntity != null && tokenEntity.getAccessToken() != null) {
             try {
                 return jwtTokenUtil.getExpirationDateFromToken(tokenEntity.getAccessToken()).after(new Date());

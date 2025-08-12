@@ -1,6 +1,6 @@
 package com.melli.wallet.config;
 
-import com.melli.wallet.service.LoggingHttpService;
+import com.melli.wallet.service.operation.LoggingHttpOperationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.MethodParameter;
 import org.springframework.http.MediaType;
@@ -16,7 +16,7 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyAdvice;
 public class ResponseBodyInterceptor implements ResponseBodyAdvice<Object> {
 
     @Autowired
-    LoggingHttpService loggingService;
+    LoggingHttpOperationService loggingService;
 
     @Override
     public boolean supports(MethodParameter returnType, Class<? extends HttpMessageConverter<?>> converterType) {

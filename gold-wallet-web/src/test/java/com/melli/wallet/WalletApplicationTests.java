@@ -21,7 +21,7 @@ import com.melli.wallet.domain.response.wallet.CreateWalletResponse;
 import com.melli.wallet.domain.response.wallet.WalletAccountObject;
 import com.melli.wallet.domain.response.wallet.WalletBalanceResponse;
 import com.melli.wallet.exception.InternalServiceException;
-import com.melli.wallet.service.*;
+import com.melli.wallet.service.repository.*;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -114,11 +114,11 @@ public class WalletApplicationTests {
     private WebApplicationContext webApplicationContext;
 
     @Autowired
-    private LimitationGeneralCustomService limitationGeneralCustomService;
+    private LimitationGeneralCustomRepositoryService limitationGeneralCustomRepositoryService;
     @Autowired
     private LimitationGeneralService limitationGeneralService;
     @Autowired
-    private ChannelService channelService;
+    private ChannelRepositoryService channelRepositoryService;
 
 
 
@@ -135,7 +135,7 @@ public class WalletApplicationTests {
 
 
     public ResultMatcher buildErrorCodeMatch(int errorCode) {
-        if (errorCode == StatusService.SUCCESSFUL) {
+        if (errorCode == StatusRepositoryService.SUCCESSFUL) {
             return jsonPath("$.errorDetail").doesNotExist();
         } else {
             return jsonPath("$.errorDetail.code").value(errorCode);
@@ -167,7 +167,7 @@ public class WalletApplicationTests {
     }
 
     public void setLimitationGeneralCustomValue(String channelName, String limitationGeneralName, WalletAccountEntity walletAccountEntity, String newValue) throws InternalServiceException {
-        limitationGeneralCustomService.create(channelService.getChannel(channelName),
+        limitationGeneralCustomRepositoryService.create(channelRepositoryService.getChannel(channelName),
                 limitationGeneralService.getSetting(limitationGeneralName).getId(), walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
                 walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity(),
                 newValue, "change " + limitationGeneralName + " to " +  newValue);
@@ -477,7 +477,7 @@ public class WalletApplicationTests {
 
     public WalletAccountObject getAccountNumber(MockMvc mockMvc, String token, String nationalCode, String walletAccountType, String walletAccountCurrency) throws Exception {
         log.info("start get wallet data ...");
-        BaseResponse<CreateWalletResponse> createWalletResponseBaseResponse = balance(mockMvc, token, nationalCode, HttpStatus.OK, StatusService.SUCCESSFUL, true);
+        BaseResponse<CreateWalletResponse> createWalletResponseBaseResponse = balance(mockMvc, token, nationalCode, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
         List<WalletAccountObject> walletAccountObjectList = createWalletResponseBaseResponse.getData().getWalletAccountObjectList();
         Optional<WalletAccountObject> walletAccountObjectOptional = walletAccountObjectList.stream().filter(x -> x.getWalletAccountTypeObject().getName().equalsIgnoreCase(walletAccountType)
                         && x.getWalletAccountCurrencyObject().getName().equalsIgnoreCase(walletAccountCurrency))
@@ -544,9 +544,9 @@ public class WalletApplicationTests {
         return objectMapper.readValue(response, typeReference);
     }
 
-    public String getSettingValue(WalletAccountService walletAccountService, LimitationGeneralCustomService limitationGeneralCustomService, ChannelService channelService, String channelName, String limitationName, String accountNumber) throws Exception {
-        WalletAccountEntity walletAccountEntity = walletAccountService.findByAccountNumber(accountNumber);
-        return limitationGeneralCustomService.getSetting(channelService.getChannel(channelName),
+    public String getSettingValue(WalletAccountRepositoryService walletAccountRepositoryService, LimitationGeneralCustomRepositoryService limitationGeneralCustomRepositoryService, ChannelRepositoryService channelRepositoryService, String channelName, String limitationName, String accountNumber) throws Exception {
+        WalletAccountEntity walletAccountEntity = walletAccountRepositoryService.findByAccountNumber(accountNumber);
+        return limitationGeneralCustomRepositoryService.getSetting(channelRepositoryService.getChannel(channelName),
                 limitationName, walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
                 walletAccountEntity.getWalletAccountTypeEntity(), walletAccountEntity.getWalletAccountCurrencyEntity(), walletAccountEntity.getWalletEntity().getWalletTypeEntity());
     }

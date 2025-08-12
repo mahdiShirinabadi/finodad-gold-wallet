@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.melli.wallet.domain.master.entity.StatusEntity;
 import com.melli.wallet.domain.response.base.ErrorDetail;
-import com.melli.wallet.service.StatusService;
+import com.melli.wallet.service.repository.StatusRepositoryService;
 import com.melli.wallet.utils.Helper;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -23,7 +23,7 @@ import java.nio.charset.StandardCharsets;
 public class RestAccessDeniedHandler implements AccessDeniedHandler {
 
     private final Helper helper;
-    private final StatusService statusService;
+    private final StatusRepositoryService statusRepositoryService;
 
     @Override
     public void handle(HttpServletRequest httpServletRequest, HttpServletResponse response, AccessDeniedException e) throws IOException, ServletException {
@@ -32,8 +32,8 @@ public class RestAccessDeniedHandler implements AccessDeniedHandler {
         ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
         response.setCharacterEncoding(StandardCharsets.UTF_8.toString());
 
-        StatusEntity statusEntity = statusService.findByCode(String.valueOf(StatusService.USER_NOT_PERMISSION));
-        ErrorDetail errorDetail = new ErrorDetail(statusEntity.getPersianDescription(), StatusService.USER_NOT_PERMISSION);
+        StatusEntity statusEntity = statusRepositoryService.findByCode(String.valueOf(StatusRepositoryService.USER_NOT_PERMISSION));
+        ErrorDetail errorDetail = new ErrorDetail(statusEntity.getPersianDescription(), StatusRepositoryService.USER_NOT_PERMISSION);
 
         response.getWriter().print(ow.writeValueAsString(helper.fillBaseResponse(false, errorDetail)));
     }

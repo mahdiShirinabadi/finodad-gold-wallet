@@ -1,6 +1,6 @@
 package com.melli.wallet.config;
 
-import com.melli.wallet.service.LoggingHttpService;
+import com.melli.wallet.service.operation.LoggingHttpOperationService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -14,7 +14,7 @@ import org.springframework.web.servlet.HandlerInterceptor;
 public class InterceptLog implements HandlerInterceptor {
 
 
-    private final LoggingHttpService loggingService;
+    private final LoggingHttpOperationService loggingService;
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {

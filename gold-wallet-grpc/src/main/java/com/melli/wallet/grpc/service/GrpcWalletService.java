@@ -4,10 +4,10 @@ import com.melli.wallet.domain.master.entity.ChannelEntity;
 import com.melli.wallet.domain.response.wallet.CreateWalletResponse;
 import com.melli.wallet.domain.response.wallet.WalletAccountObject;
 import com.melli.wallet.exception.InternalServiceException;
-import com.melli.wallet.grpc.*;
 import com.melli.wallet.grpc.config.RequestContext;
 import com.melli.wallet.grpc.exception.GrpcErrorHandler;
-import com.melli.wallet.service.*;
+import com.melli.wallet.service.operation.WalletOperationalService;
+import com.melli.wallet.service.repository.*;
 import com.melli.wallet.util.Utility;
 import io.grpc.stub.StreamObserver;
 import lombok.RequiredArgsConstructor;
@@ -31,7 +31,7 @@ public class GrpcWalletService extends WalletServiceGrpc.WalletServiceImplBase {
     private final WalletOperationalService walletOperationalService;
     private final GrpcErrorHandler exceptionHandler;
 
-    @PreAuthorize("hasAuthority(\""+ ResourceService.WALLET_CREATE +"\")")
+    @PreAuthorize("hasAuthority(\""+ ResourceRepositoryService.WALLET_CREATE +"\")")
     @Override
     public void createWallet(CreateWalletRequestGrpc request, StreamObserver<BaseResponseGrpc> responseObserver) {
         try {
@@ -47,9 +47,9 @@ public class GrpcWalletService extends WalletServiceGrpc.WalletServiceImplBase {
                     channelEntity,
                     cleanMobile,
                     request.getNationalCode(),
-                    WalletTypeService.NORMAL_USER,
-                    List.of(WalletAccountCurrencyService.GOLD, WalletAccountCurrencyService.RIAL),
-                    List.of(WalletAccountTypeService.NORMAL)
+                    WalletTypeRepositoryService.NORMAL_USER,
+                    List.of(WalletAccountCurrencyRepositoryService.GOLD, WalletAccountCurrencyRepositoryService.RIAL),
+                    List.of(WalletAccountTypeRepositoryService.NORMAL)
             );
 
             BaseResponseGrpc grpcResponse = BaseResponseGrpc.newBuilder()
@@ -64,7 +64,7 @@ public class GrpcWalletService extends WalletServiceGrpc.WalletServiceImplBase {
         }
     }
 
-    @PreAuthorize("hasAuthority(\""+ ResourceService.WALLET_DEACTIVATE +"\")")
+    @PreAuthorize("hasAuthority(\""+ ResourceRepositoryService.WALLET_DEACTIVATE +"\")")
     @Override
     public void deactivateWallet(DeactivateWalletRequestGrpc request, StreamObserver<BaseResponseGrpc> responseObserver) {
         try {
@@ -88,7 +88,7 @@ public class GrpcWalletService extends WalletServiceGrpc.WalletServiceImplBase {
         }
     }
 
-    @PreAuthorize("hasAuthority(\""+ ResourceService.WALLET_DELETE +"\")")
+    @PreAuthorize("hasAuthority(\""+ ResourceRepositoryService.WALLET_DELETE +"\")")
     @Override
     public void deleteWallet(DeleteWalletRequestGrpc request, StreamObserver<BaseResponseGrpc> responseObserver) {
         try {
@@ -112,7 +112,7 @@ public class GrpcWalletService extends WalletServiceGrpc.WalletServiceImplBase {
         }
     }
 
-    @PreAuthorize("hasAuthority(\""+ ResourceService.WALLET_INFO +"\")")
+    @PreAuthorize("hasAuthority(\""+ ResourceRepositoryService.WALLET_INFO +"\")")
     @Override
     public void getWallet(GetWalletRequestGrpc request, StreamObserver<BaseResponseGrpc> responseObserver) {
         try {
@@ -136,7 +136,7 @@ public class GrpcWalletService extends WalletServiceGrpc.WalletServiceImplBase {
         }
     }
 
-    @PreAuthorize("hasAuthority(\""+ ResourceService.WALLET_ACTIVE +"\")")
+    @PreAuthorize("hasAuthority(\""+ ResourceRepositoryService.WALLET_ACTIVE +"\")")
     @Override
     public void activateWallet(ActivateWalletRequestGrpc request, StreamObserver<BaseResponseGrpc> responseObserver) {
         try {

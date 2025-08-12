@@ -1,9 +1,9 @@
 package com.melli.wallet.config;
 
 import com.melli.wallet.ConstantRedisName;
-import com.melli.wallet.service.WalletBuyLimitationService;
-import com.melli.wallet.service.WalletCashLimitationService;
-import com.melli.wallet.service.WalletSellLimitationService;
+import com.melli.wallet.service.operation.WalletBuyLimitationOperationService;
+import com.melli.wallet.service.operation.WalletCashLimitationOperationService;
+import com.melli.wallet.service.operation.WalletSellLimitationOperationService;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.cache.CacheManager;
@@ -19,15 +19,15 @@ import java.util.Objects;
 public class CacheClearService {
     private final CacheManager cacheManager;
     
-    private final WalletCashLimitationService walletCashLimitationService;
-    private final WalletBuyLimitationService walletBuyLimitationService;
-    private final WalletSellLimitationService walletSellLimitationService;
+    private final WalletCashLimitationOperationService walletCashLimitationOperationService;
+    private final WalletBuyLimitationOperationService walletBuyLimitationOperationService;
+    private final WalletSellLimitationOperationService walletSellLimitationOperationService;
 
-    public CacheClearService(CacheManager cacheManager, WalletCashLimitationService walletCashLimitationService, WalletBuyLimitationService walletBuyLimitationService, WalletSellLimitationService walletSellLimitationService) {
+    public CacheClearService(CacheManager cacheManager, WalletCashLimitationOperationService walletCashLimitationOperationService, WalletBuyLimitationOperationService walletBuyLimitationOperationService, WalletSellLimitationOperationService walletSellLimitationOperationService) {
         this.cacheManager = cacheManager;
-        this.walletCashLimitationService = walletCashLimitationService;
-        this.walletBuyLimitationService = walletBuyLimitationService;
-        this.walletSellLimitationService = walletSellLimitationService;
+        this.walletCashLimitationOperationService = walletCashLimitationOperationService;
+        this.walletBuyLimitationOperationService = walletBuyLimitationOperationService;
+        this.walletSellLimitationOperationService = walletSellLimitationOperationService;
     }
 
     @PostConstruct
@@ -69,9 +69,9 @@ public class CacheClearService {
 
         // Clear Redis repositories (for @RedisHash entities)
         log.info("Clearing Redis repositories...");
-        walletCashLimitationService.deleteAll();
-        walletBuyLimitationService.deleteAll();
-        walletSellLimitationService.deleteAll();
+        walletCashLimitationOperationService.deleteAll();
+        walletBuyLimitationOperationService.deleteAll();
+        walletSellLimitationOperationService.deleteAll();
         log.info("Redis repositories cleared successfully");
     }
 

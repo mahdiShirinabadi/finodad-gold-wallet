@@ -1,17 +1,16 @@
 package com.melli.wallet.web;
 
 import com.melli.wallet.annotation.national_code.NationalCodeValidation;
-import com.melli.wallet.domain.request.PanelBaseSearchJson;
 import com.melli.wallet.domain.request.wallet.ActiveWalletRequestJson;
 import com.melli.wallet.domain.request.wallet.CreateWalletRequestJson;
 import com.melli.wallet.domain.request.wallet.DeactivatedWalletRequestJson;
 import com.melli.wallet.domain.request.wallet.DeleteWalletRequestJson;
 import com.melli.wallet.domain.response.base.BaseResponse;
-import com.melli.wallet.domain.response.limitation.GeneralCustomLimitationListResponse;
 import com.melli.wallet.domain.response.wallet.CreateWalletResponse;
 import com.melli.wallet.exception.InternalServiceException;
 import com.melli.wallet.security.RequestContext;
-import com.melli.wallet.service.*;
+import com.melli.wallet.service.operation.WalletOperationalService;
+import com.melli.wallet.service.repository.*;
 import com.melli.wallet.util.Utility;
 import io.micrometer.core.annotation.Timed;
 import io.swagger.v3.oas.annotations.Operation;
@@ -44,14 +43,14 @@ public class WalletController extends WebController {
 	@Timed(description = "Time taken to create wallet")
 	@PostMapping(path = "/create", produces = {MediaType.APPLICATION_JSON_VALUE})
 	@Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "ایجاد کیف پول")
-	@PreAuthorize("hasAuthority(\""+ ResourceService.WALLET_CREATE +"\")")
+	@PreAuthorize("hasAuthority(\""+ ResourceRepositoryService.WALLET_CREATE +"\")")
 	public ResponseEntity<BaseResponse<CreateWalletResponse>> createWallet(@Valid  @RequestBody CreateWalletRequestJson requestJson) throws InternalServiceException {
 		String channelIp = requestContext.getClientIp();
 		String username = requestContext.getChannelEntity().getUsername();
 		log.info("start call create wallet in username ===> {}, mobile ===> {}, from ip ===> {}", username, requestJson.getMobile(), channelIp);
 		String cleanMobile = Utility.cleanPhoneNumber(requestJson.getMobile());
-		CreateWalletResponse createWalletResponse = walletOperationalService.createWallet(requestContext.getChannelEntity(), cleanMobile, requestJson.getNationalCode(), WalletTypeService.NORMAL_USER, List.of(WalletAccountCurrencyService.GOLD, WalletAccountCurrencyService.RIAL),
-				List.of(WalletAccountTypeService.NORMAL));
+		CreateWalletResponse createWalletResponse = walletOperationalService.createWallet(requestContext.getChannelEntity(), cleanMobile, requestJson.getNationalCode(), WalletTypeRepositoryService.NORMAL_USER, List.of(WalletAccountCurrencyRepositoryService.GOLD, WalletAccountCurrencyRepositoryService.RIAL),
+				List.of(WalletAccountTypeRepositoryService.NORMAL));
 		return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse<>(true,createWalletResponse));
 	}
 
@@ -60,7 +59,7 @@ public class WalletController extends WebController {
 	@Timed(description = "Time taken to deactivated wallet")
 	@PostMapping(path = "/deactivate", produces = {MediaType.APPLICATION_JSON_VALUE})
 	@Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "غیرفعال کردن کیف پول ")
-	@PreAuthorize("hasAuthority(\""+ ResourceService.WALLET_DEACTIVATE +"\")")
+	@PreAuthorize("hasAuthority(\""+ ResourceRepositoryService.WALLET_DEACTIVATE +"\")")
 	public ResponseEntity<BaseResponse<ObjectUtils.Null>> disableWallet(@Valid @RequestBody DeactivatedWalletRequestJson requestJson) throws InternalServiceException {
 
 		String channelIp = requestContext.getClientIp();
@@ -73,7 +72,7 @@ public class WalletController extends WebController {
 	@Timed(description = "Time taken to delete wallet")
 	@PostMapping(path = "/delete", produces = {MediaType.APPLICATION_JSON_VALUE})
 	@Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "حذف کردن کیف پول ")
-	@PreAuthorize("hasAuthority(\""+ ResourceService.WALLET_DELETE +"\")")
+	@PreAuthorize("hasAuthority(\""+ ResourceRepositoryService.WALLET_DELETE +"\")")
 	public ResponseEntity<BaseResponse<ObjectUtils.Null>> deleteWallet(@Valid @RequestBody DeleteWalletRequestJson requestJson) throws InternalServiceException {
 		String channelIp = requestContext.getClientIp();
 		log.info("start delete wallet with id ==> {}", requestJson.getId());
@@ -85,7 +84,7 @@ public class WalletController extends WebController {
 	@Timed(description = "Time taken to delete wallet")
 	@GetMapping(path = "/get", produces = {MediaType.APPLICATION_JSON_VALUE})
 	@Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "دریافت اطلاعات کیف پول ")
-	@PreAuthorize("hasAuthority(\""+ ResourceService.WALLET_INFO +"\")")
+	@PreAuthorize("hasAuthority(\""+ ResourceRepositoryService.WALLET_INFO +"\")")
 	public ResponseEntity<BaseResponse<CreateWalletResponse>> getBalance(@Valid @RequestParam @NationalCodeValidation(label = "کد ملی") String nationalCode) throws InternalServiceException {
 		String channelIp = requestContext.getClientIp();
 		log.info("start get wallet with nationalCode ==> {}, from Ip ({})", nationalCode, channelIp);
@@ -100,7 +99,7 @@ public class WalletController extends WebController {
 	@Timed(description = "Time taken to active wallet")
 	@PostMapping(path = "/activate", produces = {MediaType.APPLICATION_JSON_VALUE})
 	@Operation(security = { @SecurityRequirement(name = "bearer-key") },summary =" فعال کردن کیف پول")
-	@PreAuthorize("hasAuthority(\""+ ResourceService.WALLET_ACTIVE +"\")")
+	@PreAuthorize("hasAuthority(\""+ ResourceRepositoryService.WALLET_ACTIVE +"\")")
 	public ResponseEntity<BaseResponse<ObjectUtils.Null>> activeWallet(@Valid @RequestBody ActiveWalletRequestJson requestJson) throws InternalServiceException {
 
 		String channelIp = requestContext.getClientIp();

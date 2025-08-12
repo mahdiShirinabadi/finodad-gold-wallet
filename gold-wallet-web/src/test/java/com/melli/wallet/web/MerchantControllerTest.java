@@ -10,9 +10,10 @@ import com.melli.wallet.domain.response.purchase.MerchantResponse;
 import com.melli.wallet.domain.response.wallet.WalletAccountObject;
 import com.melli.wallet.domain.response.wallet.WalletBalanceResponse;
 import com.melli.wallet.security.RequestContext;
-import com.melli.wallet.service.MerchantService;
-import com.melli.wallet.service.StatusService;
-import com.melli.wallet.service.WalletAccountCurrencyService;
+import com.melli.wallet.service.operation.MerchantOperationService;
+import com.melli.wallet.service.repository.MerchantRepositoryService;
+import com.melli.wallet.service.repository.StatusRepositoryService;
+import com.melli.wallet.service.repository.WalletAccountCurrencyRepositoryService;
 import lombok.extern.log4j.Log4j2;
 import org.flywaydb.core.Flyway;
 import org.junit.Assert;
@@ -66,7 +67,7 @@ class MerchantControllerTest extends WalletApplicationTests {
     @Autowired
     private WebApplicationContext webApplicationContext;
     @Autowired
-    private WalletAccountCurrencyService walletAccountCurrencyService;
+    private WalletAccountCurrencyRepositoryService walletAccountCurrencyRepositoryService;
     @Autowired
     private Flyway flyway;
     @Autowired
@@ -74,7 +75,9 @@ class MerchantControllerTest extends WalletApplicationTests {
     @Autowired
     private MerchantWalletAccountCurrencyRepository merchantWalletAccountCurrencyRepository;
     @Autowired
-    private MerchantService merchantService;
+    private MerchantRepositoryService merchantRepositoryService;
+    @Autowired
+    private MerchantOperationService merchantOperationService;
     @Autowired
     private RequestContext requestContext;
 
@@ -116,7 +119,7 @@ class MerchantControllerTest extends WalletApplicationTests {
     void login_success() throws Exception {
         log.info("start login_success test");
         BaseResponse<LoginResponse> response = login(mockMvc, USERNAME_CORRECT, PASSWORD_CORRECT, HttpStatus.OK,
-                StatusService.SUCCESSFUL, true);
+                StatusRepositoryService.SUCCESSFUL, true);
         ACCESS_TOKEN = response.getData().getAccessTokenObject().getToken();
         REFRESH_TOKEN = response.getData().getRefreshTokenObject().getToken();
     }
@@ -132,7 +135,7 @@ class MerchantControllerTest extends WalletApplicationTests {
     @Order(20)
     @DisplayName("merchantFail-Currency not ")
     void merchantCurrencyNotFound() throws Exception {
-        getMerchant(mockMvc, ACCESS_TOKEN, "NOTHING", HttpStatus.OK, StatusService.WALLET_ACCOUNT_CURRENCY_NOT_FOUND, false);
+        getMerchant(mockMvc, ACCESS_TOKEN, "NOTHING", HttpStatus.OK, StatusRepositoryService.WALLET_ACCOUNT_CURRENCY_NOT_FOUND, false);
     }
 
     /**
@@ -145,7 +148,7 @@ class MerchantControllerTest extends WalletApplicationTests {
     @Order(21)
     @DisplayName("merchantSuccess-empty")
     void merchantSuccessEmpty() throws Exception {
-        BaseResponse<MerchantResponse> response = getMerchant(mockMvc, ACCESS_TOKEN, "GOLD", HttpStatus.OK, StatusService.SUCCESSFUL, true);
+        BaseResponse<MerchantResponse> response = getMerchant(mockMvc, ACCESS_TOKEN, "GOLD", HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
         if(response.getData().getMerchantObjectList() != null){
             log.error("merchant must be null");
             throw new Exception("merchant must be null");
@@ -166,12 +169,12 @@ class MerchantControllerTest extends WalletApplicationTests {
     void merchantSuccess() throws Exception {
         // Create merchant wallet account currency entity for GOLD
         MerchantWalletAccountCurrencyEntity merchantWalletAccountCurrencyEntity = new MerchantWalletAccountCurrencyEntity();
-        merchantWalletAccountCurrencyEntity.setMerchantEntity(merchantService.findById(1));
-        merchantWalletAccountCurrencyEntity.setWalletAccountCurrencyEntity(walletAccountCurrencyService.findCurrency("GOLD"));
+        merchantWalletAccountCurrencyEntity.setMerchantEntity(merchantRepositoryService.findById(1));
+        merchantWalletAccountCurrencyEntity.setWalletAccountCurrencyEntity(walletAccountCurrencyRepositoryService.findCurrency("GOLD"));
         merchantWalletAccountCurrencyEntity.setCreatedAt(new Date());
         merchantWalletAccountCurrencyEntity.setCreatedBy("System");
         merchantWalletAccountCurrencyRepository.save(merchantWalletAccountCurrencyEntity);
-        BaseResponse<MerchantResponse> response = getMerchant(mockMvc, ACCESS_TOKEN, "GOLD", HttpStatus.OK, StatusService.SUCCESSFUL, true);
+        BaseResponse<MerchantResponse> response = getMerchant(mockMvc, ACCESS_TOKEN, "GOLD", HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
         if(response.getData().getMerchantObjectList().size() != 1){
             log.error("merchant must be one Record");
             throw new Exception("merchant must be one record");
@@ -188,7 +191,7 @@ class MerchantControllerTest extends WalletApplicationTests {
     @Order(23)
     @DisplayName("merchantSuccessEmptyWithRial")
     void merchantSuccessEmptyWithRial() throws Exception {
-        BaseResponse<MerchantResponse> response = getMerchant(mockMvc, ACCESS_TOKEN, "RIAL", HttpStatus.OK, StatusService.SUCCESSFUL, true);
+        BaseResponse<MerchantResponse> response = getMerchant(mockMvc, ACCESS_TOKEN, "RIAL", HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
         if(response.getData().getMerchantObjectList() != null){
             log.error("merchant must be null");
             throw new Exception("merchant must be null");
@@ -210,7 +213,7 @@ class MerchantControllerTest extends WalletApplicationTests {
         log.info("start getMerchantBalanceSuccess test");
         
         // Step 1: Get merchant data to ensure merchant exists
-        BaseResponse<MerchantResponse> merchantResponse = getMerchant(mockMvc, ACCESS_TOKEN, "GOLD", HttpStatus.OK, StatusService.SUCCESSFUL, true);
+        BaseResponse<MerchantResponse> merchantResponse = getMerchant(mockMvc, ACCESS_TOKEN, "GOLD", HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
         Assert.assertNotNull(merchantResponse.getData());
         Assert.assertNotNull(merchantResponse.getData().getMerchantObjectList());
         Assert.assertTrue(merchantResponse.getData().getMerchantObjectList().size() > 0);
@@ -219,7 +222,7 @@ class MerchantControllerTest extends WalletApplicationTests {
         String merchantId = String.valueOf(merchantResponse.getData().getMerchantObjectList().get(0).getId());
         
         // Step 3: Test the get balance endpoint
-        BaseResponse<WalletBalanceResponse> response = getMerchantBalance(mockMvc, ACCESS_TOKEN, merchantId, HttpStatus.OK, StatusService.SUCCESSFUL, true);
+        BaseResponse<WalletBalanceResponse> response = getMerchantBalance(mockMvc, ACCESS_TOKEN, merchantId, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
         Assert.assertNotNull(response.getData());
         Assert.assertNotNull(response.getData().getWalletAccountObjectList());
         // The wallet account list might be empty if merchant has no accounts, which is valid
@@ -237,7 +240,7 @@ class MerchantControllerTest extends WalletApplicationTests {
     @DisplayName("getMerchantBalanceFail-MerchantNotFound")
     void getMerchantBalanceFailMerchantNotFound() throws Exception {
         log.info("start getMerchantBalanceFailMerchantNotFound test");
-        getMerchantBalance(mockMvc, ACCESS_TOKEN, INVALID_MERCHANT_ID, HttpStatus.OK, StatusService.MERCHANT_IS_NOT_EXIST, false);
+        getMerchantBalance(mockMvc, ACCESS_TOKEN, INVALID_MERCHANT_ID, HttpStatus.OK, StatusRepositoryService.MERCHANT_IS_NOT_EXIST, false);
     }
 
     /**
@@ -253,7 +256,7 @@ class MerchantControllerTest extends WalletApplicationTests {
         log.info("start getMerchantBalanceFailInvalidMerchantId test");
         
         // Test with invalid merchant ID format (non-numeric)
-        getMerchantBalance(mockMvc, ACCESS_TOKEN, "invalid_merchant_id", HttpStatus.OK, StatusService.INPUT_PARAMETER_NOT_VALID, false);
+        getMerchantBalance(mockMvc, ACCESS_TOKEN, "invalid_merchant_id", HttpStatus.OK, StatusRepositoryService.INPUT_PARAMETER_NOT_VALID, false);
     }
 
 
@@ -273,7 +276,7 @@ class MerchantControllerTest extends WalletApplicationTests {
         log.info("start increaseBalanceSuccess test");
         
         // Step 1: Get merchant data to ensure merchant exists
-        BaseResponse<MerchantResponse> merchantResponse = getMerchant(mockMvc, ACCESS_TOKEN, "GOLD", HttpStatus.OK, StatusService.SUCCESSFUL, true);
+        BaseResponse<MerchantResponse> merchantResponse = getMerchant(mockMvc, ACCESS_TOKEN, "GOLD", HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
         Assert.assertNotNull(merchantResponse.getData());
         Assert.assertNotNull(merchantResponse.getData().getMerchantObjectList());
         Assert.assertTrue(merchantResponse.getData().getMerchantObjectList().size() > 0);
@@ -282,7 +285,7 @@ class MerchantControllerTest extends WalletApplicationTests {
         String merchantId = String.valueOf(merchantResponse.getData().getMerchantObjectList().get(0).getId());
         
         // Step 3: Get balance to find valid wallet account numbers
-        WalletBalanceResponse balanceResponse = merchantService.getBalance(requestContext.getChannelEntity(), merchantId);
+        WalletBalanceResponse balanceResponse = merchantOperationService.getBalance(requestContext.getChannelEntity(), merchantId);
         Assert.assertNotNull(balanceResponse);
         Assert.assertNotNull(balanceResponse.getWalletAccountObjectList());
         Assert.assertTrue(balanceResponse.getWalletAccountObjectList().size() > 0);
@@ -300,8 +303,8 @@ class MerchantControllerTest extends WalletApplicationTests {
         }
 
         // Step 5: Test the increase balance with valid data for both currencies
-        BaseResponse<String> responseGold = increaseMerchantBalance(mockMvc, ACCESS_TOKEN, walletGoldAccountNumber, VALID_AMOUNT, merchantId, HttpStatus.OK, StatusService.SUCCESSFUL, true);
-        BaseResponse<String> responseRial = increaseMerchantBalance(mockMvc, ACCESS_TOKEN, walletRialAccountNumber, VALID_AMOUNT, merchantId, HttpStatus.OK, StatusService.SUCCESSFUL, true);
+        BaseResponse<String> responseGold = increaseMerchantBalance(mockMvc, ACCESS_TOKEN, walletGoldAccountNumber, VALID_AMOUNT, merchantId, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
+        BaseResponse<String> responseRial = increaseMerchantBalance(mockMvc, ACCESS_TOKEN, walletRialAccountNumber, VALID_AMOUNT, merchantId, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
 
         Assert.assertNotNull(responseGold.getData());
         Assert.assertTrue(responseGold.getData().contains("Balance increased successfully"));
@@ -326,17 +329,17 @@ class MerchantControllerTest extends WalletApplicationTests {
         log.info("start increaseBalanceFailMerchantNotFound test");
         
         // Step 1: Get a valid wallet account number first
-        BaseResponse<MerchantResponse> merchantResponse = getMerchant(mockMvc, ACCESS_TOKEN, "GOLD", HttpStatus.OK, StatusService.SUCCESSFUL, true);
+        BaseResponse<MerchantResponse> merchantResponse = getMerchant(mockMvc, ACCESS_TOKEN, "GOLD", HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
         String validWalletAccountNumber = "1234567890"; // Use a hardcoded value for failure test
         if (merchantResponse.getData().getMerchantObjectList() != null && !merchantResponse.getData().getMerchantObjectList().isEmpty()) {
-            WalletBalanceResponse balanceResponse = merchantService.getBalance(requestContext.getChannelEntity(), String.valueOf(merchantResponse.getData().getMerchantObjectList().get(0).getId()));
+            WalletBalanceResponse balanceResponse = merchantOperationService.getBalance(requestContext.getChannelEntity(), String.valueOf(merchantResponse.getData().getMerchantObjectList().get(0).getId()));
             if (balanceResponse.getWalletAccountObjectList() != null && !balanceResponse.getWalletAccountObjectList().isEmpty()) {
                 validWalletAccountNumber = balanceResponse.getWalletAccountObjectList().get(0).getAccountNumber();
             }
         }
         
         // Step 2: Attempt to increase balance for non-existent merchant ID
-        increaseMerchantBalance(mockMvc, ACCESS_TOKEN, validWalletAccountNumber, VALID_AMOUNT, INVALID_MERCHANT_ID, HttpStatus.OK, StatusService.MERCHANT_IS_NOT_EXIST, false);
+        increaseMerchantBalance(mockMvc, ACCESS_TOKEN, validWalletAccountNumber, VALID_AMOUNT, INVALID_MERCHANT_ID, HttpStatus.OK, StatusRepositoryService.MERCHANT_IS_NOT_EXIST, false);
     }
 
     /**
@@ -352,12 +355,12 @@ class MerchantControllerTest extends WalletApplicationTests {
     void increaseBalanceFailWalletAccountNotFound() throws Exception {
         log.info("start increaseBalanceFailWalletAccountNotFound test");
         // Get a valid merchant ID first
-        BaseResponse<MerchantResponse> merchantResponse = getMerchant(mockMvc, ACCESS_TOKEN, "GOLD", HttpStatus.OK, StatusService.SUCCESSFUL, true);
+        BaseResponse<MerchantResponse> merchantResponse = getMerchant(mockMvc, ACCESS_TOKEN, "GOLD", HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
         String validMerchantId = "1"; // Default fallback
         if (merchantResponse.getData().getMerchantObjectList() != null && !merchantResponse.getData().getMerchantObjectList().isEmpty()) {
             validMerchantId = String.valueOf(merchantResponse.getData().getMerchantObjectList().get(0).getId());
         }
-        increaseMerchantBalance(mockMvc, ACCESS_TOKEN, INVALID_WALLET_ACCOUNT_NUMBER, VALID_AMOUNT, validMerchantId, HttpStatus.OK, StatusService.WALLET_ACCOUNT_NOT_FOUND, false);
+        increaseMerchantBalance(mockMvc, ACCESS_TOKEN, INVALID_WALLET_ACCOUNT_NUMBER, VALID_AMOUNT, validMerchantId, HttpStatus.OK, StatusRepositoryService.WALLET_ACCOUNT_NOT_FOUND, false);
     }
 
     /**
@@ -374,12 +377,12 @@ class MerchantControllerTest extends WalletApplicationTests {
         log.info("start increaseBalanceFailWalletAccountNotBelongToMerchant test");
         // This test assumes there's a wallet account that doesn't belong to the merchant
         // Get a valid merchant ID first
-        BaseResponse<MerchantResponse> merchantResponse = getMerchant(mockMvc, ACCESS_TOKEN, "GOLD", HttpStatus.OK, StatusService.SUCCESSFUL, true);
+        BaseResponse<MerchantResponse> merchantResponse = getMerchant(mockMvc, ACCESS_TOKEN, "GOLD", HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
         String validMerchantId = "1"; // Default fallback
         if (merchantResponse.getData().getMerchantObjectList() != null && !merchantResponse.getData().getMerchantObjectList().isEmpty()) {
             validMerchantId = String.valueOf(merchantResponse.getData().getMerchantObjectList().get(0).getId());
         }
-        increaseMerchantBalance(mockMvc, ACCESS_TOKEN, "9876543210", VALID_AMOUNT, validMerchantId, HttpStatus.OK, StatusService.WALLET_ACCOUNT_NOT_FOUND, false);
+        increaseMerchantBalance(mockMvc, ACCESS_TOKEN, "9876543210", VALID_AMOUNT, validMerchantId, HttpStatus.OK, StatusRepositoryService.WALLET_ACCOUNT_NOT_FOUND, false);
     }
 
     /**
@@ -397,7 +400,7 @@ class MerchantControllerTest extends WalletApplicationTests {
         log.info("start decreaseBalanceSuccess test");
         
         // Step 1: Get merchant data to ensure merchant exists
-        BaseResponse<MerchantResponse> merchantResponse = getMerchant(mockMvc, ACCESS_TOKEN, "GOLD", HttpStatus.OK, StatusService.SUCCESSFUL, true);
+        BaseResponse<MerchantResponse> merchantResponse = getMerchant(mockMvc, ACCESS_TOKEN, "GOLD", HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
         Assert.assertNotNull(merchantResponse.getData());
         Assert.assertNotNull(merchantResponse.getData().getMerchantObjectList());
         Assert.assertTrue(merchantResponse.getData().getMerchantObjectList().size() > 0);
@@ -406,7 +409,7 @@ class MerchantControllerTest extends WalletApplicationTests {
         String merchantId = String.valueOf(merchantResponse.getData().getMerchantObjectList().get(0).getId());
         
         // Step 3: Get balance to find valid wallet account numbers
-        WalletBalanceResponse balanceResponse = merchantService.getBalance(requestContext.getChannelEntity(), merchantId);
+        WalletBalanceResponse balanceResponse = merchantOperationService.getBalance(requestContext.getChannelEntity(), merchantId);
         Assert.assertNotNull(balanceResponse);
         Assert.assertNotNull(balanceResponse.getWalletAccountObjectList());
         Assert.assertTrue(balanceResponse.getWalletAccountObjectList().size() > 0);
@@ -424,8 +427,8 @@ class MerchantControllerTest extends WalletApplicationTests {
         }
         
         // Step 5: Test the decrease balance with valid data for both currencies
-        BaseResponse<String> responseGold = decreaseMerchantBalance(mockMvc, ACCESS_TOKEN, walletGoldAccountNumber, VALID_AMOUNT, merchantId, HttpStatus.OK, StatusService.SUCCESSFUL, true);
-        BaseResponse<String> responseRial = decreaseMerchantBalance(mockMvc, ACCESS_TOKEN, walletRialAccountNumber, VALID_AMOUNT, merchantId, HttpStatus.OK, StatusService.SUCCESSFUL, true);
+        BaseResponse<String> responseGold = decreaseMerchantBalance(mockMvc, ACCESS_TOKEN, walletGoldAccountNumber, VALID_AMOUNT, merchantId, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
+        BaseResponse<String> responseRial = decreaseMerchantBalance(mockMvc, ACCESS_TOKEN, walletRialAccountNumber, VALID_AMOUNT, merchantId, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
 
         Assert.assertNotNull(responseGold.getData());
         Assert.assertTrue(responseGold.getData().contains("Balance decreased successfully"));
@@ -449,10 +452,10 @@ class MerchantControllerTest extends WalletApplicationTests {
     void decreaseBalanceFailMerchantNotFound() throws Exception {
         log.info("start decreaseBalanceFailMerchantNotFound test");
         // Get a valid wallet account number first
-        BaseResponse<MerchantResponse> merchantResponse = getMerchant(mockMvc, ACCESS_TOKEN, "GOLD", HttpStatus.OK, StatusService.SUCCESSFUL, true);
+        BaseResponse<MerchantResponse> merchantResponse = getMerchant(mockMvc, ACCESS_TOKEN, "GOLD", HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
         String validWalletAccountNumber = "1234567890"; // Use a hardcoded value for failure test
         if (merchantResponse.getData().getMerchantObjectList() != null && !merchantResponse.getData().getMerchantObjectList().isEmpty()) {
-            WalletBalanceResponse balanceResponse = merchantService.getBalance(requestContext.getChannelEntity(), String.valueOf(merchantResponse.getData().getMerchantObjectList().get(0).getId()));
+            WalletBalanceResponse balanceResponse = merchantOperationService.getBalance(requestContext.getChannelEntity(), String.valueOf(merchantResponse.getData().getMerchantObjectList().get(0).getId()));
             if (balanceResponse.getWalletAccountObjectList() != null && !balanceResponse.getWalletAccountObjectList().isEmpty()) {
                 for(WalletAccountObject walletAccountObject : balanceResponse.getWalletAccountObjectList()){
                     if(walletAccountObject.getWalletAccountCurrencyObject().getName().equalsIgnoreCase("GOLD")){
@@ -461,7 +464,7 @@ class MerchantControllerTest extends WalletApplicationTests {
                 }
             }
         }
-        decreaseMerchantBalance(mockMvc, ACCESS_TOKEN, validWalletAccountNumber, VALID_AMOUNT, INVALID_MERCHANT_ID, HttpStatus.OK, StatusService.MERCHANT_IS_NOT_EXIST, false);
+        decreaseMerchantBalance(mockMvc, ACCESS_TOKEN, validWalletAccountNumber, VALID_AMOUNT, INVALID_MERCHANT_ID, HttpStatus.OK, StatusRepositoryService.MERCHANT_IS_NOT_EXIST, false);
     }
 
     /**
@@ -477,12 +480,12 @@ class MerchantControllerTest extends WalletApplicationTests {
     void decreaseBalanceFailWalletAccountNotFound() throws Exception {
         log.info("start decreaseBalanceFailWalletAccountNotFound test");
         // Get a valid merchant ID first
-        BaseResponse<MerchantResponse> merchantResponse = getMerchant(mockMvc, ACCESS_TOKEN, "GOLD", HttpStatus.OK, StatusService.SUCCESSFUL, true);
+        BaseResponse<MerchantResponse> merchantResponse = getMerchant(mockMvc, ACCESS_TOKEN, "GOLD", HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
         String validMerchantId = "1"; // Default fallback
         if (merchantResponse.getData().getMerchantObjectList() != null && !merchantResponse.getData().getMerchantObjectList().isEmpty()) {
             validMerchantId = String.valueOf(merchantResponse.getData().getMerchantObjectList().get(0).getId());
         }
-        decreaseMerchantBalance(mockMvc, ACCESS_TOKEN, INVALID_WALLET_ACCOUNT_NUMBER, VALID_AMOUNT, validMerchantId, HttpStatus.OK, StatusService.WALLET_ACCOUNT_NOT_FOUND, false);
+        decreaseMerchantBalance(mockMvc, ACCESS_TOKEN, INVALID_WALLET_ACCOUNT_NUMBER, VALID_AMOUNT, validMerchantId, HttpStatus.OK, StatusRepositoryService.WALLET_ACCOUNT_NOT_FOUND, false);
     }
 
     /**
@@ -499,12 +502,12 @@ class MerchantControllerTest extends WalletApplicationTests {
         log.info("start decreaseBalanceFailInsufficientBalance test");
         // This test assumes the merchant doesn't have enough balance
         // Get a valid merchant ID and wallet account number first
-        BaseResponse<MerchantResponse> merchantResponse = getMerchant(mockMvc, ACCESS_TOKEN, "GOLD", HttpStatus.OK, StatusService.SUCCESSFUL, true);
+        BaseResponse<MerchantResponse> merchantResponse = getMerchant(mockMvc, ACCESS_TOKEN, "GOLD", HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
         String validMerchantId = "1"; // Default fallback
         String validWalletAccountNumber = null; // Default fallback
         if (merchantResponse.getData().getMerchantObjectList() != null && !merchantResponse.getData().getMerchantObjectList().isEmpty()) {
             validMerchantId = String.valueOf(merchantResponse.getData().getMerchantObjectList().get(0).getId());
-            WalletBalanceResponse balanceResponse = merchantService.getBalance(requestContext.getChannelEntity(), validMerchantId);
+            WalletBalanceResponse balanceResponse = merchantOperationService.getBalance(requestContext.getChannelEntity(), validMerchantId);
             if (balanceResponse.getWalletAccountObjectList() != null && !balanceResponse.getWalletAccountObjectList().isEmpty()) {
                 for(WalletAccountObject walletAccountObject : balanceResponse.getWalletAccountObjectList()){
                     if(walletAccountObject.getWalletAccountCurrencyObject().getName().equalsIgnoreCase("GOLD")){
@@ -513,7 +516,7 @@ class MerchantControllerTest extends WalletApplicationTests {
                 }
             }
         }
-        decreaseMerchantBalance(mockMvc, ACCESS_TOKEN, validWalletAccountNumber, String.valueOf(Long.parseLong(VALID_AMOUNT) + 1), validMerchantId, HttpStatus.OK, StatusService.BALANCE_IS_NOT_ENOUGH, false);
+        decreaseMerchantBalance(mockMvc, ACCESS_TOKEN, validWalletAccountNumber, String.valueOf(Long.parseLong(VALID_AMOUNT) + 1), validMerchantId, HttpStatus.OK, StatusRepositoryService.BALANCE_IS_NOT_ENOUGH, false);
     }
 
     /**
@@ -530,12 +533,12 @@ class MerchantControllerTest extends WalletApplicationTests {
         log.info("start decreaseBalanceFailWalletAccountNotBelongToMerchant test");
         // This test assumes there's a wallet account that doesn't belong to the merchant
         // Get a valid merchant ID first
-        BaseResponse<MerchantResponse> merchantResponse = getMerchant(mockMvc, ACCESS_TOKEN, "GOLD", HttpStatus.OK, StatusService.SUCCESSFUL, true);
+        BaseResponse<MerchantResponse> merchantResponse = getMerchant(mockMvc, ACCESS_TOKEN, "GOLD", HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
         String validMerchantId = "1"; // Default fallback
         if (merchantResponse.getData().getMerchantObjectList() != null && !merchantResponse.getData().getMerchantObjectList().isEmpty()) {
             validMerchantId = String.valueOf(merchantResponse.getData().getMerchantObjectList().get(0).getId());
         }
-        decreaseMerchantBalance(mockMvc, ACCESS_TOKEN, "9876543210", VALID_AMOUNT, validMerchantId, HttpStatus.OK, StatusService.WALLET_ACCOUNT_NOT_FOUND, false);
+        decreaseMerchantBalance(mockMvc, ACCESS_TOKEN, "9876543210", VALID_AMOUNT, validMerchantId, HttpStatus.OK, StatusRepositoryService.WALLET_ACCOUNT_NOT_FOUND, false);
     }
 
 }

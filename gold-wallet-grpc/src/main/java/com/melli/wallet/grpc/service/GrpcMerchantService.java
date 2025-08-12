@@ -3,10 +3,9 @@ package com.melli.wallet.grpc.service;
 import com.melli.wallet.domain.response.purchase.MerchantObject;
 import com.melli.wallet.domain.response.purchase.MerchantResponse;
 import com.melli.wallet.exception.InternalServiceException;
-import com.melli.wallet.grpc.*;
 import com.melli.wallet.grpc.config.RequestContext;
 import com.melli.wallet.grpc.exception.GrpcErrorHandler;
-import com.melli.wallet.service.MerchantService;
+import com.melli.wallet.service.repository.MerchantRepositoryService;
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import lombok.RequiredArgsConstructor;
@@ -23,7 +22,7 @@ import net.devh.boot.grpc.server.service.GrpcService;
 @Log4j2
 public class GrpcMerchantService extends MerchantServiceGrpc.MerchantServiceImplBase {
 
-    private final MerchantService merchantService;
+    private final MerchantRepositoryService merchantRepositoryService;
     private final GrpcErrorHandler exceptionHandler;
 
     @Override
@@ -40,7 +39,7 @@ public class GrpcMerchantService extends MerchantServiceGrpc.MerchantServiceImpl
                 return;
             }
 
-            MerchantResponse response = merchantService.getMerchant(
+            MerchantResponse response = merchantRepositoryService.getMerchant(
                     RequestContext.getChannelEntity(),
                     request.getCurrency()
             );

@@ -7,12 +7,11 @@ import com.melli.wallet.domain.response.purchase.PurchaseResponse;
 import com.melli.wallet.domain.response.purchase.PurchaseTrackObject;
 import com.melli.wallet.domain.response.purchase.PurchaseTrackResponse;
 import com.melli.wallet.exception.InternalServiceException;
-import com.melli.wallet.grpc.*;
 import com.melli.wallet.grpc.config.RequestContext;
 import com.melli.wallet.grpc.exception.GrpcErrorHandler;
-import com.melli.wallet.service.PurchaseService;
-import com.melli.wallet.service.ResourceService;
-import com.melli.wallet.service.SecurityService;
+import com.melli.wallet.service.operation.PurchaseOperationService;
+import com.melli.wallet.service.repository.ResourceRepositoryService;
+import com.melli.wallet.service.operation.SecurityOperationService;
 import io.grpc.stub.StreamObserver;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -32,17 +31,17 @@ import java.math.BigDecimal;
 @Log4j2
 public class GrpcPurchaseServiceImplementation extends PurchaseServiceGrpc.PurchaseServiceImplBase {
 
-    private final PurchaseService purchaseService;
-    private final SecurityService securityService;
+    private final PurchaseOperationService purchaseOperationService;
+    private final SecurityOperationService securityOperationService;
     private final GrpcErrorHandler exceptionHandler;
 
-    @PreAuthorize("hasAuthority(\""+ ResourceService.GENERATE_PURCHASE_UNIQUE_IDENTIFIER +"\")")
+    @PreAuthorize("hasAuthority(\""+ ResourceRepositoryService.GENERATE_PURCHASE_UNIQUE_IDENTIFIER +"\")")
     @Override
     public void generateBuyUuid(BuyGenerateUuidRequestGrpc request, StreamObserver<BaseResponseGrpc> responseObserver) {
         try {
             log.info("start call buy uuid nationalCode ===> {}", request.getNationalCode());
             String channelIp = RequestContext.getClientIp();
-            UuidResponse response = purchaseService.buyGenerateUuid(
+            UuidResponse response = purchaseOperationService.buyGenerateUuid(
                     new BuyRequestDTO(
                             RequestContext.getChannelEntity(),
                             "",
@@ -72,11 +71,11 @@ public class GrpcPurchaseServiceImplementation extends PurchaseServiceGrpc.Purch
     }
 
     @Override
-    @PreAuthorize("hasAuthority(\""+ ResourceService.GENERATE_PURCHASE_UNIQUE_IDENTIFIER +"\")")
+    @PreAuthorize("hasAuthority(\""+ ResourceRepositoryService.GENERATE_PURCHASE_UNIQUE_IDENTIFIER +"\")")
     public void generateSellUuid(SellGenerateUuidRequestGrpc request, StreamObserver<BaseResponseGrpc> responseObserver) {
         try {
             log.info("start call sell uuid nationalCode ===> {}", request.getNationalCode());
-            UuidResponse response = purchaseService.sellGenerateUuid(
+            UuidResponse response = purchaseOperationService.sellGenerateUuid(
                     RequestContext.getChannelEntity(),
                     request.getNationalCode(),
                     request.getQuantity(),
@@ -96,7 +95,7 @@ public class GrpcPurchaseServiceImplementation extends PurchaseServiceGrpc.Purch
         }
     }
 
-    @PreAuthorize("hasAuthority(\""+ ResourceService.BUY +"\")")
+    @PreAuthorize("hasAuthority(\""+ ResourceRepositoryService.BUY +"\")")
     @Override
     public void inquiry(PurchaseTrackRequestGrpc request, StreamObserver<BaseResponseGrpc> responseObserver) {
         try {
@@ -105,7 +104,7 @@ public class GrpcPurchaseServiceImplementation extends PurchaseServiceGrpc.Purch
             log.info("start call purchase in username ===> {}, uniqueIdentifier ===> {}, from ip ===> {}",
                     username, request.getUniqueIdentifier(), channelIp);
 
-            PurchaseTrackResponse response = purchaseService.purchaseTrack(
+            PurchaseTrackResponse response = purchaseOperationService.purchaseTrack(
                     RequestContext.getChannelEntity(),
                     request.getUniqueIdentifier(),
                     request.getType(),
@@ -124,7 +123,7 @@ public class GrpcPurchaseServiceImplementation extends PurchaseServiceGrpc.Purch
         }
     }
 
-    @PreAuthorize("hasAuthority(\""+ ResourceService.BUY +"\")")
+    @PreAuthorize("hasAuthority(\""+ ResourceRepositoryService.BUY +"\")")
     @Override
     public void buy(BuyWalletRequestGrpc request, StreamObserver<BaseResponseGrpc> responseObserver) {
         try {
@@ -133,13 +132,13 @@ public class GrpcPurchaseServiceImplementation extends PurchaseServiceGrpc.Purch
             log.info("start call buy in username ===> {}, nationalCode ===> {}, from ip ===> {}",
                     username, request.getNationalCode(), channelIp);
 
-            securityService.checkSign(
+            securityOperationService.checkSign(
                     RequestContext.getChannelEntity(),
                     request.getSign(),
                     request.getUniqueIdentifier() + "|" + request.getMerchantId() + "|" + request.getTotalPrice() + "|" + request.getNationalCode()
             );
 
-            PurchaseResponse response = purchaseService.buy(
+            PurchaseResponse response = purchaseOperationService.buy(
                     new BuyRequestDTO(
                             RequestContext.getChannelEntity(),
                             request.getUniqueIdentifier(),
@@ -169,7 +168,7 @@ public class GrpcPurchaseServiceImplementation extends PurchaseServiceGrpc.Purch
     }
 
     @Override
-    @PreAuthorize("hasAuthority(\""+ ResourceService.BUY_DIRECT +"\")")
+    @PreAuthorize("hasAuthority(\""+ ResourceRepositoryService.BUY_DIRECT +"\")")
     public void buyDirect(BuyDirectWalletRequestGrpc request, StreamObserver<BaseResponseGrpc> responseObserver) {
         try {
             String channelIp = RequestContext.getClientIp();
@@ -177,13 +176,13 @@ public class GrpcPurchaseServiceImplementation extends PurchaseServiceGrpc.Purch
             log.info("start call buy direct in username ===> {}, nationalCode ===> {}, from ip ===> {}",
                     username, request.getNationalCode(), channelIp);
 
-            securityService.checkSign(
+            securityOperationService.checkSign(
                     RequestContext.getChannelEntity(),
                     request.getSign(),
                     request.getUniqueIdentifier() + "|" + request.getMerchantId() + "|" + request.getTotalPrice() + "|" + request.getNationalCode()
             );
 
-            PurchaseResponse response = purchaseService.buyDirect(
+            PurchaseResponse response = purchaseOperationService.buyDirect(
                     new BuyRequestDTO(
                             RequestContext.getChannelEntity(),
                             request.getUniqueIdentifier(),
@@ -213,7 +212,7 @@ public class GrpcPurchaseServiceImplementation extends PurchaseServiceGrpc.Purch
         }
     }
 
-    @PreAuthorize("hasAuthority(\""+ ResourceService.SELL +"\")")
+    @PreAuthorize("hasAuthority(\""+ ResourceRepositoryService.SELL +"\")")
     @Override
     public void sell(SellWalletRequestGrpc request, StreamObserver<BaseResponseGrpc> responseObserver) {
         try {
@@ -222,13 +221,13 @@ public class GrpcPurchaseServiceImplementation extends PurchaseServiceGrpc.Purch
             log.info("start call sell in username ===> {}, nationalCode ===> {}, from ip ===> {}",
                     username, request.getNationalCode(), channelIp);
 
-            securityService.checkSign(
+            securityOperationService.checkSign(
                     RequestContext.getChannelEntity(),
                     request.getSign(),
                     request.getUniqueIdentifier() + "|" + request.getMerchantId() + "|" + request.getQuantity() + "|" + request.getNationalCode()
             );
 
-            PurchaseResponse response = purchaseService.sell(
+            PurchaseResponse response = purchaseOperationService.sell(
                     new SellRequestDTO(
                             RequestContext.getChannelEntity(),
                             request.getUniqueIdentifier(),

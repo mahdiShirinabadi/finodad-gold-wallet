@@ -2,8 +2,8 @@ package com.melli.wallet.exception;
 
 import com.melli.wallet.domain.response.base.BaseResponse;
 import com.melli.wallet.domain.response.base.ErrorDetail;
-import com.melli.wallet.service.AlertService;
-import com.melli.wallet.service.StatusService;
+import com.melli.wallet.service.operation.AlertService;
+import com.melli.wallet.service.repository.StatusRepositoryService;
 import com.melli.wallet.util.StringUtils;
 import com.melli.wallet.utils.Helper;
 import jakarta.validation.ConstraintViolation;
@@ -36,7 +36,7 @@ import java.util.Map;
 public class AppExceptionsHandler extends ResponseEntityExceptionHandler {
 
     private final Helper responseHelper;
-    private final StatusService statusService;
+    private final StatusRepositoryService statusRepositoryService;
     private final AlertService alertService;
 
 
@@ -47,13 +47,13 @@ public class AppExceptionsHandler extends ResponseEntityExceptionHandler {
         log.error("error in request" + exception.getMessage());
         try {
             ErrorDetail errorDetail = new ErrorDetail();
-            errorDetail.setCode(StatusService.GENERAL_ERROR);
-            errorDetail.setMessage(statusService.findByCode(String.valueOf(StatusService.GENERAL_ERROR)).getPersianDescription());
+            errorDetail.setCode(StatusRepositoryService.GENERAL_ERROR);
+            errorDetail.setMessage(statusRepositoryService.findByCode(String.valueOf(StatusRepositoryService.GENERAL_ERROR)).getPersianDescription());
             alertService.send("Exception in " + ((ServletWebRequest) request).getRequest().getRequestURI() + " and error is " + exception, "");
             return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse<>(false, errorDetail));
         } catch (Exception ex) {
             ErrorDetail errorDetail = new ErrorDetail();
-            errorDetail.setCode(StatusService.GENERAL_ERROR);
+            errorDetail.setCode(StatusRepositoryService.GENERAL_ERROR);
             errorDetail.setMessage("Exception: error read description");
             return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse<>(false, errorDetail));
         }
@@ -64,13 +64,13 @@ public class AppExceptionsHandler extends ResponseEntityExceptionHandler {
         log.error("AuthenticationException in request ==> {} , message ===> {}", ((ServletWebRequest) request).getRequest().getRequestURI(), exception.getMessage());
         try {
             ErrorDetail errorDetail = new ErrorDetail();
-            errorDetail.setCode(StatusService.TOKEN_NOT_VALID);
-            errorDetail.setMessage(statusService.findByCode(String.valueOf(StatusService.TOKEN_NOT_VALID)).getPersianDescription());
+            errorDetail.setCode(StatusRepositoryService.TOKEN_NOT_VALID);
+            errorDetail.setMessage(statusRepositoryService.findByCode(String.valueOf(StatusRepositoryService.TOKEN_NOT_VALID)).getPersianDescription());
             alertService.send("AuthenticationException in " + ((ServletWebRequest) request).getRequest().getRequestURI() + " and error is " + exception, "");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new BaseResponse<>(false, errorDetail));
         } catch (Exception ex) {
             ErrorDetail errorDetail = new ErrorDetail();
-            errorDetail.setCode(StatusService.TOKEN_NOT_VALID);
+            errorDetail.setCode(StatusRepositoryService.TOKEN_NOT_VALID);
             errorDetail.setMessage("AuthenticationException: error read description");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new BaseResponse<>(false, errorDetail));
         }
@@ -82,13 +82,13 @@ public class AppExceptionsHandler extends ResponseEntityExceptionHandler {
         log.error("AccessDeniedException in request ==> {} message ===> {}", ((ServletWebRequest) request).getRequest().getRequestURI(), exception.getMessage());
         try {
             ErrorDetail errorDetail = new ErrorDetail();
-            errorDetail.setCode(StatusService.USER_NOT_PERMISSION);
-            errorDetail.setMessage(statusService.findByCode(String.valueOf(StatusService.USER_NOT_PERMISSION)).getPersianDescription());
+            errorDetail.setCode(StatusRepositoryService.USER_NOT_PERMISSION);
+            errorDetail.setMessage(statusRepositoryService.findByCode(String.valueOf(StatusRepositoryService.USER_NOT_PERMISSION)).getPersianDescription());
             alertService.send("AccessDeniedException in " + ((ServletWebRequest) request).getRequest().getRequestURI() + " and error is " + exception, "");
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new BaseResponse<>(false, errorDetail));
         } catch (Exception ex) {
             ErrorDetail errorDetail = new ErrorDetail();
-            errorDetail.setCode(StatusService.USER_NOT_PERMISSION);
+            errorDetail.setCode(StatusRepositoryService.USER_NOT_PERMISSION);
             errorDetail.setMessage("AccessDeniedException: error read description");
             alertService.send("AccessDeniedException in " + ((ServletWebRequest) request).getRequest().getRequestURI() + " and error is " + exception, "");
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new BaseResponse<>(false, errorDetail));
@@ -101,7 +101,7 @@ public class AppExceptionsHandler extends ResponseEntityExceptionHandler {
         try {
             ErrorDetail errorDetail = new ErrorDetail();
             errorDetail.setCode(exception.getStatus());
-            String message = statusService.findByCode(String.valueOf(exception.getStatus())).getPersianDescription();
+            String message = statusRepositoryService.findByCode(String.valueOf(exception.getStatus())).getPersianDescription();
             if (StringUtils.isPersianString(exception.getMessage())) {
                 message = StringUtils.fixSomeWord(exception.getMessage());
             }
@@ -124,7 +124,7 @@ public class AppExceptionsHandler extends ResponseEntityExceptionHandler {
         log.error("exception in request ==> {} , message ===> {}", ((ServletWebRequest) request).getRequest().getRequestURI(), exception.getMessage());
         ConstraintViolation<?> violation = exception.getConstraintViolations().iterator().next();
         ErrorDetail errorDetail = new ErrorDetail();
-        errorDetail.setCode(StatusService.INPUT_PARAMETER_NOT_VALID);
+        errorDetail.setCode(StatusRepositoryService.INPUT_PARAMETER_NOT_VALID);
         errorDetail.setMessage(violation.getMessage());
         alertService.send("ConstraintViolationException in " + ((ServletWebRequest) request).getRequest().getRequestURI() + " and error is " + errorDetail.getCode() + "|" + errorDetail.getMessage(), "");
         return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse<>(false, errorDetail));
@@ -139,7 +139,7 @@ public class AppExceptionsHandler extends ResponseEntityExceptionHandler {
             log.error("error in parameter ({}) , and error is ({}) and input value is ({})", fieldName, errorMessage, ((FieldError) error).getRejectedValue());
             errors.put(fieldName, errorMessage);
         });
-        ErrorDetail errorDetail = new ErrorDetail(ex.getBindingResult().getFieldErrors().get(0).getDefaultMessage(), StatusService.INPUT_PARAMETER_NOT_VALID);
+        ErrorDetail errorDetail = new ErrorDetail(ex.getBindingResult().getFieldErrors().get(0).getDefaultMessage(), StatusRepositoryService.INPUT_PARAMETER_NOT_VALID);
         alertService.send("handleMethodArgumentNotValid in " + ((ServletWebRequest) request).getRequest().getRequestURI() + " and error is " + errorDetail.getCode() + "|" + errorDetail.getMessage(), "");
         return new ResponseEntity<>(responseHelper.fillBaseResponse(false, errorDetail), HttpStatus.OK);
     }

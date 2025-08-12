@@ -4,8 +4,8 @@ import com.melli.wallet.domain.response.base.ErrorDetail;
 import com.melli.wallet.exception.InternalServiceException;
 import com.melli.wallet.grpc.BaseResponseGrpc;
 import com.melli.wallet.grpc.ErrorDetailGrpc;
-import com.melli.wallet.service.AlertService;
-import com.melli.wallet.service.StatusService;
+import com.melli.wallet.service.operation.AlertService;
+import com.melli.wallet.service.repository.StatusRepositoryService;
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import jakarta.validation.ConstraintViolation;
@@ -28,7 +28,7 @@ import java.nio.file.AccessDeniedException;
 @Log4j2
 public class GrpcExceptionHandler {
 
-    private final StatusService statusService;
+    private final StatusRepositoryService statusRepositoryService;
     private final AlertService alertService;
 
     public <T> void handleException(Exception ex, StreamObserver<BaseResponseGrpc> responseObserver, String methodName) {
@@ -38,18 +38,18 @@ public class GrpcExceptionHandler {
 
         try {
             if (ex instanceof AuthenticationException || ex instanceof BadCredentialsException) {
-                errorDetail.setCode(StatusService.TOKEN_NOT_VALID);
-                errorDetail.setMessage(statusService.findByCode(String.valueOf(StatusService.TOKEN_NOT_VALID)).getPersianDescription());
+                errorDetail.setCode(StatusRepositoryService.TOKEN_NOT_VALID);
+                errorDetail.setMessage(statusRepositoryService.findByCode(String.valueOf(StatusRepositoryService.TOKEN_NOT_VALID)).getPersianDescription());
                 alertService.send("AuthenticationException in " + methodName + ": " + ex.getMessage(), "");
                 responseObserver.onError(Status.UNAUTHENTICATED.withDescription("Authentication failed").asException());
             } else if (ex instanceof AccessDeniedException) {
-                errorDetail.setCode(StatusService.USER_NOT_PERMISSION);
-                errorDetail.setMessage(statusService.findByCode(String.valueOf(StatusService.USER_NOT_PERMISSION)).getPersianDescription());
+                errorDetail.setCode(StatusRepositoryService.USER_NOT_PERMISSION);
+                errorDetail.setMessage(statusRepositoryService.findByCode(String.valueOf(StatusRepositoryService.USER_NOT_PERMISSION)).getPersianDescription());
                 alertService.send("AccessDeniedException in " + methodName + ": " + ex.getMessage(), "");
                 responseObserver.onError(Status.PERMISSION_DENIED.withDescription("Access denied").asException());
             } else if (ex instanceof InternalServiceException ise) {
                 errorDetail.setCode(ise.getStatus());
-                String message = statusService.findByCode(String.valueOf(ise.getStatus())).getPersianDescription();
+                String message = statusRepositoryService.findByCode(String.valueOf(ise.getStatus())).getPersianDescription();
                 errorDetail.setMessage(message);
                 alertService.send("InternalServiceException in " + methodName + ": " + ex.getMessage(), "");
                 responseObserver.onNext(BaseResponseGrpc.newBuilder()
@@ -60,7 +60,7 @@ public class GrpcExceptionHandler {
                 responseObserver.onCompleted();
             } else if (ex instanceof ConstraintViolationException ce) {
                 ConstraintViolation<?> violation = ce.getConstraintViolations().iterator().next();
-                errorDetail.setCode(StatusService.INPUT_PARAMETER_NOT_VALID);
+                errorDetail.setCode(StatusRepositoryService.INPUT_PARAMETER_NOT_VALID);
                 errorDetail.setMessage(violation.getMessage());
                 alertService.send("ConstraintViolationException in " + methodName + ": " + errorDetail.getMessage(), "");
                 responseObserver.onNext(BaseResponseGrpc.newBuilder()
@@ -71,8 +71,8 @@ public class GrpcExceptionHandler {
                 responseObserver.onCompleted();
             } else {
                 log.error("general error", ex);
-                errorDetail.setCode(StatusService.GENERAL_ERROR);
-                errorDetail.setMessage(statusService.findByCode(String.valueOf(StatusService.GENERAL_ERROR)).getPersianDescription());
+                errorDetail.setCode(StatusRepositoryService.GENERAL_ERROR);
+                errorDetail.setMessage(statusRepositoryService.findByCode(String.valueOf(StatusRepositoryService.GENERAL_ERROR)).getPersianDescription());
                 alertService.send("Exception in " + methodName + ": " + ex.getMessage(), "");
                 responseObserver.onNext(BaseResponseGrpc.newBuilder()
                         .setSuccess(false)
@@ -83,7 +83,7 @@ public class GrpcExceptionHandler {
             }
         } catch (Exception e) {
             log.error("error in try/catch", e);
-            errorDetail.setCode(StatusService.GENERAL_ERROR);
+            errorDetail.setCode(StatusRepositoryService.GENERAL_ERROR);
             errorDetail.setMessage("Error processing exception");
             responseObserver.onNext(BaseResponseGrpc.newBuilder()
                     .setSuccess(false)

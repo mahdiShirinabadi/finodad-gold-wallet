@@ -8,8 +8,9 @@ import com.melli.wallet.domain.response.purchase.MerchantResponse;
 import com.melli.wallet.domain.response.wallet.WalletBalanceResponse;
 import com.melli.wallet.exception.InternalServiceException;
 import com.melli.wallet.security.RequestContext;
-import com.melli.wallet.service.MerchantService;
-import com.melli.wallet.service.ResourceService;
+import com.melli.wallet.service.repository.MerchantRepositoryService;
+import com.melli.wallet.service.repository.ResourceRepositoryService;
+import com.melli.wallet.service.operation.MerchantOperationService;
 import io.micrometer.core.annotation.Timed;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -38,36 +39,37 @@ import org.springframework.web.bind.annotation.*;
 public class MerchantController extends WebController {
 
     private final RequestContext requestContext;
-    private final MerchantService merchantService;
+    private final MerchantRepositoryService merchantRepositoryService;
+    private final MerchantOperationService merchantOperationService;
 
     @Timed(description = "Time taken to inquiry gold amount")
     @GetMapping(path = "/list", produces = {MediaType.APPLICATION_JSON_VALUE})
     @Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "لیست پذیرنده ها")
-    @PreAuthorize("hasAuthority(\""+ ResourceService.MERCHANT_LIST +"\")")
+    @PreAuthorize("hasAuthority(\""+ ResourceRepositoryService.MERCHANT_LIST +"\")")
     public ResponseEntity<BaseResponse<MerchantResponse>> getMerchant(@Valid @StringValidation @RequestParam("currency") String currency) throws InternalServiceException {
         String channelIp = requestContext.getClientIp();
         String username = requestContext.getChannelEntity().getUsername();
         log.info("start call getMerchant in username ===> {}, currency ===> {}, from ip ===> {}", username, currency, channelIp);
-        MerchantResponse merchantResponse = merchantService.getMerchant(requestContext.getChannelEntity(), currency);
+        MerchantResponse merchantResponse = merchantRepositoryService.getMerchant(requestContext.getChannelEntity(), currency);
         return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse<>(true, merchantResponse));
     }
 
     @Timed(description = "Time taken to inquiry gold amount")
     @GetMapping(path = "/balance", produces = {MediaType.APPLICATION_JSON_VALUE})
     @Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "مانده پذیرنده")
-    @PreAuthorize("hasAuthority(\""+ ResourceService.MERCHANT_BALANCE +"\")")
+    @PreAuthorize("hasAuthority(\""+ ResourceRepositoryService.MERCHANT_BALANCE +"\")")
     public ResponseEntity<BaseResponse<WalletBalanceResponse>> getBalanceMerchant(@Valid @NumberValidation @RequestParam("merchantId") String merchantId) throws InternalServiceException {
         String channelIp = requestContext.getClientIp();
         String username = requestContext.getChannelEntity().getUsername();
         log.info("start call balance getMerchant in username ===> {}, merchantId ===> {}, from ip ===> {}", username, merchantId, channelIp);
-        WalletBalanceResponse response = merchantService.getBalance(requestContext.getChannelEntity(), merchantId);
+        WalletBalanceResponse response = merchantOperationService.getBalance(requestContext.getChannelEntity(), merchantId);
         return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse<>(true, response));
     }
 
     @Timed(description = "Time taken to increase merchant balance")
     @PostMapping(path = "/balance/increase", produces = {MediaType.APPLICATION_JSON_VALUE})
     @Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "افزایش مانده پذیرنده")
-    @PreAuthorize("hasAuthority(\""+ ResourceService.MERCHANT_INCREASE_BALANCE +"\")")
+    @PreAuthorize("hasAuthority(\""+ ResourceRepositoryService.MERCHANT_INCREASE_BALANCE +"\")")
     public ResponseEntity<BaseResponse<String>> increaseBalance(@Valid @RequestBody MerchantBalanceRequest request) throws InternalServiceException {
         
         String channelIp = requestContext.getClientIp();
@@ -75,7 +77,7 @@ public class MerchantController extends WebController {
         log.info("start call increaseBalance in username ===> {}, walletAccountNumber ===> {}, amount ===> {}, merchantId ===> {}, from ip ===> {}", 
                 username, request.getWalletAccountNumber(), request.getAmount(), request.getMerchantId(), channelIp);
         
-        String traceId = merchantService.increaseBalance(
+        String traceId = merchantOperationService.increaseBalance(
                 requestContext.getChannelEntity(),
                 request.getWalletAccountNumber(),
                 request.getAmount(),
@@ -89,7 +91,7 @@ public class MerchantController extends WebController {
     @Timed(description = "Time taken to decrease merchant balance")
     @PostMapping(path = "/balance/decrease", produces = {MediaType.APPLICATION_JSON_VALUE})
     @Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "کاهش مانده پذیرنده")
-    @PreAuthorize("hasAuthority(\""+ ResourceService.MERCHANT_DECREASE_BALANCE +"\")")
+    @PreAuthorize("hasAuthority(\""+ ResourceRepositoryService.MERCHANT_DECREASE_BALANCE +"\")")
     public ResponseEntity<BaseResponse<String>> decreaseBalance(@Valid @RequestBody MerchantBalanceRequest request) throws InternalServiceException {
         
         String channelIp = requestContext.getClientIp();
@@ -97,7 +99,7 @@ public class MerchantController extends WebController {
         log.info("start call decreaseBalance in username ===> {}, walletAccountNumber ===> {}, amount ===> {}, merchantId ===> {}, from ip ===> {}", 
                 username, request.getWalletAccountNumber(), request.getAmount(), request.getMerchantId(), channelIp);
         
-        String traceId = merchantService.decreaseBalance(
+        String traceId = merchantOperationService.decreaseBalance(
                 requestContext.getChannelEntity(),
                 request.getWalletAccountNumber(),
                 request.getAmount(),
