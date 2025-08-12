@@ -38,6 +38,6 @@ public class TemplateRepositoryServiceImplementation implements TemplateReposito
     @Override
     public List<TemplateEntity> findAllTemplate() {
         Iterable<TemplateEntity> templateIterable = templateRepository.findAll();
-        return StreamSupport.stream(templateIterable.spliterator(), false).collect(Collectors.toList());
+        return StreamSupport.stream(templateIterable.spliterator(), false).toList();
     }
 }

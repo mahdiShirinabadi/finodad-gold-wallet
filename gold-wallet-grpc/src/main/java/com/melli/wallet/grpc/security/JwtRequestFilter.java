@@ -25,12 +25,10 @@ import java.util.UUID;
 public class JwtRequestFilter extends OncePerRequestFilter {
     private final JwtChannelDetailsService jwtChannelDetailsService;
     private final JwtTokenUtil jwtTokenUtil;
-    private final ChannelAccessTokenRepositoryService channelAccessTokenRepositoryService;
 
-    public JwtRequestFilter(JwtChannelDetailsService jwtChannelDetailsService, JwtTokenUtil jwtTokenUtil, ChannelAccessTokenRepositoryService channelAccessTokenRepositoryService) {
+    public JwtRequestFilter(JwtChannelDetailsService jwtChannelDetailsService, JwtTokenUtil jwtTokenUtil) {
         this.jwtChannelDetailsService = jwtChannelDetailsService;
         this.jwtTokenUtil = jwtTokenUtil;
-        this.channelAccessTokenRepositoryService = channelAccessTokenRepositoryService;
     }
 
     @Override

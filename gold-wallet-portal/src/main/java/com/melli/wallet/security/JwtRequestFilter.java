@@ -26,13 +26,11 @@ public class JwtRequestFilter extends OncePerRequestFilter {
     private final JwtChannelDetailsService jwtChannelDetailsService;
     private final JwtTokenUtil jwtTokenUtil;
     private final RequestContext requestContext;
-    private final ChannelAccessTokenRepositoryService channelAccessTokenRepositoryService;
 
-    public JwtRequestFilter(JwtChannelDetailsService jwtChannelDetailsService, JwtTokenUtil jwtTokenUtil, RequestContext requestContext, ChannelAccessTokenRepositoryService channelAccessTokenRepositoryService) {
+    public JwtRequestFilter(JwtChannelDetailsService jwtChannelDetailsService, JwtTokenUtil jwtTokenUtil, RequestContext requestContext) {
         this.jwtChannelDetailsService = jwtChannelDetailsService;
         this.jwtTokenUtil = jwtTokenUtil;
         this.requestContext = requestContext;
-        this.channelAccessTokenRepositoryService = channelAccessTokenRepositoryService;
     }
 
     @Override

@@ -610,7 +610,7 @@ class PhysicalCashOutControllerTest extends WalletApplicationTests {
         }
         
         // Validation
-        Assert.assertTrue("Should have exactly 2 results", results.size() == 2);
+        Assert.assertEquals("Should have exactly 2 results", 2, results.size());
         
         // Check concurrency behavior: one should succeed, one should fail with duplicate UUID error
         long successCount = results.stream().filter(r -> r.success).count();
@@ -640,10 +640,10 @@ class PhysicalCashOutControllerTest extends WalletApplicationTests {
         
         // Setup
         String quantity = "5";
-        String currency = "GOLD";
+        String currency = WalletAccountCurrencyRepositoryService.GOLD;
         
         // Get account
-        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, accessToken, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.GOLD);
+        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, accessToken, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, currency);
         
         // Test with 3 threads generating UUIDs simultaneously
         final CountDownLatch latch = new CountDownLatch(3);
@@ -962,7 +962,7 @@ class PhysicalCashOutControllerTest extends WalletApplicationTests {
     /**
      * Helper method to setup balances for sell operations
      */
-    private void setupBalancesForSell(WalletAccountObject walletAccountObjectOptional, String goldAmount, String rialAmount) {
+    private void setupBalancesForSell(WalletAccountObject walletAccountObjectOptional, String goldAmount, String rialAmount) throws Exception {
         // Ensure user has enough GOLD balance for selling
         WalletAccountEntity goldWalletAccountEntity = walletAccountRepositoryService.findByAccountNumber(walletAccountObjectOptional.getAccountNumber());
         walletAccountRepositoryService.increaseBalance(goldWalletAccountEntity.getId(), new BigDecimal(goldAmount));

@@ -4,9 +4,7 @@ import com.melli.wallet.domain.master.entity.WalletLevelEntity;
 import com.melli.wallet.domain.slave.entity.ReportWalletLevelEntity;
 import java.util.Collections;
 import org.springframework.stereotype.Component;
-
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Component
 public class WalletLevelMapper {

@@ -20,13 +20,13 @@ import lombok.*;
 @ToString
 public class UpdateLimitationGeneralRequestJson {
 
-    @Schema(name = NamingProperty.ID, required = true)
+    @Schema(name = NamingProperty.ID)
     @JsonProperty(NamingProperty.ID)
     @NotNull(message = "Limitation ID is required")
     @StringValidation(label = "شناسه محدودیت")
     private String id;
 
-    @Schema(name = NamingProperty.VALUE, required = true)
+    @Schema(name = NamingProperty.VALUE)
     @JsonProperty(NamingProperty.VALUE)
     @NotBlank(message = "Limitation value is required")
     @StringValidation(label = "مقدار محدودیت")

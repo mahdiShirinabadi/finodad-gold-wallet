@@ -47,17 +47,16 @@ public class RequestRepositoryServiceImplementation implements RequestRepository
     @Override
     public void save(RequestEntity requestEntity) throws InternalServiceException {
         log.info("start save object request ===> {}", requestEntity);
-        if (requestEntity instanceof CashInRequestEntity cashInRequestEntity) {
-            cashInRequestRepository.save(cashInRequestEntity);
-        } else if (requestEntity instanceof PurchaseRequestEntity purchaseRequestEntity) {
-            purchaseRequestRepository.save(purchaseRequestEntity);
-        }else if (requestEntity instanceof CashOutRequestEntity cashOutRequestEntity) {
-            cashOutRequestRepository.save(cashOutRequestEntity);
-        }else if (requestEntity instanceof PhysicalCashOutRequestEntity physicalCashOutRequestEntity) {
-            physicalCashOutRequestRepository.save(physicalCashOutRequestEntity);
-        } else {
-            log.error("requestEntity is not instanceof");
-            throw new InternalServiceException("error in save request, instance not define", StatusRepositoryService.GENERAL_ERROR, HttpStatus.OK);
+        switch (requestEntity) {
+            case CashInRequestEntity cashInRequestEntity -> cashInRequestRepository.save(cashInRequestEntity);
+            case PurchaseRequestEntity purchaseRequestEntity -> purchaseRequestRepository.save(purchaseRequestEntity);
+            case CashOutRequestEntity cashOutRequestEntity -> cashOutRequestRepository.save(cashOutRequestEntity);
+            case PhysicalCashOutRequestEntity physicalCashOutRequestEntity ->
+                    physicalCashOutRequestRepository.save(physicalCashOutRequestEntity);
+            case null, default -> {
+                log.error("requestEntity is not instanceof");
+                throw new InternalServiceException("error in save request, instance not define", StatusRepositoryService.GENERAL_ERROR, HttpStatus.OK);
+            }
         }
     }
 

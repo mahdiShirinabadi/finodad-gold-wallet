@@ -1,6 +1,5 @@
 package com.melli.wallet.domain.slave.persistence;
 
-import com.melli.wallet.domain.dto.AggregationCashOutDTO;
 import com.melli.wallet.domain.dto.AggregationPhysicalCashOutDTO;
 import com.melli.wallet.domain.slave.entity.ReportPhysicalCashOutRequestEntity;
 import com.melli.wallet.domain.slave.entity.ReportRrnEntity;

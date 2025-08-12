@@ -50,19 +50,13 @@ import static org.springframework.security.test.web.servlet.setup.SecurityMockMv
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class MerchantControllerTest extends WalletApplicationTests {
 
-
-    private static final String NATIONAL_CODE_CORRECT = "0077847660";
-    private static final String MOBILE_CORRECT = "09124162337";
-    
     // Test data for merchant balance operations
     private static final String VALID_AMOUNT = "1000000";
     private static final String INVALID_WALLET_ACCOUNT_NUMBER = "9999999999";
     private static final String INVALID_MERCHANT_ID = "999";
-    private static final String INVALID_AMOUNT = "0";
 
     private static MockMvc mockMvc;
     private static String ACCESS_TOKEN;
-    private static String REFRESH_TOKEN;
 
     @Autowired
     private WebApplicationContext webApplicationContext;
@@ -121,7 +115,6 @@ class MerchantControllerTest extends WalletApplicationTests {
         BaseResponse<LoginResponse> response = login(mockMvc, USERNAME_CORRECT, PASSWORD_CORRECT, HttpStatus.OK,
                 StatusRepositoryService.SUCCESSFUL, true);
         ACCESS_TOKEN = response.getData().getAccessTokenObject().getToken();
-        REFRESH_TOKEN = response.getData().getRefreshTokenObject().getToken();
     }
 
 

@@ -134,10 +134,7 @@ public class WalletOperationServiceImplementation implements WalletOperationalSe
         if (mapParameter == null) {
             mapParameter = new HashMap<>();
         }
-        Pageable pageRequest = getPageableConfig(
-                settingGeneralRepositoryService,
-                Integer.parseInt(Optional.ofNullable(mapParameter.get("page")).orElse("0")),
-                Integer.parseInt(Optional.ofNullable(mapParameter.get("size")).orElse("10")));
+
         WalletTypeEntity walletTypeEntity = walletTypeRepositoryService.getByNameManaged(WalletTypeRepositoryService.NORMAL_USER);
         WalletEntity walletEntity = walletRepositoryService.findByNationalCodeAndWalletTypeId(mapParameter.get("nationalCode"), walletTypeEntity.getId());
         List<WalletAccountEntity> walletAccountEntityList = walletAccountRepositoryService.findByWallet(walletEntity);
@@ -164,14 +161,10 @@ public class WalletOperationServiceImplementation implements WalletOperationalSe
         }
 
         List<WalletAccountEntity> walletAccountEntityList = walletAccountRepositoryService.findByWallet(walletEntity);
-        if (walletAccountEntityList.isEmpty()) {
-            log.error("walletAccount is not create success");
-            throw new InternalServiceException("walletAccount is not create success", StatusRepositoryService.WALLET_NOT_CREATE_SUCCESS, HttpStatus.OK);
-        }
         return helper.fillCreateWalletResponse(walletEntity, walletAccountEntityList, walletAccountRepositoryService);
     }
 
-    public Specification<LimitationGeneralCustomEntity> getPredicate(Map<String, String> searchCriteria) throws InternalServiceException{
+    public Specification<LimitationGeneralCustomEntity> getPredicate(Map<String, String> searchCriteria){
         return (root, query, criteriaBuilder) -> {
             List<Predicate> predicates = buildPredicatesFromCriteria(searchCriteria, root, criteriaBuilder);
             String orderBy = Optional.ofNullable(searchCriteria.get("orderBy")).orElse("id");

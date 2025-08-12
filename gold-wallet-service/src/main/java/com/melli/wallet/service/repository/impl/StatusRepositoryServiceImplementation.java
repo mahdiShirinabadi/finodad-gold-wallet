@@ -37,8 +37,7 @@ public class StatusRepositoryServiceImplementation implements StatusRepositorySe
     private final StatusRepository statusRepository;
     private final ReportStatusRepository reportStatusRepository;
     private final StatusMapper statusMapper;
-    private final SettingGeneralRepositoryService settingGeneralRepositoryService;
-    private final RedisLockService redisLockService;
+
 
 
     @PostConstruct
@@ -97,12 +96,9 @@ public class StatusRepositoryServiceImplementation implements StatusRepositorySe
         entity.setCode(code);
         entity.setPersianDescription(persianDescription);
         entity.setAdditionalData(additionalData);
-        return entity;
+        return statusRepository.save(entity);
     }
 
-    private StatusEntity save(StatusEntity statusEntity) {
-        return statusRepository.save(statusEntity);
-    }
 
     public Specification<StatusEntity> getPredicate(Map<String, String> searchCriteria) {
         return (root, query, criteriaBuilder) -> {

@@ -22,7 +22,7 @@ public interface WalletAccountRepositoryService {
     short LEVEL_1 = 1;
     short LEVEL_2 = 2;
 
-    List<WalletAccountEntity> findByWallet(WalletEntity walletEntity);
+    List<WalletAccountEntity> findByWallet(WalletEntity walletEntity) throws InternalServiceException;
 
     List<WalletAccountEntity> findByWallet(WalletEntity wallet, Pageable pageable);
 

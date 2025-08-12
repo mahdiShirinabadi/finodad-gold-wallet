@@ -1591,7 +1591,7 @@ class BuyControllerTest extends WalletApplicationTests {
      * - Increases balance by specified amount and currency
      * - Used for setting up test scenarios
      */
-    private void increaseMerchantBalance(String val, String currency, String merchantNationalCode) {
+    private void increaseMerchantBalance(String val, String currency, String merchantNationalCode) throws Exception {
         // Step 1: Find merchant wallet entity
         WalletEntity walletMerchantEntity = walletRepositoryService.findByNationalCodeAndWalletTypeId(merchantNationalCode, walletTypeRepositoryService.getByName(WalletTypeRepositoryService.MERCHANT).getId());
         List<WalletAccountEntity> walletAccountEntityList = walletAccountRepositoryService.findByWallet(walletMerchantEntity);
@@ -1616,7 +1616,7 @@ class BuyControllerTest extends WalletApplicationTests {
      * - Decreases balance by specified amount and currency
      * - Used for setting up test scenarios
      */
-    private void decreaseMerchantBalance(String val, String currency, String merchantNationalCode) {
+    private void decreaseMerchantBalance(String val, String currency, String merchantNationalCode) throws Exception {
         // Step 1: Find merchant wallet entity
         WalletEntity walletMerchantEntity = walletRepositoryService.findByNationalCodeAndWalletTypeId(merchantNationalCode, walletTypeRepositoryService.getByName(WalletTypeRepositoryService.MERCHANT).getId());
         List<WalletAccountEntity> walletAccountEntityList = walletAccountRepositoryService.findByWallet(walletMerchantEntity);
@@ -1642,7 +1642,7 @@ class BuyControllerTest extends WalletApplicationTests {
      * - Sets balance to zero for specified currency
      * - Used for setting up test scenarios
      */
-    private void setMerchantBalanceToZero(String currency, String merchantNationalCode) {
+    private void setMerchantBalanceToZero(String currency, String merchantNationalCode) throws Exception {
         // Step 1: Find merchant wallet entity
         WalletEntity walletMerchantEntity = walletRepositoryService.findByNationalCodeAndWalletTypeId(merchantNationalCode, walletTypeRepositoryService.getByName(WalletTypeRepositoryService.MERCHANT).getId());
         List<WalletAccountEntity> walletAccountEntityList = walletAccountRepositoryService.findByWallet(walletMerchantEntity);

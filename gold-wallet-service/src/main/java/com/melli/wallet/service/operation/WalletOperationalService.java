@@ -7,6 +7,7 @@ import com.melli.wallet.domain.response.base.BaseResponse;
 import com.melli.wallet.domain.response.wallet.CreateWalletResponse;
 import com.melli.wallet.exception.InternalServiceException;
 import com.melli.wallet.service.repository.SettingGeneralRepositoryService;
+import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
@@ -27,9 +28,9 @@ public interface WalletOperationalService {
 
     CreateWalletResponse createWallet(ChannelEntity channelEntity, String mobile, String nationalCode, String walletType, List<String> walletAccountCurrencyList, List<String> walletAccountTypeList) throws InternalServiceException;
     CreateWalletResponse get(ChannelEntity channelEntity, String nationalCode) throws InternalServiceException;
-    BaseResponse deactivateWallet(ChannelEntity channel, String walletId, String ip) throws InternalServiceException;
-    BaseResponse deleteWallet(ChannelEntity channel, String walletId, String ip) throws InternalServiceException;
-    BaseResponse activateWallet(ChannelEntity channel, String walletId, String ip) throws InternalServiceException;
+    BaseResponse<ObjectUtils.Null> deactivateWallet(ChannelEntity channel, String walletId, String ip) throws InternalServiceException;
+    BaseResponse<ObjectUtils.Null> deleteWallet(ChannelEntity channel, String walletId, String ip) throws InternalServiceException;
+    BaseResponse<ObjectUtils.Null> activateWallet(ChannelEntity channel, String walletId, String ip) throws InternalServiceException;
     void getStatement(ChannelEntity channel, Map<String, String> mapParameter, String ip) throws InternalServiceException;
 
 }

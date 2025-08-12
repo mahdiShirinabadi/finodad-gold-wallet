@@ -58,7 +58,7 @@ import static org.springframework.security.test.web.servlet.setup.SecurityMockMv
 class SellControllerTest extends WalletApplicationTests {
 
     private static MockMvc mockMvc;
-    private static String ACCESS_TOKEN;
+    private static String accessToken;
 
     @Autowired
     private WebApplicationContext webApplicationContext;
@@ -117,11 +117,11 @@ class SellControllerTest extends WalletApplicationTests {
 
         // Step 1: Login to get access token
         BaseResponse<LoginResponse> loginResponse = login(mockMvc, USERNAME_CORRECT, PASSWORD_CORRECT, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
-        ACCESS_TOKEN = loginResponse.getData().getAccessTokenObject().getToken();
+        accessToken = loginResponse.getData().getAccessTokenObject().getToken();
 
         // Step 2: Create wallet if needed
         try {
-            createWallet(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, MOBILE_CORRECT, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
+            createWallet(mockMvc, accessToken, NATIONAL_CODE_CORRECT, MOBILE_CORRECT, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
         } catch (Exception e) {
             // Wallet might already exist
             log.info("Wallet might already exist: {}", e.getMessage());
@@ -166,10 +166,10 @@ class SellControllerTest extends WalletApplicationTests {
         
         // Step 1: Get user's GOLD account number
         String quantity = "1.07";
-        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.GOLD);
+        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, accessToken, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.GOLD);
         
         // Step 2: Generate UUID for sell operation
-        generateSellUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, quantity, walletAccountObjectOptional.getAccountNumber(), CURRENCY_GOLD, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
+        generateSellUniqueIdentifier(mockMvc, accessToken, NATIONAL_CODE_CORRECT, quantity, walletAccountObjectOptional.getAccountNumber(), CURRENCY_GOLD, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
     }
 
     /**
@@ -185,8 +185,8 @@ class SellControllerTest extends WalletApplicationTests {
     void generateSellUuidFailInvalidNationalCode() throws Exception {
         log.info("start generateSellUuidFailInvalidNationalCode test");
         String quantity = "1.07";
-        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.GOLD);
-        generateSellUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_NOT_FOUND, quantity, walletAccountObjectOptional.getAccountNumber(), CURRENCY_GOLD, HttpStatus.OK, StatusRepositoryService.NATIONAL_CODE_NOT_FOUND, false);
+        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, accessToken, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.GOLD);
+        generateSellUniqueIdentifier(mockMvc, accessToken, NATIONAL_CODE_NOT_FOUND, quantity, walletAccountObjectOptional.getAccountNumber(), CURRENCY_GOLD, HttpStatus.OK, StatusRepositoryService.NATIONAL_CODE_NOT_FOUND, false);
     }
 
     /**
@@ -203,7 +203,7 @@ class SellControllerTest extends WalletApplicationTests {
         // Step 1: Define test parameters
         String quantity = "1.07";
         // Step 2: Attempt to generate UUID with invalid account number
-        generateSellUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, quantity, "invalid_account", CURRENCY_GOLD, HttpStatus.OK, StatusRepositoryService.WALLET_ACCOUNT_NOT_FOUND, false);
+        generateSellUniqueIdentifier(mockMvc, accessToken, NATIONAL_CODE_CORRECT, quantity, "invalid_account", CURRENCY_GOLD, HttpStatus.OK, StatusRepositoryService.WALLET_ACCOUNT_NOT_FOUND, false);
     }
 
     /**
@@ -219,8 +219,8 @@ class SellControllerTest extends WalletApplicationTests {
     void generateSellUuidFailInvalidCurrency() throws Exception {
         log.info("start generateSellUuidFailInvalidCurrency test");
         String quantity = "1.07";
-        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.GOLD);
-        generateSellUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, quantity, walletAccountObjectOptional.getAccountNumber(), "INVALID_CURRENCY", HttpStatus.OK, StatusRepositoryService.WALLET_ACCOUNT_CURRENCY_NOT_FOUND, false);
+        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, accessToken, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.GOLD);
+        generateSellUniqueIdentifier(mockMvc, accessToken, NATIONAL_CODE_CORRECT, quantity, walletAccountObjectOptional.getAccountNumber(), "INVALID_CURRENCY", HttpStatus.OK, StatusRepositoryService.WALLET_ACCOUNT_CURRENCY_NOT_FOUND, false);
     }
 
     /**
@@ -236,8 +236,8 @@ class SellControllerTest extends WalletApplicationTests {
     void generateSellUuidFailLessThanMinQuantity() throws Exception {
         log.info("start generateSellUuidFailLessThanMinQuantity test");
         String quantity = "0.0001"; // Very small quantity
-        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.GOLD);
-        generateSellUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, quantity, walletAccountObjectOptional.getAccountNumber(), CURRENCY_GOLD, HttpStatus.OK, StatusRepositoryService.QUANTITY_LESS_THAN_MIN, false);
+        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, accessToken, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.GOLD);
+        generateSellUniqueIdentifier(mockMvc, accessToken, NATIONAL_CODE_CORRECT, quantity, walletAccountObjectOptional.getAccountNumber(), CURRENCY_GOLD, HttpStatus.OK, StatusRepositoryService.QUANTITY_LESS_THAN_MIN, false);
     }
 
     /**
@@ -253,8 +253,8 @@ class SellControllerTest extends WalletApplicationTests {
     void generateSellUuidFailBiggerThanMaxQuantity() throws Exception {
         log.info("start generateSellUuidFailBiggerThanMaxQuantity test");
         String quantity = "1000000"; // Very large quantity
-        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.GOLD);
-        generateSellUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, quantity, walletAccountObjectOptional.getAccountNumber(), CURRENCY_GOLD, HttpStatus.OK, StatusRepositoryService.QUANTITY_BIGGER_THAN_MAX, false);
+        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, accessToken, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.GOLD);
+        generateSellUniqueIdentifier(mockMvc, accessToken, NATIONAL_CODE_CORRECT, quantity, walletAccountObjectOptional.getAccountNumber(), CURRENCY_GOLD, HttpStatus.OK, StatusRepositoryService.QUANTITY_BIGGER_THAN_MAX, false);
     }
 
     /**
@@ -278,7 +278,7 @@ class SellControllerTest extends WalletApplicationTests {
         String price = "100000";
 
         // Step 2: Get user's GOLD account number
-        WalletAccountObject goldAccountObject = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.GOLD);
+        WalletAccountObject goldAccountObject = getAccountNumber(mockMvc, accessToken, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.GOLD);
 
         // Step 3: Ensure user has enough GOLD balance for selling
         WalletAccountEntity goldWalletAccountEntity = walletAccountRepositoryService.findByAccountNumber(goldAccountObject.getAccountNumber());
@@ -293,11 +293,11 @@ class SellControllerTest extends WalletApplicationTests {
         walletAccountRepositoryService.increaseBalance(merchantRialAccount.getId(), new BigDecimal("200000"));
 
         // Step 5: Generate sell UUID
-        BaseResponse<UuidResponse> uuidResponse = generateSellUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, quantity, goldAccountObject.getAccountNumber(), CURRENCY_GOLD, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
+        BaseResponse<UuidResponse> uuidResponse = generateSellUniqueIdentifier(mockMvc, accessToken, NATIONAL_CODE_CORRECT, quantity, goldAccountObject.getAccountNumber(), CURRENCY_GOLD, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
         String uniqueIdentifier = uuidResponse.getData().getUniqueIdentifier();
 
         // Step 6: Perform sell operation
-        BaseResponse<PurchaseResponse> response = sell(mockMvc, ACCESS_TOKEN, uniqueIdentifier, quantity, price, CURRENCY_GOLD, "0.01", NATIONAL_CODE_CORRECT, CURRENCY_GOLD, "1", goldAccountObject.getAccountNumber(), "", "test sell success", HttpStatus.OK, "IR123456789012345678901234", StatusRepositoryService.SUCCESSFUL, true);
+        BaseResponse<PurchaseResponse> response = sell(mockMvc, accessToken, uniqueIdentifier, quantity, price, CURRENCY_GOLD, "0.01", NATIONAL_CODE_CORRECT, CURRENCY_GOLD, "1", goldAccountObject.getAccountNumber(), "", "test sell success", HttpStatus.OK, "IR123456789012345678901234", StatusRepositoryService.SUCCESSFUL, true);
         Assert.assertNotNull(response.getData());
     }
 
@@ -315,9 +315,9 @@ class SellControllerTest extends WalletApplicationTests {
         log.info("start sellFailInvalidUniqueIdentifier test");
         String quantity = "1.07";
         String price = "100000";
-        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.GOLD);
+        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, accessToken, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.GOLD);
 
-        BaseResponse<PurchaseResponse> response = sell(mockMvc, ACCESS_TOKEN, "invalid-uuid", quantity, price, CURRENCY_GOLD, "2000", NATIONAL_CODE_CORRECT, CURRENCY_GOLD, "1", walletAccountObjectOptional.getAccountNumber(), "", "test invalid uuid", HttpStatus.OK, "IR123456789012345678901234", StatusRepositoryService.UUID_NOT_FOUND, false);
+        BaseResponse<PurchaseResponse> response = sell(mockMvc, accessToken, "invalid-uuid", quantity, price, CURRENCY_GOLD, "2000", NATIONAL_CODE_CORRECT, CURRENCY_GOLD, "1", walletAccountObjectOptional.getAccountNumber(), "", "test invalid uuid", HttpStatus.OK, "IR123456789012345678901234", StatusRepositoryService.UUID_NOT_FOUND, false);
         Assert.assertSame(StatusRepositoryService.UUID_NOT_FOUND, response.getErrorDetail().getCode());
     }
 
@@ -346,18 +346,18 @@ class SellControllerTest extends WalletApplicationTests {
         log.info("start sellFailInsufficientBalance test");
         String quantity = "1.07";
         String price = "100000";
-        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.GOLD);
+        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, accessToken, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.GOLD);
 
         // Ensure user has insufficient GOLD balance
         WalletAccountEntity goldWalletAccountEntity = walletAccountRepositoryService.findByAccountNumber(walletAccountObjectOptional.getAccountNumber());
         walletAccountRepositoryService.decreaseBalance(goldWalletAccountEntity.getId(), new BigDecimal("10.0")); // Remove all balance
 
         // Generate sell UUID
-        BaseResponse<UuidResponse> uuidResponse = generateSellUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, quantity, walletAccountObjectOptional.getAccountNumber(), CURRENCY_GOLD, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
+        BaseResponse<UuidResponse> uuidResponse = generateSellUniqueIdentifier(mockMvc, accessToken, NATIONAL_CODE_CORRECT, quantity, walletAccountObjectOptional.getAccountNumber(), CURRENCY_GOLD, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
         String uniqueIdentifier = uuidResponse.getData().getUniqueIdentifier();
 
         // Test with insufficient balance
-        BaseResponse<PurchaseResponse> response = sell(mockMvc, ACCESS_TOKEN, uniqueIdentifier, quantity, price, CURRENCY_GOLD, "2000", NATIONAL_CODE_CORRECT, CURRENCY_GOLD, "1", walletAccountObjectOptional.getAccountNumber(), "", "test insufficient balance", HttpStatus.OK, "IR123456789012345678901234", StatusRepositoryService.BALANCE_IS_NOT_ENOUGH, false);
+        BaseResponse<PurchaseResponse> response = sell(mockMvc, accessToken, uniqueIdentifier, quantity, price, CURRENCY_GOLD, "2000", NATIONAL_CODE_CORRECT, CURRENCY_GOLD, "1", walletAccountObjectOptional.getAccountNumber(), "", "test insufficient balance", HttpStatus.OK, "IR123456789012345678901234", StatusRepositoryService.BALANCE_IS_NOT_ENOUGH, false);
         Assert.assertSame(StatusRepositoryService.BALANCE_IS_NOT_ENOUGH, response.getErrorDetail().getCode());
     }
 
@@ -378,12 +378,12 @@ class SellControllerTest extends WalletApplicationTests {
         String quantity = "1.07";
         String price = "100000";
         // Step 2: Get user's GOLD account number
-        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.GOLD);
+        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, accessToken, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.GOLD);
         // Step 3: Generate sell UUID
-        BaseResponse<UuidResponse> uuidResponse = generateSellUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, quantity, walletAccountObjectOptional.getAccountNumber(), CURRENCY_GOLD, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
+        BaseResponse<UuidResponse> uuidResponse = generateSellUniqueIdentifier(mockMvc, accessToken, NATIONAL_CODE_CORRECT, quantity, walletAccountObjectOptional.getAccountNumber(), CURRENCY_GOLD, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
         String uniqueIdentifier = uuidResponse.getData().getUniqueIdentifier();
         // Step 4: Test with invalid merchant ID
-        BaseResponse<PurchaseResponse> response = sell(mockMvc, ACCESS_TOKEN, uniqueIdentifier, quantity, price, CURRENCY_GOLD, "2000", NATIONAL_CODE_CORRECT, CURRENCY_GOLD, "999", walletAccountObjectOptional.getAccountNumber(), "", "test invalid merchant id", HttpStatus.OK, "IR123456789012345678901234", StatusRepositoryService.MERCHANT_IS_NOT_EXIST, false);
+        BaseResponse<PurchaseResponse> response = sell(mockMvc, accessToken, uniqueIdentifier, quantity, price, CURRENCY_GOLD, "2000", NATIONAL_CODE_CORRECT, CURRENCY_GOLD, "999", walletAccountObjectOptional.getAccountNumber(), "", "test invalid merchant id", HttpStatus.OK, "IR123456789012345678901234", StatusRepositoryService.MERCHANT_IS_NOT_EXIST, false);
         Assert.assertSame(StatusRepositoryService.MERCHANT_IS_NOT_EXIST, response.getErrorDetail().getCode());
     }
 
@@ -404,12 +404,12 @@ class SellControllerTest extends WalletApplicationTests {
         String quantity = "0.5";
         String price = "100000";
         // Step 2: Get user's GOLD account number
-        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.GOLD);
+        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, accessToken, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.GOLD);
         // Step 3: Generate sell UUID
-        BaseResponse<UuidResponse> uuidResponse = generateSellUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, quantity, walletAccountObjectOptional.getAccountNumber(), CURRENCY_GOLD, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
+        BaseResponse<UuidResponse> uuidResponse = generateSellUniqueIdentifier(mockMvc, accessToken, NATIONAL_CODE_CORRECT, quantity, walletAccountObjectOptional.getAccountNumber(), CURRENCY_GOLD, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
         String uniqueIdentifier = uuidResponse.getData().getUniqueIdentifier();
         // Step 4: Test with invalid commission currency (should be same as main currency)
-        BaseResponse<PurchaseResponse> response = sell(mockMvc, ACCESS_TOKEN, uniqueIdentifier, quantity, price, CURRENCY_GOLD, "0.05", NATIONAL_CODE_CORRECT, "GOLDD", "1", walletAccountObjectOptional.getAccountNumber(), "", "test invalid commission currency", HttpStatus.OK, "IR123456789012345678901234", StatusRepositoryService.COMMISSION_CURRENCY_NOT_VALID, false);
+        BaseResponse<PurchaseResponse> response = sell(mockMvc, accessToken, uniqueIdentifier, quantity, price, CURRENCY_GOLD, "0.05", NATIONAL_CODE_CORRECT, "GOLDD", "1", walletAccountObjectOptional.getAccountNumber(), "", "test invalid commission currency", HttpStatus.OK, "IR123456789012345678901234", StatusRepositoryService.COMMISSION_CURRENCY_NOT_VALID, false);
         Assert.assertSame(StatusRepositoryService.COMMISSION_CURRENCY_NOT_VALID, response.getErrorDetail().getCode());
     }
 
@@ -431,7 +431,7 @@ class SellControllerTest extends WalletApplicationTests {
         String quantity = "1.07";
         String price = "100000";
         // Step 2: Get user's GOLD account number
-        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.GOLD);
+        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, accessToken, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.GOLD);
         // Step 3: Ensure user has enough GOLD to sell
         WalletAccountEntity goldWalletAccountEntity = walletAccountRepositoryService.findByAccountNumber(walletAccountObjectOptional.getAccountNumber());
         walletAccountRepositoryService.increaseBalance(goldWalletAccountEntity.getId(), new BigDecimal("5.0"));
@@ -443,13 +443,13 @@ class SellControllerTest extends WalletApplicationTests {
                 .findFirst().orElse(null);
         walletAccountRepositoryService.increaseBalance(merchantRialAccount.getId(), new BigDecimal("200000"));
         // Step 5: Generate sell UUID
-        BaseResponse<UuidResponse> uuidResponse = generateSellUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, quantity, walletAccountObjectOptional.getAccountNumber(), CURRENCY_GOLD, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
+        BaseResponse<UuidResponse> uuidResponse = generateSellUniqueIdentifier(mockMvc, accessToken, NATIONAL_CODE_CORRECT, quantity, walletAccountObjectOptional.getAccountNumber(), CURRENCY_GOLD, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
         String uniqueIdentifier = uuidResponse.getData().getUniqueIdentifier();
         // Step 6: Perform first sell operation (should succeed)
-        BaseResponse<PurchaseResponse> response1 = sell(mockMvc, ACCESS_TOKEN, uniqueIdentifier, quantity, price, CURRENCY_GOLD, "2000", NATIONAL_CODE_CORRECT, CURRENCY_GOLD, "1", walletAccountObjectOptional.getAccountNumber(), "", "test sell success", HttpStatus.OK, "IR123456789012345678901234", StatusRepositoryService.SUCCESSFUL, true);
+        BaseResponse<PurchaseResponse> response1 = sell(mockMvc, accessToken, uniqueIdentifier, quantity, price, CURRENCY_GOLD, "2000", NATIONAL_CODE_CORRECT, CURRENCY_GOLD, "1", walletAccountObjectOptional.getAccountNumber(), "", "test sell success", HttpStatus.OK, "IR123456789012345678901234", StatusRepositoryService.SUCCESSFUL, true);
         Assert.assertNotNull(response1.getData());
         // Step 7: Try to perform the same sell operation again (should fail with duplicate)
-        BaseResponse<PurchaseResponse> response2 = sell(mockMvc, ACCESS_TOKEN, uniqueIdentifier, quantity, price, CURRENCY_GOLD, "2000", NATIONAL_CODE_CORRECT, CURRENCY_GOLD, "1", walletAccountObjectOptional.getAccountNumber(), "", "test duplicate request", HttpStatus.OK, "IR123456789012345678901234", StatusRepositoryService.DUPLICATE_UUID, false);
+        BaseResponse<PurchaseResponse> response2 = sell(mockMvc, accessToken, uniqueIdentifier, quantity, price, CURRENCY_GOLD, "2000", NATIONAL_CODE_CORRECT, CURRENCY_GOLD, "1", walletAccountObjectOptional.getAccountNumber(), "", "test duplicate request", HttpStatus.OK, "IR123456789012345678901234", StatusRepositoryService.DUPLICATE_UUID, false);
         Assert.assertSame(StatusRepositoryService.DUPLICATE_UUID, response2.getErrorDetail().getCode());
     }
 
@@ -472,7 +472,7 @@ class SellControllerTest extends WalletApplicationTests {
         String quantity = "1.07";
         String price = "100000";
         // Step 2: Get account numbers
-        WalletAccountObject goldAccountObject = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.GOLD);
+        WalletAccountObject goldAccountObject = getAccountNumber(mockMvc, accessToken, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.GOLD);
         // Step 3: Ensure user has enough GOLD to sell
         WalletAccountEntity goldWalletAccountEntity = walletAccountRepositoryService.findByAccountNumber(goldAccountObject.getAccountNumber());
         walletAccountRepositoryService.increaseBalance(goldWalletAccountEntity.getId(), new BigDecimal("2.0"));
@@ -484,13 +484,13 @@ class SellControllerTest extends WalletApplicationTests {
                 .findFirst().orElse(null);
         walletAccountRepositoryService.increaseBalance(merchantRialAccount.getId(), new BigDecimal("200000"));
         // Step 5: Generate sell UUID
-        BaseResponse<UuidResponse> uuidResponse = generateSellUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, quantity, goldAccountObject.getAccountNumber(), CURRENCY_GOLD, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
+        BaseResponse<UuidResponse> uuidResponse = generateSellUniqueIdentifier(mockMvc, accessToken, NATIONAL_CODE_CORRECT, quantity, goldAccountObject.getAccountNumber(), CURRENCY_GOLD, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
         String uniqueIdentifier = uuidResponse.getData().getUniqueIdentifier();
         // Step 6: Perform sell operation
-        BaseResponse<PurchaseResponse> sellResponse = sell(mockMvc, ACCESS_TOKEN, uniqueIdentifier, quantity, price, CURRENCY_GOLD, "2000", NATIONAL_CODE_CORRECT, CURRENCY_GOLD, "1", goldAccountObject.getAccountNumber(), "", "test sell for inquiry", HttpStatus.OK, "IR123456789012345678901234", StatusRepositoryService.SUCCESSFUL, true);
+        BaseResponse<PurchaseResponse> sellResponse = sell(mockMvc, accessToken, uniqueIdentifier, quantity, price, CURRENCY_GOLD, "2000", NATIONAL_CODE_CORRECT, CURRENCY_GOLD, "1", goldAccountObject.getAccountNumber(), "", "test sell for inquiry", HttpStatus.OK, "IR123456789012345678901234", StatusRepositoryService.SUCCESSFUL, true);
         Assert.assertNotNull(sellResponse.getData());
         // Step 7: Inquiry the sell operation
-        BaseResponse<PurchaseTrackResponse> inquiryResponse = inquiryPurchase(mockMvc, ACCESS_TOKEN, uniqueIdentifier, "SELL", HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
+        BaseResponse<PurchaseTrackResponse> inquiryResponse = inquiryPurchase(mockMvc, accessToken, uniqueIdentifier, "SELL", HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
         Assert.assertNotNull(inquiryResponse.getData().getPurchaseTrackObjectList());
     }
 
@@ -506,7 +506,7 @@ class SellControllerTest extends WalletApplicationTests {
     void inquirySellFailInvalidUniqueIdentifier() throws Exception {
         log.info("start inquirySellFailInvalidUniqueIdentifier test");
         // Step 1: Test with invalid UUID
-        BaseResponse<PurchaseTrackResponse> response = inquiryPurchase(mockMvc, ACCESS_TOKEN, "invalid-uuid", "SELL", HttpStatus.OK, StatusRepositoryService.UUID_NOT_FOUND, false);
+        BaseResponse<PurchaseTrackResponse> response = inquiryPurchase(mockMvc, accessToken, "invalid-uuid", "SELL", HttpStatus.OK, StatusRepositoryService.UUID_NOT_FOUND, false);
         Assert.assertSame(StatusRepositoryService.UUID_NOT_FOUND, response.getErrorDetail().getCode());
     }
 
@@ -525,11 +525,10 @@ class SellControllerTest extends WalletApplicationTests {
         log.info("start sellFailLessThanMinQuantity test");
         // Step 1: Define test parameters with very small quantity
         String quantity = "0.0001"; // Very small quantity below minimum
-        String price = "100";
         // Step 2: Get user's GOLD account number
-        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.GOLD);
+        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, accessToken, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.GOLD);
         // Step 3: Generate sell UUID - should fail due to minimum quantity limitation
-        BaseResponse<UuidResponse> uuidResponse = generateSellUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, quantity, walletAccountObjectOptional.getAccountNumber(), CURRENCY_GOLD, HttpStatus.OK, StatusRepositoryService.QUANTITY_LESS_THAN_MIN, false);
+        generateSellUniqueIdentifier(mockMvc, accessToken, NATIONAL_CODE_CORRECT, quantity, walletAccountObjectOptional.getAccountNumber(), CURRENCY_GOLD, HttpStatus.OK, StatusRepositoryService.QUANTITY_LESS_THAN_MIN, false);
     }
 
     /**
@@ -545,11 +544,10 @@ class SellControllerTest extends WalletApplicationTests {
         log.info("start sellFailBiggerThanMaxQuantity test");
         // Step 1: Define test parameters with very large quantity
         String quantity = "1000000"; // Very large quantity above maximum
-        String price = "100000000";
         // Step 2: Get user's GOLD account number
-        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.GOLD);
+        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, accessToken, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.GOLD);
         // Step 3: Generate sell UUID - should fail due to maximum quantity limitation
-        generateSellUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, quantity, walletAccountObjectOptional.getAccountNumber(), CURRENCY_GOLD, HttpStatus.OK, StatusRepositoryService.QUANTITY_BIGGER_THAN_MAX, false);
+        generateSellUniqueIdentifier(mockMvc, accessToken, NATIONAL_CODE_CORRECT, quantity, walletAccountObjectOptional.getAccountNumber(), CURRENCY_GOLD, HttpStatus.OK, StatusRepositoryService.QUANTITY_BIGGER_THAN_MAX, false);
     }
 
     /**
@@ -569,7 +567,7 @@ class SellControllerTest extends WalletApplicationTests {
         // Step 1: Define test parameters
         String quantity = "1.07";
         // Step 2: Get user's GOLD account number
-        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.GOLD);
+        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, accessToken, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.GOLD);
         // Step 3: Ensure user has enough GOLD to sell
         WalletAccountEntity goldWalletAccountEntity = walletAccountRepositoryService.findByAccountNumber(walletAccountObjectOptional.getAccountNumber());
         walletAccountRepositoryService.increaseBalance(goldWalletAccountEntity.getId(), new BigDecimal("10.0"));
@@ -586,7 +584,7 @@ class SellControllerTest extends WalletApplicationTests {
         // Step 6: Set a very low daily quantity limitation to trigger the error
         setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MAX_DAILY_QUANTITY_SELL, goldWalletAccountEntity, "0.5");
         // Step 7: Generate sell UUID - should fail due to daily quantity limitation
-        BaseResponse<UuidResponse> uuidResponse = generateSellUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, quantity, goldWalletAccountEntity.getAccountNumber(), CURRENCY_GOLD, HttpStatus.OK, StatusRepositoryService.SELL_EXCEEDED_AMOUNT_DAILY_LIMITATION, false);
+        BaseResponse<UuidResponse> uuidResponse = generateSellUniqueIdentifier(mockMvc, accessToken, NATIONAL_CODE_CORRECT, quantity, goldWalletAccountEntity.getAccountNumber(), CURRENCY_GOLD, HttpStatus.OK, StatusRepositoryService.SELL_EXCEEDED_AMOUNT_DAILY_LIMITATION, false);
         Assert.assertSame(StatusRepositoryService.SELL_EXCEEDED_AMOUNT_DAILY_LIMITATION, uuidResponse.getErrorDetail().getCode());
         // Step 8: Restore original daily quantity limitation
         setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MAX_DAILY_QUANTITY_SELL, goldWalletAccountEntity, maxDailyQuantity);
@@ -608,9 +606,8 @@ class SellControllerTest extends WalletApplicationTests {
         log.info("start sellFailDailyCountLimitation test");
         // Step 1: Define test parameters
         String quantity = "0.1";
-        String price = "10000";
         // Step 2: Get user's GOLD account number
-        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.GOLD);
+        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, accessToken, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.GOLD);
         // Step 3: Ensure user has enough GOLD to sell
         WalletAccountEntity goldWalletAccountEntity = walletAccountRepositoryService.findByAccountNumber(walletAccountObjectOptional.getAccountNumber());
         walletAccountRepositoryService.increaseBalance(goldWalletAccountEntity.getId(), new BigDecimal("10.0"));
@@ -627,7 +624,7 @@ class SellControllerTest extends WalletApplicationTests {
         // Step 6: Set a very low daily count limitation to trigger the error
         setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MAX_DAILY_COUNT_SELL, walletAccountEntity, "1");
         // Step 7: Perform first sell operation (should succeed)
-        BaseResponse<UuidResponse> uuidResponse2 = generateSellUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, quantity, walletAccountObjectOptional.getAccountNumber(), CURRENCY_GOLD, HttpStatus.OK, StatusRepositoryService.SELL_EXCEEDED_COUNT_DAILY_LIMITATION, false);
+        BaseResponse<UuidResponse> uuidResponse2 = generateSellUniqueIdentifier(mockMvc, accessToken, NATIONAL_CODE_CORRECT, quantity, walletAccountObjectOptional.getAccountNumber(), CURRENCY_GOLD, HttpStatus.OK, StatusRepositoryService.SELL_EXCEEDED_COUNT_DAILY_LIMITATION, false);
         Assert.assertSame(StatusRepositoryService.SELL_EXCEEDED_COUNT_DAILY_LIMITATION, uuidResponse2.getErrorDetail().getCode());
         // Step 8: Restore original daily count limitation
         setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MAX_DAILY_COUNT_SELL, walletAccountEntity, maxDailyCount);
@@ -649,9 +646,8 @@ class SellControllerTest extends WalletApplicationTests {
         log.info("start sellFailMonthlyQuantityLimitation test");
         // Step 1: Define test parameters
         String quantity = "1.07";
-        String price = "100000";
         // Step 2: Get user's GOLD account number
-        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.GOLD);
+        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, accessToken, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.GOLD);
         // Step 3: Ensure user has enough GOLD to sell
         WalletAccountEntity goldWalletAccountEntity = walletAccountRepositoryService.findByAccountNumber(walletAccountObjectOptional.getAccountNumber());
         walletAccountRepositoryService.increaseBalance(goldWalletAccountEntity.getId(), new BigDecimal("10.0"));
@@ -668,7 +664,7 @@ class SellControllerTest extends WalletApplicationTests {
         setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MAX_MONTHLY_QUANTITY_SELL, goldWalletAccountEntity, "0.5");
         setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MONTHLY_VALIDATION_CHECK_SELL, goldWalletAccountEntity, "true");
         // Step 7: Generate sell UUID - should fail due to monthly quantity limitation
-        generateSellUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, quantity, goldWalletAccountEntity.getAccountNumber(), CURRENCY_GOLD, HttpStatus.OK, StatusRepositoryService.SELL_EXCEEDED_AMOUNT_MONTHLY_LIMITATION, false);
+        generateSellUniqueIdentifier(mockMvc, accessToken, NATIONAL_CODE_CORRECT, quantity, goldWalletAccountEntity.getAccountNumber(), CURRENCY_GOLD, HttpStatus.OK, StatusRepositoryService.SELL_EXCEEDED_AMOUNT_MONTHLY_LIMITATION, false);
         // Step 8: Restore original monthly quantity limitation
         setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MAX_MONTHLY_QUANTITY_SELL, goldWalletAccountEntity, maxMonthlyQuantity);
         setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MONTHLY_VALIDATION_CHECK_SELL, goldWalletAccountEntity, "false");
@@ -690,9 +686,8 @@ class SellControllerTest extends WalletApplicationTests {
         log.info("start sellFailMonthlyCountLimitation test");
         // Step 1: Define test parameters
         String quantity = "0.01";
-        String price = "10000";
         // Step 2: Get user's GOLD account number
-        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.GOLD);
+        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, accessToken, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.GOLD);
         // Step 3: Ensure user has enough GOLD to sell
         WalletAccountEntity goldWalletAccountEntity = walletAccountRepositoryService.findByAccountNumber(walletAccountObjectOptional.getAccountNumber());
         walletAccountRepositoryService.increaseBalance(goldWalletAccountEntity.getId(), new BigDecimal("10.0"));
@@ -710,7 +705,7 @@ class SellControllerTest extends WalletApplicationTests {
         setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MAX_MONTHLY_COUNT_SELL, walletAccountEntity, "1");
         setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MONTHLY_VALIDATION_CHECK_SELL, walletAccountEntity, "true");
         // Step 7: Perform first sell operation (should succeed)
-        generateSellUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, quantity, walletAccountObjectOptional.getAccountNumber(), CURRENCY_GOLD, HttpStatus.OK, StatusRepositoryService.SELL_EXCEEDED_COUNT_MONTHLY_LIMITATION, false);
+        generateSellUniqueIdentifier(mockMvc, accessToken, NATIONAL_CODE_CORRECT, quantity, walletAccountObjectOptional.getAccountNumber(), CURRENCY_GOLD, HttpStatus.OK, StatusRepositoryService.SELL_EXCEEDED_COUNT_MONTHLY_LIMITATION, false);
         // Step 8: Restore original monthly count limitation
         setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MAX_MONTHLY_COUNT_SELL, walletAccountEntity, maxMonthlyCountValue);
         setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MONTHLY_VALIDATION_CHECK_SELL, walletAccountEntity, "false");
@@ -745,7 +740,7 @@ class SellControllerTest extends WalletApplicationTests {
         String additionalData = "concurrent sell test";
         
         // Get account and setup
-        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.GOLD);
+        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, accessToken, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.GOLD);
         
         // Ensure user has enough GOLD balance for selling
         WalletAccountEntity goldWalletAccountEntity = walletAccountRepositoryService.findByAccountNumber(walletAccountObjectOptional.getAccountNumber());
@@ -760,7 +755,7 @@ class SellControllerTest extends WalletApplicationTests {
         walletAccountRepositoryService.increaseBalance(merchantRialAccount.getId(), new BigDecimal("500000"));
         
         // Generate UUID
-        BaseResponse<UuidResponse> uuidResponse = generateSellUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, quantity, walletAccountObjectOptional.getAccountNumber(), currency, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
+        BaseResponse<UuidResponse> uuidResponse = generateSellUniqueIdentifier(mockMvc, accessToken, NATIONAL_CODE_CORRECT, quantity, walletAccountObjectOptional.getAccountNumber(), currency, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
         String sharedUniqueIdentifier = uuidResponse.getData().getUniqueIdentifier();
         log.info("Generated UUID: {}", sharedUniqueIdentifier);
         
@@ -772,8 +767,7 @@ class SellControllerTest extends WalletApplicationTests {
         Thread thread1 = new Thread(() -> {
             try {
                 log.info("Sell Thread 1 starting...");
-                String ref1 = "SELL_THREAD1_" + System.currentTimeMillis();
-                BaseResponse<PurchaseResponse> response1 = sellWithoutCheckResult(mockMvc, ACCESS_TOKEN, sharedUniqueIdentifier, quantity, price, currency, commission, NATIONAL_CODE_CORRECT, commissionType, "1", walletAccountObjectOptional.getAccountNumber(), sign, additionalData + "_1");
+                BaseResponse<PurchaseResponse> response1 = sellWithoutCheckResult(mockMvc, accessToken, sharedUniqueIdentifier, quantity, price, currency, commission, NATIONAL_CODE_CORRECT, commissionType, "1", walletAccountObjectOptional.getAccountNumber(), sign, additionalData + "_1");
                 
                 SellResult result1 = new SellResult();
                 result1.threadId = 1;
@@ -808,8 +802,7 @@ class SellControllerTest extends WalletApplicationTests {
         Thread thread2 = new Thread(() -> {
             try {
                 log.info("Sell Thread 2 starting...");
-                String ref2 = "SELL_THREAD2_" + System.currentTimeMillis();
-                BaseResponse<PurchaseResponse> response2 = sellWithoutCheckResult(mockMvc, ACCESS_TOKEN, sharedUniqueIdentifier, quantity, price, currency, commission, NATIONAL_CODE_CORRECT, commissionType, "1", walletAccountObjectOptional.getAccountNumber(), sign, additionalData + "_2");
+                BaseResponse<PurchaseResponse> response2 = sellWithoutCheckResult(mockMvc, accessToken, sharedUniqueIdentifier, quantity, price, currency, commission, NATIONAL_CODE_CORRECT, commissionType, "1", walletAccountObjectOptional.getAccountNumber(), sign, additionalData + "_2");
                 
                 SellResult result2 = new SellResult();
                 result2.threadId = 2;
@@ -857,7 +850,7 @@ class SellControllerTest extends WalletApplicationTests {
         }
         
         // Validation
-        Assert.assertTrue("Should have exactly 2 results", results.size() == 2);
+        Assert.assertEquals("Should have exactly 2 results", 2, results.size());
         
         // Check concurrency behavior: one should succeed, one should fail with duplicate UUID error
         long successCount = results.stream().filter(r -> r.success).count();
@@ -890,7 +883,7 @@ class SellControllerTest extends WalletApplicationTests {
         String currency = "GOLD";
         
         // Get account
-        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.GOLD);
+        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, accessToken, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.GOLD);
         
         // Test with 3 threads generating UUIDs simultaneously
         final CountDownLatch latch = new CountDownLatch(3);
@@ -900,7 +893,7 @@ class SellControllerTest extends WalletApplicationTests {
         Thread thread1 = new Thread(() -> {
             try {
                 log.info("UUID Thread 1 starting...");
-                BaseResponse<UuidResponse> response1 = generateSellUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, quantity, walletAccountObjectOptional.getAccountNumber(), currency, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
+                BaseResponse<UuidResponse> response1 = generateSellUniqueIdentifier(mockMvc, accessToken, NATIONAL_CODE_CORRECT, quantity, walletAccountObjectOptional.getAccountNumber(), currency, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
                 
                 UuidResult result1 = new UuidResult();
                 result1.threadId = 1;
@@ -936,7 +929,7 @@ class SellControllerTest extends WalletApplicationTests {
         Thread thread2 = new Thread(() -> {
             try {
                 log.info("UUID Thread 2 starting...");
-                BaseResponse<UuidResponse> response2 = generateSellUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, quantity, walletAccountObjectOptional.getAccountNumber(), currency, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
+                BaseResponse<UuidResponse> response2 = generateSellUniqueIdentifier(mockMvc, accessToken, NATIONAL_CODE_CORRECT, quantity, walletAccountObjectOptional.getAccountNumber(), currency, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
                 
                 UuidResult result2 = new UuidResult();
                 result2.threadId = 2;
@@ -972,7 +965,7 @@ class SellControllerTest extends WalletApplicationTests {
         Thread thread3 = new Thread(() -> {
             try {
                 log.info("UUID Thread 3 starting...");
-                BaseResponse<UuidResponse> response3 = generateSellUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, quantity, walletAccountObjectOptional.getAccountNumber(), currency, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
+                BaseResponse<UuidResponse> response3 = generateSellUniqueIdentifier(mockMvc, accessToken, NATIONAL_CODE_CORRECT, quantity, walletAccountObjectOptional.getAccountNumber(), currency, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
                 
                 UuidResult result3 = new UuidResult();
                 result3.threadId = 3;
@@ -1022,7 +1015,7 @@ class SellControllerTest extends WalletApplicationTests {
         }
         
         // Validation
-        Assert.assertTrue("Should have exactly 3 results", results.size() == 3);
+        Assert.assertEquals("Should have exactly 3 results", 3, results.size());
         
         // All should succeed and generate different UUIDs
         long successCount = results.stream().filter(r -> r.success).count();
@@ -1060,7 +1053,7 @@ class SellControllerTest extends WalletApplicationTests {
         String additionalData = "comprehensive concurrent sell test";
 
         // Get account number
-        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.GOLD);
+        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, accessToken, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.GOLD);
 
         setupBalancesForSellToZero(walletAccountObjectOptional);
         // Setup sufficient balances
@@ -1093,7 +1086,7 @@ class SellControllerTest extends WalletApplicationTests {
         // Generate different UUIDs for each thread
         List<String> uniqueIdentifiers = new ArrayList<>();
         for (int i = 0; i < numberOfThreads; i++) {
-            BaseResponse<UuidResponse> uuidResponse = generateSellUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, quantity, walletAccountObjectOptional.getAccountNumber(), currency, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
+            BaseResponse<UuidResponse> uuidResponse = generateSellUniqueIdentifier(mockMvc, accessToken, NATIONAL_CODE_CORRECT, quantity, walletAccountObjectOptional.getAccountNumber(), currency, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
             uniqueIdentifiers.add(uuidResponse.getData().getUniqueIdentifier());
         }
 
@@ -1108,7 +1101,7 @@ class SellControllerTest extends WalletApplicationTests {
             
             Thread thread = new Thread(() -> {
                 try {
-                    BaseResponse<PurchaseResponse> response = sellWithoutCheckResult(mockMvc, ACCESS_TOKEN, uniqueIdentifiers.get(threadId), quantity, price, currency, commission, NATIONAL_CODE_CORRECT,
+                    BaseResponse<PurchaseResponse> response = sellWithoutCheckResult(mockMvc, accessToken, uniqueIdentifiers.get(threadId), quantity, price, currency, commission, NATIONAL_CODE_CORRECT,
                             commissionType, "1", walletAccountObjectOptional.getAccountNumber(), sign, additionalData + "_scenario2_" + threadId);
                     
                     SellResult result = new SellResult();
@@ -1174,7 +1167,7 @@ class SellControllerTest extends WalletApplicationTests {
     /**
      * Helper method to setup balances for sell operations
      */
-    private void setupBalancesForSell(WalletAccountObject walletAccountObjectOptional, String goldAmount, String rialAmount) {
+    private void setupBalancesForSell(WalletAccountObject walletAccountObjectOptional, String goldAmount, String rialAmount) throws Exception {
         // Ensure user has enough GOLD balance for selling
         WalletAccountEntity goldWalletAccountEntity = walletAccountRepositoryService.findByAccountNumber(walletAccountObjectOptional.getAccountNumber());
         walletAccountRepositoryService.increaseBalance(goldWalletAccountEntity.getId(), new BigDecimal(goldAmount));
@@ -1273,7 +1266,7 @@ class SellControllerTest extends WalletApplicationTests {
         String quantity = "0.5";
         String price = "50000";
         // Step 2: Get user's GOLD account number
-        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.GOLD);
+        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, accessToken, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.GOLD);
         // Step 3: Ensure user has enough GOLD to sell
         WalletAccountEntity goldWalletAccountEntity = walletAccountRepositoryService.findByAccountNumber(walletAccountObjectOptional.getAccountNumber());
         walletAccountRepositoryService.increaseBalance(goldWalletAccountEntity.getId(), new BigDecimal("2.0"));
@@ -1299,10 +1292,10 @@ class SellControllerTest extends WalletApplicationTests {
         // Step 11: Set monthly count limitation to allow this transaction
         setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MAX_MONTHLY_COUNT_SELL, walletAccountEntity, "100");
         // Step 12: Generate sell UUID
-        BaseResponse<UuidResponse> uuidResponse = generateSellUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, quantity, walletAccountObjectOptional.getAccountNumber(), CURRENCY_GOLD, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
+        BaseResponse<UuidResponse> uuidResponse = generateSellUniqueIdentifier(mockMvc, accessToken, NATIONAL_CODE_CORRECT, quantity, walletAccountObjectOptional.getAccountNumber(), CURRENCY_GOLD, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
         String uniqueIdentifier = uuidResponse.getData().getUniqueIdentifier();
         // Step 13: Perform sell operation - should succeed within all limitations
-        BaseResponse<PurchaseResponse> response = sell(mockMvc, ACCESS_TOKEN, uniqueIdentifier, quantity, price, CURRENCY_GOLD, "1000", NATIONAL_CODE_CORRECT, CURRENCY_GOLD, "1", walletAccountObjectOptional.getAccountNumber(), "", "test sell within limitations", HttpStatus.OK, "IR123456789012345678901234", StatusRepositoryService.SUCCESSFUL, true);
+        BaseResponse<PurchaseResponse> response = sell(mockMvc, accessToken, uniqueIdentifier, quantity, price, CURRENCY_GOLD, "1000", NATIONAL_CODE_CORRECT, CURRENCY_GOLD, "1", walletAccountObjectOptional.getAccountNumber(), "", "test sell within limitations", HttpStatus.OK, "IR123456789012345678901234", StatusRepositoryService.SUCCESSFUL, true);
         Assert.assertNotNull(response.getData());
     }
 } 

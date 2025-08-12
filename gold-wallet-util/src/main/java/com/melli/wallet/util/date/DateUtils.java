@@ -569,7 +569,7 @@ public class DateUtils {
 
         int year = Integer.parseInt(lastDate.substring(0, 4));
         int month = Integer.parseInt(lastDate.substring(4, 6));
-        int day = 30;
+        int day;
 
         month = month + 1;
 
@@ -581,6 +581,7 @@ public class DateUtils {
         if (month <= 6) {
             day = 31;
         } else if (month < 12) {
+            day = 30;
         } else {
             day = 29;
         }

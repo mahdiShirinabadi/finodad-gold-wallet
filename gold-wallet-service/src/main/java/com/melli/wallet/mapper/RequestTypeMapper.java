@@ -3,11 +3,8 @@ package com.melli.wallet.mapper;
 import com.melli.wallet.domain.master.entity.RequestTypeEntity;
 import com.melli.wallet.domain.slave.entity.ReportRequestTypeEntity;
 import java.util.Collections;
-import java.util.Collections;
 import org.springframework.stereotype.Component;
-
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Component
 public class RequestTypeMapper {

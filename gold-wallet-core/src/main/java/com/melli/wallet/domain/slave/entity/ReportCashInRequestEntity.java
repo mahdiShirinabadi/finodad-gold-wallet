@@ -11,8 +11,6 @@ import lombok.Setter;
 @Getter
 @PrimaryKeyJoinColumn(name = "request_id", referencedColumnName = "id")
 public class ReportCashInRequestEntity extends ReportRequestEntity {
-	public static String REF_NUMBER_USED = "used";
-	public static String REF_NUMBER_FAIL = "fail";
 
 	@Column(name = "amount")
 	private long amount;

@@ -334,10 +334,6 @@ public class PurchaseOperationServiceImplementation implements PurchaseOperation
 
     private WalletAccountEntity checkUserAccount(WalletEntity wallet, WalletAccountCurrencyEntity currencyEntity, String walletAccountNumber, String nationalCode) throws InternalServiceException {
         List<WalletAccountEntity> accounts = walletAccountRepositoryService.findByWallet(wallet);
-        if (CollectionUtils.isEmpty(accounts)) {
-            log.error("No wallet accounts found for user {}", wallet);
-            throw new InternalServiceException("Wallet account not found for user", StatusRepositoryService.WALLET_ACCOUNT_NOT_FOUND, HttpStatus.OK);
-        }
         return accounts.stream().filter(x -> x.getWalletAccountCurrencyEntity().getId() == (currencyEntity.getId())
                 && x.getAccountNumber().equalsIgnoreCase(walletAccountNumber)).findFirst().orElseThrow(() -> {
             log.error("Rial wallet account not found for user {}", nationalCode);
@@ -347,10 +343,6 @@ public class PurchaseOperationServiceImplementation implements PurchaseOperation
 
     private WalletAccountEntity findUserAccount(WalletEntity wallet, WalletAccountCurrencyEntity currencyEntity, String nationalCode) throws InternalServiceException {
         List<WalletAccountEntity> accounts = walletAccountRepositoryService.findByWallet(wallet);
-        if (CollectionUtils.isEmpty(accounts)) {
-            log.error("No wallet accounts found for user {}", wallet);
-            throw new InternalServiceException("Wallet account not found for user", StatusRepositoryService.WALLET_ACCOUNT_NOT_FOUND, HttpStatus.OK);
-        }
         return accounts.stream().filter(x -> x.getWalletAccountCurrencyEntity().getId() == (currencyEntity.getId()) && x.getEndTime() == null).findFirst().orElseThrow(() -> {
             log.error("Rial wallet account not found for user {}", nationalCode);
             return new InternalServiceException("Wallet account not found for user", StatusRepositoryService.WALLET_ACCOUNT_NOT_FOUND, HttpStatus.OK);

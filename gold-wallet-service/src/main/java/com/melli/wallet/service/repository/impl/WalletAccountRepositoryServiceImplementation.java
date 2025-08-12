@@ -56,8 +56,13 @@ public class WalletAccountRepositoryServiceImplementation implements WalletAccou
     }
 
     @Override
-    public List<WalletAccountEntity> findByWallet(WalletEntity wallet) {
-        return walletAccountRepository.findByWalletEntity(wallet);
+    public List<WalletAccountEntity> findByWallet(WalletEntity wallet) throws InternalServiceException {
+        List<WalletAccountEntity> walletAccountEntityList = walletAccountRepository.findByWalletEntity(wallet);
+        if (walletAccountEntityList.isEmpty()) {
+            log.error("walletAccount is not create success");
+            throw new InternalServiceException("walletAccount is not create success", StatusRepositoryService.WALLET_NOT_CREATE_SUCCESS, HttpStatus.OK);
+        }
+        return walletAccountEntityList;
     }
 
 
