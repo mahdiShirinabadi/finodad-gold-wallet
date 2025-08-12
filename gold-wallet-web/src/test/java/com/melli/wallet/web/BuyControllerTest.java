@@ -33,6 +33,7 @@ import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.CountDownLatch;
@@ -71,8 +72,7 @@ class BuyControllerTest extends WalletApplicationTests {
     private static final String CURRENCY_GOLD = "GOLD";
 
     private static MockMvc mockMvc;
-    private static String ACCESS_TOKEN;
-    private static String REFRESH_TOKEN;
+    private static String accessToken;
 
     @Autowired
     private WebApplicationContext webApplicationContext;
@@ -163,8 +163,7 @@ class BuyControllerTest extends WalletApplicationTests {
         log.info("start login_success test");
         BaseResponse<LoginResponse> response = login(mockMvc, USERNAME_CORRECT, PASSWORD_CORRECT, HttpStatus.OK,
                 StatusRepositoryService.SUCCESSFUL, true);
-        ACCESS_TOKEN = response.getData().getAccessTokenObject().getToken();
-        REFRESH_TOKEN = response.getData().getRefreshTokenObject().getToken();
+        accessToken = response.getData().getAccessTokenObject().getToken();
     }
 
     /**
@@ -177,7 +176,7 @@ class BuyControllerTest extends WalletApplicationTests {
     @Order(20)
     @DisplayName("create wallet- success")
     void createWalletSuccess() throws Exception {
-        BaseResponse<CreateWalletResponse> response = createWallet(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, MOBILE_CORRECT, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
+        BaseResponse<CreateWalletResponse> response = createWallet(mockMvc, accessToken, NATIONAL_CODE_CORRECT, MOBILE_CORRECT, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
         WalletEntity walletEntity = walletRepositoryService.findById(Long.parseLong(response.getData().getWalletId()));
         if (!walletEntity.getNationalCode().equalsIgnoreCase(NATIONAL_CODE_CORRECT)) {
             log.error("wallet create not same with national code ({})", NATIONAL_CODE_CORRECT);
@@ -202,7 +201,7 @@ class BuyControllerTest extends WalletApplicationTests {
         String price="10000000";
 
         // Step 2: Get user's RIAL account number
-        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.GOLD);
+        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, accessToken, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.GOLD);
         
         // Step 3: Get minimum quantity and calculate quantity below minimum
         String minAmount = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.MIN_QUANTITY_BUY, walletAccountObjectOptional.getAccountNumber());
@@ -212,7 +211,7 @@ class BuyControllerTest extends WalletApplicationTests {
         increaseMerchantBalance("1", WalletAccountCurrencyRepositoryService.GOLD,"1111111111");
         
         // Step 5: Attempt to generate buy UUID with quantity below minimum
-        generateBuyUuid(mockMvc, ACCESS_TOKEN, walletAccountObjectOptional.getAccountNumber(), price, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusRepositoryService.QUANTITY_LESS_THAN_MIN, false, merchantId, quantity, currency);
+        generateBuyUuid(mockMvc, accessToken, walletAccountObjectOptional.getAccountNumber(), price, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusRepositoryService.QUANTITY_LESS_THAN_MIN, false, merchantId, quantity, currency);
     }
 
 
@@ -235,7 +234,7 @@ class BuyControllerTest extends WalletApplicationTests {
         String price="10000000";
 
         // Step 2: Get user's RIAL account number
-        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.GOLD);
+        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, accessToken, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.GOLD);
         
         // Step 3: Get maximum quantity and calculate quantity above maximum
         String minAmount = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.MAX_QUANTITY_BUY, walletAccountObjectOptional.getAccountNumber());
@@ -245,7 +244,7 @@ class BuyControllerTest extends WalletApplicationTests {
         increaseMerchantBalance("1", WalletAccountCurrencyRepositoryService.GOLD,"1111111111");
         
         // Step 5: Attempt to generate buy UUID with quantity above maximum
-        generateBuyUuid(mockMvc, ACCESS_TOKEN, walletAccountObjectOptional.getAccountNumber(), price, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusRepositoryService.QUANTITY_BIGGER_THAN_MAX, false, merchantId, quantity, currency);
+        generateBuyUuid(mockMvc, accessToken, walletAccountObjectOptional.getAccountNumber(), price, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusRepositoryService.QUANTITY_BIGGER_THAN_MAX, false, merchantId, quantity, currency);
     }
 
 
@@ -267,10 +266,11 @@ class BuyControllerTest extends WalletApplicationTests {
         String invalidAmount = "123edfed";
         
         // Step 2: Get user's RIAL account number
-        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.RIAL);
+        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, accessToken, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.RIAL);
         
         // Step 3: Attempt to generate buy UUID with invalid amount format
-        generateBuyUuid(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, String.valueOf(invalidAmount), walletAccountObjectOptional.getAccountNumber(), HttpStatus.OK, StatusRepositoryService.INPUT_PARAMETER_NOT_VALID, false, merchantId, quantity, currency);
+       BaseResponse<UuidResponse> response = generateBuyUuid(mockMvc, accessToken, NATIONAL_CODE_CORRECT, (invalidAmount), walletAccountObjectOptional.getAccountNumber(), HttpStatus.OK, StatusRepositoryService.INPUT_PARAMETER_NOT_VALID, false, merchantId, quantity, currency);
+       Assert.assertSame(StatusRepositoryService.INPUT_PARAMETER_NOT_VALID, response.getErrorDetail().getCode());
     }
 
     /**
@@ -292,10 +292,11 @@ class BuyControllerTest extends WalletApplicationTests {
         String currency = "GOLD";
         
         // Step 2: Get user's RIAL account number
-        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.GOLD);
+        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, accessToken, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.GOLD);
         
         // Step 3: Generate buy UUID successfully
-        generateBuyUuid(mockMvc, ACCESS_TOKEN, walletAccountObjectOptional.getAccountNumber(), price, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true, merchantId, quantity, currency);
+        BaseResponse<UuidResponse> response = generateBuyUuid(mockMvc, accessToken, walletAccountObjectOptional.getAccountNumber(), price, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true, merchantId, quantity, currency);
+        Assert.assertSame(StatusRepositoryService.SUCCESSFUL, response.getErrorDetail().getCode());
     }
 
     /**
@@ -315,20 +316,21 @@ class BuyControllerTest extends WalletApplicationTests {
         String quantity = "1.07";
         String merchantId = "1";
         String commission = "2000";
-        String commissionType = CURRENCY_RIAL;
-        String currency = CURRENCY_GOLD;
+        String commissionType = WalletAccountCurrencyRepositoryService.RIAL;
+        String currency = WalletAccountCurrencyRepositoryService.GOLD;
         String sign = "";
         String additionalData = "differentAmount";
         
         // Step 2: Get user's RIAL account number
-        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.GOLD);
+        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, accessToken, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, currency);
         
         // Step 3: Generate buy UUID with specific amount
-        BaseResponse<UuidResponse> uuidResponseBaseResponse = generateBuyUuid(mockMvc, ACCESS_TOKEN, walletAccountObjectOptional.getAccountNumber(), price, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true, merchantId, "0.001", currency);
+        BaseResponse<UuidResponse> uuidResponseBaseResponse = generateBuyUuid(mockMvc, accessToken, walletAccountObjectOptional.getAccountNumber(), price, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true, merchantId, "0.001", currency);
         
         // Step 4: Attempt buy operation with different amount - should fail
-        buy(mockMvc, ACCESS_TOKEN, uuidResponseBaseResponse.getData().getUniqueIdentifier(), quantity, String.valueOf(Long.parseLong(price) + 1), commissionType, commission, NATIONAL_CODE_CORRECT, currency
+        BaseResponse<PurchaseResponse> response = buy(mockMvc, accessToken, uuidResponseBaseResponse.getData().getUniqueIdentifier(), quantity, String.valueOf(Long.parseLong(price) + 1), commissionType, commission, NATIONAL_CODE_CORRECT, currency
                 , merchantId, walletAccountObjectOptional.getAccountNumber(), sign, additionalData, HttpStatus.OK, StatusRepositoryService.PRICE_NOT_SAME_WITH_UUID, false);
+        Assert.assertSame(StatusRepositoryService.PRICE_NOT_SAME_WITH_UUID, response.getErrorDetail().getCode());
     }
 
     /**
@@ -355,13 +357,13 @@ class BuyControllerTest extends WalletApplicationTests {
         String additionalData = "differentAmount";
         
         // Step 2: Get user's RIAL account number
-        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.GOLD);
+        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, accessToken, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.GOLD);
         
         // Step 3: Generate buy UUID with valid currency
-        BaseResponse<UuidResponse> uuidResponseBaseResponse = generateBuyUuid(mockMvc, ACCESS_TOKEN, walletAccountObjectOptional.getAccountNumber(), price, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true, merchantId, "0.001", currency);
+        BaseResponse<UuidResponse> uuidResponseBaseResponse = generateBuyUuid(mockMvc, accessToken, walletAccountObjectOptional.getAccountNumber(), price, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true, merchantId, "0.001", currency);
         
         // Step 4: Attempt buy operation with invalid currency - should fail
-        BaseResponse<PurchaseResponse> response = buy(mockMvc, ACCESS_TOKEN, uuidResponseBaseResponse.getData().getUniqueIdentifier(), quantity, String.valueOf(Long.parseLong(price)), commissionType, commission, NATIONAL_CODE_CORRECT, invalidCurrency
+        BaseResponse<PurchaseResponse> response = buy(mockMvc, accessToken, uuidResponseBaseResponse.getData().getUniqueIdentifier(), quantity, String.valueOf(Long.parseLong(price)), commissionType, commission, NATIONAL_CODE_CORRECT, invalidCurrency
                 , merchantId, walletAccountObjectOptional.getAccountNumber(), sign, additionalData, HttpStatus.OK, StatusRepositoryService.WALLET_ACCOUNT_CURRENCY_NOT_FOUND, false);
         Assert.assertSame(StatusRepositoryService.WALLET_ACCOUNT_CURRENCY_NOT_FOUND, response.getErrorDetail().getCode());
     }
@@ -388,8 +390,8 @@ class BuyControllerTest extends WalletApplicationTests {
         walletBuyLimitationOperationService.deleteAll();
         
         // Step 3: Get user's RIAL account number
-        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.GOLD);
-        WalletAccountObject walletAccountObjectOptionalRial = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.RIAL);
+        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, accessToken, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.GOLD);
+        WalletAccountObject walletAccountObjectOptionalRial = getAccountNumber(mockMvc, accessToken, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.RIAL);
 
         // Step 4: Update balance merchant wallet-account
         increaseMerchantBalance("1.07", WalletAccountCurrencyRepositoryService.GOLD, "1111111111");
@@ -408,11 +410,11 @@ class BuyControllerTest extends WalletApplicationTests {
         }
 
         // Step 6: Generate UUID for cash in operation
-        BaseResponse<UuidResponse> uniqueIdentifierCashIn = generateCashInUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, price, walletAccountObjectOptionalRial.getAccountNumber(), HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
+        BaseResponse<UuidResponse> uniqueIdentifierCashIn = generateCashInUniqueIdentifier(mockMvc, accessToken, NATIONAL_CODE_CORRECT, price, walletAccountObjectOptionalRial.getAccountNumber(), HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
         log.info("generate uuid " + uniqueIdentifierCashIn);
         
         // Step 7: Perform cash in operation to charge account
-        cashIn(mockMvc, ACCESS_TOKEN, uniqueIdentifierCashIn.getData().getUniqueIdentifier(), String.valueOf(new Date().getTime()), price, NATIONAL_CODE_CORRECT, walletAccountObjectOptionalRial.getAccountNumber(), "", "", "ACCOUNT_TO_ACCOUNT", HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
+        cashIn(mockMvc, accessToken, uniqueIdentifierCashIn.getData().getUniqueIdentifier(), String.valueOf(new Date().getTime()), price, NATIONAL_CODE_CORRECT, walletAccountObjectOptionalRial.getAccountNumber(), "", "", "ACCOUNT_TO_ACCOUNT", HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
 
         // Step 8: Define buy operation parameters
         String merchantId = "1";
@@ -423,10 +425,10 @@ class BuyControllerTest extends WalletApplicationTests {
         String additionalData = "differentAmount";
         
         // Step 9: Generate buy UUID successfully
-        BaseResponse<UuidResponse> uuidResponseBaseResponse = generateBuyUuid(mockMvc, ACCESS_TOKEN, walletAccountObjectOptional.getAccountNumber(), price, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true, merchantId, "0.001", currency);
+        BaseResponse<UuidResponse> uuidResponseBaseResponse = generateBuyUuid(mockMvc, accessToken, walletAccountObjectOptional.getAccountNumber(), price, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true, merchantId, "0.001", currency);
         
         // Step 10: Perform buy operation successfully
-        buy(mockMvc, ACCESS_TOKEN, uuidResponseBaseResponse.getData().getUniqueIdentifier(), quantity, String.valueOf(Long.parseLong(price)), commissionType, commission, NATIONAL_CODE_CORRECT, currency
+        buy(mockMvc, accessToken, uuidResponseBaseResponse.getData().getUniqueIdentifier(), quantity, String.valueOf(Long.parseLong(price)), commissionType, commission, NATIONAL_CODE_CORRECT, currency
                 , merchantId, walletAccountObjectOptional.getAccountNumber(), sign, additionalData, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
 
     }
@@ -454,7 +456,7 @@ class BuyControllerTest extends WalletApplicationTests {
         walletBuyLimitationOperationService.deleteAll();
         
         // Step 3: Get user's RIAL account number
-        WalletAccountObject walletAccountCurrencyObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.GOLD);
+        WalletAccountObject walletAccountCurrencyObjectOptional = getAccountNumber(mockMvc, accessToken, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.GOLD);
 
         // Step 4: Get current buy statistics and limitation values
         WalletAccountEntity walletAccountEntity = walletAccountRepositoryService.findByAccountNumber(walletAccountCurrencyObjectOptional.getAccountNumber());
@@ -466,14 +468,14 @@ class BuyControllerTest extends WalletApplicationTests {
         setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MAX_DAILY_COUNT_BUY, walletAccountEntity, aggregationPurchaseDTO.getCountRecord());
 
         // Step 6: Attempt to generate buy UUID - should fail due to daily count limitation
-        generateBuyUuid(mockMvc, ACCESS_TOKEN, walletAccountCurrencyObjectOptional.getAccountNumber(), price, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusRepositoryService.BUY_EXCEEDED_COUNT_DAILY_LIMITATION, false, "1", "0.001", "GOLD");
+        generateBuyUuid(mockMvc, accessToken, walletAccountCurrencyObjectOptional.getAccountNumber(), price, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusRepositoryService.BUY_EXCEEDED_COUNT_DAILY_LIMITATION, false, "1", "0.001", "GOLD");
 
         // Step 7: Restore original MAX_DAILY_COUNT_BUY limit
         setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MAX_DAILY_COUNT_BUY, walletAccountEntity, valueMaxDailyCount);
 
         setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MAX_DAILY_QUANTITY_BUY, walletAccountEntity, aggregationPurchaseDTO.getSumQuantity());
 
-        generateBuyUuid(mockMvc, ACCESS_TOKEN, walletAccountCurrencyObjectOptional.getAccountNumber(), price, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusRepositoryService.BUY_EXCEEDED_QUANTITY_DAILY_LIMITATION, false, "1", "0.001", "GOLD");
+        generateBuyUuid(mockMvc, accessToken, walletAccountCurrencyObjectOptional.getAccountNumber(), price, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusRepositoryService.BUY_EXCEEDED_QUANTITY_DAILY_LIMITATION, false, "1", "0.001", "GOLD");
 
         setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MAX_DAILY_QUANTITY_BUY, walletAccountEntity, valueMaxDailyPrice);
 
@@ -507,7 +509,7 @@ class BuyControllerTest extends WalletApplicationTests {
         walletBuyLimitationOperationService.deleteAll();
 
         // Step 3: Get user's RIAL account number
-        WalletAccountObject walletAccountCurrencyObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.GOLD);
+        WalletAccountObject walletAccountCurrencyObjectOptional = getAccountNumber(mockMvc, accessToken, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.GOLD);
 
         // Step 4: Get current buy statistics and limitation values
         WalletAccountEntity walletAccountCurrencyEntity = walletAccountRepositoryService.findByAccountNumber(walletAccountCurrencyObjectOptional.getAccountNumber());
@@ -518,11 +520,11 @@ class BuyControllerTest extends WalletApplicationTests {
         // Step 5: Temporarily set MAX_DAILY_COUNT_BUY to current count we want generateUuid will be success
         setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MAX_DAILY_COUNT_BUY, walletAccountCurrencyEntity, String.valueOf(Long.parseLong(aggregationPurchaseDTO.getCountRecord()) + 1));
         // Step 6: Attempt to generate buy UUID - should success due to daily count limitation
-        BaseResponse<UuidResponse> uuidResponseBaseResponse = generateBuyUuid(mockMvc, ACCESS_TOKEN, walletAccountCurrencyObjectOptional.getAccountNumber(), price, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true, merchantId, quantity, currencyToBuy);
+        BaseResponse<UuidResponse> uuidResponseBaseResponse = generateBuyUuid(mockMvc, accessToken, walletAccountCurrencyObjectOptional.getAccountNumber(), price, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true, merchantId, quantity, currencyToBuy);
 
         setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MAX_DAILY_COUNT_BUY, walletAccountCurrencyEntity, aggregationPurchaseDTO.getCountRecord());
 
-        buyDirect(mockMvc, refNumber, ACCESS_TOKEN, uuidResponseBaseResponse.getData().getUniqueIdentifier(), quantity, String.valueOf(Long.parseLong(price)), buyCommission, commissionRialValue, NATIONAL_CODE_CORRECT, currencyToBuy
+        buyDirect(mockMvc, refNumber, accessToken, uuidResponseBaseResponse.getData().getUniqueIdentifier(), quantity, String.valueOf(Long.parseLong(price)), buyCommission, commissionRialValue, NATIONAL_CODE_CORRECT, currencyToBuy
                 , merchantId, walletAccountCurrencyObjectOptional.getAccountNumber(), "", "", HttpStatus.OK, StatusRepositoryService.BUY_EXCEEDED_COUNT_DAILY_LIMITATION, false);
 
         // Step 7: Restore original MAX_DAILY_COUNT_BUY limit
@@ -530,10 +532,10 @@ class BuyControllerTest extends WalletApplicationTests {
 
         // step 8: Temporarily set MAX_DAILY_QUANTITY_BUY to current quantity we want generateUuid will be success
         setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MAX_DAILY_QUANTITY_BUY, walletAccountCurrencyEntity, String.valueOf(new BigDecimal(aggregationPurchaseDTO.getSumQuantity()).add(new BigDecimal(10))));
-        generateBuyUuid(mockMvc, ACCESS_TOKEN, walletAccountCurrencyObjectOptional.getAccountNumber(), price, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true, merchantId, quantity, currencyToBuy);
+        generateBuyUuid(mockMvc, accessToken, walletAccountCurrencyObjectOptional.getAccountNumber(), price, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true, merchantId, quantity, currencyToBuy);
         setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MAX_DAILY_QUANTITY_BUY, walletAccountCurrencyEntity, String.valueOf(aggregationPurchaseDTO.getSumQuantity()));
 
-        buyDirect(mockMvc, refNumber, ACCESS_TOKEN, uuidResponseBaseResponse.getData().getUniqueIdentifier(), quantity, String.valueOf(Long.parseLong(price)), buyCommission, commissionRialValue, NATIONAL_CODE_CORRECT, currencyToBuy
+        buyDirect(mockMvc, refNumber, accessToken, uuidResponseBaseResponse.getData().getUniqueIdentifier(), quantity, String.valueOf(Long.parseLong(price)), buyCommission, commissionRialValue, NATIONAL_CODE_CORRECT, currencyToBuy
                 , merchantId, walletAccountCurrencyObjectOptional.getAccountNumber(), "", "", HttpStatus.OK, StatusRepositoryService.BUY_EXCEEDED_QUANTITY_DAILY_LIMITATION, false);
 
         setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MAX_DAILY_QUANTITY_BUY, walletAccountCurrencyEntity, String.valueOf(valueMaxDailyQuantity));
@@ -561,7 +563,7 @@ class BuyControllerTest extends WalletApplicationTests {
         // Step 2: Clear buy limitation cache to start fresh
         walletBuyLimitationOperationService.deleteAll();
         // Step 3: Get user's RIAL account number
-        WalletAccountObject walletAccountCurrencyObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.GOLD);
+        WalletAccountObject walletAccountCurrencyObjectOptional = getAccountNumber(mockMvc, accessToken, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.GOLD);
         // Step 4: Update balance merchant wallet-account
         WalletAccountEntity walletAccountEntity = walletAccountRepositoryService.findByAccountNumber(walletAccountCurrencyObjectOptional.getAccountNumber());
         // Step 5: Get current monthly limitation values for backup
@@ -578,13 +580,13 @@ class BuyControllerTest extends WalletApplicationTests {
         setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MAX_MONTHLY_COUNT_BUY, walletAccountEntity, aggregationPurchaseDTO.getCountRecord());
         // Step 9: Test monthly count limitation failure
         setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MONTHLY_VALIDATION_CHECK_BUY, walletAccountEntity,"true");
-        generateBuyUuid(mockMvc, ACCESS_TOKEN, walletAccountEntity.getAccountNumber(), price, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusRepositoryService.BUY_EXCEEDED_COUNT_MONTHLY_LIMITATION, false, "1", "0.001", "GOLD");
+        generateBuyUuid(mockMvc, accessToken, walletAccountEntity.getAccountNumber(), price, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusRepositoryService.BUY_EXCEEDED_COUNT_MONTHLY_LIMITATION, false, "1", "0.001", "GOLD");
         // Step 10: Restore original monthly count limitation
         setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MAX_MONTHLY_COUNT_BUY, walletAccountEntity, valueMaxMonthlyCount);
         // Step 11: Set monthly quantity limitation to current usage to trigger failure
         setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MAX_MONTHLY_QUANTITY_BUY, walletAccountEntity, aggregationPurchaseDTO.getSumQuantity());
         // Step 12: Test monthly quantity limitation failure
-        generateBuyUuid(mockMvc, ACCESS_TOKEN, walletAccountEntity.getAccountNumber(), price, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusRepositoryService.BUY_EXCEEDED_QUANTITY_MONTHLY_LIMITATION, false, "1", "0.001", "GOLD");
+        generateBuyUuid(mockMvc, accessToken, walletAccountEntity.getAccountNumber(), price, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusRepositoryService.BUY_EXCEEDED_QUANTITY_MONTHLY_LIMITATION, false, "1", "0.001", "GOLD");
         // Step 13: Restore original monthly quantity limitation
         setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MAX_MONTHLY_QUANTITY_BUY, walletAccountEntity, valueMaxMonthlyQuantity);
 
@@ -610,8 +612,8 @@ class BuyControllerTest extends WalletApplicationTests {
         // Step 2: Clear buy limitation cache to start fresh
         walletBuyLimitationOperationService.deleteAll();
         // Step 3: Get user's RIAL account number
-        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.GOLD);
-        WalletAccountObject walletAccountObjectOptionalRial = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.RIAL);
+        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, accessToken, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.GOLD);
+        WalletAccountObject walletAccountObjectOptionalRial = getAccountNumber(mockMvc, accessToken, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.RIAL);
         // Step 4: Update balance merchant wallet-account
         WalletEntity walletMerchantEntity = walletRepositoryService.findByNationalCodeAndWalletTypeId("1111111111", walletTypeRepositoryService.getByName(WalletTypeRepositoryService.MERCHANT).getId());
         List<WalletAccountEntity> walletAccountEntityList = walletAccountRepositoryService.findByWallet(walletMerchantEntity);
@@ -638,9 +640,9 @@ class BuyControllerTest extends WalletApplicationTests {
                 x -> x.getWalletAccountCurrencyEntity().getId() == finalId).findFirst().orElse(null);
         walletAccountRepositoryService.increaseBalance(walletAccountEntity.getId(), new BigDecimal("1.07"));
         // Step 8: Generate cash-in UUID and perform cash-in
-        BaseResponse<UuidResponse> uniqueIdentifierCashIn = generateCashInUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, price, walletAccountObjectOptional.getAccountNumber(), HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
+        BaseResponse<UuidResponse> uniqueIdentifierCashIn = generateCashInUniqueIdentifier(mockMvc, accessToken, NATIONAL_CODE_CORRECT, price, walletAccountObjectOptional.getAccountNumber(), HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
         log.info("generate uuid " + uniqueIdentifierCashIn);
-        cashIn(mockMvc, ACCESS_TOKEN, uniqueIdentifierCashIn.getData().getUniqueIdentifier(), String.valueOf(new Date().getTime()), price, NATIONAL_CODE_CORRECT, walletAccountObjectOptional.getAccountNumber(), "", "", "ACCOUNT_TO_ACCOUNT", HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
+        cashIn(mockMvc, accessToken, uniqueIdentifierCashIn.getData().getUniqueIdentifier(), String.valueOf(new Date().getTime()), price, NATIONAL_CODE_CORRECT, walletAccountObjectOptional.getAccountNumber(), "", "", "ACCOUNT_TO_ACCOUNT", HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
         // Step 9: Define buy direct parameters
         String merchantId = "1";
         String refNumber = new Date() + "";
@@ -650,9 +652,9 @@ class BuyControllerTest extends WalletApplicationTests {
         String sign = "";
         String additionalData = "";
         // Step 10: Generate buy UUID
-        BaseResponse<UuidResponse> uuidResponseBaseResponse = generateBuyUuid(mockMvc, ACCESS_TOKEN, walletAccountObjectOptional.getAccountNumber(), price, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true, merchantId, "0.001", currency);
+        BaseResponse<UuidResponse> uuidResponseBaseResponse = generateBuyUuid(mockMvc, accessToken, walletAccountObjectOptional.getAccountNumber(), price, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true, merchantId, "0.001", currency);
         // Step 11: Perform buy direct operation
-        buyDirect(mockMvc, refNumber, ACCESS_TOKEN, uuidResponseBaseResponse.getData().getUniqueIdentifier(), quantity, String.valueOf(Long.parseLong(price)), commissionType, commission, NATIONAL_CODE_CORRECT, currency
+        buyDirect(mockMvc, refNumber, accessToken, uuidResponseBaseResponse.getData().getUniqueIdentifier(), quantity, String.valueOf(Long.parseLong(price)), commissionType, commission, NATIONAL_CODE_CORRECT, currency
                 , merchantId, walletAccountObjectOptional.getAccountNumber(), sign, additionalData, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
     }
 
@@ -675,7 +677,7 @@ class BuyControllerTest extends WalletApplicationTests {
         String price = "100000";
         String quantity = "1.07";
         // Step 2: Get user's RIAL account number
-        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.GOLD);
+        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, accessToken, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.GOLD);
         // Step 3: Charge account first
         String refNumber = new Date().getTime() + "";
         String cashInAmount = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_IN, walletAccountObjectOptional.getAccountNumber());
@@ -685,8 +687,8 @@ class BuyControllerTest extends WalletApplicationTests {
             setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, walletAccountEntity, "true");
         }
         // Step 4: Perform cash-in operation
-        BaseResponse<UuidResponse> cashInUuidResponse = generateCashInUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, cashInAmount, walletAccountObjectOptional.getAccountNumber(), HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
-        BaseResponse<CashInResponse> cashInResponse = cashIn(mockMvc, ACCESS_TOKEN, cashInUuidResponse.getData().getUniqueIdentifier(), refNumber, cashInAmount, NATIONAL_CODE_CORRECT, walletAccountObjectOptional.getAccountNumber(), "", "", "ACCOUNT_TO_ACCOUNT", HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
+        BaseResponse<UuidResponse> cashInUuidResponse = generateCashInUniqueIdentifier(mockMvc, accessToken, NATIONAL_CODE_CORRECT, cashInAmount, walletAccountObjectOptional.getAccountNumber(), HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
+        BaseResponse<CashInResponse> cashInResponse = cashIn(mockMvc, accessToken, cashInUuidResponse.getData().getUniqueIdentifier(), refNumber, cashInAmount, NATIONAL_CODE_CORRECT, walletAccountObjectOptional.getAccountNumber(), "", "", "ACCOUNT_TO_ACCOUNT", HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
         Assert.assertNotNull(cashInResponse.getData());
         // Step 5: Update merchant balance
         increaseMerchantBalance("1.07", WalletAccountCurrencyRepositoryService.GOLD, "1111111111");
@@ -698,10 +700,10 @@ class BuyControllerTest extends WalletApplicationTests {
         String sign = "";
         String additionalData = "test commission currency error";
         // Step 7: Generate UUID for buyDirect
-        BaseResponse<UuidResponse> uuidResponse = generateBuyUuid(mockMvc, ACCESS_TOKEN, walletAccountObjectOptional.getAccountNumber(), price, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true, merchantId, "0.001", currency);
+        BaseResponse<UuidResponse> uuidResponse = generateBuyUuid(mockMvc, accessToken, walletAccountObjectOptional.getAccountNumber(), price, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true, merchantId, "0.001", currency);
         String uniqueIdentifier = uuidResponse.getData().getUniqueIdentifier();
         // Step 8: Test with GOLD commission currency (should fail)
-        BaseResponse<PurchaseResponse> response = buyDirect(mockMvc, refNumber, ACCESS_TOKEN, uniqueIdentifier, quantity, String.valueOf(Long.parseLong(price)), commissionType, commission, NATIONAL_CODE_CORRECT, currency, merchantId, walletAccountObjectOptional.getAccountNumber(), sign, additionalData, HttpStatus.OK, StatusRepositoryService.COMMISSION_CURRENCY_NOT_VALID, false);
+        BaseResponse<PurchaseResponse> response = buyDirect(mockMvc, refNumber, accessToken, uniqueIdentifier, quantity, String.valueOf(Long.parseLong(price)), commissionType, commission, NATIONAL_CODE_CORRECT, currency, merchantId, walletAccountObjectOptional.getAccountNumber(), sign, additionalData, HttpStatus.OK, StatusRepositoryService.COMMISSION_CURRENCY_NOT_VALID, false);
         Assert.assertSame(StatusRepositoryService.COMMISSION_CURRENCY_NOT_VALID, response.getErrorDetail().getCode());
     }
 
@@ -727,11 +729,11 @@ class BuyControllerTest extends WalletApplicationTests {
         String commissionType = "RIAL";
         String invalidUuid = "invalid_uuid";
         // Step 2: Get user's RIAL account number
-        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.GOLD);
+        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, accessToken, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.GOLD);
         String sign = "";
         String additionalData = "test invalid uuid";
         // Step 3: Test with invalid UUID
-        buyDirect(mockMvc, refNumber, ACCESS_TOKEN, invalidUuid, quantity, price, commissionType, commission, NATIONAL_CODE_CORRECT, CURRENCY_GOLD, merchantId, walletAccountObjectOptional.getAccountNumber(), sign, additionalData, HttpStatus.OK, StatusRepositoryService.UUID_NOT_FOUND, false);
+        buyDirect(mockMvc, refNumber, accessToken, invalidUuid, quantity, price, commissionType, commission, NATIONAL_CODE_CORRECT, CURRENCY_GOLD, merchantId, walletAccountObjectOptional.getAccountNumber(), sign, additionalData, HttpStatus.OK, StatusRepositoryService.UUID_NOT_FOUND, false);
     }
 
     /**
@@ -751,7 +753,7 @@ class BuyControllerTest extends WalletApplicationTests {
         String price = "100000";
         String quantity = "1.07";
         // Step 2: Get user's RIAL account number
-        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.GOLD);
+        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, accessToken, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.GOLD);
         // Step 3: Charge account first
         String refNumber = new Date().getTime() + "";
         String cashInAmount = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_IN, walletAccountObjectOptional.getAccountNumber());
@@ -761,8 +763,8 @@ class BuyControllerTest extends WalletApplicationTests {
             setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, walletAccountEntity, "true");
         }
         // Step 4: Perform cash-in operation
-        BaseResponse<UuidResponse> cashInUuidResponse = generateCashInUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, cashInAmount, walletAccountObjectOptional.getAccountNumber(), HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
-        BaseResponse<CashInResponse> cashInResponse = cashIn(mockMvc, ACCESS_TOKEN, cashInUuidResponse.getData().getUniqueIdentifier(), refNumber, cashInAmount, NATIONAL_CODE_CORRECT, walletAccountObjectOptional.getAccountNumber(), "", "", "ACCOUNT_TO_ACCOUNT", HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
+        BaseResponse<UuidResponse> cashInUuidResponse = generateCashInUniqueIdentifier(mockMvc, accessToken, NATIONAL_CODE_CORRECT, cashInAmount, walletAccountObjectOptional.getAccountNumber(), HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
+        BaseResponse<CashInResponse> cashInResponse = cashIn(mockMvc, accessToken, cashInUuidResponse.getData().getUniqueIdentifier(), refNumber, cashInAmount, NATIONAL_CODE_CORRECT, walletAccountObjectOptional.getAccountNumber(), "", "", "ACCOUNT_TO_ACCOUNT", HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
         Assert.assertNotNull(cashInResponse.getData());
         // Step 5: Define buy direct parameters
         String merchantId = "1";
@@ -773,12 +775,12 @@ class BuyControllerTest extends WalletApplicationTests {
         String additionalData = "test merchant balance not enough";
         refNumber = new Date().getTime() + "";
         // Step 6: Generate buy UUID
-        BaseResponse<UuidResponse> uuidResponse = generateBuyUuid(mockMvc, ACCESS_TOKEN, walletAccountObjectOptional.getAccountNumber(), price, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true, merchantId, quantity, currency);
+        BaseResponse<UuidResponse> uuidResponse = generateBuyUuid(mockMvc, accessToken, walletAccountObjectOptional.getAccountNumber(), price, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true, merchantId, quantity, currency);
         String uniqueIdentifier = uuidResponse.getData().getUniqueIdentifier();
         // Step 7: Set merchant balance to zero to simulate insufficient balance
         setMerchantBalanceToZero(WalletAccountCurrencyRepositoryService.GOLD,"1111111111");
         // Step 8: Test with insufficient merchant balance
-        BaseResponse<PurchaseResponse> response = buyDirect(mockMvc, refNumber, ACCESS_TOKEN, uniqueIdentifier, quantity, String.valueOf(Long.parseLong(price)), commissionType, commission, NATIONAL_CODE_CORRECT,
+        BaseResponse<PurchaseResponse> response = buyDirect(mockMvc, refNumber, accessToken, uniqueIdentifier, quantity, String.valueOf(Long.parseLong(price)), commissionType, commission, NATIONAL_CODE_CORRECT,
                 currency, merchantId, walletAccountObjectOptional.getAccountNumber(), sign, additionalData, HttpStatus.OK, StatusRepositoryService.MERCHANT_BALANCE_NOT_ENOUGH, false);
         Assert.assertSame(StatusRepositoryService.MERCHANT_BALANCE_NOT_ENOUGH, response.getErrorDetail().getCode());
     }
@@ -800,7 +802,7 @@ class BuyControllerTest extends WalletApplicationTests {
         String price = "100000";
         String quantity = "1.07";
         // Step 2: Get user's RIAL account number
-        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.GOLD);
+        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, accessToken, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.GOLD);
         // Step 3: Charge account first
         String refNumber = new Date().getTime() + "";
         String cashInAmount = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_IN, walletAccountObjectOptional.getAccountNumber());
@@ -810,8 +812,8 @@ class BuyControllerTest extends WalletApplicationTests {
             setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, walletAccountEntity, "true");
         }
         // Step 4: Perform cash-in operation
-        BaseResponse<UuidResponse> cashInUuidResponse = generateCashInUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, cashInAmount, walletAccountObjectOptional.getAccountNumber(), HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
-        BaseResponse<CashInResponse> cashInResponse = cashIn(mockMvc, ACCESS_TOKEN, cashInUuidResponse.getData().getUniqueIdentifier(), refNumber, cashInAmount, NATIONAL_CODE_CORRECT, walletAccountObjectOptional.getAccountNumber(), "", "", "ACCOUNT_TO_ACCOUNT", HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
+        BaseResponse<UuidResponse> cashInUuidResponse = generateCashInUniqueIdentifier(mockMvc, accessToken, NATIONAL_CODE_CORRECT, cashInAmount, walletAccountObjectOptional.getAccountNumber(), HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
+        BaseResponse<CashInResponse> cashInResponse = cashIn(mockMvc, accessToken, cashInUuidResponse.getData().getUniqueIdentifier(), refNumber, cashInAmount, NATIONAL_CODE_CORRECT, walletAccountObjectOptional.getAccountNumber(), "", "", "ACCOUNT_TO_ACCOUNT", HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
         Assert.assertNotNull(cashInResponse.getData());
         // Step 5: Update merchant balance
         increaseMerchantBalance("1.07", WalletAccountCurrencyRepositoryService.GOLD, "1111111111");
@@ -824,10 +826,10 @@ class BuyControllerTest extends WalletApplicationTests {
         String sign = "";
         String additionalData = "test invalid merchant id";
         // Step 7: Generate buy UUID
-        BaseResponse<UuidResponse> uuidResponse = generateBuyUuid(mockMvc, ACCESS_TOKEN, walletAccountObjectOptional.getAccountNumber(), price, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true, merchantId, "0.001", currency);
+        BaseResponse<UuidResponse> uuidResponse = generateBuyUuid(mockMvc, accessToken, walletAccountObjectOptional.getAccountNumber(), price, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true, merchantId, "0.001", currency);
         String uniqueIdentifier = uuidResponse.getData().getUniqueIdentifier();
         // Step 8: Test with invalid merchant ID
-        BaseResponse<PurchaseResponse> response = buyDirect(mockMvc, refNumber, ACCESS_TOKEN, uniqueIdentifier, quantity, String.valueOf(Long.parseLong(price)), commissionType, commission, NATIONAL_CODE_CORRECT, currency, invalidMerchantId, walletAccountObjectOptional.getAccountNumber(), sign, additionalData, HttpStatus.OK, StatusRepositoryService.MERCHANT_IS_NOT_EXIST, false);
+        BaseResponse<PurchaseResponse> response = buyDirect(mockMvc, refNumber, accessToken, uniqueIdentifier, quantity, String.valueOf(Long.parseLong(price)), commissionType, commission, NATIONAL_CODE_CORRECT, currency, invalidMerchantId, walletAccountObjectOptional.getAccountNumber(), sign, additionalData, HttpStatus.OK, StatusRepositoryService.MERCHANT_IS_NOT_EXIST, false);
         Assert.assertSame(StatusRepositoryService.MERCHANT_IS_NOT_EXIST, response.getErrorDetail().getCode());
     }
 
@@ -848,7 +850,7 @@ class BuyControllerTest extends WalletApplicationTests {
         String price = "100000";
         String quantity = "1.07";
         // Step 2: Get user's RIAL account number
-        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.GOLD);
+        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, accessToken, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.GOLD);
         // Step 3: Charge account first
         String refNumber = new Date().getTime() + "";
         String cashInAmount = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_IN, walletAccountObjectOptional.getAccountNumber());
@@ -858,8 +860,8 @@ class BuyControllerTest extends WalletApplicationTests {
             setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, walletAccountEntity, "true");
         }
         // Step 4: Perform cash-in operation
-        BaseResponse<UuidResponse> cashInUuidResponse = generateCashInUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, cashInAmount, walletAccountObjectOptional.getAccountNumber(), HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
-        BaseResponse<CashInResponse> cashInResponse = cashIn(mockMvc, ACCESS_TOKEN, cashInUuidResponse.getData().getUniqueIdentifier(), refNumber, cashInAmount, NATIONAL_CODE_CORRECT, walletAccountObjectOptional.getAccountNumber(), "", "", "ACCOUNT_TO_ACCOUNT", HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
+        BaseResponse<UuidResponse> cashInUuidResponse = generateCashInUniqueIdentifier(mockMvc, accessToken, NATIONAL_CODE_CORRECT, cashInAmount, walletAccountObjectOptional.getAccountNumber(), HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
+        BaseResponse<CashInResponse> cashInResponse = cashIn(mockMvc, accessToken, cashInUuidResponse.getData().getUniqueIdentifier(), refNumber, cashInAmount, NATIONAL_CODE_CORRECT, walletAccountObjectOptional.getAccountNumber(), "", "", "ACCOUNT_TO_ACCOUNT", HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
         Assert.assertNotNull(cashInResponse.getData());
         // Step 5: Update merchant balance
         increaseMerchantBalance("1.07", WalletAccountCurrencyRepositoryService.GOLD, "1111111111");
@@ -872,10 +874,10 @@ class BuyControllerTest extends WalletApplicationTests {
         String sign = "";
         String additionalData = "test invalid currency";
         // Step 7: Generate buy UUID
-        BaseResponse<UuidResponse> uuidResponse = generateBuyUuid(mockMvc, ACCESS_TOKEN, walletAccountObjectOptional.getAccountNumber(), price, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true, merchantId, "0.001", currency);
+        BaseResponse<UuidResponse> uuidResponse = generateBuyUuid(mockMvc, accessToken, walletAccountObjectOptional.getAccountNumber(), price, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true, merchantId, "0.001", currency);
         String uniqueIdentifier = uuidResponse.getData().getUniqueIdentifier();
         // Step 8: Test with invalid currency
-        BaseResponse<PurchaseResponse> response = buyDirect(mockMvc, refNumber, ACCESS_TOKEN, uniqueIdentifier, quantity, String.valueOf(Long.parseLong(price)), commissionType, commission, NATIONAL_CODE_CORRECT, invalidCurrency, merchantId, walletAccountObjectOptional.getAccountNumber(), sign, additionalData, HttpStatus.OK, StatusRepositoryService.WALLET_ACCOUNT_CURRENCY_NOT_FOUND, false);
+        BaseResponse<PurchaseResponse> response = buyDirect(mockMvc, refNumber, accessToken, uniqueIdentifier, quantity, String.valueOf(Long.parseLong(price)), commissionType, commission, NATIONAL_CODE_CORRECT, invalidCurrency, merchantId, walletAccountObjectOptional.getAccountNumber(), sign, additionalData, HttpStatus.OK, StatusRepositoryService.WALLET_ACCOUNT_CURRENCY_NOT_FOUND, false);
         Assert.assertSame(StatusRepositoryService.WALLET_ACCOUNT_CURRENCY_NOT_FOUND, response.getErrorDetail().getCode());
     }
 
@@ -899,16 +901,16 @@ class BuyControllerTest extends WalletApplicationTests {
         String additionalData = "simple test";
         
         // Get account
-        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.GOLD);
+        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, accessToken, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.GOLD);
         
         // Setup merchant balance
         increaseMerchantBalance("5.0", WalletAccountCurrencyRepositoryService.GOLD, "1111111111");
         
         // Generate UUID and test buyDirect
-        BaseResponse<UuidResponse> uuidResponse = generateBuyUuid(mockMvc, ACCESS_TOKEN, walletAccountObjectOptional.getAccountNumber(), price, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true, merchantId, "0.001", currency);
+        BaseResponse<UuidResponse> uuidResponse = generateBuyUuid(mockMvc, accessToken, walletAccountObjectOptional.getAccountNumber(), price, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true, merchantId, "0.001", currency);
         String uniqueIdentifier = uuidResponse.getData().getUniqueIdentifier();
         
-        BaseResponse<PurchaseResponse> response = buyDirect(mockMvc, "SIMPLE_TEST_" + new Date().getTime(), ACCESS_TOKEN, uniqueIdentifier, quantity, price, commissionType, commission, NATIONAL_CODE_CORRECT, currency, merchantId, walletAccountObjectOptional.getAccountNumber(), sign, additionalData, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
+        BaseResponse<PurchaseResponse> response = buyDirect(mockMvc, "SIMPLE_TEST_" + new Date().getTime(), accessToken, uniqueIdentifier, quantity, price, commissionType, commission, NATIONAL_CODE_CORRECT, currency, merchantId, walletAccountObjectOptional.getAccountNumber(), sign, additionalData, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
         
         log.info("Simple buyDirect test result: Success={}, ErrorCode={}", response.getSuccess(), response.getErrorDetail() != null ? response.getErrorDetail().getCode() : "N/A");
         Assert.assertTrue("Simple buyDirect should succeed", response.getSuccess());
@@ -961,14 +963,14 @@ class BuyControllerTest extends WalletApplicationTests {
                 String sign = "";
                 String additionalData = "ultra minimal test";
                 
-                WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.GOLD);
+                WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, accessToken, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.GOLD);
                 increaseMerchantBalance("5.0", WalletAccountCurrencyRepositoryService.GOLD, "1111111111");
                 
-                BaseResponse<UuidResponse> uuidResponse = generateBuyUuid(mockMvc, ACCESS_TOKEN, walletAccountObjectOptional.getAccountNumber(), price, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true, merchantId, "0.001", currency);
+                BaseResponse<UuidResponse> uuidResponse = generateBuyUuid(mockMvc, accessToken, walletAccountObjectOptional.getAccountNumber(), price, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true, merchantId, "0.001", currency);
                 String uniqueIdentifier = uuidResponse.getData().getUniqueIdentifier();
                 
                 log.info("Thread calling buyDirect with UUID: {}", uniqueIdentifier);
-                threadResponse[0] = buyDirect(mockMvc, "ULTRA_" + System.currentTimeMillis(), ACCESS_TOKEN, uniqueIdentifier, quantity, price, commissionType, commission, NATIONAL_CODE_CORRECT, currency, merchantId, walletAccountObjectOptional.getAccountNumber(), sign, additionalData, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
+                threadResponse[0] = buyDirect(mockMvc, "ULTRA_" + System.currentTimeMillis(), accessToken, uniqueIdentifier, quantity, price, commissionType, commission, NATIONAL_CODE_CORRECT, currency, merchantId, walletAccountObjectOptional.getAccountNumber(), sign, additionalData, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
                 log.info("Thread completed buyDirect call successfully");
                 
             } catch (Exception e) {
@@ -1017,11 +1019,11 @@ class BuyControllerTest extends WalletApplicationTests {
         String additionalData = "no executor test";
         
         // Get account and setup
-        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.GOLD);
+        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, accessToken, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.GOLD);
         increaseMerchantBalance("5.0", WalletAccountCurrencyRepositoryService.GOLD, "1111111111");
         
         // Generate UUID
-        BaseResponse<UuidResponse> uuidResponse = generateBuyUuid(mockMvc, ACCESS_TOKEN, walletAccountObjectOptional.getAccountNumber(), price, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true, merchantId, "0.001", currency);
+        BaseResponse<UuidResponse> uuidResponse = generateBuyUuid(mockMvc, accessToken, walletAccountObjectOptional.getAccountNumber(), price, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true, merchantId, "0.001", currency);
         String sharedUniqueIdentifier = uuidResponse.getData().getUniqueIdentifier();
         log.info("Generated UUID: {}", sharedUniqueIdentifier);
         
@@ -1034,7 +1036,7 @@ class BuyControllerTest extends WalletApplicationTests {
             try {
                 log.info("Raw Thread 1 starting...");
                 String ref1 = "THREAD1_" + System.currentTimeMillis();
-                BaseResponse<PurchaseResponse> response1 = buyDirectWithoutCheckResult(mockMvc, ref1, ACCESS_TOKEN, sharedUniqueIdentifier, quantity, price, commissionType, commission, NATIONAL_CODE_CORRECT, currency, merchantId, walletAccountObjectOptional.getAccountNumber(), sign, additionalData + "_1");
+                BaseResponse<PurchaseResponse> response1 = buyDirectWithoutCheckResult(mockMvc, ref1, accessToken, sharedUniqueIdentifier, quantity, price, commissionType, commission, NATIONAL_CODE_CORRECT, currency, merchantId, walletAccountObjectOptional.getAccountNumber(), sign, additionalData + "_1");
                 
                 BuyResult result1 = new BuyResult();
                 result1.threadId = 1;
@@ -1070,7 +1072,7 @@ class BuyControllerTest extends WalletApplicationTests {
             try {
                 log.info("Raw Thread 2 starting...");
                 String ref2 = "THREAD2_" + System.currentTimeMillis();
-                BaseResponse<PurchaseResponse> response2 = buyDirectWithoutCheckResult(mockMvc, ref2, ACCESS_TOKEN, sharedUniqueIdentifier, quantity, price, commissionType, commission, NATIONAL_CODE_CORRECT, currency, merchantId, walletAccountObjectOptional.getAccountNumber(), sign, additionalData + "_2");
+                BaseResponse<PurchaseResponse> response2 = buyDirectWithoutCheckResult(mockMvc, ref2, accessToken, sharedUniqueIdentifier, quantity, price, commissionType, commission, NATIONAL_CODE_CORRECT, currency, merchantId, walletAccountObjectOptional.getAccountNumber(), sign, additionalData + "_2");
                 
                 BuyResult result2 = new BuyResult();
                 result2.threadId = 2;
@@ -1166,7 +1168,7 @@ class BuyControllerTest extends WalletApplicationTests {
         walletBuyLimitationOperationService.deleteAll();
         
         // Step 3: Get user's GOLD account number (only GOLD needed for buyDirect)
-        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.GOLD);
+        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, accessToken, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.GOLD);
         
         // Step 4: Increase merchant balance with sufficient amount for multiple transactions
         increaseMerchantBalance("10.0", WalletAccountCurrencyRepositoryService.GOLD, "1111111111");
@@ -1175,7 +1177,7 @@ class BuyControllerTest extends WalletApplicationTests {
         int numberOfThreads = 5;
         List<String> uniqueIdentifiers = new ArrayList<>();
         for (int i = 0; i < numberOfThreads; i++) {
-            BaseResponse<UuidResponse> uuidResponse = generateBuyUuid(mockMvc, ACCESS_TOKEN, walletAccountObjectOptional.getAccountNumber(), price, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true, merchantId, "0.001", currency);
+            BaseResponse<UuidResponse> uuidResponse = generateBuyUuid(mockMvc, accessToken, walletAccountObjectOptional.getAccountNumber(), price, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true, merchantId, "0.001", currency);
             uniqueIdentifiers.add(uuidResponse.getData().getUniqueIdentifier());
         }
         
@@ -1191,7 +1193,7 @@ class BuyControllerTest extends WalletApplicationTests {
             Thread thread = new Thread(() -> {
                 try {
                     // All threads use the same refNumber to test payment ID concurrency
-                    BaseResponse<PurchaseResponse> response = buyDirectWithoutCheckResult(mockMvc, sharedRefNumber, ACCESS_TOKEN, uniqueIdentifier, quantity, price, commissionType, commission, NATIONAL_CODE_CORRECT, currency, merchantId, walletAccountObjectOptional.getAccountNumber(), sign, additionalData + "_" + threadId);
+                    BaseResponse<PurchaseResponse> response = buyDirectWithoutCheckResult(mockMvc, sharedRefNumber, accessToken, uniqueIdentifier, quantity, price, commissionType, commission, NATIONAL_CODE_CORRECT, currency, merchantId, walletAccountObjectOptional.getAccountNumber(), sign, additionalData + "_" + threadId);
                     
                     BuyResult result = new BuyResult();
                     result.threadId = threadId;
@@ -1283,7 +1285,7 @@ class BuyControllerTest extends WalletApplicationTests {
         walletBuyLimitationOperationService.deleteAll();
         
         // Get account number (only GOLD needed for buyDirect)
-        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.GOLD);
+        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, accessToken, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.GOLD);
         
         // Setup sufficient merchant balance (no cashIn needed for buyDirect)
         increaseMerchantBalance("20.0", WalletAccountCurrencyRepositoryService.GOLD, "1111111111");
@@ -1318,7 +1320,7 @@ class BuyControllerTest extends WalletApplicationTests {
         // Generate different UUIDs for each thread
         List<String> uniqueIdentifiers = new ArrayList<>();
         for (int i = 0; i < numberOfThreads; i++) {
-            BaseResponse<UuidResponse> uuidResponse = generateBuyUuid(mockMvc, ACCESS_TOKEN, walletAccountObjectOptional.getAccountNumber(), price, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true, merchantId, "0.001", currency);
+            BaseResponse<UuidResponse> uuidResponse = generateBuyUuid(mockMvc, accessToken, walletAccountObjectOptional.getAccountNumber(), price, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true, merchantId, "0.001", currency);
             uniqueIdentifiers.add(uuidResponse.getData().getUniqueIdentifier());
         }
         
@@ -1333,7 +1335,7 @@ class BuyControllerTest extends WalletApplicationTests {
             
             Thread thread = new Thread(() -> {
                 try {
-                    BaseResponse<PurchaseResponse> response = buyDirectWithoutCheckResult(mockMvc, sharedRefNumber, ACCESS_TOKEN, uniqueIdentifier, quantity, price, commissionType, commission, NATIONAL_CODE_CORRECT, currency, merchantId, walletAccountObjectOptional.getAccountNumber(), sign, additionalData + "_scenario1_" + threadId);
+                    BaseResponse<PurchaseResponse> response = buyDirectWithoutCheckResult(mockMvc, sharedRefNumber, accessToken, uniqueIdentifier, quantity, price, commissionType, commission, NATIONAL_CODE_CORRECT, currency, merchantId, walletAccountObjectOptional.getAccountNumber(), sign, additionalData + "_scenario1_" + threadId);
                     
                     BuyResult result = new BuyResult();
                     result.threadId = threadId;
@@ -1409,7 +1411,7 @@ class BuyControllerTest extends WalletApplicationTests {
         int numberOfThreads = 3;
         
         // Generate single UUID for all threads
-        BaseResponse<UuidResponse> uuidResponse = generateBuyUuid(mockMvc, ACCESS_TOKEN, walletAccountObjectOptional.getAccountNumber(), price, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true, merchantId, "0.001", currency);
+        BaseResponse<UuidResponse> uuidResponse = generateBuyUuid(mockMvc, accessToken, walletAccountObjectOptional.getAccountNumber(), price, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true, merchantId, "0.001", currency);
         String sharedUniqueIdentifier = uuidResponse.getData().getUniqueIdentifier();
         
         CountDownLatch latch = new CountDownLatch(numberOfThreads);
@@ -1423,7 +1425,7 @@ class BuyControllerTest extends WalletApplicationTests {
             Thread thread = new Thread(() -> {
                 try {
                     String threadRefNumber = "SCENARIO2_" + new Date().getTime() + "_thread_" + threadId;
-                    BaseResponse<PurchaseResponse> response = buyDirectWithoutCheckResult(mockMvc, threadRefNumber, ACCESS_TOKEN, sharedUniqueIdentifier, quantity, price, commissionType, commission, NATIONAL_CODE_CORRECT, currency, merchantId, walletAccountObjectOptional.getAccountNumber(), sign, additionalData + "_scenario2_" + threadId);
+                    BaseResponse<PurchaseResponse> response = buyDirectWithoutCheckResult(mockMvc, threadRefNumber, accessToken, sharedUniqueIdentifier, quantity, price, commissionType, commission, NATIONAL_CODE_CORRECT, currency, merchantId, walletAccountObjectOptional.getAccountNumber(), sign, additionalData + "_scenario2_" + threadId);
                     
                     BuyResult result = new BuyResult();
                     result.threadId = threadId;
