@@ -8,6 +8,7 @@ import com.melli.wallet.domain.master.entity.*;
 import com.melli.wallet.domain.response.UuidResponse;
 import com.melli.wallet.domain.response.purchase.PurchaseResponse;
 import com.melli.wallet.domain.response.purchase.PurchaseTrackResponse;
+import com.melli.wallet.domain.slave.entity.ReportPurchaseRequestEntity;
 import com.melli.wallet.exception.InternalServiceException;
 import com.melli.wallet.service.*;
 import com.melli.wallet.utils.Helper;
@@ -144,7 +145,7 @@ public class PurchaseServiceImplementation implements PurchaseService {
     @Override
     public PurchaseTrackResponse purchaseTrack(ChannelEntity channel, String uniqueIdentifier, String type, String channelIp) throws InternalServiceException {
         RrnEntity rrnEntity = rrnService.checkRrn(uniqueIdentifier, channel, requestTypeService.getRequestType(type), "", "");
-        PurchaseRequestEntity purchaseRequestEntity = requestService.findPurchaseRequestByRrnId(rrnEntity.getId());
+        ReportPurchaseRequestEntity purchaseRequestEntity = requestService.findPurchaseRequestByRrnId(rrnEntity.getId());
         return helper.fillPurchaseTrackResponse(purchaseRequestEntity, statusService);
     }
 
@@ -313,12 +314,11 @@ public class PurchaseServiceImplementation implements PurchaseService {
     }
 
     private WalletEntity findUserWallet(String nationalCode) throws InternalServiceException {
-        WalletTypeEntity walletType = walletTypeService.getAll().stream()
-                .filter(x -> x.getName().equals(WalletTypeService.NORMAL_USER)).findFirst()
-                .orElseThrow(() -> {
-                    log.error("Wallet type {} not found", WalletTypeService.NORMAL_USER);
-                    return new InternalServiceException("Wallet type not found", StatusService.WALLET_TYPE_NOT_FOUND, HttpStatus.OK);
-                });
+        WalletTypeEntity walletType = walletTypeService.getByNameManaged(WalletTypeService.NORMAL_USER);
+        if (walletType == null) {
+            log.error("Wallet type {} not found", WalletTypeService.NORMAL_USER);
+            throw new InternalServiceException("Wallet type not found", StatusService.WALLET_TYPE_NOT_FOUND, HttpStatus.OK);
+        }
 
         WalletEntity wallet = walletService.findByNationalCodeAndWalletTypeId(nationalCode, walletType.getId());
         if (wallet == null) {
@@ -360,12 +360,11 @@ public class PurchaseServiceImplementation implements PurchaseService {
             throw new InternalServiceException("na wallet account found for channel", StatusService.CHANNEL_WALLET_ACCOUNT_NOT_FOUND, HttpStatus.OK);
         }
 
-        WalletAccountTypeEntity wageType = walletAccountTypeService.getAll().stream()
-                .filter(x -> x.getName().equalsIgnoreCase(WalletAccountTypeService.WAGE)).findFirst()
-                .orElseThrow(() -> {
-                    log.error("Wallet account type wage not found for channel {}", channel.getUsername());
-                    return new InternalServiceException("Wallet account type wage not found", StatusService.WALLET_ACCOUNT_TYPE_NOT_FOUND, HttpStatus.OK);
-                });
+        WalletAccountTypeEntity wageType = walletAccountTypeService.findByNameManaged(WalletAccountTypeService.WAGE);
+        if (wageType == null) {
+            log.error("Wallet account type wage not found for channel {}", channel.getUsername());
+            throw new InternalServiceException("Wallet account type wage not found", StatusService.WALLET_ACCOUNT_TYPE_NOT_FOUND, HttpStatus.OK);
+        }
 
         return accounts.stream()
                 .filter(x -> x.getWalletAccountCurrencyEntity().getName().equalsIgnoreCase(walletAccountTypeName)

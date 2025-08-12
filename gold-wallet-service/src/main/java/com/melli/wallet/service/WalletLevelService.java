@@ -21,4 +21,9 @@ public interface WalletLevelService {
     void clearCache();
     WalletLevelEntity getById(Long id) throws InternalServiceException;
     WalletLevelEntity getByLevel(String level) throws InternalServiceException;
+    
+    // Methods for getting managed entities from master database
+    List<WalletLevelEntity> getAllManaged();
+    WalletLevelEntity getByIdManaged(Long id) throws InternalServiceException;
+    WalletLevelEntity getByLevelManaged(String level) throws InternalServiceException;
 }

@@ -3,7 +3,10 @@ package com.melli.wallet.service.impl;
 import com.melli.wallet.ConstantRedisName;
 import com.melli.wallet.domain.master.entity.RequestTypeEntity;
 import com.melli.wallet.domain.master.persistence.RequestTypeRepository;
+import com.melli.wallet.domain.slave.entity.ReportRequestTypeEntity;
+import com.melli.wallet.domain.slave.persistence.ReportRequestTypeRepository;
 import com.melli.wallet.exception.InternalServiceException;
+import com.melli.wallet.mapper.RequestTypeMapper;
 import com.melli.wallet.service.RequestTypeService;
 import com.melli.wallet.service.StatusService;
 import lombok.RequiredArgsConstructor;
@@ -25,12 +28,15 @@ import java.util.Optional;
 public class RequestTypeServiceImplementation implements RequestTypeService {
 
     private final RequestTypeRepository requestTypeDAO;
+    private final ReportRequestTypeRepository reportRequestTypeRepository;
+    private final RequestTypeMapper requestTypeMapper;
 
     @Override
     @Cacheable(unless = "#result == null")
     public RequestTypeEntity getRequestType(String name) {
         log.info("start get RequestType for name ==> ({})", name);
-        return requestTypeDAO.findByName(name.toLowerCase());
+        ReportRequestTypeEntity reportEntity = reportRequestTypeRepository.findByName(name.toLowerCase());
+        return requestTypeMapper.toRequestTypeEntity(reportEntity);
     }
 
 
@@ -57,13 +63,13 @@ public class RequestTypeServiceImplementation implements RequestTypeService {
     }
 
     private RequestTypeEntity findById(long id) throws InternalServiceException{
-        Optional<RequestTypeEntity> requestType=requestTypeDAO.findById(id);
+        Optional<ReportRequestTypeEntity> requestType=reportRequestTypeRepository.findById(id);
         if(requestType.isEmpty()){
             log.debug("request Type with Id ({}), not found !!! ", id);
             throw new InternalServiceException("request Type with Id (" + id + ") not found !!!", StatusService.REQUEST_TYPE_NOT_FOUND, HttpStatus.OK);
         }
 
-        return requestType.get();
+        return requestTypeMapper.toRequestTypeEntity(requestType.get());
     }
 
 

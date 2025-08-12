@@ -3,7 +3,10 @@ package com.melli.wallet.service.impl;
 import com.melli.wallet.ConstantRedisName;
 import com.melli.wallet.domain.master.entity.StatusEntity;
 import com.melli.wallet.domain.master.persistence.StatusRepository;
+import com.melli.wallet.domain.slave.entity.ReportStatusEntity;
+import com.melli.wallet.domain.slave.persistence.ReportStatusRepository;
 import com.melli.wallet.exception.InternalServiceException;
+import com.melli.wallet.mapper.StatusMapper;
 import com.melli.wallet.service.SettingGeneralService;
 import com.melli.wallet.service.StatusService;
 import com.melli.wallet.util.StringUtils;
@@ -32,6 +35,8 @@ import java.util.*;
 public class StatusServiceImplementation implements StatusService {
 
     private final StatusRepository statusRepository;
+    private final ReportStatusRepository reportStatusRepository;
+    private final StatusMapper statusMapper;
     private final SettingGeneralService settingGeneralService;
     private final RedisLockService redisLockService;
 
@@ -46,13 +51,13 @@ public class StatusServiceImplementation implements StatusService {
     @Cacheable(key = "{#code}", unless = "#result == null")
     public StatusEntity findByCode(String code) {
         log.info("Starting retrieval of Status by code: {}", code);
-        StatusEntity statusEntity = statusRepository.findByCode(code);
+        ReportStatusEntity reportEntity = reportStatusRepository.findByCode(code);
 
-        if (statusEntity == null) {
+        if (reportEntity == null) {
             log.info("Status code not defined: {}", code);
             return createUndefinedStatusEntity(code);
         }
-        return statusEntity;
+        return statusMapper.toStatusEntity(reportEntity);
     }
 
     private StatusEntity createUndefinedStatusEntity(String code) {
@@ -72,14 +77,17 @@ public class StatusServiceImplementation implements StatusService {
 
 
     public StatusEntity findById(long id) throws InternalServiceException {
-        return statusRepository.findById(id).orElseThrow(() -> {
+        ReportStatusEntity reportEntity = reportStatusRepository.findById(id).orElse(null);
+        if (reportEntity == null) {
             log.error("status with id {} not found", id);
-            return new InternalServiceException("status not found", StatusService.STATUS_NOT_FOUND, HttpStatus.FORBIDDEN);
-        });
+            throw new InternalServiceException("status not found", StatusService.STATUS_NOT_FOUND, HttpStatus.FORBIDDEN);
+        }
+        return statusMapper.toStatusEntity(reportEntity);
     }
 
     private StatusEntity findByCodeOrNull(String code) {
-        return statusRepository.findByCode(code);
+        ReportStatusEntity reportEntity = reportStatusRepository.findByCode(code);
+        return reportEntity != null ? statusMapper.toStatusEntity(reportEntity) : null;
     }
 
     private StatusEntity buildStatusEntity(String createdByUsername, String code, String persianDescription, String additionalData) {
@@ -130,6 +138,7 @@ public class StatusServiceImplementation implements StatusService {
 
     @Override
     public StatusEntity findByPersianDescription(String persianDescription) {
-        return statusRepository.findByPersianDescription(persianDescription).orElse(null);
+        ReportStatusEntity reportEntity = reportStatusRepository.findByPersianDescription(persianDescription).orElse(null);
+        return reportEntity != null ? statusMapper.toStatusEntity(reportEntity) : null;
     }
 }

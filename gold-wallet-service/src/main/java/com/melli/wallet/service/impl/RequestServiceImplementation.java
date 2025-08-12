@@ -9,6 +9,12 @@ import com.melli.wallet.domain.master.persistence.CashOutRequestRepository;
 import com.melli.wallet.domain.master.persistence.PhysicalCashOutRequestRepository;
 import com.melli.wallet.domain.master.persistence.PurchaseRequestRepository;
 import com.melli.wallet.domain.response.cash.CashInTrackResponse;
+import com.melli.wallet.domain.slave.entity.ReportCashOutRequestEntity;
+import com.melli.wallet.domain.slave.entity.ReportPhysicalCashOutRequestEntity;
+import com.melli.wallet.domain.slave.entity.ReportPurchaseRequestEntity;
+import com.melli.wallet.domain.slave.persistence.ReportCashOutRequestRepository;
+import com.melli.wallet.domain.slave.persistence.ReportPhysicalCashOutRequestRepository;
+import com.melli.wallet.domain.slave.persistence.ReportPurchaseRequestRepository;
 import com.melli.wallet.exception.InternalServiceException;
 import com.melli.wallet.service.RequestService;
 import com.melli.wallet.service.RrnService;
@@ -35,10 +41,10 @@ public class RequestServiceImplementation implements RequestService {
 
     private final CashInRequestRepository cashInRequestRepository;
     private final PurchaseRequestRepository purchaseRequestRepository;
-    private final RrnService rrnService;
-    private final Helper helper;
-    private final StatusService statusService;
+    private final ReportPurchaseRequestRepository reportPurchaseRequestRepository;
+    private final ReportPhysicalCashOutRequestRepository reportPhysicalCashOutRequestRepository;
     private final CashOutRequestRepository cashOutRequestRepository;
+    private final ReportCashOutRequestRepository reportCashOutRequestRepository;
     private final PhysicalCashOutRequestRepository physicalCashOutRequestRepository;
 
 
@@ -94,44 +100,8 @@ public class RequestServiceImplementation implements RequestService {
     }
 
     @Override
-    public PurchaseRequestEntity findPurchaseRequestByRrnId(long traceId) throws InternalServiceException {
-        return purchaseRequestRepository.findByRrnEntityId(traceId);
-    }
-
-    @Override
-    public PurchaseRequestEntity findPurchaseRequestById(long requestId) {
-        return purchaseRequestRepository.findById(requestId);
-    }
-
-
-    @Override
-    public CashOutRequestEntity findCashOutRequest(long id) {
-        return null;
-    }
-
-    @Override
-    public CashOutRequestEntity findCashOutRequestByRequestId(long requestId) {
-        return null;
-    }
-
-    @Override
-    public List<PurchaseRequestEntity> findValidPurchase(MerchantEntity merchantEntity, Integer[] result, Date fromDate, Date toDate, WalletAccountTypeEntity walletAccountTypeEntity) {
-        return List.of();
-    }
-
-    @Override
-    public List<PurchaseRequestEntity> findValidPurchaseByAccountType(Integer[] result, Date fromDate, Date toDate, WalletAccountTypeEntity walletAccountTypeEntity) {
-        return List.of();
-    }
-
-    @Override
-    public void logHistory(RequestEntity request, String comment, String chargeDesc, int chargeResult) {
-
-    }
-
-    @Override
-    public CashInRequestEntity findCashInWithId(long requestId) {
-        return cashInRequestRepository.findById(requestId);
+    public ReportPurchaseRequestEntity findPurchaseRequestByRrnId(long traceId) throws InternalServiceException {
+        return reportPurchaseRequestRepository.findByRrnEntityId(traceId);
     }
 
     @Override
@@ -143,16 +113,16 @@ public class RequestServiceImplementation implements RequestService {
     }
 
     @Override
-    public CashOutRequestEntity findCashOutWithRrnId(long rrnId) throws InternalServiceException {
-        return cashOutRequestRepository.findOptionalByRrnEntityId(rrnId).orElseThrow(() -> {
+    public ReportCashOutRequestEntity findCashOutWithRrnId(long rrnId) throws InternalServiceException {
+        return reportCashOutRequestRepository.findOptionalByRrnEntityId(rrnId).orElseThrow(() -> {
             log.error("cashOutRequest with id ({}) not found", rrnId);
             return new InternalServiceException("cashOutRequest not found", StatusService.RECORD_NOT_FOUND, HttpStatus.OK);
         });
     }
 
     @Override
-    public PhysicalCashOutRequestEntity findPhysicalCashOutWithRrnId(long rrnId) throws InternalServiceException {
-        return physicalCashOutRequestRepository.findOptionalByRrnEntityId(rrnId).orElseThrow(() -> {
+    public ReportPhysicalCashOutRequestEntity findPhysicalCashOutWithRrnId(long rrnId) throws InternalServiceException {
+        return reportPhysicalCashOutRequestRepository.findOptionalByRrnEntityId(rrnId).orElseThrow(() -> {
             log.error("physicalCashOutRequest with id ({}) not found", rrnId);
             return new InternalServiceException("physicalCashOutRequest not found", StatusService.RECORD_NOT_FOUND, HttpStatus.OK);
         });
@@ -177,7 +147,7 @@ public class RequestServiceImplementation implements RequestService {
     }
 
     @Override
-    public void findPhyicalCashOutDuplicateWithRrnId(long rrnId) throws InternalServiceException {
+    public void findPhysicalCashOutDuplicateWithRrnId(long rrnId) throws InternalServiceException {
         PhysicalCashOutRequestEntity physicalCashOutRequestEntity = physicalCashOutRequestRepository.findByRrnEntityId(rrnId);
         if(physicalCashOutRequestEntity != null) {
             log.error("cashOutDuplicateWithRrnId ({}) found", rrnId);
@@ -186,26 +156,18 @@ public class RequestServiceImplementation implements RequestService {
     }
 
     @Override
-    public List<Long> findPurchaseIdsByTerminalId(String likeStr, Integer[] results, Date fromDate, Date toDate, WalletAccountTypeEntity walletAccountTypeEntity) {
-        return List.of();
-    }
-
-    @Override
-    public CashInTrackResponse cashInTrack(String uid, String channelIp) throws InternalServiceException {
-        log.info("star to cashInTrack with uid ( {} ) and channelIp ( {} )", uid, channelIp);
-        RrnEntity rrnEntity = rrnService.findByUid(uid);
-        if (rrnEntity == null) {
-            log.error("rrn with uid ( {} ) not found", uid);
-            throw new InternalServiceException("can not find rrn with uid ( " + uid + " )", StatusService.UUID_NOT_FOUND, HttpStatus.OK);
-        }
-        log.info("start tracking cashIn  with traceId ( {} ) ...", rrnEntity.getUuid());
-        CashInRequestEntity cashInRequest = cashInRequestRepository.findByRrnEntity(rrnEntity);
-        return helper.fillCashInTrackResponse(cashInRequest, statusService);
-    }
-
-    @Override
     public AggregationPurchaseDTO findSumAmountByTransactionTypeBetweenDate(long[] walletAccountId, String transactionType, Date fromDate, Date toDate) {
-        return purchaseRequestRepository.findSumAmountByTransactionTypeBetweenDate(walletAccountId, transactionType, fromDate, toDate);
+        return reportPurchaseRequestRepository.findSumAmountByTransactionTypeBetweenDate(walletAccountId, transactionType, fromDate, toDate);
+    }
+
+    @Override
+    public AggregationPurchaseDTO findSumAmountByTransactionTypeBetweenDateByChannelId(long channelId, String transactionType, Date fromDate, Date toDate) {
+        return reportPurchaseRequestRepository.findSumAmountByTransactionTypeBetweenDateByChannel(channelId, transactionType, fromDate, toDate);
+    }
+
+    @Override
+    public AggregationPurchaseDTO findPhysicalByChannelAndDate(long channelId, Date fromDate, Date toDate) {
+        return null;
     }
 
     @Override

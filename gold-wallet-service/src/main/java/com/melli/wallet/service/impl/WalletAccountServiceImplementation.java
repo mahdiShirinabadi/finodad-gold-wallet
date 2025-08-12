@@ -126,7 +126,7 @@ public class WalletAccountServiceImplementation implements WalletAccountService 
 
         //inquiry currency and accountType
         List<WalletAccountCurrencyEntity> walletAccountCurrencyEntityList = walletAccountCurrencyService.getAll();
-        List<WalletAccountTypeEntity> walletAccountTypeEntityList = walletAccountTypeService.getAll();
+        List<WalletAccountTypeEntity> walletAccountTypeEntityList = walletAccountTypeService.getAllManaged();
 
         for(String walletAccountCurrencyName : walletAccountCurrencyList) {
             walletAccountCurrencyEntityList.stream().filter(walletAccountCurrencyEntity -> walletAccountCurrencyEntity.getName().equals(walletAccountCurrencyName)).findFirst().orElseThrow(()->{

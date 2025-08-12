@@ -19,4 +19,9 @@ public interface WalletAccountTypeService {
     void clearCache();
     WalletAccountTypeEntity findByName(String name);
     WalletAccountTypeEntity getById(Long id) throws InternalServiceException;
+    
+    // Methods for getting managed entities from master database
+    List<WalletAccountTypeEntity> getAllManaged();
+    WalletAccountTypeEntity findByNameManaged(String name);
+    WalletAccountTypeEntity getByIdManaged(Long id) throws InternalServiceException;
 }

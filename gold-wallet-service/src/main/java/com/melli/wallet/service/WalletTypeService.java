@@ -20,4 +20,9 @@ public interface WalletTypeService {
     void clearCache();
     WalletTypeEntity getByName(String name);
     WalletTypeEntity getById(Long id) throws InternalServiceException;
+    
+    // Methods for getting managed entities from master database
+    List<WalletTypeEntity> getAllManaged();
+    WalletTypeEntity getByNameManaged(String name);
+    WalletTypeEntity getByIdManaged(Long id) throws InternalServiceException;
 }

@@ -123,7 +123,7 @@ class PhysicalCashOutControllerTest extends WalletApplicationTests {
         walletEntity.setDescription("channel wallet");
         walletEntity.setOwner(channelService.getChannel(USERNAME_CORRECT));
         walletEntity.setWalletTypeEntity(walletTypeService.getByName(WalletTypeService.CHANNEL));
-        walletEntity.setWalletLevelEntity(walletLevelService.getAll().stream().filter(x -> x.getName().equalsIgnoreCase(WalletLevelService.BRONZE)).findFirst().get());
+        walletEntity.setWalletLevelEntity(walletLevelService.getByLevelManaged(WalletLevelService.BRONZE));
         walletEntity.setCreatedBy("admin");
         walletEntity.setCreatedAt(new Date());
         walletService.save(walletEntity);

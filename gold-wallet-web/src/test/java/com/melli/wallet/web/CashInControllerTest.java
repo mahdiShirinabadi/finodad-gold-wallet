@@ -47,7 +47,7 @@ import static org.springframework.security.test.web.servlet.setup.SecurityMockMv
  * - Wallet and account status validation
  */
 @Log4j2
-@DisplayName("CacheInControllerTest End2End test")
+@DisplayName("CashInControllerTest End2End test")
 @DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_CLASS)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class CashInControllerTest extends WalletApplicationTests {

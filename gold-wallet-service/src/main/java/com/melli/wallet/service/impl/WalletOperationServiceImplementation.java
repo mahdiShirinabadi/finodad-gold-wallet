@@ -53,15 +53,15 @@ public class WalletOperationServiceImplementation implements WalletOperationalSe
             log.info("nationalCode({}) and mobile({}) are related together.", nationalCode, mobile);
         }
 
-        Optional<WalletTypeEntity> walletTypeEntity = walletTypeService.getAll().stream().filter(x -> x.getName().equals(walletTypeString)).findFirst();
-        if (walletTypeEntity.isEmpty()) {
+        WalletTypeEntity walletTypeEntity = walletTypeService.getByNameManaged(walletTypeString);
+        if (walletTypeEntity == null) {
             log.error("wallet type with name ({}) not found", walletTypeString);
             throw new InternalServiceException("walletType not found", StatusService.WALLET_TYPE_NOT_FOUND, HttpStatus.OK);
         }
 
         return redisLockService.runAfterLock(nationalCode, this.getClass(), () -> {
 
-            WalletEntity walletEntity = walletService.findByNationalCodeAndWalletTypeId(nationalCode, walletTypeEntity.get().getId());
+            WalletEntity walletEntity = walletService.findByNationalCodeAndWalletTypeId(nationalCode, walletTypeEntity.getId());
             if (walletEntity != null) {
 
                 if(!Utility.cleanPhoneNumber(walletEntity.getMobile()).equalsIgnoreCase(Utility.cleanPhoneNumber(mobile))) {
@@ -85,9 +85,9 @@ public class WalletOperationServiceImplementation implements WalletOperationalSe
             walletEntity.setNationalCode(nationalCode);
             walletEntity.setDescription("");
             walletEntity.setOwner(channelEntity);
-            walletEntity.setWalletTypeEntity(walletTypeEntity.get());
+            walletEntity.setWalletTypeEntity(walletTypeEntity);
             walletEntity.setStatus(WalletStatusEnum.ACTIVE);
-            walletEntity.setWalletLevelEntity(walletLevelService.getAll().stream().filter(x -> x.getName().equals(WalletLevelService.BRONZE)).findFirst().get());
+            walletEntity.setWalletLevelEntity(walletLevelService.getByLevelManaged(WalletLevelService.BRONZE));
             walletEntity.setCreatedBy(nationalCode);
             walletEntity.setCreatedAt(new Date());
             walletService.save(walletEntity);
@@ -138,7 +138,7 @@ public class WalletOperationServiceImplementation implements WalletOperationalSe
                 settingGeneralService,
                 Integer.parseInt(Optional.ofNullable(mapParameter.get("page")).orElse("0")),
                 Integer.parseInt(Optional.ofNullable(mapParameter.get("size")).orElse("10")));
-        WalletTypeEntity walletTypeEntity = walletTypeService.getByName(WalletTypeService.NORMAL_USER);
+        WalletTypeEntity walletTypeEntity = walletTypeService.getByNameManaged(WalletTypeService.NORMAL_USER);
         WalletEntity walletEntity = walletService.findByNationalCodeAndWalletTypeId(mapParameter.get("nationalCode"), walletTypeEntity.getId());
         List<WalletAccountEntity> walletAccountEntityList = walletAccountService.findByWallet(walletEntity);
         Optional<WalletAccountEntity> walletAccountEntityOptional = walletAccountEntityList.stream().filter(x->x.getWalletAccountCurrencyEntity().getName().equalsIgnoreCase(WalletAccountCurrencyService.GOLD)).findFirst();
@@ -151,13 +151,13 @@ public class WalletOperationServiceImplementation implements WalletOperationalSe
     @Override
     public CreateWalletResponse get(ChannelEntity channelEntity, String nationalCode) throws InternalServiceException {
 
-        Optional<WalletTypeEntity> walletTypeEntity = walletTypeService.getAll().stream().filter(x -> x.getName().equals(WalletTypeService.NORMAL_USER)).findFirst();
-        if (walletTypeEntity.isEmpty()) {
+        WalletTypeEntity walletTypeEntity = walletTypeService.getByNameManaged(WalletTypeService.NORMAL_USER);
+        if (walletTypeEntity == null) {
             log.error("walletType with name ({}) not found", WalletTypeService.NORMAL_USER);
             throw new InternalServiceException("walletType not found", StatusService.WALLET_TYPE_NOT_FOUND, HttpStatus.OK);
         }
 
-        WalletEntity walletEntity = walletService.findByNationalCodeAndWalletTypeId(nationalCode, walletTypeEntity.get().getId());
+        WalletEntity walletEntity = walletService.findByNationalCodeAndWalletTypeId(nationalCode, walletTypeEntity.getId());
         if (walletEntity == null) {
             log.error("wallet is not create");
             throw new InternalServiceException("walletAccount is not create success", StatusService.WALLET_NOT_FOUND, HttpStatus.OK);

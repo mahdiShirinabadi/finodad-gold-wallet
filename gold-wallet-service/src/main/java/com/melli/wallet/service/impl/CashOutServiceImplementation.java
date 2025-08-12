@@ -8,6 +8,8 @@ import com.melli.wallet.domain.response.cash.CashOutResponse;
 import com.melli.wallet.domain.response.cash.CashOutTrackResponse;
 import com.melli.wallet.domain.response.cash.PhysicalCashOutResponse;
 import com.melli.wallet.domain.response.cash.PhysicalCashOutTrackResponse;
+import com.melli.wallet.domain.slave.entity.ReportCashOutRequestEntity;
+import com.melli.wallet.domain.slave.entity.ReportPhysicalCashOutRequestEntity;
 import com.melli.wallet.exception.InternalServiceException;
 import com.melli.wallet.service.*;
 import com.melli.wallet.util.Utility;
@@ -135,7 +137,7 @@ public class CashOutServiceImplementation implements CashOutService {
         RequestTypeEntity requestTypeEntity = requestTypeService.getRequestType(RequestTypeService.CASH_OUT);
         RrnEntity rrnEntity = rrnService.findByUid(uuid);
         rrnService.checkRrn(uuid, channelEntity, requestTypeEntity,"","");
-        CashOutRequestEntity cashOutRequestEntity = requestService.findCashOutWithRrnId(rrnEntity.getId());
+        ReportCashOutRequestEntity cashOutRequestEntity = requestService.findCashOutWithRrnId(rrnEntity.getId());
         return helper.fillCashOutTrackResponse(cashOutRequestEntity, statusService);
     }
 
@@ -175,7 +177,7 @@ public class CashOutServiceImplementation implements CashOutService {
             rrnService.checkRrn(physicalCashOutObjectDTO.getUniqueIdentifier(), physicalCashOutObjectDTO.getChannel(), requestTypeEntity, String.valueOf(physicalCashOutObjectDTO.getQuantity()), physicalCashOutObjectDTO.getAccountNumber());
             log.info("finish physicalWithdrawal checking existence of traceId({})", physicalCashOutObjectDTO.getUniqueIdentifier());
 
-            requestService.findPhyicalCashOutDuplicateWithRrnId(rrnEntity.getId());
+            requestService.findPhysicalCashOutDuplicateWithRrnId(rrnEntity.getId());
 
             WalletAccountEntity walletAccountEntity = helper.checkWalletAndWalletAccountForNormalUser(walletService, rrnEntity.getNationalCode(), walletAccountService, physicalCashOutObjectDTO.getAccountNumber());
             walletCashLimitationService.checkPhysicalCashOutLimitation(physicalCashOutObjectDTO.getChannel(), walletAccountEntity.getWalletEntity(), physicalCashOutObjectDTO.getQuantity(), walletAccountEntity);
@@ -244,7 +246,7 @@ public class CashOutServiceImplementation implements CashOutService {
         RequestTypeEntity requestTypeEntity = requestTypeService.getRequestType(RequestTypeService.PHYSICAL_CASH_OUT);
         RrnEntity rrnEntity = rrnService.findByUid(uuid);
         rrnService.checkRrn(uuid, channelEntity, requestTypeEntity,"","");
-        PhysicalCashOutRequestEntity requestEntity = requestService.findPhysicalCashOutWithRrnId(rrnEntity.getId());
+        ReportPhysicalCashOutRequestEntity requestEntity = requestService.findPhysicalCashOutWithRrnId(rrnEntity.getId());
         return helper.fillPhysicalCashOutTrackResponse(requestEntity, statusService);
     }
 
@@ -257,12 +259,11 @@ public class CashOutServiceImplementation implements CashOutService {
             throw new InternalServiceException("na wallet account found for channel", StatusService.CHANNEL_WALLET_ACCOUNT_NOT_FOUND, HttpStatus.OK);
         }
 
-        WalletAccountTypeEntity wageType = walletAccountTypeService.getAll().stream()
-                .filter(x -> x.getName().equalsIgnoreCase(WalletAccountTypeService.WAGE)).findFirst()
-                .orElseThrow(() -> {
-                    log.error("Wallet account type wage not found for channel {}", channel.getUsername());
-                    return new InternalServiceException("Wallet account type wage not found", StatusService.WALLET_ACCOUNT_TYPE_NOT_FOUND, HttpStatus.OK);
-                });
+        WalletAccountTypeEntity wageType = walletAccountTypeService.findByNameManaged(WalletAccountTypeService.WAGE);
+        if (wageType == null) {
+            log.error("Wallet account type wage not found for channel {}", channel.getUsername());
+            throw new InternalServiceException("Wallet account type wage not found", StatusService.WALLET_ACCOUNT_TYPE_NOT_FOUND, HttpStatus.OK);
+        }
 
         return accounts.stream()
                 .filter(x -> x.getWalletAccountCurrencyEntity().getName().equalsIgnoreCase(walletAccountTypeName)

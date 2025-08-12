@@ -13,6 +13,9 @@ import com.melli.wallet.domain.response.purchase.*;
 import com.melli.wallet.domain.response.wallet.CreateWalletResponse;
 import com.melli.wallet.domain.response.wallet.WalletAccountObject;
 import com.melli.wallet.domain.response.wallet.WalletBalanceResponse;
+import com.melli.wallet.domain.slave.entity.ReportCashOutRequestEntity;
+import com.melli.wallet.domain.slave.entity.ReportPhysicalCashOutRequestEntity;
+import com.melli.wallet.domain.slave.entity.ReportPurchaseRequestEntity;
 import com.melli.wallet.exception.InternalServiceException;
 import com.melli.wallet.service.*;
 import com.melli.wallet.util.StringUtils;
@@ -97,7 +100,7 @@ public class Helper {
         return response;
     }
 
-    public CashOutTrackResponse fillCashOutTrackResponse(CashOutRequestEntity cashOutRequestEntity, StatusService statusService) {
+    public CashOutTrackResponse fillCashOutTrackResponse(ReportCashOutRequestEntity cashOutRequestEntity, StatusService statusService) {
         StatusEntity statusEntity = statusService.findByCode(String.valueOf(cashOutRequestEntity.getResult()));
         CashOutTrackResponse response = new CashOutTrackResponse();
         response.setId(cashOutRequestEntity.getId());
@@ -112,7 +115,7 @@ public class Helper {
         return response;
     }
 
-    public PhysicalCashOutTrackResponse fillPhysicalCashOutTrackResponse(PhysicalCashOutRequestEntity physicalCashOutRequestEntity, StatusService statusService) {
+    public PhysicalCashOutTrackResponse fillPhysicalCashOutTrackResponse(ReportPhysicalCashOutRequestEntity physicalCashOutRequestEntity, StatusService statusService) {
         StatusEntity statusEntity = statusService.findByCode(String.valueOf(physicalCashOutRequestEntity.getResult()));
         PhysicalCashOutTrackResponse response = new PhysicalCashOutTrackResponse();
         response.setId(physicalCashOutRequestEntity.getId());
@@ -137,7 +140,7 @@ public class Helper {
         return new MerchantObject(String.valueOf(merchantEntity.getId()), merchantEntity.getName(), merchantEntity.getLogo());
     }
 
-    public PurchaseTrackResponse fillPurchaseTrackResponse(PurchaseRequestEntity purchaseRequestEntity, StatusService statusService) {
+    public PurchaseTrackResponse fillPurchaseTrackResponse(ReportPurchaseRequestEntity purchaseRequestEntity, StatusService statusService) {
         StatusEntity statusEntity = statusService.findByCode(String.valueOf(purchaseRequestEntity.getResult()));
         PurchaseTrackObject response = new PurchaseTrackObject();
         response.setNationalCode(purchaseRequestEntity.getWalletAccount().getWalletEntity().getNationalCode());

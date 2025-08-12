@@ -3,7 +3,10 @@ package com.melli.wallet.service.impl;
 import com.melli.wallet.ConstantRedisName;
 import com.melli.wallet.domain.master.entity.WalletTypeEntity;
 import com.melli.wallet.domain.master.persistence.WalletTypeRepository;
+import com.melli.wallet.domain.slave.entity.ReportWalletTypeEntity;
+import com.melli.wallet.domain.slave.persistence.ReportWalletTypeRepository;
 import com.melli.wallet.exception.InternalServiceException;
+import com.melli.wallet.mapper.WalletTypeMapper;
 import com.melli.wallet.service.StatusService;
 import com.melli.wallet.service.WalletTypeService;
 import lombok.RequiredArgsConstructor;
@@ -27,11 +30,14 @@ import java.util.List;
 public class WalletTypeServiceImplementation implements WalletTypeService {
 
     private final WalletTypeRepository walletTypeRepository;
+    private final ReportWalletTypeRepository reportWalletTypeRepository;
+    private final WalletTypeMapper walletTypeMapper;
 
     @Override
     @Cacheable(unless = "#result == null")
     public List<WalletTypeEntity> getAll() {
-        return walletTypeRepository.findAll();
+        List<ReportWalletTypeEntity> reportEntities = reportWalletTypeRepository.findAll();
+        return walletTypeMapper.toWalletTypeEntityList(reportEntities);
     }
 
     @Override
@@ -42,11 +48,34 @@ public class WalletTypeServiceImplementation implements WalletTypeService {
     @Override
     @Cacheable(key = "{#name}", unless = "#result == null")
     public WalletTypeEntity getByName(String name) {
-        return walletTypeRepository.findByName(name);
+        ReportWalletTypeEntity reportEntity = reportWalletTypeRepository.findByName(name);
+        return walletTypeMapper.toWalletTypeEntity(reportEntity);
     }
 
     @Override
     public WalletTypeEntity getById(Long id) throws InternalServiceException {
+        ReportWalletTypeEntity reportEntity = reportWalletTypeRepository.findById(id).orElseThrow(() -> {
+            log.error("wallet type with id ({}) not found", id);
+            return new InternalServiceException("Wallet type not found", StatusService.WALLET_TYPE_NOT_FOUND, HttpStatus.OK);
+        });
+        return walletTypeMapper.toWalletTypeEntity(reportEntity);
+    }
+
+    /**
+     * Get managed entities from master database for operations that need to save relationships
+     */
+    @Override
+    public List<WalletTypeEntity> getAllManaged() {
+        return walletTypeRepository.findAll();
+    }
+
+    @Override
+    public WalletTypeEntity getByNameManaged(String name) {
+        return walletTypeRepository.findByName(name);
+    }
+
+    @Override
+    public WalletTypeEntity getByIdManaged(Long id) throws InternalServiceException {
         return walletTypeRepository.findById(id).orElseThrow(() -> {
             log.error("wallet type with id ({}) not found", id);
             return new InternalServiceException("Wallet type not found", StatusService.WALLET_TYPE_NOT_FOUND, HttpStatus.OK);
