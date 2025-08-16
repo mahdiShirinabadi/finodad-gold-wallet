@@ -137,7 +137,7 @@ public class Helper {
     }
 
     private MerchantObject convertMerchantEntityToMerchantObject(MerchantEntity merchantEntity) {
-        return new MerchantObject(String.valueOf(merchantEntity.getId()), merchantEntity.getName(), merchantEntity.getLogo());
+        return new MerchantObject(String.valueOf(merchantEntity.getId()), merchantEntity.getName(), merchantEntity.getLogo(), String.valueOf(merchantEntity.getStatus()));
     }
 
     public PurchaseTrackResponse fillPurchaseTrackResponse(ReportPurchaseRequestEntity purchaseRequestEntity, StatusRepositoryService statusRepositoryService) {

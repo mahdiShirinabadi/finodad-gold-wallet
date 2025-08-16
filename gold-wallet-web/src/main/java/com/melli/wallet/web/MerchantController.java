@@ -3,6 +3,7 @@ package com.melli.wallet.web;
 import com.melli.wallet.annotation.number.NumberValidation;
 import com.melli.wallet.annotation.string.StringValidation;
 import com.melli.wallet.domain.request.merchant.MerchantBalanceRequest;
+import com.melli.wallet.domain.request.merchant.MerchantUpdateRequest;
 import com.melli.wallet.domain.response.base.BaseResponse;
 import com.melli.wallet.domain.response.purchase.MerchantResponse;
 import com.melli.wallet.domain.response.wallet.WalletBalanceResponse;
@@ -17,6 +18,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -64,6 +66,18 @@ public class MerchantController extends WebController {
         log.info("start call balance getMerchant in username ===> {}, merchantId ===> {}, from ip ===> {}", username, merchantId, channelIp);
         WalletBalanceResponse response = merchantOperationService.getBalance(requestContext.getChannelEntity(), merchantId);
         return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse<>(true, response));
+    }
+
+    @Timed(description = "Time taken to inquiry gold amount")
+    @PostMapping(path = "/updateStatus", produces = {MediaType.APPLICATION_JSON_VALUE})
+    @Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "تغییر وضعیت پذیرنده")
+    @PreAuthorize("hasAuthority(\""+ ResourceRepositoryService.MERCHANT_MANAGE +"\")")
+    public ResponseEntity<BaseResponse<ObjectUtils.Null>> update(@Valid @RequestBody MerchantUpdateRequest request) throws InternalServiceException {
+        String channelIp = requestContext.getClientIp();
+        String username = requestContext.getChannelEntity().getUsername();
+        log.info("start call update merchant in username ===> {}, merchantId ===> {}, from ip ===> {}, data ===> ({})", username, request.getMerchantId(), channelIp, request);
+        merchantOperationService.updateStatus(requestContext.getChannelEntity(), request.getMerchantId(), request.getStatus());
+        return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse<>(true));
     }
 
     @Timed(description = "Time taken to increase merchant balance")

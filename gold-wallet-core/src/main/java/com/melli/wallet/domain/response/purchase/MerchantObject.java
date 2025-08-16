@@ -28,4 +28,8 @@ public class MerchantObject {
     @Schema(name = NamingProperty.LOGO)
     @JsonProperty(NamingProperty.LOGO)
     private String logo;
+
+    @Schema(name = NamingProperty.STATUS)
+    @JsonProperty(NamingProperty.STATUS)
+    private String status;
 }

@@ -33,7 +33,6 @@ import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
 import java.util.ArrayList;
-import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.CountDownLatch;
@@ -68,7 +67,6 @@ class BuyControllerTest extends WalletApplicationTests {
 
     private static final String NATIONAL_CODE_CORRECT = "0077847660";
     private static final String MOBILE_CORRECT = "09124162337";
-    private static final String CURRENCY_RIAL = "RIAL";
     private static final String CURRENCY_GOLD = "GOLD";
 
     private static MockMvc mockMvc;
@@ -295,8 +293,7 @@ class BuyControllerTest extends WalletApplicationTests {
         WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, accessToken, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.GOLD);
         
         // Step 3: Generate buy UUID successfully
-        BaseResponse<UuidResponse> response = generateBuyUuid(mockMvc, accessToken, walletAccountObjectOptional.getAccountNumber(), price, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true, merchantId, quantity, currency);
-        Assert.assertSame(StatusRepositoryService.SUCCESSFUL, response.getErrorDetail().getCode());
+        generateBuyUuid(mockMvc, accessToken, walletAccountObjectOptional.getAccountNumber(), price, NATIONAL_CODE_CORRECT, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true, merchantId, quantity, currency);
     }
 
     /**

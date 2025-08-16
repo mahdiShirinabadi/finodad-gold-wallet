@@ -46,6 +46,20 @@ public class MerchantOperationServiceImplementation implements MerchantOperation
     }
 
     @Override
+    public void updateStatus(ChannelEntity channelEntity, String merchantId, String status) throws InternalServiceException {
+        log.info("start update status for merchantId ({}) and status ({}) with channel ({})", merchantId, status, channelEntity.getUsername());
+        MerchantEntity merchantEntity = merchantRepositoryService.findById(Integer.parseInt(merchantId));
+        if(merchantEntity == null){
+            log.error("merchant {} not found", merchantId);
+            throw new InternalServiceException("merchant not found", StatusRepositoryService.MERCHANT_IS_NOT_EXIST, HttpStatus.OK);
+        }
+        merchantEntity.setStatus(Integer.parseInt(status));
+        merchantRepositoryService.save(merchantEntity);
+        merchantRepositoryService.clearAllCache();
+        log.info("success update status for merchantId ({}) and status ({})", merchantId, status);
+    }
+
+    @Override
     public String increaseBalance(ChannelEntity channelEntity, String walletAccountNumber, String amount, String merchantId) throws InternalServiceException {
 
         // Validate merchant exists

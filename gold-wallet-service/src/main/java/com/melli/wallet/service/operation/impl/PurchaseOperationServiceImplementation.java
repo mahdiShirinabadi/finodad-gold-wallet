@@ -63,6 +63,10 @@ public class PurchaseOperationServiceImplementation implements PurchaseOperation
             log.info("finish traceId ===> {}, username ({}), nationalCode ({})", rrnEntity.getUuid(), buyRequestDTO.getChannel().getUsername(), buyRequestDTO.getNationalCode());
             MerchantEntity merchant = findMerchant(buyRequestDTO.getMerchantId());
 
+            if(merchant.getStatus() == MerchantRepositoryService.DISABLED){
+                log.error("merchant is disable and system can not sell any things");
+                throw new InternalServiceException("merchant is disable", StatusRepositoryService.MERCHANT_IS_DISABLE, HttpStatus.OK);
+            }
 
             walletBuyLimitationOperationService.checkGeneral(buyRequestDTO.getChannel(), walletEntity, buyRequestDTO.getAmount(), userCurrencyWalletAccount, rrnEntity.getUuid(), currencyEntity);
             walletBuyLimitationOperationService.checkDailyLimitation(buyRequestDTO.getChannel(), walletEntity, buyRequestDTO.getAmount(), userCurrencyWalletAccount, rrnEntity.getUuid(), currencyEntity);
@@ -117,6 +121,12 @@ public class PurchaseOperationServiceImplementation implements PurchaseOperation
 
         // Validate merchant and wallet accounts
         MerchantEntity merchant = findMerchant(sellRequestDTO.getMerchantId());
+
+        if(merchant.getStatus() == MerchantRepositoryService.DISABLED){
+            log.error("merchant is disable and system can not buy any things");
+            throw new InternalServiceException("merchant is disable", StatusRepositoryService.MERCHANT_IS_DISABLE, HttpStatus.OK);
+        }
+
         WalletAccountEntity merchantCurrencyAccount = findMerchantWalletAccount(merchant, currencyEntity);
         WalletAccountEntity merchantRialAccount = findMerchantWalletAccount(merchant, rialCurrencyEntity);
 

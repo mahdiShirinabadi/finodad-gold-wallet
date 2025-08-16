@@ -25,6 +25,7 @@ public interface ResourceRepositoryService {
     String MERCHANT_BALANCE = "MERCHANT_BALANCE";
     String MERCHANT_INCREASE_BALANCE = "MERCHANT_INCREASE_BALANCE";
     String MERCHANT_DECREASE_BALANCE = "MERCHANT_DECREASE_BALANCE";
+    String MERCHANT_MANAGE = "MERCHANT_MANAGE";
 
     ResourceEntity getRequestType(String name);
 
