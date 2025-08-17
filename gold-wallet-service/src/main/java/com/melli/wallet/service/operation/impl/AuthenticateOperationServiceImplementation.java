@@ -1,5 +1,6 @@
 package com.melli.wallet.service.operation.impl;
 
+import com.melli.wallet.annotation.LogExecutionTime;
 import com.melli.wallet.domain.master.entity.ChannelAccessTokenEntity;
 import com.melli.wallet.domain.master.entity.ChannelEntity;
 import com.melli.wallet.domain.response.login.LoginResponse;
@@ -33,6 +34,7 @@ public class AuthenticateOperationServiceImplementation implements AuthenticateO
     private final ChannelAccessTokenRepositoryService channelAccessTokenRepositoryService;
 
     @Override
+    @LogExecutionTime("Checking login")
     public LoginResponse login(String username, String ip, boolean isAfter, Map<String, String> accessTokenMap, Map<String, String> refreshTokenMap) throws InternalServiceException {
 
         ChannelEntity channelEntity = channelRepositoryService.findByUsername(username);

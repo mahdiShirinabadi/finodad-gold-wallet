@@ -13,6 +13,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -54,6 +55,8 @@ public class MerchantOperationServiceImplementation implements MerchantOperation
             throw new InternalServiceException("merchant not found", StatusRepositoryService.MERCHANT_IS_NOT_EXIST, HttpStatus.OK);
         }
         merchantEntity.setStatus(Integer.parseInt(status));
+        merchantEntity.setUpdatedAt(new Date());
+        merchantEntity.setUpdatedBy(channelEntity.getUsername());
         merchantRepositoryService.save(merchantEntity);
         merchantRepositoryService.clearAllCache();
         log.info("success update status for merchantId ({}) and status ({})", merchantId, status);

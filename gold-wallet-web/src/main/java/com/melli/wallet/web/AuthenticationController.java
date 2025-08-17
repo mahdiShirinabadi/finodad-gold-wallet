@@ -1,5 +1,6 @@
 package com.melli.wallet.web;
 
+import com.melli.wallet.annotation.LogExecutionTime;
 import com.melli.wallet.domain.master.entity.ChannelAccessTokenEntity;
 import com.melli.wallet.domain.master.entity.ChannelEntity;
 import com.melli.wallet.domain.request.login.LoginRequestJson;
@@ -62,6 +63,7 @@ public class AuthenticationController extends WebController {
     @Operation(summary = "ورود به حساب کاربری")
     @Timed(description = "time taken to login profile")
     @PostMapping(value = "/login")
+    @LogExecutionTime("User login process")
     public ResponseEntity<BaseResponse<LoginResponse>> login(@Valid @RequestBody LoginRequestJson loginJson, HttpServletRequest httpRequest) throws InternalServiceException {
         try {
             authenticate(loginJson.getUsername(), loginJson.getPassword());

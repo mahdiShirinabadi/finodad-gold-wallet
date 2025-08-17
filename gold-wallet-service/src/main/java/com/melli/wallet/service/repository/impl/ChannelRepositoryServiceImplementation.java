@@ -1,5 +1,6 @@
 package com.melli.wallet.service.repository.impl;
 
+import com.melli.wallet.annotation.LogExecutionTime;
 import com.melli.wallet.domain.master.entity.ChannelEntity;
 import com.melli.wallet.domain.master.persistence.ChannelRepository;
 import com.melli.wallet.exception.InternalServiceException;
@@ -48,6 +49,7 @@ public class ChannelRepositoryServiceImplementation implements ChannelRepository
     }
 
     @Override
+    @LogExecutionTime("checking findByUsername")
     public ChannelEntity findByUsername(String username) {
         return channelRepository.findByUsername(username);
     }

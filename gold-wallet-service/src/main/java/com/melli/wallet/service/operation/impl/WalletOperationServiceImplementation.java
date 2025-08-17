@@ -11,6 +11,7 @@ import com.melli.wallet.service.operation.ShahkarInfoOperationService;
 import com.melli.wallet.util.StringUtils;
 import com.melli.wallet.util.Utility;
 import com.melli.wallet.utils.Helper;
+import com.melli.wallet.annotation.LogExecutionTime;
 import com.melli.wallet.utils.RedisLockService;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
@@ -46,6 +47,7 @@ public class WalletOperationServiceImplementation implements WalletOperationalSe
     private final TransactionService transactionService;
 
     @Override
+    @LogExecutionTime("Creating wallet for user")
     public CreateWalletResponse createWallet(ChannelEntity channelEntity, String mobile, String nationalCode, String walletTypeString, List<String> walletAccountCurrencyList, List<String> walletAccountTypeList) throws InternalServiceException {
         if (channelEntity.getCheckShahkar() == ChannelRepositoryService.TRUE || StringUtils.hasText(nationalCode)) {
             log.info("Start checking if nationalCode({}) and mobile({}) are related from shahkar or not ...", nationalCode, mobile);

@@ -18,7 +18,7 @@ import lombok.Setter;
 public class MerchantUpdateRequest {
 
     @Valid
-    @StringValidation(label = "وضعیت")
+    @NumberValidation(label = "وضعیت")
     @JsonProperty(NamingProperty.STATUS)
     private String status;
 
