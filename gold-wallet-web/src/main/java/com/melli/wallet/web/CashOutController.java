@@ -1,5 +1,6 @@
 package com.melli.wallet.web;
 
+import com.melli.wallet.annotation.LogExecutionTime;
 import com.melli.wallet.domain.dto.CashOutObjectDTO;
 import com.melli.wallet.domain.request.wallet.CashGenerateUuidRequestJson;
 import com.melli.wallet.domain.request.wallet.CashOutWalletRequestJson;
@@ -45,6 +46,7 @@ public class CashOutController extends WebController {
     @PostMapping(path = "/generate/uuid", produces = {MediaType.APPLICATION_JSON_VALUE})
     @Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "ایجاد شناسه یکتا")
     @PreAuthorize("hasAuthority(\""+ ResourceRepositoryService.CASH_OUT +"\")")
+    @LogExecutionTime("Generate cash out UUID")
     public ResponseEntity<BaseResponse<UuidResponse>> cashOutGenerateUuid(@Valid @RequestBody CashGenerateUuidRequestJson requestJson) throws InternalServiceException {
         log.info("start call uuid nationalCode ===> {}", requestJson.getNationalCode());
         UuidResponse response = cashOutOperationService.generateUuid(requestContext.getChannelEntity(), requestJson.getNationalCode(), requestJson.getAmount(), requestJson.getAccountNumber());
@@ -56,6 +58,7 @@ public class CashOutController extends WebController {
     @PostMapping(path = "/withdraw", produces = {MediaType.APPLICATION_JSON_VALUE})
     @Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "برداشت وجه")
     @PreAuthorize("hasAuthority(\""+ ResourceRepositoryService.CASH_OUT +"\")")
+    @LogExecutionTime("Cash out withdrawal")
     public ResponseEntity<BaseResponse<CashOutResponse>> cashOut(@Valid @RequestBody CashOutWalletRequestJson requestJson) throws InternalServiceException {
         String channelIp = requestContext.getClientIp();
         String username = requestContext.getChannelEntity().getUsername();
@@ -72,6 +75,7 @@ public class CashOutController extends WebController {
     @GetMapping(path = "/inquiry", produces = {MediaType.APPLICATION_JSON_VALUE})
     @Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "پیگیری برداشت وجه")
     @PreAuthorize("hasAuthority(\""+ ResourceRepositoryService.CASH_OUT +"\")")
+    @LogExecutionTime("Cash out inquiry")
     public ResponseEntity<BaseResponse<CashOutTrackResponse>> inquiryCashOut(@Valid @RequestParam("uniqueIdentifier") String uniqueIdentifier) throws InternalServiceException {
         String channelIp = requestContext.getClientIp();
         String username = requestContext.getChannelEntity().getUsername();

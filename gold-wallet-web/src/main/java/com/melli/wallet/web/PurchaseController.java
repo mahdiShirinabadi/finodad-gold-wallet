@@ -1,5 +1,6 @@
 package com.melli.wallet.web;
 
+import com.melli.wallet.annotation.LogExecutionTime;
 import com.melli.wallet.annotation.fund_type.PurchaseTypeValidation;
 import com.melli.wallet.domain.dto.BuyRequestDTO;
 import com.melli.wallet.domain.dto.SellRequestDTO;
@@ -48,6 +49,7 @@ public class PurchaseController extends WebController {
     @PostMapping(path = "/buy/generate/uuid", produces = {MediaType.APPLICATION_JSON_VALUE})
     @Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "ایجاد شناسه یکتا")
     @PreAuthorize("hasAuthority(\""+ ResourceRepositoryService.GENERATE_PURCHASE_UNIQUE_IDENTIFIER +"\")")
+    @LogExecutionTime("Generate buy UUID")
     public ResponseEntity<BaseResponse<UuidResponse>> generateBuyUuid(@Valid @RequestBody BuyGenerateUuidRequestJson requestJson) throws InternalServiceException {
         log.info("start call buy uuid nationalCode ===> {}", requestJson.getNationalCode());
         String channelIp = requestContext.getClientIp();
@@ -61,6 +63,7 @@ public class PurchaseController extends WebController {
     @PostMapping(path = "/sell/generate/uuid", produces = {MediaType.APPLICATION_JSON_VALUE})
     @Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "ایجاد شناسه یکتا")
     @PreAuthorize("hasAuthority(\""+ ResourceRepositoryService.GENERATE_PURCHASE_UNIQUE_IDENTIFIER +"\")")
+    @LogExecutionTime("Generate sell UUID")
     public ResponseEntity<BaseResponse<UuidResponse>> generateSellUuid(@Valid @RequestBody SellGenerateUuidRequestJson requestJson) throws InternalServiceException {
         log.info("start call sell uuid nationalCode ===> {}", requestJson.getNationalCode());
         UuidResponse response = purchaseOperationService.sellGenerateUuid(requestContext.getChannelEntity(), requestJson.getNationalCode(), requestJson.getQuantity(), requestJson.getAccountNumber(), requestJson.getCurrency());
@@ -71,6 +74,7 @@ public class PurchaseController extends WebController {
     @GetMapping(path = "/inquiry", produces = {MediaType.APPLICATION_JSON_VALUE})
     @Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "پیگیری")
     @PreAuthorize("hasAuthority(\""+ ResourceRepositoryService.GENERATE_PURCHASE_UNIQUE_IDENTIFIER +"\")")
+    @LogExecutionTime("Purchase inquiry")
     public ResponseEntity<BaseResponse<PurchaseTrackResponse>> sell(@Valid @RequestParam("uniqueIdentifier") String uniqueIdentifier,@Valid @RequestParam("type") @PurchaseTypeValidation(label = "نوع تراکنش")  String type) throws InternalServiceException {
         String channelIp = requestContext.getClientIp();
         String username = requestContext.getChannelEntity().getUsername();
@@ -83,6 +87,7 @@ public class PurchaseController extends WebController {
     @PostMapping(path = "/buy", produces = {MediaType.APPLICATION_JSON_VALUE})
     @Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "خرید")
     @PreAuthorize("hasAuthority(\""+ ResourceRepositoryService.BUY +"\")")
+    @LogExecutionTime("Buy operation")
     public ResponseEntity<BaseResponse<PurchaseResponse>> buy(@Valid @RequestBody BuyWalletRequestJson requestJson) throws InternalServiceException {
         String channelIp = requestContext.getClientIp();
         String username = requestContext.getChannelEntity().getUsername();
@@ -101,6 +106,7 @@ public class PurchaseController extends WebController {
     @PostMapping(path = "/buy/direct", produces = {MediaType.APPLICATION_JSON_VALUE})
     @Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "خرید")
     @PreAuthorize("hasAuthority(\""+ ResourceRepositoryService.BUY_DIRECT +"\")")
+    @LogExecutionTime("Direct buy operation")
     public ResponseEntity<BaseResponse<PurchaseResponse>> buyDirect(@Valid @RequestBody BuyDirectWalletRequestJson requestJson) throws InternalServiceException {
         String channelIp = requestContext.getClientIp();
         String username = requestContext.getChannelEntity().getUsername();
@@ -119,6 +125,7 @@ public class PurchaseController extends WebController {
     @PostMapping(path = "/sell", produces = {MediaType.APPLICATION_JSON_VALUE})
     @Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "فروش")
     @PreAuthorize("hasAuthority(\""+ ResourceRepositoryService.SELL +"\")")
+    @LogExecutionTime("Sell operation")
     public ResponseEntity<BaseResponse<PurchaseResponse>> sell(@Valid @RequestBody SellWalletRequestJson requestJson) throws InternalServiceException {
 
         String channelIp = requestContext.getClientIp();

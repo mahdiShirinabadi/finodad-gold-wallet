@@ -89,6 +89,7 @@ public class AuthenticationController extends WebController {
     @Timed(description = "time taken to checkShahkar profile")
     @Operation(summary = "تولید دوباره accessToken")
     @PostMapping(value = "/refresh", produces = {MediaType.APPLICATION_JSON_VALUE})
+    @LogExecutionTime("Refresh token process")
     public ResponseEntity<BaseResponse<LoginResponse>> refreshToken(@Valid @RequestBody RefreshTokenRequestJson requestJson, HttpServletRequest httpRequest) throws InternalServiceException {
         log.info("start refreshToken with data ({})", requestJson.toString());
         boolean isAfter = checkExpiration(channelRepositoryService.findByUsername(requestJson.getUsername()));
@@ -130,6 +131,7 @@ public class AuthenticationController extends WebController {
     @PostMapping(path = "/logout", produces = {MediaType.APPLICATION_JSON_VALUE})
     @PreAuthorize("hasAuthority(\"" + ResourceRepositoryService.LOGOUT + "\")")
     @Operation(security = {@SecurityRequirement(name = "bearer-key")}, summary = "خروج از حساب")
+    @LogExecutionTime("User logout process")
     public ResponseEntity<BaseResponse<ObjectUtils.Null>> logout() throws InternalServiceException {
         log.info("start logout channel by ({}), ip({})", context.getChannelEntity().getUsername(), context.getClientIp());
         authenticateOperationService.logout(context.getChannelEntity());

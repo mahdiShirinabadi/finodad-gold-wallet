@@ -48,6 +48,7 @@ public class PhysicalCashOutController extends WebController {
     @PostMapping(path = "/generate/uuid", produces = {MediaType.APPLICATION_JSON_VALUE})
     @Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "ایجاد شناسه یکتا برای دریافت فیزیکی")
     @PreAuthorize("hasAuthority(\""+ ResourceRepositoryService.PHYSICAL_CASH_OUT +"\")")
+    @LogExecutionTime("Generate physical cash out UUID")
     public ResponseEntity<BaseResponse<UuidResponse>> physicalCashOutGenerateUuid(@Valid @RequestBody PhysicalCashGenerateUuidRequestJson requestJson) throws InternalServiceException {
         log.info("start call uuid nationalCode ===> {}", requestJson.getNationalCode());
         UuidResponse response = cashOutOperationService.physicalGenerateUuid(requestContext.getChannelEntity(), requestJson.getNationalCode(), requestJson.getQuantity(), requestJson.getAccountNumber());
@@ -59,6 +60,7 @@ public class PhysicalCashOutController extends WebController {
     @PostMapping(path = "/withdrawal", produces = {MediaType.APPLICATION_JSON_VALUE})
     @Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "برداشت وجه فیزیکی")
     @PreAuthorize("hasAuthority(\""+ ResourceRepositoryService.PHYSICAL_CASH_OUT +"\")")
+    @LogExecutionTime("Physical cash out withdrawal")
     public ResponseEntity<BaseResponse<PhysicalCashOutResponse>> physicalCashOut(@Valid @RequestBody PhysicalCashOutWalletRequestJson requestJson) throws InternalServiceException {
         String channelIp = requestContext.getClientIp();
         String username = requestContext.getChannelEntity().getUsername();
@@ -77,6 +79,7 @@ public class PhysicalCashOutController extends WebController {
     @GetMapping(path = "/inquiry", produces = {MediaType.APPLICATION_JSON_VALUE})
     @Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "پیگیری برداشت وجه فیزیکی")
     @PreAuthorize("hasAuthority(\""+ ResourceRepositoryService.PHYSICAL_CASH_OUT +"\")")
+    @LogExecutionTime("Physical cash out inquiry")
     public ResponseEntity<BaseResponse<PhysicalCashOutTrackResponse>> physicalInquiryCashOut(@Valid @RequestParam("uniqueIdentifier") String uniqueIdentifier) throws InternalServiceException {
         String channelIp = requestContext.getClientIp();
         String username = requestContext.getChannelEntity().getUsername();

@@ -1,5 +1,6 @@
 package com.melli.wallet.web;
 
+import com.melli.wallet.annotation.LogExecutionTime;
 import com.melli.wallet.annotation.fund_type.PurchaseTypeValidation;
 import com.melli.wallet.annotation.national_code.NationalCodeValidation;
 import com.melli.wallet.annotation.string.StringValidation;
@@ -50,6 +51,7 @@ public class TransactionController extends WebController {
 	@GetMapping(path = "/last", produces = {MediaType.APPLICATION_JSON_VALUE})
 	@Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "صورتحساب")
 	@PreAuthorize("hasAuthority(\""+ ResourceRepositoryService.STATEMENT +"\")")
+	@LogExecutionTime("Get last transaction")
 	public ResponseEntity<BaseResponse<StatementResponse>> last(@Valid @NationalCodeValidation(label = "کد ملی") @RequestParam("nationalCode") String nationalCode,@Valid @RequestParam("accountNumber") @StringValidation(label = "شماره حساب کیف")  String accountNumber) throws InternalServiceException {
 		String channelIp = requestContext.getClientIp();
 		String username = requestContext.getChannelEntity().getUsername();
@@ -63,6 +65,7 @@ public class TransactionController extends WebController {
 	@PostMapping(path = "/report", produces = {MediaType.APPLICATION_JSON_VALUE})
 	@Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "گزارش تراکنش")
 	@PreAuthorize("hasAuthority(\""+ ResourceRepositoryService.STATEMENT +"\")")
+	@LogExecutionTime("Generate transaction report")
 	public ResponseEntity<BaseResponse<ReportTransactionResponse>> report(@RequestBody @Validated PanelBaseSearchJson request) throws InternalServiceException {
 		String channelIp = requestContext.getClientIp();
 		String username = requestContext.getChannelEntity().getUsername();
