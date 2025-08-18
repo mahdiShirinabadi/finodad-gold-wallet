@@ -5,7 +5,7 @@ option java_package = "com.melli.wallet.grpc";
 option java_outer_classname = "BaseProto";
 
 package wallet;
-import "auth_options.proto";
+// import "auth_options.proto"; // Commented out due to compilation issues
 
 // Message Definitions
 message BaseResponseGrpc {

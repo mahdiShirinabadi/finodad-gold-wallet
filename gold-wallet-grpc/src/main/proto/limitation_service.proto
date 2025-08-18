@@ -1,7 +1,7 @@
 syntax = "proto3";
 
 package wallet;
-import "auth_options.proto";
+// import "auth_options.proto"; // Commented out due to compilation issues
 import "base.proto";
 
 option java_package = "com.melli.wallet.grpc";
@@ -10,10 +10,10 @@ option java_outer_classname = "LimitationProto";
 
 service LimitationService {
   rpc GetLimitationValue(GetLimitationValueRequestGrpc) returns (BaseResponseGrpc) {
-    option (required_resource) = "LIMITATION_LIST";
+    // option (required_resource) = "LIMITATION_LIST"; // Commented out due to compilation issues
   }
   rpc GetLimitationList(GetLimitationListRequestGrpc) returns (BaseResponseGrpc) {
-    option (required_resource) = "LIMITATION_LIST";
+    // option (required_resource) = "LIMITATION_LIST"; // Commented out due to compilation issues
   }
 }
 

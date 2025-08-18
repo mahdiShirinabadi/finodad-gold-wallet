@@ -27,6 +27,5 @@ public class PanelChannelResourceUpdateRequest {
 
     @Schema(name = NamingProperty.ROLE_IDS)
     @JsonProperty(value = NamingProperty.ROLE_IDS)
-    @ListElementsInteger(label = "نقش ها")
     private List<String> roleIds;
 }

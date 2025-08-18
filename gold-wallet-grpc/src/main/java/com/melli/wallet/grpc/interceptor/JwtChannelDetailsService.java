@@ -1,4 +1,4 @@
-package com.melli.wallet.grpc.security;
+package com.melli.wallet.grpc.interceptor;
 
 import com.melli.wallet.domain.master.entity.ChannelEntity;
 import com.melli.wallet.service.repository.ChannelRepositoryService;

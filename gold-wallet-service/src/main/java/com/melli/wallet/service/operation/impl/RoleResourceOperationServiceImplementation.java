@@ -3,6 +3,7 @@ package com.melli.wallet.service.operation.impl;
 import com.melli.wallet.annotation.LogExecutionTime;
 import com.melli.wallet.domain.master.entity.RoleEntity;
 import com.melli.wallet.domain.master.entity.ResourceEntity;
+import com.melli.wallet.domain.master.entity.RoleResourceEntity;
 import com.melli.wallet.domain.master.persistence.RoleRepository;
 import com.melli.wallet.domain.master.persistence.ResourceRepository;
 import com.melli.wallet.domain.master.persistence.RoleResourceRepository;
@@ -15,6 +16,7 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -33,17 +35,17 @@ public class RoleResourceOperationServiceImplementation implements RoleResourceO
     @Override
     @Transactional
     @LogExecutionTime("Add resources to role")
-    public void addResourcesToRole(Long roleId, List<Long> resourceIds, String updatedBy) throws InternalServiceException {
+    public void addResourcesToRole(String roleId, List<String> resourceIds, String updatedBy) throws InternalServiceException {
         log.info("Starting addResourcesToRole - roleId: {}, resourceIds: {}, updatedBy: {}", roleId, resourceIds, updatedBy);
         
         try {
             // Check if role exists
-            RoleEntity role = roleRepositoryService.findById(roleId);
+            RoleEntity role = roleRepositoryService.findById(Long.parseLong(roleId));
             log.info("Role found - roleId: {}, roleName: {}", roleId, role.getName());
             
             // Check if all resources exist
             List<ResourceEntity> resources = new java.util.ArrayList<>();
-            resourceRepository.findAllById(resourceIds).forEach(resources::add);
+            resourceRepository.findAllById(resourceIds.stream().map(Long::parseLong).toList()).forEach(resources::add);
             if (resources.size() != resourceIds.size()) {
                 log.error("Resource not found - requested: {}, found: {}", resourceIds.size(), resources.size());
                 throw new InternalServiceException(StatusRepositoryService.RESOURCE_NOT_FOUND);
@@ -56,8 +58,15 @@ public class RoleResourceOperationServiceImplementation implements RoleResourceO
             
             // Then, assign all new resources
             log.info("Assigning new resources to roleId: {} - resourceCount: {}", roleId, resources.size());
-            roleResourceRepository.updateRoleResources(role.getId(), new HashSet<>(resources));
-            
+            for(ResourceEntity resource : resources) {
+                RoleResourceEntity roleResourceEntity = new RoleResourceEntity();
+                roleResourceEntity.setResourceEntity(resource);
+                roleResourceEntity.setRoleEntity(role);
+                roleResourceEntity.setCreatedAt(new Date());
+                roleResourceEntity.setCreatedBy(updatedBy);
+                roleResourceRepository.save(roleResourceEntity);
+            }
+
             log.info("Successfully completed addResourcesToRole - roleId: {}, resourceCount: {}", roleId, resources.size());
             
         } catch (InternalServiceException e) {

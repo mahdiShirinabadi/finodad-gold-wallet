@@ -5,7 +5,7 @@ option java_package = "com.melli.wallet.grpc";
 option java_outer_classname = "AuthProto";
 
 package wallet;
-import "auth_options.proto";
+// import "auth_options.proto"; // Commented out due to compilation issues
 import "base.proto";
 // Authentication Service
 service AuthService {

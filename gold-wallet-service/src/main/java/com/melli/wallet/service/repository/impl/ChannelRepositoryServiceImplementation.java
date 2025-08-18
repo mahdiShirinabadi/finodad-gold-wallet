@@ -215,10 +215,5 @@ public class ChannelRepositoryServiceImplementation implements ChannelRepository
             query.orderBy(criteriaBuilder.desc(root.get(orderBy)));
         }
     }
-
-    @Override
-    public void updateChannelRole(PanelChannelResourceUpdateRequest request) throws InternalServiceException {
-
-    }
 }
 

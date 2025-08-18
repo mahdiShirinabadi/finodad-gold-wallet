@@ -70,7 +70,7 @@ public class AuthenticationController extends WebController {
             boolean isAfter = checkExpiration(channelRepositoryService.findByUsername(loginJson.getUsername()));
             Map<String, String> accessToken = jwtTokenUtil.generateToken(loginJson.getUsername(), Long.parseLong(settingGeneralRepositoryService.getSetting(SettingGeneralRepositoryService.DURATION_ACCESS_TOKEN_PROFILE).getValue()));
             Map<String, String> refreshToken = jwtTokenUtil.generateRefreshToken(loginJson.getUsername(), Long.parseLong(settingGeneralRepositoryService.getSetting(SettingGeneralRepositoryService.DURATION_REFRESH_TOKEN_PROFILE).getValue()));
-            return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse<>(true, authenticateOperationService.login(loginJson.getUsername(), getIP(httpRequest), isAfter, accessToken, refreshToken)));
+            return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse<>(true, authenticateOperationService.login(loginJson.getUsername(), getIP(httpRequest), accessToken, refreshToken)));
         } catch (InternalServiceException ex) {
             log.error("failed in login with InternalServiceException ({})", ex.getMessage());
             throw ex;
@@ -94,7 +94,7 @@ public class AuthenticationController extends WebController {
         boolean isAfter = checkExpiration(channelRepositoryService.findByUsername(requestJson.getUsername()));
         Map<String, String> accessToken = jwtTokenUtil.generateToken(requestJson.getUsername(), Long.parseLong(settingGeneralRepositoryService.getSetting(SettingGeneralRepositoryService.DURATION_ACCESS_TOKEN_PROFILE).getValue()));
         Map<String, String> refreshToken = jwtTokenUtil.generateRefreshToken(requestJson.getUsername(), Long.parseLong(settingGeneralRepositoryService.getSetting(SettingGeneralRepositoryService.DURATION_REFRESH_TOKEN_PROFILE).getValue()));
-        return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse<>(true, authenticateOperationService.generateRefreshToken(requestJson.getRefreshToken(), requestJson.getUsername(), getIP(httpRequest), isAfter, accessToken, refreshToken)));
+        return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse<>(true, authenticateOperationService.generateRefreshToken(requestJson.getRefreshToken(), requestJson.getUsername(), getIP(httpRequest), accessToken, refreshToken)));
     }
 
     private void authenticate(String username, String password) {

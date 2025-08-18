@@ -5,27 +5,27 @@ option java_package = "com.melli.wallet.grpc";
 option java_outer_classname = "PurchaseProto";
 
 package wallet;
-import "auth_options.proto";
+// import "auth_options.proto"; // Commented out due to compilation issues
 import "base.proto";
 // Purchase Service
 service PurchaseService {
   rpc GenerateBuyUuid(BuyGenerateUuidRequestGrpc) returns (BaseResponseGrpc) {
-    option (required_resource) = "GENERATE_PURCHASE_UNIQUE_IDENTIFIER";
+    // option (required_resource) = "GENERATE_PURCHASE_UNIQUE_IDENTIFIER"; // Commented out due to compilation issues
   }
   rpc GenerateSellUuid(SellGenerateUuidRequestGrpc) returns (BaseResponseGrpc) {
-    option (required_resource) = "GENERATE_PURCHASE_UNIQUE_IDENTIFIER";
+    // option (required_resource) = "GENERATE_PURCHASE_UNIQUE_IDENTIFIER"; // Commented out due to compilation issues
   }
   rpc Inquiry(PurchaseTrackRequestGrpc) returns (BaseResponseGrpc) {
-    option (required_resource) = "GENERATE_PURCHASE_UNIQUE_IDENTIFIER";
+    // option (required_resource) = "GENERATE_PURCHASE_UNIQUE_IDENTIFIER"; // Commented out due to compilation issues
   }
   rpc Buy(BuyWalletRequestGrpc) returns (BaseResponseGrpc) {
-    option (required_resource) = "BUY";
+    // option (required_resource) = "BUY"; // Commented out due to compilation issues
   }
   rpc BuyDirect(BuyDirectWalletRequestGrpc) returns (BaseResponseGrpc) {
-    option (required_resource) = "BUY_DIRECT";
+    // option (required_resource) = "BUY_DIRECT"; // Commented out due to compilation issues
   }
   rpc Sell(SellWalletRequestGrpc) returns (BaseResponseGrpc) {
-    option (required_resource) = "SELL";
+    // option (required_resource) = "SELL"; // Commented out due to compilation issues
   }
 }
 

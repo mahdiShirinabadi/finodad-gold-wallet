@@ -118,7 +118,7 @@ public class ChannelRoleOperationServiceImplementation implements ChannelRoleOpe
                                         .name(role.getName())
                                         .persianDescription(role.getPersianDescription())
                                         .build())
-                                .collect(Collectors.toList());
+                                .toList();
                         
                         return ChannelListResponse.builder()
                                 .id(channel.getId())
@@ -129,7 +129,7 @@ public class ChannelRoleOperationServiceImplementation implements ChannelRoleOpe
                                 .assignedRoles(roleSummaries)
                                 .build();
                     })
-                    .collect(Collectors.toList());
+                    .toList();
             
             log.info("Successfully completed getChannelList - returned {} channels", result.size());
             return result;

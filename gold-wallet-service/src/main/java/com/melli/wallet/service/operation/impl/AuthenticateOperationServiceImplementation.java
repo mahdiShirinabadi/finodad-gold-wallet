@@ -35,7 +35,7 @@ public class AuthenticateOperationServiceImplementation implements AuthenticateO
 
     @Override
     @LogExecutionTime("Checking login")
-    public LoginResponse login(String username, String ip, boolean isAfter, Map<String, String> accessTokenMap, Map<String, String> refreshTokenMap) throws InternalServiceException {
+    public LoginResponse login(String username, String ip, Map<String, String> accessTokenMap, Map<String, String> refreshTokenMap) throws InternalServiceException {
 
         ChannelEntity channelEntity = channelRepositoryService.findByUsername(username);
 
@@ -57,7 +57,7 @@ public class AuthenticateOperationServiceImplementation implements AuthenticateO
     }
 
     @Override
-    public LoginResponse generateRefreshToken(String refreshToken, String nationalCode, String ip, boolean isAfter, Map<String, String> accessTokenMap, Map<String, String> refreshTokenMap) throws InternalServiceException {
+    public LoginResponse generateRefreshToken(String refreshToken, String nationalCode, String ip, Map<String, String> accessTokenMap, Map<String, String> refreshTokenMap) throws InternalServiceException {
         ChannelAccessTokenEntity channelAccessTokenEntityOld = channelAccessTokenRepositoryService.findTopByRefreshTokenEndTimeIsnUll(refreshToken);
 
         if (!channelAccessTokenEntityOld.getChannelEntity().getUsername().equalsIgnoreCase(nationalCode)) {

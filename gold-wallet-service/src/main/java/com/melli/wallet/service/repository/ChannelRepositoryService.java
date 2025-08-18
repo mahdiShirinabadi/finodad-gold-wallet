@@ -44,5 +44,4 @@ public interface ChannelRepositoryService {
 
 	PanelRoleListResponse listChannelRoles(ChannelEntity channelEntity, Map<String, String> map) throws InternalServiceException;
 
-	void updateChannelRole(PanelChannelResourceUpdateRequest request) throws InternalServiceException;
 }

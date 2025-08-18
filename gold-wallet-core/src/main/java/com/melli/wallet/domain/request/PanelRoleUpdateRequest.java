@@ -36,6 +36,5 @@ public class PanelRoleUpdateRequest {
 
     @Schema(name = NamingProperty.RESOURCE_IDS)
     @JsonProperty(value = NamingProperty.RESOURCE_IDS)
-    @ListElementsInteger(label = "دسترسی ها")
     private List<String> resourceIds;
 }

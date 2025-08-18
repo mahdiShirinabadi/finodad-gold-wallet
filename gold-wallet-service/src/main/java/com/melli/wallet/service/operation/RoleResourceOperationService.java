@@ -15,7 +15,7 @@ public interface RoleResourceOperationService {
      * Add resources to role (keep existing resources and add new ones)
      */
     @Transactional
-    void addResourcesToRole(Long roleId, List<Long> resourceIds, String updatedBy) throws InternalServiceException;
+    void addResourcesToRole(String roleId, List<String> resourceIds, String updatedBy) throws InternalServiceException;
 
     /**
      * Get role with resources

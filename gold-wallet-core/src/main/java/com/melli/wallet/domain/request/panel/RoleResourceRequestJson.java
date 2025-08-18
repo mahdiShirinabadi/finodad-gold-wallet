@@ -1,6 +1,7 @@
 package com.melli.wallet.domain.request.panel;
 
 import com.melli.wallet.NamingProperty;
+import com.melli.wallet.annotation.number.ListElementsInteger;
 import com.melli.wallet.annotation.number.NumberValidation;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotEmpty;
@@ -19,9 +20,10 @@ public class RoleResourceRequestJson {
 
     @Schema(name = NamingProperty.ROLE_ID)
     @NumberValidation(label = "roleId")
-    private Long roleId;
+    private String roleId;
 
     @Schema(name = NamingProperty.RESOURCE_IDS)
     @NotEmpty(message = "Resource IDs list cannot be empty")
-    private List<Long> resourceIds;
+    @ListElementsInteger
+    private List<String> resourceIds;
 }

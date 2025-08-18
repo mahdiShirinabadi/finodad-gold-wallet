@@ -25,6 +25,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -93,8 +94,8 @@ public class RoleManagementOperationServiceImplementation implements RoleManagem
         }
         
         // Clear existing resources and assign new ones
-        role.setResources(resources.stream().collect(Collectors.toSet()));
-        roleResourceOperationService.addResourcesToRole(roleId, resourceIds, updatedBy);
+        role.setResources(new HashSet<>(resources));
+        roleResourceOperationService.addResourcesToRole(String.valueOf(roleId), resourceIds.stream().map(String::valueOf).toList(), updatedBy);
     }
 
 

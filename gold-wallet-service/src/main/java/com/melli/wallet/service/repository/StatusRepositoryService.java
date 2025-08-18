@@ -98,6 +98,7 @@ public interface StatusRepositoryService {
     int RESOURCE_NOT_FOUND = 78;
     int RESOURCE_ALREADY_EXISTS = 79;
     int RESOURCE_IN_USE = 80;
+    int CHANNEL_IS_DISABLE = 81;
     
     // General Error Codes
     int INTERNAL_ERROR = 99;

@@ -13,7 +13,7 @@ import java.util.Map;
  */
 public interface AuthenticateOperationService {
 
-    LoginResponse login(String username, String ip, boolean isAfter, Map<String, String> accessToken, Map<String, String> refreshToken) throws InternalServiceException;
-    LoginResponse generateRefreshToken(String refreshToken, String nationalCode, String ip, boolean isAfter, Map<String, String> accessTokenMap, Map<String, String> refreshTokenMap) throws InternalServiceException;
+    LoginResponse login(String username, String ip, Map<String, String> accessToken, Map<String, String> refreshToken) throws InternalServiceException;
+    LoginResponse generateRefreshToken(String refreshToken, String nationalCode, String ip, Map<String, String> accessTokenMap, Map<String, String> refreshTokenMap) throws InternalServiceException;
     void logout(ChannelEntity channelEntity) throws InternalServiceException;
 }
