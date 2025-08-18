@@ -1,9 +1,14 @@
 package com.melli.wallet.service.repository;
 
 import com.melli.wallet.domain.master.entity.ChannelEntity;
+import com.melli.wallet.domain.request.PanelChannelResourceUpdateRequest;
+import com.melli.wallet.domain.response.PanelChannelResponse;
+import com.melli.wallet.domain.response.panel.PanelRoleListResponse;
 import com.melli.wallet.exception.InternalServiceException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Map;
 
 /**
  * Created by shirinabadi on 03/11/2016.
@@ -34,4 +39,10 @@ public interface ChannelRepositoryService {
 	void clearCacheAll();
 
 	ChannelEntity changePasswordChannel(String channelName, String password, PasswordEncoder bcryptEncoder)throws InternalServiceException;
+
+	PanelChannelResponse list(Map<String, String> mapParameter) throws InternalServiceException;
+
+	PanelRoleListResponse listChannelRoles(ChannelEntity channelEntity, Map<String, String> map) throws InternalServiceException;
+
+	void updateChannelRole(PanelChannelResourceUpdateRequest request) throws InternalServiceException;
 }

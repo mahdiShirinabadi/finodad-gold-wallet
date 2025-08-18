@@ -2,6 +2,8 @@ package com.melli.wallet.utils;
 
 import com.melli.wallet.domain.enumaration.WalletStatusEnum;
 import com.melli.wallet.domain.master.entity.*;
+import com.melli.wallet.domain.response.PanelChannelObject;
+import com.melli.wallet.domain.response.PanelChannelResponse;
 import com.melli.wallet.domain.response.base.BaseResponse;
 import com.melli.wallet.domain.response.base.ErrorDetail;
 import com.melli.wallet.domain.response.cash.*;
@@ -9,13 +11,18 @@ import com.melli.wallet.domain.response.channel.ChannelObject;
 import com.melli.wallet.domain.response.limitation.*;
 import com.melli.wallet.domain.response.login.LoginResponse;
 import com.melli.wallet.domain.response.login.TokenObject;
+import com.melli.wallet.domain.response.panel.PanelResourceObject;
+import com.melli.wallet.domain.response.panel.PanelRoleListResponse;
+import com.melli.wallet.domain.response.panel.PanelRoleObject;
 import com.melli.wallet.domain.response.purchase.*;
+import com.melli.wallet.domain.response.transaction.ReportTransactionObject;
+import com.melli.wallet.domain.response.transaction.ReportTransactionResponse;
+import com.melli.wallet.domain.response.transaction.StatementObject;
+import com.melli.wallet.domain.response.transaction.StatementResponse;
 import com.melli.wallet.domain.response.wallet.CreateWalletResponse;
 import com.melli.wallet.domain.response.wallet.WalletAccountObject;
 import com.melli.wallet.domain.response.wallet.WalletBalanceResponse;
-import com.melli.wallet.domain.slave.entity.ReportCashOutRequestEntity;
-import com.melli.wallet.domain.slave.entity.ReportPhysicalCashOutRequestEntity;
-import com.melli.wallet.domain.slave.entity.ReportPurchaseRequestEntity;
+import com.melli.wallet.domain.slave.entity.*;
 import com.melli.wallet.exception.InternalServiceException;
 import com.melli.wallet.service.repository.*;
 import com.melli.wallet.util.StringUtils;
@@ -113,6 +120,35 @@ public class Helper {
         response.setCreateTime(DateUtils.getLocaleDate(DateUtils.FARSI_LOCALE, cashOutRequestEntity.getCreatedAt(), FORMAT_DATE_RESPONSE, false));
         response.setCreateTimeTimestamp(cashOutRequestEntity.getCreatedAt().getTime());
         return response;
+    }
+
+    public PanelChannelResponse fillPanelChannelResponse(Page<ReportChannelEntity> channelEntityPage) {
+        PanelChannelResponse response = new PanelChannelResponse();
+        response.setSize(channelEntityPage.getSize());
+        response.setNumber(channelEntityPage.getNumber());
+        response.setTotalPages(channelEntityPage.getTotalPages());
+        response.setTotalElements(channelEntityPage.getTotalElements());
+        response.setList(channelEntityPage.getContent().stream().map(this::fillPanelChannelObject).toList());
+        return response;
+    }
+
+    private PanelChannelObject fillPanelChannelObject(ReportChannelEntity channelEntity) {
+        PanelChannelObject panelChannelObject = new PanelChannelObject();
+        panelChannelObject.setId(String.valueOf(channelEntity.getId()));
+        panelChannelObject.setIp(channelEntity.getIp());
+        panelChannelObject.setMobile(channelEntity.getMobile());
+        panelChannelObject.setUsername(channelEntity.getUsername());
+        panelChannelObject.setFirstName(channelEntity.getFirstName());
+        panelChannelObject.setLastName(channelEntity.getLastName());
+        panelChannelObject.setPublicKey(channelEntity.getPublicKey());
+        panelChannelObject.setStatus(String.valueOf(channelEntity.getStatus()));
+        panelChannelObject.setCreateBy(channelEntity.getCreatedBy());
+        panelChannelObject.setCreateTime(DateUtils.getLocaleDate(DateUtils.FARSI_LOCALE, channelEntity.getCreatedAt(), FORMAT_DATE_RESPONSE, false));
+        panelChannelObject.setUpdateTime(DateUtils.getLocaleDate(DateUtils.FARSI_LOCALE, channelEntity.getUpdatedAt(), FORMAT_DATE_RESPONSE, false));
+        panelChannelObject.setUpdateBy(channelEntity.getUpdatedBy());
+        panelChannelObject.setTrust(channelEntity.getTrust());
+        panelChannelObject.setSign(channelEntity.getSign());
+        return panelChannelObject;
     }
 
     public PhysicalCashOutTrackResponse fillPhysicalCashOutTrackResponse(ReportPhysicalCashOutRequestEntity physicalCashOutRequestEntity, StatusRepositoryService statusRepositoryService) {
@@ -256,6 +292,50 @@ public class Helper {
        return new CashInResponse(nationalCode, balance, uuid, accountNumber);
     }
 
+    public StatementResponse fillStatementResponse(String nationalCode, List<ReportTransactionEntity> reportTransactionEntityList) {
+        StatementResponse statementResponse = new StatementResponse();
+        statementResponse.setNationalCode(nationalCode);
+        statementResponse.setList(reportTransactionEntityList.stream().map(this::convertToStatementObject).toList());
+        return statementResponse;
+    }
+
+    public ReportTransactionResponse fillReportStatementResponse(Page<ReportTransactionEntity> reportTransactionEntityPage) {
+        ReportTransactionResponse statementResponse = new ReportTransactionResponse();
+        statementResponse.setNumber(reportTransactionEntityPage.getNumber());
+        statementResponse.setSize(reportTransactionEntityPage.getSize());
+        statementResponse.setTotalElements(reportTransactionEntityPage.getTotalElements());
+        statementResponse.setTotalPages(reportTransactionEntityPage.getTotalPages());
+        statementResponse.setList(reportTransactionEntityPage.stream().map(this::convertToReportStatementObject).toList());
+        return statementResponse;
+    }
+
+    public StatementObject convertToStatementObject(ReportTransactionEntity reportTransactionEntity) {
+        StatementObject statementObject = new StatementObject();
+        statementObject.setId(String.valueOf(reportTransactionEntity.getId()));
+        statementObject.setAccountNumber(reportTransactionEntity.getWalletAccountEntity().getAccountNumber());
+        statementObject.setType(reportTransactionEntity.getType());
+        statementObject.setUniqueIdentifier(reportTransactionEntity.getRrnEntity().getUuid());
+        statementObject.setCurrency(reportTransactionEntity.getWalletAccountEntity().getWalletAccountCurrencyEntity().getName());
+        statementObject.setQuantity(String.valueOf(reportTransactionEntity.getAmount()));
+        statementObject.setBalance(String.valueOf(reportTransactionEntity.getBalance()));
+        statementObject.setCreateTime(DateUtils.getLocaleDate(DateUtils.FARSI_LOCALE, reportTransactionEntity.getCreatedAt(), FORMAT_DATE_RESPONSE, false));
+        return statementObject;
+    }
+
+    public ReportTransactionObject convertToReportStatementObject(ReportTransactionEntity reportTransactionEntity) {
+        ReportTransactionObject statementObject = new ReportTransactionObject();
+        statementObject.setNationalCode(reportTransactionEntity.getWalletAccountEntity().getWalletEntity().getNationalCode());
+        statementObject.setId(String.valueOf(reportTransactionEntity.getId()));
+        statementObject.setAccountNumber(reportTransactionEntity.getWalletAccountEntity().getAccountNumber());
+        statementObject.setType(reportTransactionEntity.getType());
+        statementObject.setUniqueIdentifier(reportTransactionEntity.getRrnEntity().getUuid());
+        statementObject.setCurrency(reportTransactionEntity.getWalletAccountEntity().getWalletAccountCurrencyEntity().getName());
+        statementObject.setQuantity(String.valueOf(reportTransactionEntity.getAmount()));
+        statementObject.setBalance(String.valueOf(reportTransactionEntity.getBalance()));
+        statementObject.setCreateTime(DateUtils.getLocaleDate(DateUtils.FARSI_LOCALE, reportTransactionEntity.getCreatedAt(), FORMAT_DATE_RESPONSE, false));
+        return statementObject;
+    }
+
     public CashOutResponse fillCashOutResponse(String nationalCode, String uuid, String balance, String accountNumber) {
         return new CashOutResponse(nationalCode, balance, uuid, accountNumber);
     }
@@ -376,6 +456,41 @@ public class Helper {
             throw new InternalServiceException("wallet for nationalCode (" + nationalCode + ") is not active!!", StatusRepositoryService.WALLET_IS_NOT_ACTIVE, HttpStatus.OK);
         }
         return walletEntity;
+    }
+
+    public PanelRoleListResponse fillChannelRoleListResponse(Page<ReportChannelRoleEntity> page) {
+        PanelRoleListResponse response = new PanelRoleListResponse();
+        response.setSize(page.getSize());
+        response.setNumber(page.getNumber());
+        response.setTotalPages(page.getTotalPages());
+        response.setTotalElements(page.getTotalElements());
+        response.setList(page.getContent().stream().map(this::fillChannelRoleListObject).toList());
+        return response;
+    }
+
+    private PanelRoleObject fillChannelRoleListObject(ReportChannelRoleEntity channelRoleEntity) {
+        PanelRoleObject panelOperatorRoleObject = new PanelRoleObject();
+        ReportRoleEntity roleEntity = channelRoleEntity.getRoleEntity();
+        panelOperatorRoleObject.setId(String.valueOf(roleEntity.getId()));
+        panelOperatorRoleObject.setName(roleEntity.getName());
+        panelOperatorRoleObject.setCreatedTime(DateUtils.getLocaleDate(DateUtils.FARSI_LOCALE, roleEntity.getCreatedAt(), DateUtils.DEFAULT_DATE_TIME_FORMAT, false));
+        panelOperatorRoleObject.setCreatedBy(roleEntity.getCreatedBy());
+        panelOperatorRoleObject.setUpdatedTime(DateUtils.getLocaleDate(DateUtils.FARSI_LOCALE, roleEntity.getUpdatedAt(), DateUtils.DEFAULT_DATE_TIME_FORMAT, false));
+        panelOperatorRoleObject.setUpdatedBy(roleEntity.getUpdatedBy());
+        List<PanelResourceObject> resourceObjects = roleEntity.getResources().stream().map(this::fillPanelResourceListObject).toList();
+        panelOperatorRoleObject.setResources(resourceObjects);
+        return panelOperatorRoleObject;
+    }
+
+    private PanelResourceObject fillPanelResourceListObject(ReportResourceEntity resourceEntity) {
+        PanelResourceObject panelOperatorRoleObject = new PanelResourceObject();
+        panelOperatorRoleObject.setId(String.valueOf(resourceEntity.getId()));
+        panelOperatorRoleObject.setName(resourceEntity.getName());
+        panelOperatorRoleObject.setCreatedAt(DateUtils.getLocaleDate(DateUtils.FARSI_LOCALE, resourceEntity.getCreatedAt(), DateUtils.DEFAULT_DATE_FORMAT, false));
+        panelOperatorRoleObject.setCreatedBy(resourceEntity.getCreatedBy());
+        panelOperatorRoleObject.setUpdatedAt(DateUtils.getLocaleDate(DateUtils.FARSI_LOCALE, resourceEntity.getUpdatedAt(), DateUtils.DEFAULT_DATE_FORMAT, false));
+        panelOperatorRoleObject.setUpdatedBy(resourceEntity.getUpdatedBy());
+        return panelOperatorRoleObject;
     }
 
 

@@ -38,6 +38,7 @@ public class NamingProperty {
     public static final String UPDATE_TIME = "updateTime";
     public static final String CREATE_TIMESTAMP = "createTimestamp";
     public static final String FIRST_NAME = "firstName";
+    public static final String FARSI_NAME = "farsiName";
     public static final String LAST_NAME = "lastName";
     public static final String VALUE = "value";
     public static final String NAME = "name";
@@ -49,6 +50,7 @@ public class NamingProperty {
     public static final String EXPIRE_TIME = "expireTime";
     public static final String CHANNEL_NAME = "channelName";
     public static final String PURCHASE_TRACK_OBJECT_LIST = "purchaseTrackObjectList";
+    public static final String TRANSACTION_OBJECT_LIST = "transactionObjectList";
     public static final String SETTING_GENERAL_OBJECT_LIST = "settingGeneralObjectList";
     public static final String PATTERN = "pattern";
     public static final String STATUS = "status";
@@ -75,6 +77,17 @@ public class NamingProperty {
     public static final String WALLET_TYPE_NAME = "walletTypeName";
     public static final String CHANNEL_ID = "channelId";
     public static final String END_TIME = "endTime";
+    public static final String LIST = "list";
+    public static final String RESOURCES = "resources";
+    public static final String PERSIAN_DESCRIPTION = "persianDescription";
+    public static final String RESOURCE_IDS = "resourceIds";
+    public static final String ROLE_ID = "roleId";
+    public static final String ROLE_IDS = "roleIds";
+    public static final String MOBILE = "mobile";
+    public static final String TRUST = "trust";
+    public static final String PUBLIC_KEY = "publicKey";
+    public static final String EXPIRE_TIME_DURATION = "expireTimeDuration";
+    public static final String IP = "ip";
 
 
     private NamingProperty() {

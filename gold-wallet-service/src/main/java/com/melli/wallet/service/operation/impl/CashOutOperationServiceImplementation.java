@@ -50,7 +50,7 @@ public class CashOutOperationServiceImplementation implements CashOutOperationSe
     private final WalletCashLimitationOperationService walletCashLimitationOperationService;
     private final RequestTypeRepositoryService requestTypeRepositoryService;
     private final TemplateRepositoryService templateRepositoryService;
-    private final TransactionService transactionService;
+    private final TransactionRepositoryService transactionRepositoryService;
     private final MessageResolverOperationService messageResolverOperationService;
     private final StatusRepositoryService statusRepositoryService;
     private final WalletAccountTypeRepositoryService walletAccountTypeRepositoryService;
@@ -120,7 +120,7 @@ public class CashOutOperationServiceImplementation implements CashOutOperationSe
             model.put("additionalData", cashOutRequestEntity.getAdditionalData());
             String templateMessage = templateRepositoryService.getTemplate(TemplateRepositoryService.CASH_OUT);
             transaction.setDescription(messageResolverOperationService.resolve(templateMessage, model));
-            transactionService.insertWithdraw(transaction);
+            transactionRepositoryService.insertWithdraw(transaction);
             log.info("balance for walletAccount ===> {} update successful", walletAccountEntity.getAccountNumber());
 
             requestRepositoryService.save(cashOutRequestEntity);
@@ -219,7 +219,7 @@ public class CashOutOperationServiceImplementation implements CashOutOperationSe
             model.put("additionalData", physicalCashOutRequestEntity.getAdditionalData());
             String templateMessage = templateRepositoryService.getTemplate(TemplateRepositoryService.PHYSICAL_CASH_OUT);
             transaction.setDescription(messageResolverOperationService.resolve(templateMessage, model));
-            transactionService.insertWithdraw(transaction);
+            transactionRepositoryService.insertWithdraw(transaction);
             log.info("balance for walletAccount ===> {} update successful", walletAccountEntity.getAccountNumber());
 
             //commission type must be currency
@@ -228,7 +228,7 @@ public class CashOutOperationServiceImplementation implements CashOutOperationSe
                         , channelCommissionAccount.getId());
                 TransactionEntity commissionDeposit = createTransaction(channelCommissionAccount, physicalCashOutObjectDTO.getCommission(),
                         messageResolverOperationService.resolve(templateMessage, model), physicalCashOutRequestEntity.getAdditionalData(), physicalCashOutRequestEntity.getRequestTypeEntity().getId(), physicalCashOutRequestEntity.getRrnEntity());
-                transactionService.insertDeposit(commissionDeposit);
+                transactionRepositoryService.insertDeposit(commissionDeposit);
                 log.info("finish sell transaction for uniqueIdentifier ({}), commission ({}) for deposit commission from nationalCode ({}) with transactionId ({})", physicalCashOutRequestEntity.getRrnEntity().getId(), physicalCashOutObjectDTO.getCommission(), physicalCashOutObjectDTO.getNationalCode(), commissionDeposit.getId());
             }
 

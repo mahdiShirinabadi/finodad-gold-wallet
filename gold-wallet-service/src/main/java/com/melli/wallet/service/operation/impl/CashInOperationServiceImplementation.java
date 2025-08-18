@@ -51,7 +51,7 @@ public class CashInOperationServiceImplementation implements CashInOperationServ
     private final WalletCashLimitationOperationService walletCashLimitationOperationService;
     private final RequestTypeRepositoryService requestTypeRepositoryService;
     private final TemplateRepositoryService templateRepositoryService;
-    private final TransactionService transactionService;
+    private final TransactionRepositoryService transactionRepositoryService;
     private final MessageResolverOperationService messageResolverOperationService;
     private final StatusRepositoryService statusRepositoryService;
     private final RefnumberRepository refnumberRepository;
@@ -159,7 +159,7 @@ public class CashInOperationServiceImplementation implements CashInOperationServ
             model.put("additionalData", chargeObjectDTO.getAdditionalData());
             String templateMessage = templateRepositoryService.getTemplate(TemplateRepositoryService.CASH_IN);
             transaction.setDescription(messageResolverOperationService.resolve(templateMessage, model));
-            transactionService.insertDeposit(transaction);
+            transactionRepositoryService.insertDeposit(transaction);
             log.info("balance for walletAccount ===> {} update successful", walletAccountEntity.getAccountNumber());
 
             requestRepositoryService.save(cashInRequestEntity);

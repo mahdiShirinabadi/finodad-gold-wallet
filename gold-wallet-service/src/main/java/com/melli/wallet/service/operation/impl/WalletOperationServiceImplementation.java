@@ -19,7 +19,6 @@ import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -44,7 +43,7 @@ public class WalletOperationServiceImplementation implements WalletOperationalSe
     private final WalletTypeRepositoryService walletTypeRepositoryService;
     private final WalletLevelRepositoryService walletLevelRepositoryService;
     private final SettingGeneralRepositoryService settingGeneralRepositoryService;
-    private final TransactionService transactionService;
+    private final TransactionRepositoryService transactionRepositoryService;
 
     @Override
     @LogExecutionTime("Creating wallet for user")
@@ -66,7 +65,7 @@ public class WalletOperationServiceImplementation implements WalletOperationalSe
             WalletEntity walletEntity = walletRepositoryService.findByNationalCodeAndWalletTypeId(nationalCode, walletTypeEntity.getId());
             if (walletEntity != null) {
 
-                if(!Utility.cleanPhoneNumber(walletEntity.getMobile()).equalsIgnoreCase(Utility.cleanPhoneNumber(mobile))) {
+                if (!Utility.cleanPhoneNumber(walletEntity.getMobile()).equalsIgnoreCase(Utility.cleanPhoneNumber(mobile))) {
                     log.error("wallet with nationalCode ({}) exist with another mobile number ({})", nationalCode, walletEntity.getMobile());
                     throw new InternalServiceException("wallet exist with another mobileNumber", StatusRepositoryService.WALLET_EXIST_WITH_ANOTHER_MOBILE, HttpStatus.OK);
                 }
@@ -129,25 +128,6 @@ public class WalletOperationServiceImplementation implements WalletOperationalSe
     }
 
     @Override
-    public void getStatement(ChannelEntity channelEntity, Map<String, String> mapParameter, String ip) throws InternalServiceException {
-
-        log.info("start find all GeneralCustomLimitation for username ({}), mapParameter ({})",
-                channelEntity.getUsername(), Utility.mapToJsonOrNull(mapParameter));
-        if (mapParameter == null) {
-            mapParameter = new HashMap<>();
-        }
-
-        WalletTypeEntity walletTypeEntity = walletTypeRepositoryService.getByNameManaged(WalletTypeRepositoryService.NORMAL_USER);
-        WalletEntity walletEntity = walletRepositoryService.findByNationalCodeAndWalletTypeId(mapParameter.get("nationalCode"), walletTypeEntity.getId());
-        List<WalletAccountEntity> walletAccountEntityList = walletAccountRepositoryService.findByWallet(walletEntity);
-        Optional<WalletAccountEntity> walletAccountEntityOptional = walletAccountEntityList.stream().filter(x->x.getWalletAccountCurrencyEntity().getName().equalsIgnoreCase(WalletAccountCurrencyRepositoryService.GOLD)).findFirst();
-        if(walletAccountEntityOptional.isEmpty()) {
-            log.error("wallet for nationalCode ({}) not exist", walletEntity.getNationalCode());
-            throw new InternalServiceException("walletAccount not found", StatusRepositoryService.WALLET_ACCOUNT_NOT_FOUND, HttpStatus.OK);
-        }
-    }
-
-    @Override
     public CreateWalletResponse get(ChannelEntity channelEntity, String nationalCode) throws InternalServiceException {
 
         WalletTypeEntity walletTypeEntity = walletTypeRepositoryService.getByNameManaged(WalletTypeRepositoryService.NORMAL_USER);
@@ -166,7 +146,7 @@ public class WalletOperationServiceImplementation implements WalletOperationalSe
         return helper.fillCreateWalletResponse(walletEntity, walletAccountEntityList, walletAccountRepositoryService);
     }
 
-    public Specification<LimitationGeneralCustomEntity> getPredicate(Map<String, String> searchCriteria){
+    public Specification<LimitationGeneralCustomEntity> getPredicate(Map<String, String> searchCriteria) {
         return (root, query, criteriaBuilder) -> {
             List<Predicate> predicates = buildPredicatesFromCriteria(searchCriteria, root, criteriaBuilder);
             String orderBy = Optional.ofNullable(searchCriteria.get("orderBy")).orElse("id");

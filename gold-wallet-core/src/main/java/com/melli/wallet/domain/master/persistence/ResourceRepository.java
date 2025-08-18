@@ -14,5 +14,6 @@ import java.util.List;
 @Repository
 public interface ResourceRepository extends CrudRepository<ResourceEntity, Long> {
     List<ResourceEntity> findAll();
+    List<ResourceEntity> findAllByIdIn(List<Long> ids);
     ResourceEntity findByName(String name);
 }

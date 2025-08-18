@@ -4,21 +4,28 @@ import com.melli.wallet.domain.master.entity.ChannelEntity;
 import com.melli.wallet.domain.master.entity.MerchantEntity;
 import com.melli.wallet.domain.master.entity.MerchantWalletAccountCurrencyEntity;
 import com.melli.wallet.domain.master.persistence.MerchantWalletAccountCurrencyRepository;
+import com.melli.wallet.domain.request.PanelBaseSearchJson;
+import com.melli.wallet.domain.request.PanelChannelResourceUpdateRequest;
 import com.melli.wallet.domain.request.setup.ChannelCreateRequestJson;
 import com.melli.wallet.domain.request.setup.MerchantCreateRequestJson;
+import com.melli.wallet.domain.response.PanelChannelResponse;
 import com.melli.wallet.domain.response.base.BaseResponse;
+import com.melli.wallet.domain.response.panel.PanelRoleListResponse;
 import com.melli.wallet.domain.response.wallet.CreateWalletResponse;
 import com.melli.wallet.exception.InternalServiceException;
 import com.melli.wallet.security.RequestContext;
 import com.melli.wallet.service.operation.WalletOperationalService;
 import com.melli.wallet.service.repository.*;
+import com.melli.wallet.util.Utility;
 import com.melli.wallet.web.WebController;
 import io.micrometer.core.annotation.Timed;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -52,7 +59,7 @@ public class PanelChannelController extends WebController {
     @Timed(description = "Time taken to update limitation general")
     @PostMapping(path = "/channel/wallet/create", produces = {MediaType.APPLICATION_JSON_VALUE}, consumes = {MediaType.APPLICATION_JSON_VALUE})
     @Operation(security = {@SecurityRequirement(name = "bearer-key")}, summary = "Update general limitation (value and pattern only)")
-    @PreAuthorize("hasAuthority(\"" + ResourceRepositoryService.LIMITATION_MANAGE + "\")")
+    @PreAuthorize("hasAuthority(\"" + ResourceRepositoryService.PANEL_CHANNEL_LIST + "\")")
     public ResponseEntity<BaseResponse<String>> createChannelWallet(@Valid @RequestBody ChannelCreateRequestJson requestJson) throws InternalServiceException {
 
         ChannelEntity channel = channelRepositoryService.getChannel(requestJson.getUsername());
@@ -74,7 +81,7 @@ public class PanelChannelController extends WebController {
     @Timed(description = "Time taken to update limitation general")
     @PostMapping(path = "/merchant/create", produces = {MediaType.APPLICATION_JSON_VALUE}, consumes = {MediaType.APPLICATION_JSON_VALUE})
     @Operation(security = {@SecurityRequirement(name = "bearer-key")}, summary = "Update general limitation (value and pattern only)")
-    @PreAuthorize("hasAuthority(\"" + ResourceRepositoryService.LIMITATION_MANAGE + "\")")
+    @PreAuthorize("hasAuthority(\"" + ResourceRepositoryService.PANEL_CHANNEL_LIST + "\")")
     public ResponseEntity<BaseResponse<String>> createMerchantWallet(@Valid @RequestBody MerchantCreateRequestJson requestJson) throws InternalServiceException {
 
         CreateWalletResponse createWalletResponse = walletOperationalService.createWallet(requestContext.getChannelEntity(), requestJson.getMobileNumber(), "1111111111", WalletTypeRepositoryService.MERCHANT, List.of(WalletAccountCurrencyRepositoryService.GOLD, WalletAccountCurrencyRepositoryService.RIAL),

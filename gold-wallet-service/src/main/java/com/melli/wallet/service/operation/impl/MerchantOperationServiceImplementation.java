@@ -27,7 +27,7 @@ import java.util.List;
 public class MerchantOperationServiceImplementation implements MerchantOperationService {
 
     private final WalletAccountRepositoryService walletAccountRepositoryService;
-    private final TransactionService transactionService;
+    private final TransactionRepositoryService transactionRepositoryService;
     private final RrnRepositoryService rrnRepositoryService;
     private final RequestTypeRepositoryService requestTypeRepositoryService;
     private final RedisLockService redisLockService;
@@ -110,7 +110,7 @@ public class MerchantOperationServiceImplementation implements MerchantOperation
             transaction.setDescription("افزایش مانده پذیرنده " + merchant.getName() + " به مبلغ " + amount + " - شناسه تراکنش: " + rrnEntity.getId());
 
             // Execute deposit transaction
-            transactionService.insertDeposit(transaction);
+            transactionRepositoryService.insertDeposit(transaction);
 
             log.info("finish increaseBalance for merchant {} with amount {} and traceId {}", merchantId, amount, rrnEntity.getUuid());
             return rrnEntity.getUuid();
@@ -171,7 +171,7 @@ public class MerchantOperationServiceImplementation implements MerchantOperation
             transaction.setDescription("کاهش مانده پذیرنده " + merchant.getName() + " به مبلغ " + amount + " - شناسه تراکنش: " + rrnEntity.getId());
 
             // Execute withdrawal transaction
-            transactionService.insertWithdraw(transaction);
+            transactionRepositoryService.insertWithdraw(transaction);
 
             log.info("finish decreaseBalance for merchant {} with amount {} and traceId {}", merchantId, amount, rrnEntity.getUuid());
             return rrnEntity.getUuid();

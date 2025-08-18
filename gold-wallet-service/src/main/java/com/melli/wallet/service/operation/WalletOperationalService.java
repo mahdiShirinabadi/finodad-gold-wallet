@@ -12,7 +12,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * @author ShirinAbadi.Mahdi on 6/18/2022
@@ -31,6 +30,5 @@ public interface WalletOperationalService {
     BaseResponse<ObjectUtils.Null> deactivateWallet(ChannelEntity channel, String walletId, String ip) throws InternalServiceException;
     BaseResponse<ObjectUtils.Null> deleteWallet(ChannelEntity channel, String walletId, String ip) throws InternalServiceException;
     BaseResponse<ObjectUtils.Null> activateWallet(ChannelEntity channel, String walletId, String ip) throws InternalServiceException;
-    void getStatement(ChannelEntity channel, Map<String, String> mapParameter, String ip) throws InternalServiceException;
 
 }

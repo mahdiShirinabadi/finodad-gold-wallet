@@ -86,6 +86,21 @@ public interface StatusRepositoryService {
     int PHYSICAL_CASHOUT_EXCEEDED_AMOUNT_DAILY_LIMITATION = 71;
 
     int MERCHANT_IS_DISABLE = 72;
+    
+    // Panel Role Management Status Codes
+    int ROLE_NOT_FOUND = 73;
+    int ROLE_ALREADY_EXISTS = 74;
+    int ROLE_IN_USE = 75;
+    int ROLE_ALREADY_ASSIGNED = 76;
+    int ROLE_NOT_ASSIGNED = 77;
+    
+    // Panel Resource Management Status Codes
+    int RESOURCE_NOT_FOUND = 78;
+    int RESOURCE_ALREADY_EXISTS = 79;
+    int RESOURCE_IN_USE = 80;
+    
+    // General Error Codes
+    int INTERNAL_ERROR = 99;
 
 
     int REFRESH_TOKEN_NOT_BELONG_TO_PROFILE = 898;

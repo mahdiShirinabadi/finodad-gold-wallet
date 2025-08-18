@@ -37,7 +37,7 @@ public class PurchaseTransactionalService {
     private final RrnRepositoryService rrnRepositoryService;
     private final RequestRepositoryService requestRepositoryService;
     private final Helper helper;
-    private final TransactionService transactionService;
+    private final TransactionRepositoryService transactionRepositoryService;
     private final MessageResolverOperationService messageResolverOperationService;
     private final TemplateRepositoryService templateRepositoryService;
     private final RequestTypeRepositoryService requestTypeRepositoryService;
@@ -171,7 +171,7 @@ public class PurchaseTransactionalService {
         log.info("start buy transaction for uniqueIdentifier ({}), price ({}) for withdrawal user from nationalCode ({}), walletAccountId ({})", purchaseRequest.getRrnEntity().getUuid(), purchaseRequest.getPrice(), purchaseRequest.getNationalCode(), userRialAccount.getId());
         TransactionEntity userWithdrawalTransaction = createTransaction(userRialAccount, BigDecimal.valueOf(purchaseRequest.getPrice()),
                 messageResolverOperationService.resolve(withdrawalTemplate, model), purchaseRequest.getAdditionalData(), purchaseRequest, purchaseRequest.getRrnEntity());
-        transactionService.insertWithdraw(userWithdrawalTransaction);
+        transactionRepositoryService.insertWithdraw(userWithdrawalTransaction);
         log.info("finish buy transaction for uniqueIdentifier ({}), price ({}) for withdrawal user from nationalCode ({}) with transactionId ({})", purchaseRequest.getRrnEntity().getUuid(), purchaseRequest.getPrice(), purchaseRequest.getNationalCode(), userWithdrawalTransaction.getId());
 
         // commission must be rial
@@ -179,7 +179,7 @@ public class PurchaseTransactionalService {
             log.info("start buy transaction for uniqueIdentifier ({}), commission ({}) for deposit commission from nationalCode ({}), walletAccountId ({})", purchaseRequest.getRrnEntity().getUuid(), commission, purchaseRequest.getNationalCode(), channelCommissionAccount.getId());
             TransactionEntity commissionDeposit = createTransaction(channelCommissionAccount, commission,
                     messageResolverOperationService.resolve(depositTemplate, model), purchaseRequest.getAdditionalData(), purchaseRequest, purchaseRequest.getRrnEntity());
-            transactionService.insertDeposit(commissionDeposit);
+            transactionRepositoryService.insertDeposit(commissionDeposit);
             log.info("finish buy transaction for uniqueIdentifier ({}), commission ({}) for deposit commission from nationalCode ({}) with transactionId ({})", purchaseRequest.getRrnEntity().getId(), commission, purchaseRequest.getNationalCode(), commissionDeposit.getId());
         }
 
@@ -189,7 +189,7 @@ public class PurchaseTransactionalService {
         TransactionEntity merchantDeposit = createTransaction(
                 merchantRialAccount, merchantDepositPrice,
                 messageResolverOperationService.resolve(depositTemplate, model), purchaseRequest.getAdditionalData(), purchaseRequest, purchaseRequest.getRrnEntity());
-        transactionService.insertDeposit(merchantDeposit);
+        transactionRepositoryService.insertDeposit(merchantDeposit);
         log.info("finish buy transaction for uniqueIdentifier ({}), price ({}) for deposit merchant walletAccountId({}) with transactionId({})", purchaseRequest.getRrnEntity().getUuid(), merchantDepositPrice, merchantRialAccount.getId(), merchantDeposit.getId());
 
         // Merchant withdrawal (currency)
@@ -199,7 +199,7 @@ public class PurchaseTransactionalService {
                 messageResolverOperationService.resolve(withdrawalTemplate, model),
                 purchaseRequest.getAdditionalData(), purchaseRequest, purchaseRequest.getRrnEntity()
         );
-        transactionService.insertWithdraw(merchantWithdrawal);
+        transactionRepositoryService.insertWithdraw(merchantWithdrawal);
         log.info("finish buy transaction for uniqueIdentifier ({}), quantity ({}) for withdrawal merchant walletAccountId({}), transactionId({})", purchaseRequest.getRrnEntity().getUuid(), purchaseRequest.getQuantity(), merchantCurrencyAccount.getId(), merchantWithdrawal.getId());
 
         // User deposit (currency)
@@ -208,7 +208,7 @@ public class PurchaseTransactionalService {
                 userCurrencyAccount,
                 purchaseRequest.getQuantity(), messageResolverOperationService.resolve(depositTemplate, model), purchaseRequest.getAdditionalData(), purchaseRequest, purchaseRequest.getRrnEntity()
         );
-        transactionService.insertDeposit(userDepositTransaction);
+        transactionRepositoryService.insertDeposit(userDepositTransaction);
         log.info("finish buy transaction for uniqueIdentifier ({}), quantity ({}) for deposit currency user walletAccountId({}), transactionId ({})", purchaseRequest.getRrnEntity().getUuid(), purchaseRequest.getQuantity(), userCurrencyAccount.getId(), userDepositTransaction.getId());
 
         log.info("terminate buyProcessTransactions for uniqueIdentifier ({})", purchaseRequest.getRrnEntity().getUuid());
@@ -238,7 +238,7 @@ public class PurchaseTransactionalService {
         TransactionEntity merchantRialWithdrawal = createTransaction(
                 merchantRialAccount, BigDecimal.valueOf(purchaseRequest.getPrice()),
                 messageResolverOperationService.resolve(withdrawalTemplate, model), purchaseRequest.getAdditionalData(), purchaseRequest, purchaseRequest.getRrnEntity());
-        transactionService.insertWithdraw(merchantRialWithdrawal);
+        transactionRepositoryService.insertWithdraw(merchantRialWithdrawal);
         log.info("finish sell transaction for uniqueIdentifier ({}), price ({}) for merchant withdrawal from id ({}), walletAccountId ({}), transactionId ({})", purchaseRequest.getRrnEntity().getUuid(), purchaseRequest.getPrice(), purchaseRequest.getMerchantEntity().getId(), userRialAccount.getId(),
                 merchantRialWithdrawal.getId());
 
@@ -248,7 +248,7 @@ public class PurchaseTransactionalService {
             log.info("start sell transaction for uniqueIdentifier ({}), commission ({}) for deposit commission from nationalCode ({}), walletAccountId ({})", purchaseRequest.getRrnEntity().getUuid(), commission, purchaseRequest.getNationalCode(), channelCommissionAccount.getId());
             TransactionEntity commissionDeposit = createTransaction(channelCommissionAccount, commission,
                     messageResolverOperationService.resolve(depositTemplate, model), purchaseRequest.getAdditionalData(), purchaseRequest, purchaseRequest.getRrnEntity());
-            transactionService.insertDeposit(commissionDeposit);
+            transactionRepositoryService.insertDeposit(commissionDeposit);
             log.info("finish sell transaction for uniqueIdentifier ({}), commission ({}) for deposit commission from nationalCode ({}) with transactionId ({})", purchaseRequest.getRrnEntity().getId(), commission, purchaseRequest.getNationalCode(), commissionDeposit.getId());
         }
 
@@ -256,21 +256,21 @@ public class PurchaseTransactionalService {
         log.info("start sell transaction for uniqueIdentifier ({}), price ({}) for user deposit currency user walletAccountId({})", purchaseRequest.getRrnEntity().getUuid(), purchaseRequest.getPrice(), userCurrencyAccount.getId());
         TransactionEntity userRialDeposit = createTransaction(userRialAccount, BigDecimal.valueOf(purchaseRequest.getPrice()),
                 messageResolverOperationService.resolve(depositTemplate, model), purchaseRequest.getAdditionalData(), purchaseRequest, purchaseRequest.getRrnEntity());
-        transactionService.insertDeposit(userRialDeposit);
+        transactionRepositoryService.insertDeposit(userRialDeposit);
         log.info("finish sell transaction for uniqueIdentifier ({}), price ({}) for user deposit currency user walletAccountId({}), transactionId ({})", purchaseRequest.getRrnEntity().getUuid(), purchaseRequest.getPrice(), userCurrencyAccount.getId(), userRialDeposit.getId());
 
         // user withdrawal (currency) (quantity)
         log.info("start sell transaction for uniqueIdentifier ({}), quantity ({}) for user withdrawal user walletAccountId({})", purchaseRequest.getRrnEntity().getUuid(), purchaseRequest.getQuantity(), merchantCurrencyAccount.getId());
         TransactionEntity merchantCurrencyWithdrawal = createTransaction(userCurrencyAccount, (purchaseRequest.getQuantity()),
                 messageResolverOperationService.resolve(withdrawalTemplate, model), purchaseRequest.getAdditionalData(), purchaseRequest, purchaseRequest.getRrnEntity());
-        transactionService.insertWithdraw(merchantCurrencyWithdrawal);
+        transactionRepositoryService.insertWithdraw(merchantCurrencyWithdrawal);
         log.info("start sell transaction for uniqueIdentifier ({}), quantity ({}) for user withdrawal user walletAccountId({})", purchaseRequest.getRrnEntity().getUuid(), purchaseRequest.getQuantity(), merchantCurrencyAccount.getId());
 
         // merchant deposit (currency) (quantity - commission)
         log.info("start sell transaction for uniqueIdentifier ({}), quantity ({}) for merchant deposit currency user walletAccountId({})", purchaseRequest.getRrnEntity().getUuid(), purchaseRequest.getQuantity().subtract(commission), userCurrencyAccount.getId());
         TransactionEntity merchantCurrencyDeposit = createTransaction(merchantCurrencyAccount, purchaseRequest.getQuantity().subtract(commission),
                 messageResolverOperationService.resolve(depositTemplate, model), purchaseRequest.getAdditionalData(), purchaseRequest, purchaseRequest.getRrnEntity());
-        transactionService.insertDeposit(merchantCurrencyDeposit);
+        transactionRepositoryService.insertDeposit(merchantCurrencyDeposit);
         log.info("finish sell transaction for uniqueIdentifier ({}), quantity ({}) for merchant deposit currency user walletAccountId({}), transactionId ({})", purchaseRequest.getRrnEntity().getUuid(), purchaseRequest.getQuantity().subtract(commission), userCurrencyAccount.getId(), merchantCurrencyDeposit.getId());
         walletSellLimitationOperationService.updateLimitation(userCurrencyAccount, new BigDecimal(purchaseRequest.getPrice()), purchaseRequest.getQuantity(), purchaseRequest.getRrnEntity().getUuid());
     }
