@@ -1,5 +1,6 @@
 package com.melli.wallet.web.panel;
 
+import com.melli.wallet.annotation.LogExecutionTime;
 import com.melli.wallet.domain.master.entity.ChannelEntity;
 import com.melli.wallet.domain.master.entity.MerchantEntity;
 import com.melli.wallet.domain.master.entity.MerchantWalletAccountCurrencyEntity;
@@ -60,6 +61,7 @@ public class PanelChannelController extends WebController {
     @PostMapping(path = "/channel/wallet/create", produces = {MediaType.APPLICATION_JSON_VALUE}, consumes = {MediaType.APPLICATION_JSON_VALUE})
     @Operation(security = {@SecurityRequirement(name = "bearer-key")}, summary = "Update general limitation (value and pattern only)")
     @PreAuthorize("hasAuthority(\"" + ResourceRepositoryService.PANEL_CHANNEL_LIST + "\")")
+    @LogExecutionTime("Create channel wallet")
     public ResponseEntity<BaseResponse<String>> createChannelWallet(@Valid @RequestBody ChannelCreateRequestJson requestJson) throws InternalServiceException {
 
         ChannelEntity channel = channelRepositoryService.getChannel(requestJson.getUsername());
@@ -82,6 +84,7 @@ public class PanelChannelController extends WebController {
     @PostMapping(path = "/merchant/create", produces = {MediaType.APPLICATION_JSON_VALUE}, consumes = {MediaType.APPLICATION_JSON_VALUE})
     @Operation(security = {@SecurityRequirement(name = "bearer-key")}, summary = "Update general limitation (value and pattern only)")
     @PreAuthorize("hasAuthority(\"" + ResourceRepositoryService.PANEL_CHANNEL_LIST + "\")")
+    @LogExecutionTime("Create merchant wallet")
     public ResponseEntity<BaseResponse<String>> createMerchantWallet(@Valid @RequestBody MerchantCreateRequestJson requestJson) throws InternalServiceException {
 
         CreateWalletResponse createWalletResponse = walletOperationalService.createWallet(requestContext.getChannelEntity(), requestJson.getMobileNumber(), "1111111111", WalletTypeRepositoryService.MERCHANT, List.of(WalletAccountCurrencyRepositoryService.GOLD, WalletAccountCurrencyRepositoryService.RIAL),

@@ -1,5 +1,6 @@
 package com.melli.wallet.web.panel;
 
+import com.melli.wallet.annotation.LogExecutionTime;
 import com.melli.wallet.domain.request.PanelBaseSearchJson;
 import com.melli.wallet.domain.request.limitation.CreateLimitationGeneralCustomRequestJson;
 import com.melli.wallet.domain.request.limitation.UpdateLimitationGeneralRequestJson;
@@ -48,6 +49,7 @@ public class PanelLimitationController extends WebController {
     @PostMapping(path = "/updateGeneral", produces = {MediaType.APPLICATION_JSON_VALUE}, consumes = {MediaType.APPLICATION_JSON_VALUE})
     @Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "Update general limitation (value and pattern only)")
     @PreAuthorize("hasAuthority(\""+ ResourceRepositoryService.LIMITATION_MANAGE +"\")")
+    @LogExecutionTime("Update limitation general")
     public ResponseEntity<BaseResponse<String>> updateLimitationGeneral(@Valid @RequestBody UpdateLimitationGeneralRequestJson request) throws InternalServiceException {
         String channelIp = requestContext.getClientIp();
         String username = requestContext.getChannelEntity().getUsername();
@@ -60,6 +62,7 @@ public class PanelLimitationController extends WebController {
     @PostMapping(path = "/insertGeneralCustom", produces = {MediaType.APPLICATION_JSON_VALUE}, consumes = {MediaType.APPLICATION_JSON_VALUE})
     @Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "Insert general custom limitation")
     @PreAuthorize("hasAuthority(\""+ ResourceRepositoryService.LIMITATION_MANAGE +"\")")
+    @LogExecutionTime("Insert limitation general custom")
     public ResponseEntity<BaseResponse<String>> insertLimitationGeneralCustom(@Valid @RequestBody CreateLimitationGeneralCustomRequestJson request) throws InternalServiceException {
         String channelIp = requestContext.getClientIp();
         String username = requestContext.getChannelEntity().getUsername();
@@ -82,6 +85,7 @@ public class PanelLimitationController extends WebController {
     @PostMapping(path = "/generalList", produces = {MediaType.APPLICATION_JSON_VALUE})
     @Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "Get general limitations list")
     @PreAuthorize("hasAuthority(\""+ ResourceRepositoryService.LIMITATION_MANAGE +"\")")
+    @LogExecutionTime("Get general limitations list")
     public ResponseEntity<BaseResponse<GeneralLimitationListResponse>> getGeneralLimitationsList(@Valid @RequestBody PanelBaseSearchJson panelSearchJson) throws InternalServiceException {
         String channelIp = requestContext.getClientIp();
         String username = requestContext.getChannelEntity().getUsername();
@@ -96,6 +100,7 @@ public class PanelLimitationController extends WebController {
     @PostMapping(path = "/generalCustomList", produces = {MediaType.APPLICATION_JSON_VALUE})
     @Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "Get general custom limitations list")
     @PreAuthorize("hasAuthority(\""+ ResourceRepositoryService.LIMITATION_MANAGE +"\")")
+    @LogExecutionTime("Get general custom limitations list")
     public ResponseEntity<BaseResponse<GeneralCustomLimitationListResponse>> getGeneralCustomLimitationsList(@Valid @RequestBody PanelBaseSearchJson panelSearchJson) throws InternalServiceException {
         String channelIp = requestContext.getClientIp();
         String username = requestContext.getChannelEntity().getUsername();
