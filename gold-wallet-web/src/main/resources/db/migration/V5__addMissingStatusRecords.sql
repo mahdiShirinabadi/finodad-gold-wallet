@@ -31,16 +31,12 @@ insert into status(created_by, created_at, code, persian_description) values ('a
 insert into status(created_by, created_at, code, persian_description) values ('admin',now(),'68','موجودی پذیرنده کافی نیست') on conflict do nothing;
 insert into status(created_by, created_at, code, persian_description) values ('admin',now(),'998','زمان انتظار به پایان رسیده است') on conflict do nothing;
 
--- Add new request types for merchant balance operations
-INSERT into request_type(created_by, created_at, name, fa_name, display)
-VALUES ('System', now(), 'merchant_increase_balance', 'افزایش مانده پذیرنده', 1)
-on conflict do nothing;
-
-INSERT into request_type(created_by, created_at, name, fa_name, display)
-VALUES ('System', now(), 'merchant_decrease_balance', 'کاهش مانده پذیرنده', 1)
-on conflict do nothing;
 
 -- Add new resources for merchant balance operations
+insert into resource(created_by, created_at, name, fa_name, display)
+values ('System', now(), 'MERCHANT_BALANCE', 'افزایش مانده پذیرنده', 1)
+    on conflict do nothing;
+
 insert into resource(created_by, created_at, name, fa_name, display)
 values ('System', now(), 'MERCHANT_INCREASE_BALANCE', 'افزایش مانده پذیرنده', 1)
 on conflict do nothing;
@@ -48,3 +44,16 @@ on conflict do nothing;
 insert into resource(created_by, created_at, name, fa_name, display)
 values ('System', now(), 'MERCHANT_DECREASE_BALANCE', 'کاهش مانده پذیرنده', 1)
 on conflict do nothing;
+
+
+INSERT INTO role_resource(created_by, created_at, role_id, resource_id)
+VALUES ('System', now(), (select id from role_ where name='WEB_PROFILE'), (select id from resource where name='MERCHANT_BALANCE'))
+    on conflict do nothing;
+
+INSERT INTO role_resource(created_by, created_at, role_id, resource_id)
+VALUES ('System', now(), (select id from role_ where name='WEB_PROFILE'), (select id from resource where name='MERCHANT_INCREASE_BALANCE'))
+    on conflict do nothing;
+
+INSERT INTO role_resource(created_by, created_at, role_id, resource_id)
+VALUES ('System', now(), (select id from role_ where name='WEB_PROFILE'), (select id from resource where name='MERCHANT_DECREASE_BALANCE'))
+    on conflict do nothing;
