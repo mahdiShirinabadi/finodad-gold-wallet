@@ -60,7 +60,7 @@ public class PanelChannelController extends WebController {
     @Timed(description = "Time taken to update limitation general")
     @PostMapping(path = "/channel/wallet/create", produces = {MediaType.APPLICATION_JSON_VALUE}, consumes = {MediaType.APPLICATION_JSON_VALUE})
     @Operation(security = {@SecurityRequirement(name = "bearer-key")}, summary = "Update general limitation (value and pattern only)")
-    @PreAuthorize("hasAuthority(\"" + ResourceRepositoryService.PANEL_CHANNEL_LIST + "\")")
+    @PreAuthorize("hasAuthority(\"" + ResourceRepositoryService.CHANNEL_MANAGE + "\")")
     @LogExecutionTime("Create channel wallet")
     public ResponseEntity<BaseResponse<String>> createChannelWallet(@Valid @RequestBody ChannelCreateRequestJson requestJson) throws InternalServiceException {
 
@@ -83,17 +83,17 @@ public class PanelChannelController extends WebController {
     @Timed(description = "Time taken to update limitation general")
     @PostMapping(path = "/merchant/create", produces = {MediaType.APPLICATION_JSON_VALUE}, consumes = {MediaType.APPLICATION_JSON_VALUE})
     @Operation(security = {@SecurityRequirement(name = "bearer-key")}, summary = "Update general limitation (value and pattern only)")
-    @PreAuthorize("hasAuthority(\"" + ResourceRepositoryService.PANEL_CHANNEL_LIST + "\")")
+    @PreAuthorize("hasAuthority(\"" + ResourceRepositoryService.MERCHANT_MANAGE + "\")")
     @LogExecutionTime("Create merchant wallet")
     public ResponseEntity<BaseResponse<String>> createMerchantWallet(@Valid @RequestBody MerchantCreateRequestJson requestJson) throws InternalServiceException {
 
-        CreateWalletResponse createWalletResponse = walletOperationalService.createWallet(requestContext.getChannelEntity(), requestJson.getMobileNumber(), "1111111111", WalletTypeRepositoryService.MERCHANT, List.of(WalletAccountCurrencyRepositoryService.GOLD, WalletAccountCurrencyRepositoryService.RIAL),
+        CreateWalletResponse createWalletResponse = walletOperationalService.createWallet(requestContext.getChannelEntity(), requestJson.getMobileNumber(), requestJson.getEconomicCode(), WalletTypeRepositoryService.MERCHANT, List.of(WalletAccountCurrencyRepositoryService.GOLD, WalletAccountCurrencyRepositoryService.RIAL),
                 List.of(WalletAccountTypeRepositoryService.NORMAL));
         MerchantEntity merchantEntity = new MerchantEntity();
         merchantEntity.setName(requestJson.getName());
         merchantEntity.setDescription("create merchant");
         merchantEntity.setMobile(requestJson.getMobileNumber());
-        merchantEntity.setNationalCode("1111111111");
+        merchantEntity.setNationalCode(requestJson.getEconomicCode());
         merchantEntity.setEconomicalCode(requestJson.getEconomicCode());
         merchantEntity.setLogo("");
         merchantEntity.setWalletEntity(walletRepositoryService.findById(Long.parseLong(createWalletResponse.getWalletId())));
@@ -117,7 +117,7 @@ public class PanelChannelController extends WebController {
         rialEntity.setWalletAccountCurrencyEntity(walletAccountCurrencyRepositoryService.findCurrency(WalletAccountCurrencyRepositoryService.RIAL));
         merchantWalletAccountCurrencyRepository.save(rialEntity);
 
-        return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse<>(true, "wage wallet created for channel"));
+        return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse<>(true, "merchant created successful"));
     }
 
 

@@ -41,6 +41,7 @@ values ('system', 'now()', (select id from role_ where name='WEB_PROFILE'), (sel
 insert into channel_role(created_by, created_at, role_id, channel_id) values ('system',now(),(select id from role_ where name='WEB_PROFILE'), (select id from channel where username='admin'));
 
 -- create merchant
+/*
 insert into wallet(mobile, national_code, description, owner_channel_id, wallet_type_id, wallet_level_id, status,
                    created_at, created_by)
 values ('09124162337', '1111111111', 'merchant',
@@ -80,5 +81,5 @@ where wallet_id = (select id from wallet where national_code = '1111111111' and 
 
 insert into merchant(created_by, created_at, name, mobile, national_code, economical_code, wallet_id, settlement_type,status)
 values ('System',now(),'فروشگاه تست','09124162337','1111111111','123467980',
-        (select id from wallet where national_code = '1111111111' and wallet.description = 'merchant'),1,1);
+        (select id from wallet where national_code = '1111111111' and wallet.description = 'merchant'),1,1);*/
 

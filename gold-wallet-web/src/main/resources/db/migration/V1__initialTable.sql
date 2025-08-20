@@ -540,7 +540,7 @@ VALUES ('System', now(), 'MAX_WRONG_PASSWORD_FOR_PROFILE', '5', 'حداکثر ت
 on conflict do nothing;
 
 INSERT INTO setting_general(created_by, created_at, name, value, additional_data)
-VALUES ('System', now(), 'DURATION_ACCESS_TOKEN_PROFILE', '600', 'زمان توکن پروفایل')
+VALUES ('System', now(), 'DURATION_ACCESS_TOKEN_PROFILE', '6000', 'زمان توکن پروفایل')
 on conflict do nothing;
 
 INSERT INTO setting_general(created_by, created_at, name, value, additional_data)
@@ -652,7 +652,7 @@ CREATE UNIQUE INDEX idx_unique_national_code_wallet_type ON wallet (national_cod
 insert into channel(created_by, created_at, firstname, lastname, username, mobile, password, trust, sign, public_key,
                     ip, status, account, check_shahkar)
 values ('Systen', now(), 'Mahdi', 'admin', 'admin', '09124162337',
-        '$2a$10$U5lecEunX.HBU.MBVLUV8OvwCrgGDJtaKVgGA5hzgwfsfTV8GD8TK', 1, 0, '', '0.0.0.0/0', 1,
+        '$2a$10$U5lecEunX.HBU.MBVLUV8OvwCrgGDJtaKVgGA5hzgwfsfTV8GD8TK', 1, 0, '', '0:0:0:0:0:0:0:1;0.0.0.0/0', 1,
         '1234567890', '0');
 
 insert into resource(created_by, created_at, name, fa_name, display)

@@ -21,8 +21,8 @@ import lombok.*;
 @ToString
 public class CreateLimitationGeneralCustomRequestJson {
 
-    @Schema(name = NamingProperty.ID, required = true)
-    @JsonProperty(NamingProperty.ID)
+    @Schema(name = NamingProperty.LIMITATION_GENERAL_ID)
+    @JsonProperty(NamingProperty.LIMITATION_GENERAL_ID)
     @NotNull(message = "General limitation ID is required")
     @NumberValidation(label = "شناسه محدودیت عمومی")
     private String limitationGeneralId;

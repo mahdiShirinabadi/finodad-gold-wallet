@@ -285,9 +285,8 @@ public class AdvancedServiceLoggingAspect {
         if (logExecutionTime) {
             logMessage.append(" - Execution time: ").append(executionTime).append("ms");
         }
-        
+
         logMessage.append(" - Exception: ").append(throwable.getMessage());
-        
-        log.error(logMessage.toString(), throwable);
+        log.error(logMessage.toString());
     }
 }

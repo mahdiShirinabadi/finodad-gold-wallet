@@ -36,8 +36,7 @@ public interface ResourceRepositoryService {
     String MERCHANT_DECREASE_BALANCE = "MERCHANT_DECREASE_BALANCE";
     String MERCHANT_MANAGE = "MERCHANT_MANAGE";
     String STATEMENT = "STATEMENT";
-    String PANEL_CHANNEL_LIST = "PANEL_CHANNEL_LIST";
-    
+
 
     // Panel Management Resources (Simplified)
     String ROLE_MANAGE = "ROLE_MANAGE";
