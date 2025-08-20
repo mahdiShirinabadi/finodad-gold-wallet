@@ -127,7 +127,7 @@ public class RoleManagementController extends WebController {
      * Add resources to a role (keep existing resources and add new ones)
      */
     @Timed(description = "Time taken to add resources to role")
-    @PostMapping(path = "/add-resources", produces = {MediaType.APPLICATION_JSON_VALUE}, consumes = {MediaType.APPLICATION_JSON_VALUE})
+    @PostMapping(path = "/addResources", produces = {MediaType.APPLICATION_JSON_VALUE}, consumes = {MediaType.APPLICATION_JSON_VALUE})
     @Operation(security = {@SecurityRequirement(name = "bearer-key")}, summary = "Add resources to a role (keep existing resources)")
     @PreAuthorize("hasAuthority(\"" + ResourceRepositoryService.ROLE_MANAGE + "\")")
     @LogExecutionTime("Add resources to role")
@@ -165,7 +165,7 @@ public class RoleManagementController extends WebController {
      * 5. Assign Role To Channel
      */
     @Timed(description = "Time taken to assign role to channel")
-    @PostMapping(path = "/assign-role-to-channel", produces = {MediaType.APPLICATION_JSON_VALUE}, consumes = {MediaType.APPLICATION_JSON_VALUE})
+    @PostMapping(path = "/assignRoleToChannel", produces = {MediaType.APPLICATION_JSON_VALUE}, consumes = {MediaType.APPLICATION_JSON_VALUE})
     @Operation(security = {@SecurityRequirement(name = "bearer-key")}, summary = "Assign a role to a channel")
     @PreAuthorize("hasAuthority(\"" + ResourceRepositoryService.CHANNEL_MANAGE + "\")")
     @LogExecutionTime("Assign role to channel")

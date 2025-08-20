@@ -223,7 +223,7 @@ CREATE TABLE if not exists wallet_account
     status                     VARCHAR(100),
     version                    BIGINT,
     pin                        VARCHAR(100),
-    balance                    NUMERIC(15, 5) default 0,
+    balance                    NUMERIC(25, 5) default 0,
     end_time                   TIMESTAMP WITHOUT TIME ZONE
 );
 
@@ -521,9 +521,9 @@ CREATE TABLE if not exists transaction_part
     updated_at        TIMESTAMP WITHOUT TIME ZONE,
     wallet_account_id int                         not null references wallet_account (id),
     request_type_id   int,
-    amount            NUMERIC(15, 5)             not null,
+    amount            NUMERIC(25, 5)             not null,
     type              varchar(1)                  not null,
-    balance           NUMERIC(15, 5)              not null,
+    balance           NUMERIC(25, 5)              not null,
     description       varchar(200) default null,
     additional_data   varchar(300) default null,
     rrn_id            bigint,
@@ -580,27 +580,15 @@ VALUES ('System', now(), 'MIN_AMOUNT_CASH_IN', '1000', 'حداقل مبلغ شا
 on conflict do nothing;
 
 INSERT INTO limitation_general(created_by, created_at, name, value, additional_data)
-VALUES ('System', now(), 'MAX_AMOUNT_CASH_IN', '1000000', 'حداکثر مبلغ شارژ کیف پول')
+VALUES ('System', now(), 'MAX_AMOUNT_CASH_IN', '100000000000', 'حداکثر مبلغ شارژ کیف پول')
 on conflict do nothing;
 
 INSERT INTO limitation_general(created_by, created_at, name, value, additional_data)
-VALUES ('System', now(), 'MAX_WALLET_AMOUNT_DAILY_CASH_IN', '10000000', 'حداکثر مبالغ شارژ کیف پول در روز')
+VALUES ('System', now(), 'MAX_WALLET_AMOUNT_DAILY_CASH_IN', '100000000000', 'حداکثر مبالغ شارژ کیف پول در روز')
 on conflict do nothing;
 
 INSERT INTO limitation_general(created_by, created_at, name, value, additional_data)
-VALUES ('System', now(), 'MAX_WALLET_BALANCE', '1000000', 'حداکثر مانده کیف پول')
-on conflict do nothing;
-
-INSERT INTO limitation_general(created_by, created_at, name, value, additional_data)
-VALUES ('System', now(), 'MAX_WALLET_BALANCE', '1000000', 'حداکثر مانده کیف پول')
-on conflict do nothing;
-
-INSERT INTO limitation_general(created_by, created_at, name, value, additional_data)
-VALUES ('System', now(), 'MAX_WALLET_BALANCE', '1000000', 'حداکثر مانده کیف پول')
-on conflict do nothing;
-
-INSERT INTO limitation_general(created_by, created_at, name, value, additional_data)
-VALUES ('System', now(), 'MAX_WALLET_BALANCE', '1000000', 'حداکثر مانده کیف پول')
+VALUES ('System', now(), 'MAX_WALLET_BALANCE', '100000000000', 'حداکثر مانده کیف پول')
 on conflict do nothing;
 
 INSERT INTO limitation_general(created_by, created_at, name, value, additional_data)

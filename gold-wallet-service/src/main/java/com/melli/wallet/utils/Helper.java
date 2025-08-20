@@ -40,6 +40,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.util.matcher.IpAddressMatcher;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.text.DecimalFormat;
 import java.util.*;
 
 
@@ -370,19 +372,25 @@ public class Helper {
     public WalletBalanceResponse fillWalletBalanceResponse(List<WalletAccountEntity> walletAccountEntityList, WalletAccountRepositoryService walletAccountRepositoryService) {
         WalletBalanceResponse response = new WalletBalanceResponse();
         List<WalletAccountObject> walletAccountObjectList = new ArrayList<>();
+        walletAccountEntityList.sort(Comparator.comparingDouble(WalletAccountEntity::getId));
         for (WalletAccountEntity walletAccountEntity : walletAccountEntityList) {
             WalletAccountObject walletAccountObject = new WalletAccountObject();
             walletAccountObject.setWalletAccountTypeObject(SubHelper.convertWalletAccountEntityToObject(walletAccountEntity.getWalletAccountTypeEntity()));
             walletAccountObject.setWalletAccountCurrencyObject(SubHelper.convertWalletAccountCurrencyEntityToObject(walletAccountEntity.getWalletAccountCurrencyEntity()));
             walletAccountObject.setAccountNumber(walletAccountEntity.getAccountNumber());
             walletAccountObject.setStatus(String.valueOf(walletAccountEntity.getStatus()));
-            walletAccountObject.setBalance(String.valueOf(walletAccountRepositoryService.getBalance(walletAccountEntity.getId())));
+            walletAccountObject.setBalance(prettyBalance(walletAccountRepositoryService.getBalance(walletAccountEntity.getId())));
             walletAccountObject.setStatus(walletAccountEntity.getStatus().getText());
             walletAccountObject.setStatusDescription(walletAccountEntity.getStatus().getPersianDescription());
             walletAccountObjectList.add(walletAccountObject);
         }
         response.setWalletAccountObjectList(walletAccountObjectList);
         return response;
+    }
+
+    private String prettyBalance(BigDecimal num){
+        DecimalFormat df = new DecimalFormat("0.#####");
+        return df.format(num);
     }
 
 
