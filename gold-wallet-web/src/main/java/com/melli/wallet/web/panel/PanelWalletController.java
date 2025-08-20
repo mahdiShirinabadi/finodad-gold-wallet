@@ -27,7 +27,7 @@ import org.springframework.web.bind.annotation.RestController;
  * Date: 8/20/2025
  */
 @RestController
-@RequestMapping("/panel/wallet")
+@RequestMapping("/api/v1/panel/wallet")
 @RequiredArgsConstructor
 @Log4j2
 public class PanelWalletController {
