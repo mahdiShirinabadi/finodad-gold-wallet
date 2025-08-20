@@ -2,7 +2,9 @@ package com.melli.wallet.sadad.impl;
 
 import com.melli.wallet.ChannelException;
 import com.melli.wallet.sadad.SadadChannelInterface;
+import com.melli.wallet.sadad.config.SadadProperties;
 import com.melli.wallet.util.Utility;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.entity.StringEntity;
@@ -26,28 +28,15 @@ import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 @Service
 @Profile({"staging111"})
 @Log4j2
+@RequiredArgsConstructor
 public class SimpleSadadChannelInterfaceImpl implements SadadChannelInterface {
 
-    @Value("${sadad.timeout}")
-    private String timeout;
-    @Value("${sadad.identity.url}")
-    private String identityUrl;
-    @Value("${sadad.shahkar.url}")
-    private String shahkarUrl;
-    private String fundTransferUrl;
-    @Value("${sadad.inquiry.url}")
-    private String fundTransferInquiryUrl;
-    @Value("${sadad.statement.url}")
-    private String statementUrl;
-    @Value("${sadad.sms.url}")
-    private String smsUrl;
-    @Value("${sadad.account.url}")
-    private String getAccountUrl;
+    private final SadadProperties sadadProperties;
 
 
     @Override
     public String shahkar(String token, String nationalCode, String mobile) throws ChannelException, URISyntaxException {
-        log.info("start shahkarUrl({}), nationalCode ({}), timeout({})", shahkarUrl, nationalCode, timeout);
+        log.info("start shahkarUrl({}), nationalCode ({}), timeout({})", sadadProperties.getShahkarUrl(), nationalCode, sadadProperties.getTimeout());
 
         Map<String, String> headers = new HashMap<>();
         headers.put(AUTHORIZATION, "Bearer " + token);
@@ -66,9 +55,9 @@ public class SimpleSadadChannelInterfaceImpl implements SadadChannelInterface {
         json.put("branchCode", "0");
         StringEntity body = new StringEntity(json.toString(), StandardCharsets.UTF_8);
 
-        URIBuilder builder = new URIBuilder(shahkarUrl);
+        URIBuilder builder = new URIBuilder(sadadProperties.getShahkarUrl());
 
-        String response = sendRequest(Utility.getCallerClassAndMethodName(), HttpMethod.POST, builder, Integer.parseInt(timeout), headers, params, body, new int[] {HttpStatus.OK.value()});
+        String response = sendRequest(Utility.getCallerClassAndMethodName(), HttpMethod.POST, builder, Integer.parseInt(sadadProperties.getTimeout()), headers, params, body, new int[] {HttpStatus.OK.value()});
         log.info("({}), Finished for, with response({})", Utility.getCallerMethodName(), response);
         return response;
     }
@@ -85,8 +74,8 @@ public class SimpleSadadChannelInterfaceImpl implements SadadChannelInterface {
         Map<String, String> params = new HashMap<>();
         params.put("scope", scope);
         params.put("grant_type", "client_credentials");
-        URIBuilder builder = new URIBuilder(identityUrl);
-        String response = sendRequest(Utility.getCallerClassAndMethodName(), HttpMethod.POST, builder, Integer.parseInt(timeout), headers, params, null, new int[] {HttpStatus.OK.value()});
+        URIBuilder builder = new URIBuilder(sadadProperties.getIdentityUrl());
+        String response = sendRequest(Utility.getCallerClassAndMethodName(), HttpMethod.POST, builder, Integer.parseInt(sadadProperties.getTimeout()), headers, params, null, new int[] {HttpStatus.OK.value()});
         log.info("({}), Finished login  for scope ({}) with response({})", Utility.getCallerMethodName(), scope, response);
         return response;
     }
@@ -428,7 +417,7 @@ public class SimpleSadadChannelInterfaceImpl implements SadadChannelInterface {
 
     @Override
     public String statement(String token, String amount, String srcAccountNumber, String traceNumber, String fromDate, String toDate, String creditDebit, int page, int length) throws ChannelException, URISyntaxException {
-        log.info("start statementUrl({}), srcAccountNumber ({}),timeout({}), traceNumber ({})", statementUrl, srcAccountNumber, timeout, traceNumber);
+        log.info("start statementUrl({}), srcAccountNumber ({}),timeout({}), traceNumber ({})", sadadProperties.getStatementUrl(), srcAccountNumber, sadadProperties.getTimeout(), traceNumber);
 
         Map<String, String> headers = new HashMap<>();
         headers.put(AUTHORIZATION, "Bearer " + token);
@@ -454,11 +443,11 @@ public class SimpleSadadChannelInterfaceImpl implements SadadChannelInterface {
         json.put("traceNumber", traceNumber);
         StringEntity body = new StringEntity(json.toString(), StandardCharsets.UTF_8);
 
-        URIBuilder builder = new URIBuilder(statementUrl);
+        URIBuilder builder = new URIBuilder(sadadProperties.getStatementUrl());
 
         log.info("start get statement with jsonRequest ({})", json.toString());
 
-        String response = sendRequest(Utility.getCallerClassAndMethodName(), HttpMethod.POST, builder, Integer.parseInt(timeout), headers, params, body, new int[]{HttpStatus.OK.value()});
+        String response = sendRequest(Utility.getCallerClassAndMethodName(), HttpMethod.POST, builder, Integer.parseInt(sadadProperties.getTimeout()), headers, params, body, new int[]{HttpStatus.OK.value()});
         log.info("({}), Finished for, with response({})", Utility.getCallerMethodName(), response);
 //        String response1="{\"error\":null,\"response\":{\"accountStatementResponse\":[{\"transactionId\":103772186439,\"transactionDateTime\":\"2025-04-22T19:44:33Z\",\"transactionTraceCode\":\"BCG15018\",\"creditDebit\":\"CREDIT\",\"branchCode\":251,\"branchName\":\"تمرکز اسناد\",\"operatorCode\":\"BCGUSER\",\"additionalData1\":\"0110697402009\",\"additionalData2\":\"0080560921\",\"transactionCode\":\"000\",\"transactionDescription\":\"انتقالي\",\"realDateTime\":\"2025-04-22T19:44:33Z\",\"amount\":10000000,\"balance\":153426944456,\"channelType\":\"TELLER\",\"categoryId\":null,\"comment\":null,\"hyperLinkType\":0,\"rowNumber\":1,\"origKey\":null,\"channelDateTime\":null},{\"transactionId\":103772186435,\"transactionDateTime\":\"2025-04-22T19:25:49Z\",\"transactionTraceCode\":\"BCG14317\",\"creditDebit\":\"CREDIT\",\"branchCode\":251,\"branchName\":\"تمرکز اسناد\",\"operatorCode\":\"BCGUSER\",\"additionalData1\":\"0102960198001\",\"additionalData2\":\"3621007148\",\"transactionCode\":\"000\",\"transactionDescription\":\"انتقالي\",\"realDateTime\":\"2025-04-22T19:25:49Z\",\"amount\":10000000,\"balance\":153352944456,\"channelType\":\"TELLER\",\"categoryId\":null,\"comment\":null,\"hyperLinkType\":0,\"rowNumber\":2,\"origKey\":null,\"channelDateTime\":null},{\"transactionId\":103772186414,\"transactionDateTime\":\"2025-04-22T18:29:54Z\",\"transactionTraceCode\":\"BCG17858\",\"creditDebit\":\"CREDIT\",\"branchCode\":251,\"branchName\":\"تمرکز اسناد\",\"operatorCode\":\"BCGUSER\",\"additionalData1\":\"0100376066003\",\"additionalData2\":\"0064901777\",\"transactionCode\":\"000\",\"transactionDescription\":\"انتقالي\",\"realDateTime\":\"2025-04-22T18:29:54Z\",\"amount\":10000000,\"balance\":147397447296,\"channelType\":\"TELLER\",\"categoryId\":null,\"comment\":null,\"hyperLinkType\":0,\"rowNumber\":3,\"origKey\":null,\"channelDateTime\":null},{\"transactionId\":103772186404,\"transactionDateTime\":\"2025-04-22T18:02:27Z\",\"transactionTraceCode\":\"BCG18395\",\"creditDebit\":\"CREDIT\",\"branchCode\":251,\"branchName\":\"تمرکز اسناد\",\"operatorCode\":\"BCGUSER\",\"additionalData1\":\"0117287969000\",\"additionalData2\":\"2691182304\",\"transactionCode\":\"000\",\"transactionDescription\":\"انتقالي\",\"realDateTime\":\"2025-04-22T18:02:27Z\",\"amount\":10000000,\"balance\":145914127296,\"channelType\":\"TELLER\",\"categoryId\":null,\"comment\":null,\"hyperLinkType\":0,\"rowNumber\":4,\"origKey\":null,\"channelDateTime\":null},{\"transactionId\":103772186402,\"transactionDateTime\":\"2025-04-22T17:56:59Z\",\"transactionTraceCode\":\"BCG14541\",\"creditDebit\":\"CREDIT\",\"branchCode\":251,\"branchName\":\"تمرکز اسناد\",\"operatorCode\":\"BCGUSER\",\"additionalData1\":\"0110320689003\",\"additionalData2\":\"4431926151\",\"transactionCode\":\"000\",\"transactionDescription\":\"انتقالي\",\"realDateTime\":\"2025-04-22T17:56:59Z\",\"amount\":10000000,\"balance\":145754127296,\"channelType\":\"TELLER\",\"categoryId\":null,\"comment\":null,\"hyperLinkType\":0,\"rowNumber\":5,\"origKey\":null,\"channelDateTime\":null},{\"transactionId\":103772186397,\"transactionDateTime\":\"2025-04-22T17:50:31Z\",\"transactionTraceCode\":\"BCG19195\",\"creditDebit\":\"CREDIT\",\"branchCode\":251,\"branchName\":\"تمرکز اسناد\",\"operatorCode\":\"BCGUSER\",\"additionalData1\":\"0306050199007\",\"additionalData2\":\"5629937502\",\"transactionCode\":\"000\",\"transactionDescription\":\"انتقالي\",\"realDateTime\":\"2025-04-22T17:50:31Z\",\"amount\":10000000,\"balance\":144620127296,\"channelType\":\"TELLER\",\"categoryId\":null,\"comment\":null,\"hyperLinkType\":0,\"rowNumber\":6,\"origKey\":null,\"channelDateTime\":null},{\"transactionId\":103772186391,\"transactionDateTime\":\"2025-04-22T17:39:54Z\",\"transactionTraceCode\":\"BCG11151\",\"creditDebit\":\"CREDIT\",\"branchCode\":251,\"branchName\":\"تمرکز اسناد\",\"operatorCode\":\"BCGUSER\",\"additionalData1\":\"0108115802001\",\"additionalData2\":\"5459966035\",\"transactionCode\":\"000\",\"transactionDescription\":\"انتقالي\",\"realDateTime\":\"2025-04-22T17:39:54Z\",\"amount\":10000000,\"balance\":141092127296,\"channelType\":\"TELLER\",\"categoryId\":null,\"comment\":null,\"hyperLinkType\":0,\"rowNumber\":7,\"origKey\":null,\"channelDateTime\":null},{\"transactionId\":103772186386,\"transactionDateTime\":\"2025-04-22T17:29:18Z\",\"transactionTraceCode\":\"BCG12811\",\"creditDebit\":\"CREDIT\",\"branchCode\":251,\"branchName\":\"تمرکز اسناد\",\"operatorCode\":\"BCGUSER\",\"additionalData1\":\"0364140225007\",\"additionalData2\":\"4189574430\",\"transactionCode\":\"000\",\"transactionDescription\":\"انتقالي\",\"realDateTime\":\"2025-04-22T17:29:18Z\",\"amount\":10000000,\"balance\":140132127296,\"channelType\":\"TELLER\",\"categoryId\":null,\"comment\":null,\"hyperLinkType\":0,\"rowNumber\":8,\"origKey\":null,\"channelDateTime\":null},{\"transactionId\":103772186371,\"transactionDateTime\":\"2025-04-22T16:56:05Z\",\"transactionTraceCode\":\"BCG19942\",\"creditDebit\":\"CREDIT\",\"branchCode\":251,\"branchName\":\"تمرکز اسناد\",\"operatorCode\":\"BCGUSER\",\"additionalData1\":\"0301082116003\",\"additionalData2\":\"1750482363\",\"transactionCode\":\"000\",\"transactionDescription\":\"انتقالي\",\"realDateTime\":\"2025-04-22T16:56:05Z\",\"amount\":10000000,\"balance\":137808487296,\"channelType\":\"TELLER\",\"categoryId\":null,\"comment\":null,\"hyperLinkType\":0,\"rowNumber\":9,\"origKey\":null,\"channelDateTime\":null},{\"transactionId\":103772186369,\"transactionDateTime\":\"2025-04-22T16:54:30Z\",\"transactionTraceCode\":\"BCG19013\",\"creditDebit\":\"CREDIT\",\"branchCode\":251,\"branchName\":\"تمرکز اسناد\",\"operatorCode\":\"BCGUSER\",\"additionalData1\":\"0220786251000\",\"additionalData2\":\"0534998781\",\"transactionCode\":\"000\",\"transactionDescription\":\"انتقالي\",\"realDateTime\":\"2025-04-22T16:54:30Z\",\"amount\":10000000,\"balance\":137498487296,\"channelType\":\"TELLER\",\"categoryId\":null,\"comment\":null,\"hyperLinkType\":0,\"rowNumber\":10,\"origKey\":null,\"channelDateTime\":null},{\"transactionId\":103772184617,\"transactionDateTime\":\"2025-04-22T04:54:57Z\",\"transactionTraceCode\":\"bPOE0048\",\"creditDebit\":\"CREDIT\",\"branchCode\":271,\"branchName\":\"اسکان\",\"operatorCode\":\"A93957\",\"additionalData1\":\"0204916390001\",\"additionalData2\":\"0946619247\",\"transactionCode\":\"000\",\"transactionDescription\":\"انتقالي\",\"realDateTime\":\"2025-04-22T04:54:57Z\",\"amount\":1000000,\"balance\":328324943372,\"channelType\":\"TELLER\",\"categoryId\":null,\"comment\":null,\"hyperLinkType\":0,\"rowNumber\":1,\"origKey\":null,\"channelDateTime\":null}],\"outputRecordCount\":333}}";
 //        String response="{\"error\":null,\"response\":{\"accountStatementResponse\":[{\"transactionId\":103772184617,\"transactionDateTime\":\"2025-04-22T04:54:57Z\",\"transactionTraceCode\":\"bPOE0048\",\"creditDebit\":\"CREDIT\",\"branchCode\":271,\"branchName\":\"اسکان\",\"operatorCode\":\"A93957\",\"additionalData1\":\"0204916390001\",\"additionalData2\":\"0946619247\",\"transactionCode\":\"000\",\"transactionDescription\":\"انتقالي\",\"realDateTime\":\"2025-04-22T04:54:57Z\",\"amount\":1000000,\"balance\":328324943372,\"channelType\":\"TELLER\",\"categoryId\":null,\"comment\":null,\"hyperLinkType\":0,\"rowNumber\":1,\"origKey\":null,\"channelDateTime\":null}],\"outputRecordCount\":333}}";
@@ -507,7 +496,7 @@ public class SimpleSadadChannelInterfaceImpl implements SadadChannelInterface {
 
     @Override
     public String getAccount(String token, String nationalCode, String customerType) throws ChannelException, URISyntaxException {
-        log.info("start getAccount({}), url ({}),timeout({})", getAccountUrl, nationalCode, timeout);
+        log.info("start getAccount({}), url ({}),timeout({})", sadadProperties.getAccountUrl(), nationalCode, sadadProperties.getTimeout());
 
         Map<String, String> headers = new HashMap<>();
         headers.put(AUTHORIZATION, "Bearer " + token);
@@ -519,11 +508,11 @@ public class SimpleSadadChannelInterfaceImpl implements SadadChannelInterface {
         json.put("identifier", nationalCode);
         StringEntity body = new StringEntity(json.toString(), StandardCharsets.UTF_8);
 
-        URIBuilder builder = new URIBuilder(getAccountUrl);
+        URIBuilder builder = new URIBuilder(sadadProperties.getAccountUrl());
 
         log.info("send message with jsonRequest ({})", json.toString());
 
-        String response = sendRequest(Utility.getCallerClassAndMethodName(), HttpMethod.POST, builder, Integer.parseInt(timeout), headers, params, body, new int[] {HttpStatus.OK.value()});
+        String response = sendRequest(Utility.getCallerClassAndMethodName(), HttpMethod.POST, builder, Integer.parseInt(sadadProperties.getTimeout()), headers, params, body, new int[] {HttpStatus.OK.value()});
         log.info("({}), Finished for, with response({})", Utility.getCallerMethodName(), response);
         return response;
 

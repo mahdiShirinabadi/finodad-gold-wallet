@@ -2,13 +2,15 @@ package com.melli.wallet.sadad.impl;
 
 import com.melli.wallet.ChannelException;
 import com.melli.wallet.sadad.SadadChannelInterface;
+import com.melli.wallet.sadad.config.SadadProperties;
 import com.melli.wallet.util.StringUtils;
 import com.melli.wallet.util.Utility;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.entity.StringEntity;
 import org.json.JSONObject;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -28,33 +30,15 @@ import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 @Service
 @Profile({"prod"})
 @Log4j2
+@RequiredArgsConstructor
 public class SadadChannelInterfaceImpl implements SadadChannelInterface {
 
-    @Value("${sadad.timeout}")
-    private String timeout;
-    @Value("${sadad.identity.url}")
-    private String identityUrl;
-    @Value("${sadad.fundTransfer.url}")
-    private String fundTransferUrl;
-    @Value("${sadad.inquiry.url}")
-    private String fundTransferInquiryUrl;
-    @Value("${sadad.shahkar.url}")
-    private String shahkarUrl;
-    @Value("${sadad.statement.url}")
-    private String statementUrl;
-    @Value("${sadad.sms.url}")
-    private String smsUrl;
-    @Value("${sadad.mobile.url}")
-    private String getMobileUrl;
-    @Value("${sadad.balance.url}")
-    private String getBalanceUrl;
-    @Value("${sadad.account.url}")
-    private String getAccountUrl;
+    private final SadadProperties sadadProperties;
 
 
     @Override
     public String fundTransfer(String token, String traceId, String requestId, String fromAccount, String toAccount, String amount, Date date, String creditPayId) throws ChannelException, URISyntaxException {
-        log.info("start fundTransfer for url({}), uuid({})", fundTransferUrl, traceId);
+        log.info("start fundTransfer for url({}), uuid({})", sadadProperties.getFundTransferUrl(), traceId);
 
         Map<String, String> headers = new HashMap<>();
         headers.put(AUTHORIZATION, "Bearer " + token);
@@ -78,8 +62,8 @@ public class SadadChannelInterfaceImpl implements SadadChannelInterface {
         json.put("transferMethod", "INTRA_BANK");
         StringEntity body = new StringEntity(json.toString(), StandardCharsets.UTF_8);
 
-        URIBuilder builder = new URIBuilder(fundTransferUrl);
-        String response = sendRequest(Utility.getCallerClassAndMethodName(), HttpMethod.POST, builder, Integer.parseInt(timeout), headers, params, body, new int[] {HttpStatus.OK.value()});
+        URIBuilder builder = new URIBuilder(sadadProperties.getFundTransferUrl());
+        String response = sendRequest(Utility.getCallerClassAndMethodName(), HttpMethod.POST, builder, Integer.parseInt(sadadProperties.getTimeout()), headers, params, body, new int[] {HttpStatus.OK.value()});
         log.info("({}), Finished for uuid ({}), with response({})", Utility.getCallerMethodName(), traceId, response);
         return response;
 
@@ -87,15 +71,15 @@ public class SadadChannelInterfaceImpl implements SadadChannelInterface {
 
     @Override
     public String fundTransferInquiry(String token, String uuid, String amount) throws ChannelException, URISyntaxException {
-        log.info("start inquiry for baseUrl({}), timeout({}), uuid ({})", fundTransferInquiryUrl, timeout, uuid);
+        log.info("start inquiry for baseUrl({}), timeout({}), uuid ({})", sadadProperties.getInquiryUrl(), sadadProperties.getTimeout(), uuid);
 
         Map<String, String> headers = new HashMap<>();
         headers.put(AUTHORIZATION, "Bearer " + token);
 
         Map<String, String> params = new HashMap<>();
 
-        URIBuilder builder = new URIBuilder(fundTransferInquiryUrl + uuid);
-        String response = sendRequest(Utility.getCallerClassAndMethodName(), HttpMethod.GET, builder, Integer.parseInt(timeout), headers, params, null, new int[] {HttpStatus.OK.value()});
+        URIBuilder builder = new URIBuilder(sadadProperties.getInquiryUrl() + uuid);
+        String response = sendRequest(Utility.getCallerClassAndMethodName(), HttpMethod.GET, builder, Integer.parseInt(sadadProperties.getTimeout()), headers, params, null, new int[] {HttpStatus.OK.value()});
         log.info("({}), Finished for uuid ({}), with response({})", Utility.getCallerMethodName(), uuid, response);
         return response;
 
@@ -103,7 +87,7 @@ public class SadadChannelInterfaceImpl implements SadadChannelInterface {
 
     @Override
     public String shahkar(String token, String nationalCode, String mobile) throws ChannelException, URISyntaxException {
-        log.info("start shahkarUrl({}), nationalCode ({}), timeout({})", shahkarUrl, nationalCode, timeout);
+        log.info("start shahkarUrl({}), nationalCode ({}), timeout({})", sadadProperties.getShahkarUrl(), nationalCode, sadadProperties.getTimeout());
 
         Map<String, String> headers = new HashMap<>();
         headers.put(AUTHORIZATION, "Bearer " + token);
@@ -122,9 +106,9 @@ public class SadadChannelInterfaceImpl implements SadadChannelInterface {
         json.put("branchCode", "0");
         StringEntity body = new StringEntity(json.toString(), StandardCharsets.UTF_8);
 
-        URIBuilder builder = new URIBuilder(shahkarUrl);
+        URIBuilder builder = new URIBuilder(sadadProperties.getShahkarUrl());
 
-        String response = sendRequest(Utility.getCallerClassAndMethodName(), HttpMethod.POST, builder, Integer.parseInt(timeout), headers, params, body, new int[] {HttpStatus.OK.value()});
+        String response = sendRequest(Utility.getCallerClassAndMethodName(), HttpMethod.POST, builder, Integer.parseInt(sadadProperties.getTimeout()), headers, params, body, new int[] {HttpStatus.OK.value()});
         log.info("({}), Finished for, with response({})", Utility.getCallerMethodName(), response);
         return response;
 
@@ -132,7 +116,7 @@ public class SadadChannelInterfaceImpl implements SadadChannelInterface {
 
     @Override
     public String statement(String token, String amount, String srcAccountNumber, String traceNumber, String fromDate, String toDate, String creditDebit, int page, int length) throws ChannelException, URISyntaxException {
-        log.info("start statementUrl({}), srcAccountNumber ({}),timeout({}), traceNumber ({})", statementUrl, srcAccountNumber, timeout, traceNumber);
+        log.info("start statementUrl({}), srcAccountNumber ({}),timeout({}), traceNumber ({})", sadadProperties.getStatementUrl(), srcAccountNumber, sadadProperties.getTimeout(), traceNumber);
 
         Map<String, String> headers = new HashMap<>();
         headers.put(AUTHORIZATION, "Bearer " + token);
@@ -161,18 +145,18 @@ public class SadadChannelInterfaceImpl implements SadadChannelInterface {
         }
         StringEntity body = new StringEntity(json.toString(), StandardCharsets.UTF_8);
 
-        URIBuilder builder = new URIBuilder(statementUrl);
+        URIBuilder builder = new URIBuilder(sadadProperties.getStatementUrl());
 
         log.info("start get statement with jsonRequest ({})", json.toString());
 
-        String response = sendRequest(Utility.getCallerClassAndMethodName(), HttpMethod.POST, builder, Integer.parseInt(timeout), headers, params, body, new int[] {HttpStatus.OK.value()});
+        String response = sendRequest(Utility.getCallerClassAndMethodName(), HttpMethod.POST, builder, Integer.parseInt(sadadProperties.getTimeout()), headers, params, body, new int[] {HttpStatus.OK.value()});
         log.info("({}), Finished for, with response({})", Utility.getCallerMethodName(), response);
         return response;
     }
 
     @Override
     public String sendSms(String token, String message, String mobile, int priority, int ttl) throws ChannelException, URISyntaxException {
-        log.info("start sendSms({}), mobile ({}),timeout({})", smsUrl, mobile, timeout);
+        log.info("start sendSms({}), mobile ({}),timeout({})", sadadProperties.getSmsUrl(), mobile, sadadProperties.getTimeout());
 
         Map<String, String> headers = new HashMap<>();
         headers.put(AUTHORIZATION, "Bearer " + token);
@@ -186,33 +170,33 @@ public class SadadChannelInterfaceImpl implements SadadChannelInterface {
         json.put("ttl", 3);
         StringEntity body = new StringEntity(json.toString(), StandardCharsets.UTF_8);
 
-        URIBuilder builder = new URIBuilder(smsUrl);
+        URIBuilder builder = new URIBuilder(sadadProperties.getSmsUrl());
 
         log.info("send message with jsonRequest ({})", json.toString());
 
-        String response = sendRequest(Utility.getCallerClassAndMethodName(), HttpMethod.POST, builder, Integer.parseInt(timeout), headers, params, body, new int[] {HttpStatus.OK.value()});
+        String response = sendRequest(Utility.getCallerClassAndMethodName(), HttpMethod.POST, builder, Integer.parseInt(sadadProperties.getTimeout()), headers, params, body, new int[] {HttpStatus.OK.value()});
         log.info("({}), Finished for, with response({})", Utility.getCallerMethodName(), response);
         return response;
     }
 
     @Override
     public String getBalance(String token, String accountNumber) throws ChannelException, URISyntaxException {
-        log.info("start inquiry for baseUrl({}), timeout({}), accountNumber ({})", getBalanceUrl, timeout, accountNumber);
+        log.info("start inquiry for baseUrl({}), timeout({}), accountNumber ({})", sadadProperties.getBalanceUrl(), sadadProperties.getTimeout(), accountNumber);
 
         Map<String, String> headers = new HashMap<>();
         headers.put(AUTHORIZATION, "Bearer " + token);
 
         Map<String, String> params = new HashMap<>();
 
-        URIBuilder builder = new URIBuilder(getBalanceUrl + accountNumber);
-        String response = sendRequest(Utility.getCallerClassAndMethodName(), HttpMethod.GET, builder, Integer.parseInt(timeout), headers, params, null, new int[] {HttpStatus.OK.value()});
-        log.info("({}), Finished for uuid ({}), with response({})", Utility.getCallerMethodName(), getBalanceUrl, response);
+        URIBuilder builder = new URIBuilder(sadadProperties.getBalanceUrl() + accountNumber);
+        String response = sendRequest(Utility.getCallerClassAndMethodName(), HttpMethod.GET, builder, Integer.parseInt(sadadProperties.getTimeout()), headers, params, null, new int[] {HttpStatus.OK.value()});
+        log.info("({}), Finished for uuid ({}), with response({})", Utility.getCallerMethodName(), sadadProperties.getBalanceUrl(), response);
         return response;
     }
 
     @Override
     public String getAccount(String token, String nationalCode, String customerType) throws ChannelException, URISyntaxException {
-        log.info("start getAccount({}), url ({}),timeout({})", getAccountUrl, nationalCode, timeout);
+        log.info("start getAccount({}), url ({}),timeout({})", sadadProperties.getAccountUrl(), nationalCode, sadadProperties.getTimeout());
 
         Map<String, String> headers = new HashMap<>();
         headers.put(AUTHORIZATION, "Bearer " + token);
@@ -224,11 +208,11 @@ public class SadadChannelInterfaceImpl implements SadadChannelInterface {
         json.put("identifier", nationalCode);
         StringEntity body = new StringEntity(json.toString(), StandardCharsets.UTF_8);
 
-        URIBuilder builder = new URIBuilder(getAccountUrl);
+        URIBuilder builder = new URIBuilder(sadadProperties.getAccountUrl());
 
         log.info("send message with jsonRequest ({})", json.toString());
 
-        String response = sendRequest(Utility.getCallerClassAndMethodName(), HttpMethod.POST, builder, Integer.parseInt(timeout), headers, params, body, new int[] {HttpStatus.OK.value()});
+        String response = sendRequest(Utility.getCallerClassAndMethodName(), HttpMethod.POST, builder, Integer.parseInt(sadadProperties.getTimeout()), headers, params, body, new int[] {HttpStatus.OK.value()});
         log.info("({}), Finished for, with response({})", Utility.getCallerMethodName(), response);
         return response;
     }
@@ -246,8 +230,8 @@ public class SadadChannelInterfaceImpl implements SadadChannelInterface {
         Map<String, String> params = new HashMap<>();
         params.put("scope", scope);
         params.put("grant_type", "client_credentials");
-        URIBuilder builder = new URIBuilder(identityUrl);
-        String response = sendRequest(Utility.getCallerClassAndMethodName(), HttpMethod.POST, builder, Integer.parseInt(timeout), headers, params, null, new int[] {HttpStatus.OK.value()});
+        URIBuilder builder = new URIBuilder(sadadProperties.getIdentityUrl());
+        String response = sendRequest(Utility.getCallerClassAndMethodName(), HttpMethod.POST, builder, Integer.parseInt(sadadProperties.getTimeout()), headers, params, null, new int[] {HttpStatus.OK.value()});
         log.info("({}), Finished login  for scope ({}) with response({})", Utility.getCallerMethodName(), scope, response);
         return response;
     }

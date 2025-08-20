@@ -2,6 +2,7 @@ package com.melli.wallet;
 
 
 import com.melli.wallet.config.FileStorageProperties;
+import com.melli.wallet.sadad.config.SadadProperties;
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.servers.Server;
 import lombok.extern.log4j.Log4j2;
@@ -27,7 +28,8 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 @EnableCaching(proxyTargetClass = true)
 @Log4j2
 @EnableConfigurationProperties({
-        FileStorageProperties.class
+        FileStorageProperties.class,
+        SadadProperties.class
 })
 public class WalletApplication {
 
