@@ -67,7 +67,6 @@ public class AuthenticationController extends WebController {
     public ResponseEntity<BaseResponse<LoginResponse>> login(@Valid @RequestBody LoginRequestJson loginJson, HttpServletRequest httpRequest) throws InternalServiceException {
         try {
             authenticate(loginJson.getUsername(), loginJson.getPassword());
-            boolean isAfter = checkExpiration(channelRepositoryService.findByUsername(loginJson.getUsername()));
             Map<String, String> accessToken = jwtTokenUtil.generateToken(loginJson.getUsername(), Long.parseLong(settingGeneralRepositoryService.getSetting(SettingGeneralRepositoryService.DURATION_ACCESS_TOKEN_PROFILE).getValue()));
             Map<String, String> refreshToken = jwtTokenUtil.generateRefreshToken(loginJson.getUsername(), Long.parseLong(settingGeneralRepositoryService.getSetting(SettingGeneralRepositoryService.DURATION_REFRESH_TOKEN_PROFILE).getValue()));
             return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse<>(true, authenticateOperationService.login(loginJson.getUsername(), getIP(httpRequest), accessToken, refreshToken)));

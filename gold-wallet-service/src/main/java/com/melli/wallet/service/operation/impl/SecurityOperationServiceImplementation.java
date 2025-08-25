@@ -66,6 +66,7 @@ public class SecurityOperationServiceImplementation implements SecurityOperation
         return Long.parseLong(maxFail);
     }
 
+    @Async("threadPoolExecutorForSlack")
     public void resetFailLoginCount(ChannelEntity channelEntity) {
         ChannelBlockEntity profileBlock = channelBlockRepositoryService.findByProfile(channelEntity);
         if (profileBlock == null) {
@@ -81,7 +82,7 @@ public class SecurityOperationServiceImplementation implements SecurityOperation
         channelBlockRepositoryService.save(profileBlock);
     }
 
-    @Async
+    @Async("threadPoolExecutorForSlack")
     public void increaseFailLogin(ChannelEntity channelEntity) {
         if(channelEntity != null){
             log.info("increase failed login count for nationalCode ({})", channelEntity.getUsername());
