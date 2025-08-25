@@ -644,6 +644,17 @@ VALUES ('System', now(), 'buy', 'خرید', 1);
 INSERT into request_type(created_by, created_at, name, fa_name, display)
 VALUES ('System', now(), 'sell', 'فروش', 1);
 
+INSERT into request_type(created_by, created_at, name, fa_name, display)
+VALUES ('System', now(), 'merchant_increase_balance', 'افزایش موجودی پذیرنده', 1);
+
+INSERT into request_type(created_by, created_at, name, fa_name, display)
+VALUES ('System', now(), 'merchant_decrease_balance', 'کاهش موجودی پذیرنده', 1);
+
+-- Physical Cash Out request type
+INSERT INTO request_type (created_by, created_at, name, fa_name, display)
+VALUES ('System', now(), 'physical_cash_out', 'برداشت فیزیکی وجه', 1)
+    on conflict do nothing;
+
 
 
 CREATE INDEX ON channel_access_token (channel_id);

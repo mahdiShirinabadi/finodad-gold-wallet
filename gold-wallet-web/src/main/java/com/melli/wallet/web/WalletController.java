@@ -98,9 +98,6 @@ public class WalletController extends WebController {
 	}
 
 
-
-
-
 	@Timed(description = "Time taken to active wallet")
 	@PostMapping(path = "/activate", produces = {MediaType.APPLICATION_JSON_VALUE})
 	@Operation(security = { @SecurityRequirement(name = "bearer-key") },summary =" فعال کردن کیف پول")

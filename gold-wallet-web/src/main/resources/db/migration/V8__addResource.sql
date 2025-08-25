@@ -23,6 +23,10 @@ insert into resource(created_by, created_at, name, fa_name, display)
 values ('System', now(), 'LIMITATION_MANAGE', 'مدیریت کانال ها', 1)
 on conflict do nothing;
 
+insert into resource(created_by, created_at, name, fa_name, display)
+values ('System', now(), 'STATEMENT', 'صورتحساب', 1)
+on conflict do nothing;
+
 insert into role_resource(created_by, created_at, role_id, resource_id)
 values ('system', 'now()', (select id from role_ where name='WEB_PROFILE'), (select id from resource where name='ROLE_MANAGE'));
 
@@ -37,3 +41,12 @@ values ('system', 'now()', (select id from role_ where name='WEB_PROFILE'), (sel
 
 insert into role_resource(created_by, created_at, role_id, resource_id)
 values ('system', 'now()', (select id from role_ where name='WEB_PROFILE'), (select id from resource where name='LIMITATION_MANAGE'));
+
+insert into role_resource(created_by, created_at, role_id, resource_id)
+values ('system', 'now()', (select id from role_ where name='WEB_PROFILE'), (select id from resource where name='STATEMENT'));
+
+insert into role_resource(created_by, created_at, role_id, resource_id)
+values ('system', 'now()', (select id from role_ where name='WEB_PROFILE'), (select id from resource where name='BUY_DIRECT'));
+
+insert into role_resource(created_by, created_at, role_id, resource_id)
+values ('system', 'now()', (select id from role_ where name='WEB_PROFILE'), (select id from resource where name='CASH_OUT'));

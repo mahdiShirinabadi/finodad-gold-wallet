@@ -2,7 +2,6 @@ package com.melli.wallet.exception;
 
 import com.melli.wallet.domain.response.base.BaseResponse;
 import com.melli.wallet.domain.response.base.ErrorDetail;
-import com.melli.wallet.domain.response.panel.base.PanelBaseResponse;
 import com.melli.wallet.service.operation.AlertService;
 import com.melli.wallet.service.repository.StatusRepositoryService;
 import com.melli.wallet.utils.Helper;
