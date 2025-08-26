@@ -22,6 +22,7 @@ import com.melli.wallet.domain.response.wallet.WalletAccountObject;
 import com.melli.wallet.domain.response.wallet.WalletBalanceResponse;
 import com.melli.wallet.exception.InternalServiceException;
 import com.melli.wallet.service.repository.*;
+import com.melli.wallet.sync.ResourceSyncService;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -39,6 +40,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
+
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
@@ -120,6 +122,9 @@ public class WalletApplicationTests {
     @Autowired
     private ChannelRepositoryService channelRepositoryService;
 
+    @Autowired
+    private ResourceSyncService resourceSyncService;
+
 
 
     private static MockMvc mockMvc;
@@ -193,6 +198,8 @@ public class WalletApplicationTests {
         }
         return requestBuilder;
     }
+
+
 
     @Test
     public void contextLoads() {

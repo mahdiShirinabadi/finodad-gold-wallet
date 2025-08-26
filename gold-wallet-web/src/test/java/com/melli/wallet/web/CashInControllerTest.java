@@ -2,6 +2,7 @@ package com.melli.wallet.web;
 
 import com.melli.wallet.WalletApplicationTests;
 import com.melli.wallet.config.CacheClearService;
+import com.melli.wallet.sync.ResourceSyncService;
 import com.melli.wallet.domain.enumaration.WalletStatusEnum;
 import com.melli.wallet.domain.master.entity.WalletAccountEntity;
 import com.melli.wallet.domain.master.entity.WalletEntity;
@@ -82,6 +83,8 @@ class CashInControllerTest extends WalletApplicationTests {
     private CacheClearService cacheClearService;
     @Autowired
     private Flyway flyway;
+    @Autowired
+    private ResourceSyncService resourceSyncService;
 
 
     /**
@@ -103,6 +106,7 @@ class CashInControllerTest extends WalletApplicationTests {
         log.info("start cleaning initial values in test DB");
         flyway.clean();
         flyway.migrate();
+        resourceSyncService.syncResourcesOnStartup();
         
         // Clear all caches
         cacheClearService.clearCache();
@@ -323,7 +327,7 @@ class CashInControllerTest extends WalletApplicationTests {
     void cashInFailMaxAmount() throws Exception {
         // Step 1: Define test parameters
         String refNumber = new Date().getTime() + "";
-        String amount = "1000000000";
+        String amount = "10000000";
         
         // Step 2: Get user's RIAL account number
         WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.RIAL);
@@ -340,7 +344,7 @@ class CashInControllerTest extends WalletApplicationTests {
         boolean changeMaxAmountCashIn = false;
         if( Long.parseLong(amount) <= Long.parseLong(valueMaxAmountCashIn)){
             changeMaxAmountCashIn = true;
-            setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MAX_WALLET_BALANCE, walletAccountEntity, String.valueOf(Long.parseLong(amount) - 1));
+            setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MAX_AMOUNT_CASH_IN, walletAccountEntity, String.valueOf(Long.parseLong(amount) - 1));
         }
         
         // Step 5: Attempt cash in with amount above maximum

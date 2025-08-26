@@ -1,1 +1,0 @@
--- Resource and role_resource insertions moved to V9 migration

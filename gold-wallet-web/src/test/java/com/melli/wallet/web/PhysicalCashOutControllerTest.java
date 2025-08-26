@@ -2,6 +2,7 @@ package com.melli.wallet.web;
 
 import com.melli.wallet.WalletApplicationTests;
 import com.melli.wallet.config.CacheClearService;
+import com.melli.wallet.sync.ResourceSyncService;
 import com.melli.wallet.domain.enumaration.WalletStatusEnum;
 import com.melli.wallet.domain.master.entity.*;
 import com.melli.wallet.domain.response.UuidResponse;
@@ -81,6 +82,8 @@ class PhysicalCashOutControllerTest extends WalletApplicationTests {
     private Flyway flyway;
     @Autowired
     private WalletLevelRepositoryService walletLevelRepositoryService;
+    @Autowired
+    private ResourceSyncService resourceSyncService;
 
 
     /**
@@ -104,16 +107,9 @@ class PhysicalCashOutControllerTest extends WalletApplicationTests {
         log.info("start cleaning initial values in test DB");
         flyway.clean();
         flyway.migrate();
+        resourceSyncService.syncResourcesOnStartup();
         cacheClearService.clearCache();
-
-        // Re-setup MockMvc after database changes
-        mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).apply(springSecurity()).build();
-        Assert.assertNotNull(mockMvc);
-        log.info("start cleaning initial values in test DB for purchase");
-        flyway.clean();
-        flyway.migrate();
-        log.info("start cleaning initial values in test DB for purchase");
-        cacheClearService.clearCache();
+        
 
         // Create wallet for channel testing
         WalletEntity walletEntity = new WalletEntity();

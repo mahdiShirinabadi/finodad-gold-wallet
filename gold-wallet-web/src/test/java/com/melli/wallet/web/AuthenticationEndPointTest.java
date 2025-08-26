@@ -2,6 +2,7 @@ package com.melli.wallet.web;
 
 import com.melli.wallet.WalletApplicationTests;
 import com.melli.wallet.config.CacheClearService;
+import com.melli.wallet.sync.ResourceSyncService;
 import com.melli.wallet.domain.master.entity.ChannelEntity;
 import com.melli.wallet.domain.response.base.BaseResponse;
 import com.melli.wallet.domain.response.login.LoginResponse;
@@ -36,6 +37,8 @@ public class AuthenticationEndPointTest extends WalletApplicationTests {
     private CacheClearService cacheClearService;
     @Autowired
     private Flyway flyway;
+    @Autowired
+    private ResourceSyncService resourceSyncService;
 
 
 
@@ -54,6 +57,7 @@ public class AuthenticationEndPointTest extends WalletApplicationTests {
         Assert.assertNotNull(mockMvc);
         flyway.clean();
         flyway.migrate();
+        resourceSyncService.syncResourcesOnStartup();
         cacheClearService.clearCache();
         mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).apply(springSecurity()).build();
     }

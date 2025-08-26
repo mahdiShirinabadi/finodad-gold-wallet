@@ -2,6 +2,7 @@ package com.melli.wallet.web;
 
 import com.melli.wallet.WalletApplicationTests;
 import com.melli.wallet.config.CacheClearService;
+import com.melli.wallet.sync.ResourceSyncService;
 import com.melli.wallet.domain.dto.AggregationPurchaseDTO;
 import com.melli.wallet.domain.enumaration.TransactionTypeEnum;
 import com.melli.wallet.domain.enumaration.WalletStatusEnum;
@@ -98,6 +99,8 @@ class BuyControllerTest extends WalletApplicationTests {
     private RequestRepositoryService requestRepositoryService;
     @Autowired
     private LimitationGeneralService limitationGeneralService;
+    @Autowired
+    private ResourceSyncService resourceSyncService;
 
 
     /**
@@ -121,6 +124,7 @@ class BuyControllerTest extends WalletApplicationTests {
         log.info("start cleaning initial values in test DB for purchase");
         flyway.clean();
         flyway.migrate();
+        resourceSyncService.syncResourcesOnStartup();
         log.info("start cleaning initial values in test DB for purchase");
         
         // Step 3: Clear all caches

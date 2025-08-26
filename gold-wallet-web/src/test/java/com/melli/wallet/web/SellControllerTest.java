@@ -2,6 +2,7 @@ package com.melli.wallet.web;
 
 import com.melli.wallet.WalletApplicationTests;
 import com.melli.wallet.config.CacheClearService;
+import com.melli.wallet.sync.ResourceSyncService;
 import com.melli.wallet.domain.enumaration.WalletStatusEnum;
 import com.melli.wallet.domain.master.entity.ChannelEntity;
 import com.melli.wallet.domain.master.entity.WalletAccountEntity;
@@ -80,6 +81,8 @@ class SellControllerTest extends WalletApplicationTests {
     private CacheClearService cacheClearService;
     @Autowired
     private WalletLevelRepositoryService walletLevelRepositoryService;
+    @Autowired
+    private ResourceSyncService resourceSyncService;
 
     private static final String NATIONAL_CODE_CORRECT = "0077847660";
     private static final String NATIONAL_CODE_NOT_FOUND = "0451710010";
@@ -110,6 +113,7 @@ class SellControllerTest extends WalletApplicationTests {
         log.info("start cleaning initial values in test DB for purchase");
         flyway.clean();
         flyway.migrate();
+        resourceSyncService.syncResourcesOnStartup();
         log.info("start cleaning initial values in test DB for purchase");
         
         // Clear all caches

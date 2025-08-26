@@ -2,6 +2,7 @@ package com.melli.wallet.web;
 
 import com.melli.wallet.WalletApplicationTests;
 import com.melli.wallet.config.CacheClearService;
+import com.melli.wallet.sync.ResourceSyncService;
 import com.melli.wallet.domain.master.entity.MerchantWalletAccountCurrencyEntity;
 import com.melli.wallet.domain.master.persistence.MerchantWalletAccountCurrencyRepository;
 import com.melli.wallet.domain.response.base.BaseResponse;
@@ -74,6 +75,8 @@ class MerchantControllerTest extends WalletApplicationTests {
     private MerchantOperationService merchantOperationService;
     @Autowired
     private RequestContext requestContext;
+    @Autowired
+    private ResourceSyncService resourceSyncService;
 
 
     /**
@@ -95,6 +98,7 @@ class MerchantControllerTest extends WalletApplicationTests {
         log.info("start cleaning initial values in test DB for purchase");
         flyway.clean();
         flyway.migrate();
+        resourceSyncService.syncResourcesOnStartup();
         log.info("start cleaning initial values in test DB for purchase");
         
         // Clear all caches
