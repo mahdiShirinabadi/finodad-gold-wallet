@@ -128,7 +128,7 @@ public class AuthenticationController extends WebController {
 
     @Timed(description = "time taken to logout profile")
     @PostMapping(path = "/logout", produces = {MediaType.APPLICATION_JSON_VALUE})
-    @PreAuthorize("hasAuthority(\"" + ResourceRepositoryService.LOGOUT + "\")")
+    @PreAuthorize("hasAuthority('" + ResourceDefinition.LOGOUT_AUTH + "')")
     @Operation(security = {@SecurityRequirement(name = "bearer-key")}, summary = "خروج از حساب")
     @LogExecutionTime("User logout process")
     public ResponseEntity<BaseResponse<ObjectUtils.Null>> logout() throws InternalServiceException {

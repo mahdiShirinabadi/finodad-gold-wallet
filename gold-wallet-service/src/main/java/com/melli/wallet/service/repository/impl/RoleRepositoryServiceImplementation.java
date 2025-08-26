@@ -62,6 +62,16 @@ public class RoleRepositoryServiceImplementation implements RoleRepositoryServic
     }
 
     @Override
+    public Optional<RoleEntity> findByName(String name) {
+        return roleRepository.findByName(name);
+    }
+
+    @Override
+    public RoleEntity save(RoleEntity roleEntity) {
+        return roleRepository.save(roleEntity);
+    }
+
+    @Override
     @Transactional
     @LogExecutionTime("Create role")
     public RoleDetailResponse createRole(RoleCreateRequestJson requestJson, String createdBy) throws InternalServiceException {

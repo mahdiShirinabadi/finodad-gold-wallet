@@ -9,6 +9,7 @@ import com.melli.wallet.domain.response.panel.WalletTypeListResponse;
 import com.melli.wallet.exception.InternalServiceException;
 import com.melli.wallet.service.operation.WalletListOperationService;
 import com.melli.wallet.service.repository.ResourceRepositoryService;
+import com.melli.wallet.service.repository.ResourceDefinition;
 import io.micrometer.core.annotation.Timed;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -37,7 +38,7 @@ public class PanelWalletController {
     @Timed(description = "Time taken to get wallet account currency list")
     @GetMapping(path = "/accountCurrency/list", produces = {MediaType.APPLICATION_JSON_VALUE})
     @Operation(security = {@SecurityRequirement(name = "bearer-key")}, summary = "لیست ارزهای حساب کیف پول")
-    @PreAuthorize("hasAuthority(\"" + ResourceRepositoryService.LIMITATION_MANAGE + "\")")
+    @PreAuthorize("hasAuthority('" + ResourceDefinition.LIMITATION_MANAGE_AUTH + "')")
     @LogExecutionTime("Get wallet account currency list")
     public ResponseEntity<BaseResponse<WalletAccountCurrencyListResponse>> getWalletAccountCurrencyList() throws InternalServiceException {
         log.info("start getWalletAccountCurrencyList");
@@ -48,7 +49,7 @@ public class PanelWalletController {
     @Timed(description = "Time taken to get wallet level list")
     @GetMapping(path = "/level/list", produces = {MediaType.APPLICATION_JSON_VALUE})
     @Operation(security = {@SecurityRequirement(name = "bearer-key")}, summary = "لیست سطوح کیف پول")
-    @PreAuthorize("hasAuthority(\"" + ResourceRepositoryService.LIMITATION_MANAGE + "\")")
+    @PreAuthorize("hasAuthority('" + ResourceDefinition.LIMITATION_MANAGE_AUTH + "')")
     @LogExecutionTime("Get wallet level list")
     public ResponseEntity<BaseResponse<WalletLevelListResponse>> getWalletLevelList() throws InternalServiceException {
         log.info("start getWalletLevelList");
@@ -59,7 +60,7 @@ public class PanelWalletController {
     @Timed(description = "Time taken to get wallet type list")
     @GetMapping(path = "/type/list", produces = {MediaType.APPLICATION_JSON_VALUE})
     @Operation(security = {@SecurityRequirement(name = "bearer-key")}, summary = "لیست انواع کیف پول")
-    @PreAuthorize("hasAuthority(\"" + ResourceRepositoryService.LIMITATION_MANAGE + "\")")
+    @PreAuthorize("hasAuthority('" + ResourceDefinition.LIMITATION_MANAGE_AUTH + "')")
     @LogExecutionTime("Get wallet type list")
     public ResponseEntity<BaseResponse<WalletTypeListResponse>> getWalletTypeList() throws InternalServiceException {
         log.info("start getWalletTypeList");
@@ -70,9 +71,35 @@ public class PanelWalletController {
     @Timed(description = "Time taken to get wallet account type list")
     @GetMapping(path = "/accountType/list", produces = {MediaType.APPLICATION_JSON_VALUE})
     @Operation(security = {@SecurityRequirement(name = "bearer-key")}, summary = "لیست انواع حساب کیف پول")
-    @PreAuthorize("hasAuthority(\"" + ResourceRepositoryService.LIMITATION_MANAGE + "\")")
+    @PreAuthorize("hasAuthority('" + ResourceDefinition.LIMITATION_MANAGE_AUTH + "')")
     @LogExecutionTime("Get wallet account type list")
     public ResponseEntity<BaseResponse<WalletAccountTypeListResponse>> getWalletAccountTypeList() throws InternalServiceException {
+        log.info("start getWalletAccountTypeList");
+        WalletAccountTypeListResponse response = walletListOperationService.getWalletAccountTypeList();
+        return ResponseEntity.ok(new BaseResponse<>(true, response));
+    }
+
+    @Timed(description = "Time taken to get wallet account type list")
+    @GetMapping(path = "/customer/list", produces = {MediaType.APPLICATION_JSON_VALUE})
+    @Operation(security = {@SecurityRequirement(name = "bearer-key")}, summary = "لیست انواع حساب کیف پول", description =
+            """
+                           {
+                             "parameterMap": {
+                               "id": "44",
+                               "nationalCode": "1234567890",
+                               "fromTime":"1403/01/01",
+                               "toTime":"1403/09/01",
+                               "sejamMember":"false"
+                               "page": "0",
+                               "size": "10",
+                               "orderBy": "id",
+                               "sort": "asc"
+                             }
+                           }
+                    """)
+    @PreAuthorize("hasAuthority('" + ResourceDefinition.LIMITATION_MANAGE_AUTH + "')")
+    @LogExecutionTime("Get customer account type list")
+    public ResponseEntity<BaseResponse<WalletAccountTypeListResponse>> getCutomerList() throws InternalServiceException {
         log.info("start getWalletAccountTypeList");
         WalletAccountTypeListResponse response = walletListOperationService.getWalletAccountTypeList();
         return ResponseEntity.ok(new BaseResponse<>(true, response));

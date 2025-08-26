@@ -8,6 +8,7 @@ import com.melli.wallet.exception.InternalServiceException;
 import com.melli.wallet.security.RequestContext;
 import com.melli.wallet.service.operation.LimitationOperationService;
 import com.melli.wallet.service.repository.ResourceRepositoryService;
+import com.melli.wallet.service.repository.ResourceDefinition;
 import io.micrometer.core.annotation.Timed;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -42,7 +43,7 @@ public class LimitationController extends WebController {
     @Timed(description = "Time taken to create wallet")
     @GetMapping(path = "/getValue", produces = {MediaType.APPLICATION_JSON_VALUE})
     @Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "دریافت محدودیتها کلی")
-    @PreAuthorize("hasAuthority(\""+ ResourceRepositoryService.LIMITATION_LIST +"\")")
+    @PreAuthorize("hasAuthority('" + ResourceDefinition.LIMITATION_LIST_AUTH + "')")
     @LogExecutionTime("Get limitation value")
     public ResponseEntity<BaseResponse<LimitationCustomResponse>> generalList(@Valid  @RequestParam(value = "limitationName") String limitationName,
                                                                               @Valid @RequestParam(value ="accountNumber") String accountNumber,
@@ -58,7 +59,7 @@ public class LimitationController extends WebController {
     @Timed(description = "Time taken to create wallet")
     @GetMapping(path = "/list", produces = {MediaType.APPLICATION_JSON_VALUE})
     @Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "دریافت لیست محدودیتها")
-    @PreAuthorize("hasAuthority(\""+ ResourceRepositoryService.LIMITATION_LIST +"\")")
+    @PreAuthorize("hasAuthority('" + ResourceDefinition.LIMITATION_LIST_AUTH + "')")
     @LogExecutionTime("Get limitation list")
     public ResponseEntity<BaseResponse<LimitationListResponse>> getList() throws InternalServiceException {
         String channelIp = requestContext.getClientIp();

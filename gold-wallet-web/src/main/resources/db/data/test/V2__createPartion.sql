@@ -1,40 +1,6 @@
 CREATE TABLE if not exists transaction_part_0000000001 PARTITION OF transaction_part FOR VALUES FROM (1) TO (100000);
 
-insert into resource(created_by, created_at, name, fa_name, display)
-values ('system', 'now()', 'BUY_DIRECT', 'لیست پذیرنده ها', 1)
-    on conflict do nothing;
-
-
-insert into role_resource(created_by, created_at, role_id, resource_id)
-values ('system', 'now()', (select id from role_ where name='WEB_PROFILE'), (select id from resource where name='WALLET_CREATE'));
-insert into role_resource(created_by, created_at, role_id, resource_id)
-values ('system', 'now()', (select id from role_ where name='WEB_PROFILE'), (select id from resource where name='WALLET_DEACTIVATE'));
-insert into role_resource(created_by, created_at, role_id, resource_id)
-values ('system', 'now()', (select id from role_ where name='WEB_PROFILE'), (select id from resource where name='WALLET_DELETE'));
-insert into role_resource(created_by, created_at, role_id, resource_id)
-values ('system', 'now()', (select id from role_ where name='WEB_PROFILE'), (select id from resource where name='WALLET_ACTIVE'));
-insert into role_resource(created_by, created_at, role_id, resource_id)
-values ('system', 'now()', (select id from role_ where name='WEB_PROFILE'), (select id from resource where name='WALLET_INFO'));
-insert into role_resource(created_by, created_at, role_id, resource_id)
-values ('system', 'now()', (select id from role_ where name='WEB_PROFILE'), (select id from resource where name='GENERATE_UNIQUE_IDENTIFIER'));
-insert into role_resource(created_by, created_at, role_id, resource_id)
-values ('system', 'now()', (select id from role_ where name='WEB_PROFILE'), (select id from resource where name='CASH_IN'));
-insert into role_resource(created_by, created_at, role_id, resource_id)
-values ('system', 'now()', (select id from role_ where name='WEB_PROFILE'), (select id from resource where name='BUY'));
-insert into role_resource(created_by, created_at, role_id, resource_id)
-values ('system', 'now()', (select id from role_ where name='WEB_PROFILE'), (select id from resource where name='SELL'));
-insert into role_resource(created_by, created_at, role_id, resource_id)
-values ('system', 'now()', (select id from role_ where name='WEB_PROFILE'), (select id from resource where name='LOGOUT'));
-insert into role_resource(created_by, created_at, role_id, resource_id)
-values ('system', 'now()', (select id from role_ where name='WEB_PROFILE'), (select id from resource where name='GENERATE_PURCHASE_UNIQUE_IDENTIFIER'));
-insert into role_resource(created_by, created_at, role_id, resource_id)
-values ('system', 'now()', (select id from role_ where name='WEB_PROFILE'), (select id from resource where name='GENERATE_CASH_IN_UNIQUE_IDENTIFIER'));
-insert into role_resource(created_by, created_at, role_id, resource_id)
-values ('system', 'now()', (select id from role_ where name='WEB_PROFILE'), (select id from resource where name='MERCHANT_LIST'));
-insert into role_resource(created_by, created_at, role_id, resource_id)
-values ('system', 'now()', (select id from role_ where name='WEB_PROFILE'), (select id from resource where name='BUY_DIRECT'));
-
-insert into channel_role(created_by, created_at, role_id, channel_id) values ('system',now(),(select id from role_ where name='WEB_PROFILE'), (select id from channel where username='admin'));
+-- Resource, role_resource and channel_role insertions moved to V9 migration
 
 -- create merchant
 insert into wallet(mobile, national_code, description, owner_channel_id, wallet_type_id, wallet_level_id, status,

@@ -59,10 +59,7 @@ INSERT INTO setting_general(created_by, created_at, name, value, additional_data
 VALUES ('System', now(), 'SETTLE_DEFAULT_SIZE', '10', 'اندازه پیش‌فرض برای صفحه‌بندی')
 on conflict do nothing;
 
--- Physical Cash Out resource
-INSERT INTO resource (created_by, created_at, name, fa_name, display)
-VALUES ('System', now(), 'PHYSICAL_CASH_OUT', 'برداشت فیزیکی وجه', 1)
-on conflict do nothing;
+-- Physical Cash Out resource moved to V9 migration
 
 -- Physical Cash Out status codes
 INSERT INTO status (created_by, created_at, code, persian_description, additional_data)

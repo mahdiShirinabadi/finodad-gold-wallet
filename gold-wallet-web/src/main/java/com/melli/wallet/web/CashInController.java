@@ -12,6 +12,7 @@ import com.melli.wallet.exception.InternalServiceException;
 import com.melli.wallet.security.RequestContext;
 import com.melli.wallet.service.operation.CashInOperationService;
 import com.melli.wallet.service.repository.ResourceRepositoryService;
+import com.melli.wallet.service.repository.ResourceDefinition;
 import com.melli.wallet.service.operation.SecurityOperationService;
 import io.micrometer.core.annotation.Timed;
 import io.swagger.v3.oas.annotations.Operation;
@@ -45,7 +46,7 @@ public class CashInController extends WebController {
     @Timed(description = "Time taken to create wallet")
     @PostMapping(path = "/generate/uuid", produces = {MediaType.APPLICATION_JSON_VALUE})
     @Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "ایجاد شناسه یکتا")
-    @PreAuthorize("hasAuthority(\""+ ResourceRepositoryService.CASH_IN +"\")")
+    @PreAuthorize("hasAuthority('" + ResourceDefinition.CASH_IN_AUTH + "')")
     @LogExecutionTime("Generate cash in UUID")
     public ResponseEntity<BaseResponse<UuidResponse>> generateUuid(@Valid @RequestBody CashGenerateUuidRequestJson requestJson) throws InternalServiceException {
         log.info("start call cashIn uuid nationalCode ===> {}", requestJson.getNationalCode());
@@ -56,7 +57,7 @@ public class CashInController extends WebController {
     @Timed(description = "CashEndPoint.cashIn")
     @PostMapping(path = "/charge", produces = {MediaType.APPLICATION_JSON_VALUE})
     @Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "افزایش موجودی کیف پول")
-    @PreAuthorize("hasAuthority(\""+ ResourceRepositoryService.CASH_IN +"\")")
+    @PreAuthorize("hasAuthority('" + ResourceDefinition.CASH_IN_AUTH + "')")
     @LogExecutionTime("Cash in charge")
     public ResponseEntity<BaseResponse<CashInResponse>> cashIn(@Valid @RequestBody CashInWalletRequestJson requestJson) throws InternalServiceException {
         String channelIp = requestContext.getClientIp();
@@ -73,7 +74,7 @@ public class CashInController extends WebController {
     @Timed(description = "CashEndPoint.inquiry")
     @GetMapping(path = "/inquiry", produces = {MediaType.APPLICATION_JSON_VALUE})
     @Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "پیگیری افزایش موجودی کیف پول")
-    @PreAuthorize("hasAuthority(\""+ ResourceRepositoryService.CASH_IN +"\")")
+    @PreAuthorize("hasAuthority('" + ResourceDefinition.CASH_IN_AUTH + "')")
     @LogExecutionTime("Cash in inquiry")
     public ResponseEntity<BaseResponse<CashInTrackResponse>> inquiryCashIn(@Valid @RequestParam("uniqueIdentifier") String uniqueIdentifier) throws InternalServiceException {
         String channelIp = requestContext.getClientIp();

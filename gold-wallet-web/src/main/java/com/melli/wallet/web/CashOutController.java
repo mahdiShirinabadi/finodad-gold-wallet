@@ -12,6 +12,7 @@ import com.melli.wallet.exception.InternalServiceException;
 import com.melli.wallet.security.RequestContext;
 import com.melli.wallet.service.operation.CashOutOperationService;
 import com.melli.wallet.service.repository.ResourceRepositoryService;
+import com.melli.wallet.service.repository.ResourceDefinition;
 import com.melli.wallet.service.operation.SecurityOperationService;
 import io.micrometer.core.annotation.Timed;
 import io.swagger.v3.oas.annotations.Operation;
@@ -45,7 +46,7 @@ public class CashOutController extends WebController {
     @Timed(description = "Time taken to create wallet")
     @PostMapping(path = "/generate/uuid", produces = {MediaType.APPLICATION_JSON_VALUE})
     @Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "ایجاد شناسه یکتا")
-    @PreAuthorize("hasAuthority(\""+ ResourceRepositoryService.CASH_OUT +"\")")
+    @PreAuthorize("hasAuthority('" + ResourceDefinition.CASH_OUT_AUTH + "')")
     @LogExecutionTime("Generate cash out UUID")
     public ResponseEntity<BaseResponse<UuidResponse>> cashOutGenerateUuid(@Valid @RequestBody CashGenerateUuidRequestJson requestJson) throws InternalServiceException {
         log.info("start call uuid nationalCode ===> {}", requestJson.getNationalCode());
@@ -57,7 +58,7 @@ public class CashOutController extends WebController {
     @Timed(description = "CashEndPoint.cashOut")
     @PostMapping(path = "/withdraw", produces = {MediaType.APPLICATION_JSON_VALUE})
     @Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "برداشت وجه")
-    @PreAuthorize("hasAuthority(\""+ ResourceRepositoryService.CASH_OUT +"\")")
+    @PreAuthorize("hasAuthority('" + ResourceDefinition.CASH_OUT_AUTH + "')")
     @LogExecutionTime("Cash out withdrawal")
     public ResponseEntity<BaseResponse<CashOutResponse>> cashOut(@Valid @RequestBody CashOutWalletRequestJson requestJson) throws InternalServiceException {
         String channelIp = requestContext.getClientIp();
@@ -74,7 +75,7 @@ public class CashOutController extends WebController {
     @Timed(description = "CashEndPoint.cashOut.inquiry")
     @GetMapping(path = "/inquiry", produces = {MediaType.APPLICATION_JSON_VALUE})
     @Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "پیگیری برداشت وجه")
-    @PreAuthorize("hasAuthority(\""+ ResourceRepositoryService.CASH_OUT +"\")")
+    @PreAuthorize("hasAuthority('" + ResourceDefinition.CASH_OUT_AUTH + "')")
     @LogExecutionTime("Cash out inquiry")
     public ResponseEntity<BaseResponse<CashOutTrackResponse>> inquiryCashOut(@Valid @RequestParam("uniqueIdentifier") String uniqueIdentifier) throws InternalServiceException {
         String channelIp = requestContext.getClientIp();

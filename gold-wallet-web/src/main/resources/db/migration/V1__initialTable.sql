@@ -531,9 +531,7 @@ CREATE TABLE if not exists transaction_part
 ) PARTITION BY RANGE (wallet_account_id);
 
 
-insert into role_ (created_by, created_at, name, persian_description, additional_data)
-values ('admin', now(), 'WEB_PROFILE', 'کاربر وب', '')
-on conflict do nothing;
+-- Role insertion moved to V9 migration
 
 INSERT INTO setting_general(created_by, created_at, name, value, additional_data)
 VALUES ('System', now(), 'MAX_WRONG_PASSWORD_FOR_PROFILE', '5', 'حداکثر تعداد رمز نادرست')
@@ -666,31 +664,4 @@ values ('Systen', now(), 'Mahdi', 'admin', 'admin', '09124162337',
         '$2a$10$U5lecEunX.HBU.MBVLUV8OvwCrgGDJtaKVgGA5hzgwfsfTV8GD8TK', 1, 0, '', '0:0:0:0:0:0:0:1;0.0.0.0/0', 1,
         '1234567890', '0');
 
-insert into resource(created_by, created_at, name, fa_name, display)
-values ('system', 'now()', 'WALLET_CREATE', 'ایجاد کیف پول', 1);
-insert into resource(created_by, created_at, name, fa_name, display)
-values ('system', 'now()', 'WALLET_DEACTIVATE', 'غیر فعال کیف پول', 1);
-insert into resource(created_by, created_at, name, fa_name, display)
-values ('system', 'now()', 'WALLET_DELETE', 'حذف کیف پول', 1);
-insert into resource(created_by, created_at, name, fa_name, display)
-values ('system', 'now()', 'WALLET_ACTIVE', 'فعال کردن کیف پول', 1);
-insert into resource(created_by, created_at, name, fa_name, display)
-values ('system', 'now()', 'WALLET_INFO', 'دریافت اطلاعات کیف پول', 1);
-insert into resource(created_by, created_at, name, fa_name, display)
-values ('system', 'now()', 'GENERATE_UNIQUE_IDENTIFIER', 'تولید شناسه یکتا', 1);
-insert into resource(created_by, created_at, name, fa_name, display)
-values ('system', 'now()', 'CASH_IN', 'واریز وجه', 1);
-insert into resource(created_by, created_at, name, fa_name, display)
-values ('system', 'now()', 'BUY', 'خرید', 1);
-insert into resource(created_by, created_at, name, fa_name, display)
-values ('system', 'now()', 'SELL', 'فروش', 1);
-insert into resource(created_by, created_at, name, fa_name, display)
-values ('system', 'now()', 'LOGOUT', 'خروج', 1);
-insert into resource(created_by, created_at, name, fa_name, display)
-values ('system', 'now()', 'GENERATE_PURCHASE_UNIQUE_IDENTIFIER', 'کد یکتا خرید', 1);
-insert into resource(created_by, created_at, name, fa_name, display)
-values ('system', 'now()', 'GENERATE_CASH_IN_UNIQUE_IDENTIFIER', 'کد یکتا شارژ', 1);
-insert into resource(created_by, created_at, name, fa_name, display)
-values ('system', 'now()', 'MERCHANT_LIST', 'لیست پذیرنده ها', 1);
-insert into resource(created_by, created_at, name, fa_name, display)
-values ('system', 'now()', 'CASH_OUT', 'لیست پذیرنده ها', 1);
+-- Resource insertions moved to V9 migration

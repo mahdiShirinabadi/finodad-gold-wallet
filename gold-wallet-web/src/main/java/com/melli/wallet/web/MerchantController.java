@@ -11,6 +11,7 @@ import com.melli.wallet.domain.response.wallet.WalletBalanceResponse;
 import com.melli.wallet.exception.InternalServiceException;
 import com.melli.wallet.security.RequestContext;
 import com.melli.wallet.service.repository.MerchantRepositoryService;
+import com.melli.wallet.service.repository.ResourceDefinition;
 import com.melli.wallet.service.repository.ResourceRepositoryService;
 import com.melli.wallet.service.operation.MerchantOperationService;
 import io.micrometer.core.annotation.Timed;
@@ -48,7 +49,7 @@ public class MerchantController extends WebController {
     @Timed(description = "Time taken to inquiry gold amount")
     @GetMapping(path = "/list", produces = {MediaType.APPLICATION_JSON_VALUE})
     @Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "لیست پذیرنده ها")
-    @PreAuthorize("hasAuthority(\""+ ResourceRepositoryService.MERCHANT_LIST +"\")")
+    @PreAuthorize("hasAuthority('" + ResourceDefinition.MERCHANT_LIST_AUTH + "')")
     @LogExecutionTime("Get merchant list")
     public ResponseEntity<BaseResponse<MerchantResponse>> getMerchant(@Valid @StringValidation @RequestParam("currency") String currency) throws InternalServiceException {
         String channelIp = requestContext.getClientIp();
@@ -61,7 +62,7 @@ public class MerchantController extends WebController {
     @Timed(description = "Time taken to inquiry gold amount")
     @GetMapping(path = "/balance", produces = {MediaType.APPLICATION_JSON_VALUE})
     @Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "مانده پذیرنده")
-    @PreAuthorize("hasAuthority(\""+ ResourceRepositoryService.MERCHANT_BALANCE +"\")")
+    @PreAuthorize("hasAuthority('" + ResourceDefinition.MERCHANT_BALANCE_AUTH + "')")
     @LogExecutionTime("Get merchant balance")
     public ResponseEntity<BaseResponse<WalletBalanceResponse>> getBalanceMerchant(@Valid @NumberValidation @RequestParam("merchantId") String merchantId) throws InternalServiceException {
         String channelIp = requestContext.getClientIp();
@@ -74,7 +75,7 @@ public class MerchantController extends WebController {
     @Timed(description = "Time taken to inquiry gold amount")
     @PostMapping(path = "/updateStatus", produces = {MediaType.APPLICATION_JSON_VALUE})
     @Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "تغییر وضعیت پذیرنده")
-    @PreAuthorize("hasAuthority(\""+ ResourceRepositoryService.MERCHANT_MANAGE +"\")")
+    @PreAuthorize("hasAuthority('" + ResourceDefinition.MERCHANT_MANAGE_AUTH + "')")
     @LogExecutionTime("Update merchant status")
     public ResponseEntity<BaseResponse<ObjectUtils.Null>> update(@Valid @RequestBody MerchantUpdateRequest request) throws InternalServiceException {
         String channelIp = requestContext.getClientIp();
@@ -87,7 +88,7 @@ public class MerchantController extends WebController {
     @Timed(description = "Time taken to increase merchant balance")
     @PostMapping(path = "/balance/increase", produces = {MediaType.APPLICATION_JSON_VALUE})
     @Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "افزایش مانده پذیرنده")
-    @PreAuthorize("hasAuthority(\""+ ResourceRepositoryService.MERCHANT_INCREASE_BALANCE +"\")")
+    @PreAuthorize("hasAuthority('" + ResourceDefinition.MERCHANT_INCREASE_BALANCE_AUTH + "')")
     @LogExecutionTime("Increase merchant balance")
     public ResponseEntity<BaseResponse<String>> increaseBalance(@Valid @RequestBody MerchantBalanceRequest request) throws InternalServiceException {
         
@@ -110,7 +111,7 @@ public class MerchantController extends WebController {
     @Timed(description = "Time taken to decrease merchant balance")
     @PostMapping(path = "/balance/decrease", produces = {MediaType.APPLICATION_JSON_VALUE})
     @Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "کاهش مانده پذیرنده")
-    @PreAuthorize("hasAuthority(\""+ ResourceRepositoryService.MERCHANT_DECREASE_BALANCE +"\")")
+    @PreAuthorize("hasAuthority('" + ResourceDefinition.MERCHANT_DECREASE_BALANCE_AUTH + "')")
     @LogExecutionTime("Decrease merchant balance")
     public ResponseEntity<BaseResponse<String>> decreaseBalance(@Valid @RequestBody MerchantBalanceRequest request) throws InternalServiceException {
         

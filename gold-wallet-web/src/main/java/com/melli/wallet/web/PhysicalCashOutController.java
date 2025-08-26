@@ -12,6 +12,7 @@ import com.melli.wallet.exception.InternalServiceException;
 import com.melli.wallet.security.RequestContext;
 import com.melli.wallet.service.operation.CashOutOperationService;
 import com.melli.wallet.service.repository.ResourceRepositoryService;
+import com.melli.wallet.service.repository.ResourceDefinition;
 import com.melli.wallet.service.operation.SecurityOperationService;
 import io.micrometer.core.annotation.Timed;
 import io.swagger.v3.oas.annotations.Operation;
@@ -48,7 +49,7 @@ public class PhysicalCashOutController extends WebController {
     @Timed(description = "CashEndPoint.physical.cashOut.generate.uuid")
     @PostMapping(path = "/generate/uuid", produces = {MediaType.APPLICATION_JSON_VALUE})
     @Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "ایجاد شناسه یکتا برای دریافت فیزیکی")
-    @PreAuthorize("hasAuthority(\""+ ResourceRepositoryService.PHYSICAL_CASH_OUT +"\")")
+    @PreAuthorize("hasAuthority('" + ResourceDefinition.PHYSICAL_CASH_OUT_AUTH + "')")
     @LogExecutionTime("Generate physical cash out UUID")
     public ResponseEntity<BaseResponse<UuidResponse>> physicalCashOutGenerateUuid(@Valid @RequestBody PhysicalCashGenerateUuidRequestJson requestJson) throws InternalServiceException {
         log.info("start call uuid nationalCode ===> {}", requestJson.getNationalCode());
@@ -60,7 +61,7 @@ public class PhysicalCashOutController extends WebController {
     @Timed(description = "CashEndPoint.physical.cashOut")
     @PostMapping(path = "/withdrawal", produces = {MediaType.APPLICATION_JSON_VALUE})
     @Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "برداشت وجه فیزیکی")
-    @PreAuthorize("hasAuthority(\""+ ResourceRepositoryService.PHYSICAL_CASH_OUT +"\")")
+    @PreAuthorize("hasAuthority('" + ResourceDefinition.PHYSICAL_CASH_OUT_AUTH + "')")
     @LogExecutionTime("Physical cash out withdrawal")
     public ResponseEntity<BaseResponse<PhysicalCashOutResponse>> physicalCashOut(@Valid @RequestBody PhysicalCashOutWalletRequestJson requestJson) throws InternalServiceException {
         String channelIp = requestContext.getClientIp();
@@ -79,7 +80,7 @@ public class PhysicalCashOutController extends WebController {
     @Timed(description = "CashEndPoint.physical.cashOut.inquiry")
     @GetMapping(path = "/inquiry", produces = {MediaType.APPLICATION_JSON_VALUE})
     @Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "پیگیری برداشت وجه فیزیکی")
-    @PreAuthorize("hasAuthority(\""+ ResourceRepositoryService.PHYSICAL_CASH_OUT +"\")")
+    @PreAuthorize("hasAuthority('" + ResourceDefinition.PHYSICAL_CASH_OUT_AUTH + "')")
     @LogExecutionTime("Physical cash out inquiry")
     public ResponseEntity<BaseResponse<PhysicalCashOutTrackResponse>> physicalInquiryCashOut(@Valid @RequestParam("uniqueIdentifier") String uniqueIdentifier) throws InternalServiceException {
         String channelIp = requestContext.getClientIp();

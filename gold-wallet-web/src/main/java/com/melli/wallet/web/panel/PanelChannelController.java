@@ -17,6 +17,7 @@ import com.melli.wallet.exception.InternalServiceException;
 import com.melli.wallet.security.RequestContext;
 import com.melli.wallet.service.operation.WalletOperationalService;
 import com.melli.wallet.service.repository.*;
+import com.melli.wallet.service.repository.ResourceDefinition;
 import com.melli.wallet.util.Utility;
 import com.melli.wallet.web.WebController;
 import io.micrometer.core.annotation.Timed;
@@ -60,7 +61,7 @@ public class PanelChannelController extends WebController {
     @Timed(description = "Time taken to update limitation general")
     @PostMapping(path = "/channel/wallet/create", produces = {MediaType.APPLICATION_JSON_VALUE}, consumes = {MediaType.APPLICATION_JSON_VALUE})
     @Operation(security = {@SecurityRequirement(name = "bearer-key")}, summary = "Update general limitation (value and pattern only)")
-    @PreAuthorize("hasAuthority(\"" + ResourceRepositoryService.CHANNEL_MANAGE + "\")")
+    @PreAuthorize("hasAuthority('" + ResourceDefinition.CHANNEL_MANAGE_AUTH + "')")
     @LogExecutionTime("Create channel wallet")
     public ResponseEntity<BaseResponse<String>> createChannelWallet(@Valid @RequestBody ChannelCreateRequestJson requestJson) throws InternalServiceException {
 
@@ -83,7 +84,7 @@ public class PanelChannelController extends WebController {
     @Timed(description = "Time taken to update limitation general")
     @PostMapping(path = "/merchant/create", produces = {MediaType.APPLICATION_JSON_VALUE}, consumes = {MediaType.APPLICATION_JSON_VALUE})
     @Operation(security = {@SecurityRequirement(name = "bearer-key")}, summary = "Update general limitation (value and pattern only)")
-    @PreAuthorize("hasAuthority(\"" + ResourceRepositoryService.MERCHANT_MANAGE + "\")")
+    @PreAuthorize("hasAuthority('" + ResourceDefinition.MERCHANT_MANAGE_AUTH + "')")
     @LogExecutionTime("Create merchant wallet")
     public ResponseEntity<BaseResponse<String>> createMerchantWallet(@Valid @RequestBody MerchantCreateRequestJson requestJson) throws InternalServiceException {
 

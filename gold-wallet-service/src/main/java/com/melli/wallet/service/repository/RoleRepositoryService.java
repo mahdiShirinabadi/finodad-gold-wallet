@@ -12,6 +12,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Class Name: RoleService
@@ -21,11 +22,16 @@ import java.util.Map;
 public interface RoleRepositoryService {
 
     String WEB_PROFILE = "WEB_PROFILE";
+    String GOD_ROLE = "GOD";
 
     void addChannelToRole(ChannelEntity channelEntity, String roleName) throws InternalServiceException;
     void removeChannelFromRole(ChannelEntity channelEntity, String roleName) throws InternalServiceException;
 
     RoleEntity findById(Long roleId) throws InternalServiceException;
+
+    RoleEntity save(RoleEntity roleEntity);
+
+    Optional<RoleEntity> findByName(String name);
     /**
      * Create a new role
      */

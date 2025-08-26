@@ -18,6 +18,7 @@ import com.melli.wallet.exception.InternalServiceException;
 import com.melli.wallet.security.RequestContext;
 import com.melli.wallet.service.operation.WalletOperationalService;
 import com.melli.wallet.service.repository.*;
+import com.melli.wallet.service.repository.ResourceDefinition;
 import com.melli.wallet.util.Utility;
 import io.micrometer.core.annotation.Timed;
 import io.swagger.v3.oas.annotations.Operation;
@@ -50,7 +51,7 @@ public class TransactionController extends WebController {
 	@Timed(description = "Time taken to create wallet")
 	@GetMapping(path = "/last", produces = {MediaType.APPLICATION_JSON_VALUE})
 	@Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "صورتحساب")
-	@PreAuthorize("hasAuthority(\""+ ResourceRepositoryService.STATEMENT +"\")")
+	@PreAuthorize("hasAuthority('" + ResourceDefinition.STATEMENT_AUTH + "')")
 	@LogExecutionTime("Get last transaction")
 	public ResponseEntity<BaseResponse<StatementResponse>> last(@Valid @NationalCodeValidation(label = "کد ملی") @RequestParam("nationalCode") String nationalCode,@Valid @RequestParam("accountNumber") @StringValidation(label = "شماره حساب کیف")  String accountNumber) throws InternalServiceException {
 		String channelIp = requestContext.getClientIp();
@@ -64,7 +65,7 @@ public class TransactionController extends WebController {
 	@Timed(description = "Time taken to create wallet")
 	@PostMapping(path = "/report", produces = {MediaType.APPLICATION_JSON_VALUE})
 	@Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "گزارش تراکنش")
-	@PreAuthorize("hasAuthority(\""+ ResourceRepositoryService.STATEMENT +"\")")
+	@PreAuthorize("hasAuthority('" + ResourceDefinition.STATEMENT_AUTH + "')")
 	@LogExecutionTime("Generate transaction report")
 	public ResponseEntity<BaseResponse<ReportTransactionResponse>> report(@RequestBody @Validated PanelBaseSearchJson request) throws InternalServiceException {
 		String channelIp = requestContext.getClientIp();

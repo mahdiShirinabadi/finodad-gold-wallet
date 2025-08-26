@@ -16,6 +16,7 @@ import com.melli.wallet.security.RequestContext;
 import com.melli.wallet.service.operation.RoleResourceOperationService;
 import com.melli.wallet.service.operation.ChannelRoleOperationService;
 import com.melli.wallet.service.repository.ResourceRepositoryService;
+import com.melli.wallet.service.repository.ResourceDefinition;
 import com.melli.wallet.service.repository.RoleRepositoryService;
 import com.melli.wallet.web.WebController;
 import io.micrometer.core.annotation.Timed;
@@ -64,7 +65,7 @@ public class RoleManagementController extends WebController {
     @Timed(description = "Time taken to create role")
     @PostMapping(path = "/role/create", produces = {MediaType.APPLICATION_JSON_VALUE}, consumes = {MediaType.APPLICATION_JSON_VALUE})
     @Operation(security = {@SecurityRequirement(name = "bearer-key")}, summary = "Create a new role")
-    @PreAuthorize("hasAuthority(\"" + ResourceRepositoryService.ROLE_MANAGE + "\")")
+    @PreAuthorize("hasAuthority('" + ResourceDefinition.ROLE_MANAGE_AUTH + "')")
     @LogExecutionTime("Create role")
     public ResponseEntity<BaseResponse<RoleDetailResponse>> addRole(
             @Valid @RequestBody RoleCreateRequestJson requestJson) throws InternalServiceException {
@@ -80,7 +81,7 @@ public class RoleManagementController extends WebController {
     @Timed(description = "Time taken to list roles")
     @GetMapping(path = "/role/list", produces = {MediaType.APPLICATION_JSON_VALUE})
     @Operation(security = {@SecurityRequirement(name = "bearer-key")}, summary = "Get paginated list of roles")
-    @PreAuthorize("hasAuthority(\"" + ResourceRepositoryService.ROLE_MANAGE + "\")")
+    @PreAuthorize("hasAuthority('" + ResourceDefinition.ROLE_MANAGE_AUTH + "')")
     @LogExecutionTime("List roles")
     public ResponseEntity<BaseResponse<Page<RoleDetailResponse>>> roleList(Pageable pageable) throws InternalServiceException {
 
@@ -97,7 +98,7 @@ public class RoleManagementController extends WebController {
     @Timed(description = "Time taken to create resource")
     @PostMapping(path = "/resource/create", produces = {MediaType.APPLICATION_JSON_VALUE}, consumes = {MediaType.APPLICATION_JSON_VALUE})
     @Operation(security = {@SecurityRequirement(name = "bearer-key")}, summary = "Create a new resource")
-    @PreAuthorize("hasAuthority(\"" + ResourceRepositoryService.RESOURCE_MANAGE + "\")")
+    @PreAuthorize("hasAuthority('" + ResourceDefinition.RESOURCE_MANAGE_AUTH + "')")
     @LogExecutionTime("Create resource")
     public ResponseEntity<BaseResponse<ResourceDetailResponse>> addResource(
             @Valid @RequestBody ResourceCreateRequestJson requestJson) throws InternalServiceException {
@@ -113,7 +114,7 @@ public class RoleManagementController extends WebController {
     @Timed(description = "Time taken to list resources")
     @GetMapping(path = "/resource/list", produces = {MediaType.APPLICATION_JSON_VALUE})
     @Operation(security = {@SecurityRequirement(name = "bearer-key")}, summary = "Get paginated list of resources")
-    @PreAuthorize("hasAuthority(\"" + ResourceRepositoryService.RESOURCE_MANAGE + "\")")
+    @PreAuthorize("hasAuthority('" + ResourceDefinition.RESOURCE_MANAGE_AUTH + "')")
     @LogExecutionTime("List resources")
     public ResponseEntity<BaseResponse<Page<ResourceListResponse>>> resourceList(Pageable pageable) throws InternalServiceException {
 
@@ -129,7 +130,7 @@ public class RoleManagementController extends WebController {
     @Timed(description = "Time taken to add resources to role")
     @PostMapping(path = "/addResources", produces = {MediaType.APPLICATION_JSON_VALUE}, consumes = {MediaType.APPLICATION_JSON_VALUE})
     @Operation(security = {@SecurityRequirement(name = "bearer-key")}, summary = "Add resources to a role (keep existing resources)")
-    @PreAuthorize("hasAuthority(\"" + ResourceRepositoryService.ROLE_MANAGE + "\")")
+    @PreAuthorize("hasAuthority('" + ResourceDefinition.ROLE_MANAGE_AUTH + "')")
     @LogExecutionTime("Add resources to role")
     public ResponseEntity<BaseResponse<String>> addResourcesToRole(
             @Valid @RequestBody RoleResourceRequestJson requestJson) throws InternalServiceException {
@@ -147,7 +148,7 @@ public class RoleManagementController extends WebController {
     @Timed(description = "Time taken to get role resources")
     @GetMapping(path = "/{roleId}/resources", produces = {MediaType.APPLICATION_JSON_VALUE})
     @Operation(security = {@SecurityRequirement(name = "bearer-key")}, summary = "Get all resources for a role")
-    @PreAuthorize("hasAuthority(\"" + ResourceRepositoryService.ROLE_MANAGE + "\")")
+    @PreAuthorize("hasAuthority('" + ResourceDefinition.ROLE_MANAGE_AUTH + "')")
     @LogExecutionTime("Get role resources")
     public ResponseEntity<BaseResponse<List<ResourceListResponse>>> getRoleResources(@PathVariable Long roleId) throws InternalServiceException {
 
@@ -167,7 +168,7 @@ public class RoleManagementController extends WebController {
     @Timed(description = "Time taken to assign role to channel")
     @PostMapping(path = "/assignRoleToChannel", produces = {MediaType.APPLICATION_JSON_VALUE}, consumes = {MediaType.APPLICATION_JSON_VALUE})
     @Operation(security = {@SecurityRequirement(name = "bearer-key")}, summary = "Assign a role to a channel")
-    @PreAuthorize("hasAuthority(\"" + ResourceRepositoryService.CHANNEL_MANAGE + "\")")
+    @PreAuthorize("hasAuthority('" + ResourceDefinition.CHANNEL_MANAGE_AUTH + "')")
     @LogExecutionTime("Assign role to channel")
     public ResponseEntity<BaseResponse<String>> assignRoleToChannel(
             @Valid @RequestBody ChannelRoleRequestJson requestJson) throws InternalServiceException {
@@ -191,7 +192,7 @@ public class RoleManagementController extends WebController {
     @Timed(description = "Time taken to list channels")
     @GetMapping(path = "/channel/list", produces = {MediaType.APPLICATION_JSON_VALUE})
     @Operation(security = {@SecurityRequirement(name = "bearer-key")}, summary = "Get list of channels")
-    @PreAuthorize("hasAuthority(\"" + ResourceRepositoryService.CHANNEL_MANAGE + "\")")
+    @PreAuthorize("hasAuthority('" + ResourceDefinition.CHANNEL_MANAGE_AUTH + "')")
     @LogExecutionTime("List channels")
     public ResponseEntity<BaseResponse<List<ChannelListResponse>>> channelList() throws InternalServiceException {
         List<ChannelListResponse> response = channelRoleOperationService.getChannelList();
