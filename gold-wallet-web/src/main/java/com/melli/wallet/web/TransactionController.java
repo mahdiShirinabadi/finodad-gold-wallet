@@ -64,7 +64,20 @@ public class TransactionController extends WebController {
 
 	@Timed(description = "Time taken to create wallet")
 	@PostMapping(path = "/report", produces = {MediaType.APPLICATION_JSON_VALUE})
-	@Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "گزارش تراکنش")
+	@Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "گزارش تراکنش", description =
+			"""
+                            {
+                              "map": {
+                                "nationalCode": "1234567890",
+                                "fromTime":"1403/01/01",
+                                "toTime":"1403/09/01",
+                                "page": "0",
+                                "size": "10",
+                                "orderBy": "id",
+                                "sort": "asc"
+                              }
+                            }
+                     """)
 	@PreAuthorize("hasAuthority('" + ResourceDefinition.STATEMENT_AUTH + "')")
 	@LogExecutionTime("Generate transaction report")
 	public ResponseEntity<BaseResponse<ReportTransactionResponse>> report(@RequestBody @Validated PanelBaseSearchJson request) throws InternalServiceException {

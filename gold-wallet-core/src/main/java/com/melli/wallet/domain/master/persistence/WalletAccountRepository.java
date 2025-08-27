@@ -5,6 +5,8 @@ import com.melli.wallet.domain.enumaration.WalletStatusEnum;
 import com.melli.wallet.domain.master.entity.WalletAccountEntity;
 import com.melli.wallet.domain.master.entity.WalletEntity;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
@@ -57,4 +59,6 @@ public interface WalletAccountRepository extends CrudRepository<WalletAccountEnt
 
     @Query(value = "SELECT w.balance AS balance, w.block_amount AS blockAmount  FROM {h-schema}wallet_account w where id=:id", nativeQuery = true)
     BalanceObjectDTO getBalanceById(@Param("id") long id);
+
+    List<WalletAccountEntity> findByWalletEntityIdIn(List<Long> walletIds);
 }

@@ -57,4 +57,18 @@ public interface ReportWalletAccountRepository extends CrudRepository<ReportWall
 
     @Query(value = "SELECT w.balance AS balance, w.block_amount AS blockAmount  FROM {h-schema}wallet_account w where id=:id", nativeQuery = true)
     BalanceObjectDTO getBalanceById(@Param("id") long id);
+
+    @Query(value = "SELECT " +
+            "wa.id as accountId, " +
+            "wa.account_number as accountNumber, " +
+            "wa.status as accountStatus, " +
+            "wa.balance as balance, " +
+            "wa.wallet_id as walletId, " +
+            "wat.name as accountTypeName, " +
+            "wac.name as currencyName " +
+            "FROM {h-schema}wallet_account wa " +
+            "INNER JOIN {h-schema}wallet_account_type wat ON wa.wallet_account_type_id = wat.id " +
+            "INNER JOIN {h-schema}wallet_account_currency wac ON wa.wallet_account_currency_id = wac.id " +
+            "WHERE wa.wallet_id IN :walletIds", nativeQuery = true)
+    List<Object[]> findAccountDetailsByWalletIds(@Param("walletIds") List<Long> walletIds);
 } 

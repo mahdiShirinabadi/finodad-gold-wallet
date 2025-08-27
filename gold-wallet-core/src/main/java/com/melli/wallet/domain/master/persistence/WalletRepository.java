@@ -2,8 +2,11 @@ package com.melli.wallet.domain.master.persistence;
 
 import com.melli.wallet.domain.enumaration.WalletStatusEnum;
 import com.melli.wallet.domain.master.entity.WalletEntity;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.Date;
@@ -43,4 +46,6 @@ public interface WalletRepository extends CrudRepository<WalletEntity, Long> {
 			"INNER JOIN wallet as w on wa.wallet_id = w.id\n" +
 			"where wa.account_number= :accountNumber", nativeQuery = true)
 	WalletEntity findWalletByAccountNumber(String accountNumber);
+
+	List<WalletEntity> findByStatusAndNationalCodeContainingAndMobileContaining(WalletStatusEnum status, String nationalCode, String mobile);
 }

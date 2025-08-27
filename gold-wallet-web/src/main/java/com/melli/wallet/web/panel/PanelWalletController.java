@@ -1,7 +1,10 @@
 package com.melli.wallet.web.panel;
 
 import com.melli.wallet.annotation.LogExecutionTime;
+import com.melli.wallet.domain.request.PanelBaseSearchJson;
+import com.melli.wallet.security.RequestContext;
 import com.melli.wallet.domain.response.base.BaseResponse;
+import com.melli.wallet.domain.response.panel.CustomerListResponse;
 import com.melli.wallet.domain.response.panel.WalletAccountCurrencyListResponse;
 import com.melli.wallet.domain.response.panel.WalletAccountTypeListResponse;
 import com.melli.wallet.domain.response.panel.WalletLevelListResponse;
@@ -13,12 +16,15 @@ import com.melli.wallet.service.repository.ResourceDefinition;
 import io.micrometer.core.annotation.Timed;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -33,6 +39,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Log4j2
 public class PanelWalletController {
 
+    private final RequestContext requestContext;
     private final WalletListOperationService walletListOperationService;
 
     @Timed(description = "Time taken to get wallet account currency list")
@@ -79,29 +86,31 @@ public class PanelWalletController {
         return ResponseEntity.ok(new BaseResponse<>(true, response));
     }
 
-    @Timed(description = "Time taken to get wallet account type list")
-    @GetMapping(path = "/customer/list", produces = {MediaType.APPLICATION_JSON_VALUE})
-    @Operation(security = {@SecurityRequirement(name = "bearer-key")}, summary = "لیست انواع حساب کیف پول", description =
+        @Timed(description = "Time taken to get customer list")
+    @PostMapping(path = "/customer/list", produces = {MediaType.APPLICATION_JSON_VALUE})
+    @Operation(security = {@SecurityRequirement(name = "bearer-key")}, summary = "لیست مشتریان", description =
             """
-                           {
-                             "parameterMap": {
-                               "id": "44",
-                               "nationalCode": "1234567890",
-                               "fromTime":"1403/01/01",
-                               "toTime":"1403/09/01",
-                               "sejamMember":"false"
-                               "page": "0",
-                               "size": "10",
-                               "orderBy": "id",
-                               "sort": "asc"
-                             }
-                           }
-                    """)
+                            {
+                              "map": {
+                                "id": "44",
+                                "nationalCode": "1234567890",
+                                "fromTime":"1403/01/01",
+                                "toTime":"1403/09/01",
+                                "page": "0",
+                                "size": "10",
+                                "orderBy": "id",
+                                "sort": "asc"
+                              }
+                            }
+                     """)
     @PreAuthorize("hasAuthority('" + ResourceDefinition.LIMITATION_MANAGE_AUTH + "')")
-    @LogExecutionTime("Get customer account type list")
-    public ResponseEntity<BaseResponse<WalletAccountTypeListResponse>> getCutomerList() throws InternalServiceException {
-        log.info("start getWalletAccountTypeList");
-        WalletAccountTypeListResponse response = walletListOperationService.getWalletAccountTypeList();
+    @LogExecutionTime("Get customer list")
+    public ResponseEntity<BaseResponse<CustomerListResponse>> getCustomerList(@Valid @RequestBody PanelBaseSearchJson panelSearchJson) throws InternalServiceException {
+        String channelIp = requestContext.getClientIp();
+        String username = requestContext.getChannelEntity().getUsername();
+        log.info("start get customer list in username ===> {}, from ip ===> {}", username, channelIp);
+
+        CustomerListResponse response = walletListOperationService.getCustomerListEfficient(panelSearchJson.getMap());
         return ResponseEntity.ok(new BaseResponse<>(true, response));
     }
 }

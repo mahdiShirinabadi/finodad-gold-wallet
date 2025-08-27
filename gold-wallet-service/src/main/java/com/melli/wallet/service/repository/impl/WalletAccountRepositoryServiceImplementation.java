@@ -5,6 +5,7 @@ import com.melli.wallet.domain.dto.BalanceObjectDTO;
 import com.melli.wallet.domain.enumaration.WalletStatusEnum;
 import com.melli.wallet.domain.master.entity.*;
 import com.melli.wallet.domain.master.persistence.WalletAccountRepository;
+import com.melli.wallet.domain.slave.persistence.ReportWalletAccountRepository;
 import com.melli.wallet.exception.InternalServiceException;
 import com.melli.wallet.service.repository.StatusRepositoryService;
 import com.melli.wallet.service.repository.WalletAccountCurrencyRepositoryService;
@@ -16,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -34,6 +36,7 @@ import java.util.Optional;
 public class WalletAccountRepositoryServiceImplementation implements WalletAccountRepositoryService {
 
     private final WalletAccountRepository walletAccountRepository;
+    private final ReportWalletAccountRepository reportWalletAccountRepository;
     private final WalletAccountCurrencyRepositoryService walletAccountCurrencyRepositoryService;
     private final WalletAccountTypeRepositoryService walletAccountTypeRepositoryService;
 
@@ -204,6 +207,24 @@ public class WalletAccountRepositoryServiceImplementation implements WalletAccou
             balanceObject.setBalance(0);
         }
         return balanceObject;
+    }
+
+    @Override
+    public List<WalletAccountEntity> findByWalletIds(List<Long> walletIds) {
+        log.info("start find wallet accounts for {} wallet ids", walletIds.size());
+        List<WalletAccountEntity> accounts = walletAccountRepository.findByWalletEntityIdIn(walletIds);
+        log.info("found {} wallet accounts", accounts.size());
+        return accounts;
+    }
+
+
+
+    @Override
+    public List<Object[]> findAccountDetailsByWalletIds(List<Long> walletIds) {
+        log.info("start find account details for {} wallet ids", walletIds.size());
+        List<Object[]> result = reportWalletAccountRepository.findAccountDetailsByWalletIds(walletIds);
+        log.info("found {} account detail records", result.size());
+        return result;
     }
 }
 

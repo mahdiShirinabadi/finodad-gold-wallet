@@ -1,7 +1,10 @@
 package com.melli.wallet.service.repository;
 
 import com.melli.wallet.domain.master.entity.WalletEntity;
+import com.melli.wallet.domain.slave.entity.ReportWalletEntity;
 import com.melli.wallet.exception.InternalServiceException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
@@ -24,6 +27,11 @@ public interface WalletRepositoryService {
     void save(WalletEntity wallet);
 
     List<WalletEntity> findAllByStatus(String status);
+
+    List<WalletEntity> findWalletsWithFilters(String status, String nationalCode, String mobile);
+
+    Page<ReportWalletEntity> findWalletsWithFiltersAndPagination(String status, String nationalCode, String mobile,
+                                                                 String fromTime, String toTime, Pageable pageable);
 
     void clearAllCache();
 }

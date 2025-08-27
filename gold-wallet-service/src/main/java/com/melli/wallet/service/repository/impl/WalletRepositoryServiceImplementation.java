@@ -4,17 +4,24 @@ import com.melli.wallet.ConstantRedisName;
 import com.melli.wallet.domain.enumaration.WalletStatusEnum;
 import com.melli.wallet.domain.master.entity.WalletEntity;
 import com.melli.wallet.domain.master.persistence.WalletRepository;
+import com.melli.wallet.domain.slave.entity.ReportWalletEntity;
+import com.melli.wallet.domain.slave.persistence.ReportWalletRepository;
 import com.melli.wallet.exception.InternalServiceException;
 import com.melli.wallet.service.repository.StatusRepositoryService;
 import com.melli.wallet.service.repository.WalletRepositoryService;
+import com.melli.wallet.util.StringUtils;
+import com.melli.wallet.util.date.DateUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import java.util.Date;
 import java.util.List;
 
 
@@ -26,6 +33,7 @@ public class WalletRepositoryServiceImplementation implements WalletRepositorySe
 
 
     private final WalletRepository walletRepository;
+    private final ReportWalletRepository reportWalletRepository;
 
     @Override
     @Cacheable(key = "{#nationalCode, #walletTypeEntityId}",unless = "#result == null")
@@ -67,6 +75,52 @@ public class WalletRepositoryServiceImplementation implements WalletRepositorySe
     @Override
     public List<WalletEntity> findAllByStatus(String status) {
         return walletRepository.findAllByStatus(WalletStatusEnum.valueOf(status));
+    }
+
+    @Override
+    public List<WalletEntity> findWalletsWithFilters(String status, String nationalCode, String mobile) {
+        log.info("start find wallets with filters - status: {}, nationalCode: {}, mobile: {}", status, nationalCode, mobile);
+        WalletStatusEnum statusEnum = WalletStatusEnum.valueOf(status);
+        List<WalletEntity> wallets = walletRepository.findByStatusAndNationalCodeContainingAndMobileContaining(statusEnum, nationalCode, mobile);
+        log.info("found {} wallets with filters", wallets.size());
+        return wallets;
+    }
+
+    @Override
+    public Page<ReportWalletEntity> findWalletsWithFiltersAndPagination(String status, String nationalCode, String mobile,
+                                                                        String fromTime, String toTime, Pageable pageable) {
+        log.info("start find wallets with filters and pagination - status: {}, nationalCode: {}, mobile: {}, fromTime: {}, toTime: {}", 
+                status, nationalCode, mobile, fromTime, toTime);
+        
+        String fromTimeStr = null;
+        if (StringUtils.hasText(fromTime)) {
+            Date sDate;
+            if (Integer.parseInt(fromTime.substring(0, 4)) < 1900) {
+                sDate = DateUtils.parse(fromTime, DateUtils.PERSIAN_DATE_FORMAT, true, DateUtils.FARSI_LOCALE);
+            } else {
+                sDate = DateUtils.parse(fromTime, DateUtils.PERSIAN_DATE_FORMAT, true, DateUtils.ENGLISH_LOCALE);
+            }
+            if (sDate != null) {
+                fromTimeStr = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(sDate);
+            }
+        }
+
+        String toTimeStr = null;
+        if (StringUtils.hasText(toTime)) {
+            Date tDate;
+            if (Integer.parseInt(toTime.substring(0, 4)) < 1900) {
+                tDate = DateUtils.parse(toTime, DateUtils.PERSIAN_DATE_FORMAT, true, DateUtils.FARSI_LOCALE);
+            } else {
+                tDate = DateUtils.parse(toTime, DateUtils.PERSIAN_DATE_FORMAT, true, DateUtils.ENGLISH_LOCALE);
+            }
+            if (tDate != null) {
+                toTimeStr = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(tDate);
+            }
+        }
+
+        Page<ReportWalletEntity> wallets = reportWalletRepository.findWalletsWithFilters(nationalCode, mobile, fromTimeStr, toTimeStr, pageable);
+        log.info("found {} wallets with filters and pagination", wallets.getTotalElements());
+        return wallets;
     }
 
 }

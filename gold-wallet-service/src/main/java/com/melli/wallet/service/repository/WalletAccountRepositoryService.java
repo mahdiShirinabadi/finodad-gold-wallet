@@ -55,4 +55,8 @@ public interface WalletAccountRepositoryService {
 
     WalletAccountEntity findByAccountNumberAndEndTimeIsNull(String accountNumber);
 
+    List<WalletAccountEntity> findByWalletIds(List<Long> walletIds);
+
+    List<Object[]> findAccountDetailsByWalletIds(List<Long> walletIds);
+
 }
