@@ -12,6 +12,7 @@ import com.melli.wallet.service.repository.WalletAccountCurrencyRepositoryServic
 import com.melli.wallet.service.repository.WalletAccountRepositoryService;
 import com.melli.wallet.service.repository.WalletAccountTypeRepositoryService;
 import com.melli.wallet.util.Validator;
+import com.melli.wallet.utils.AccountNumberGeneratorService;
 import com.melli.wallet.utils.Helper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -163,8 +164,7 @@ public class WalletAccountRepositoryServiceImplementation implements WalletAccou
                 walletAccountEntity.setStatus(WalletStatusEnum.ACTIVE);
                 walletAccountEntity.setCreatedAt(new Date());
                 walletAccountEntity.setCreatedBy(channel.getUsername());
-                walletAccountRepository.save(walletAccountEntity);
-                walletAccountEntity.setAccountNumber(Validator.padWithZero(String.valueOf(walletAccountEntity.getId()), Helper.WALLET_ACCOUNT_LENGTH));
+                walletAccountEntity.setAccountNumber(AccountNumberGeneratorService.generateAccountNumber(wallet.getId(), walletAccountCurrencyEntity.get().getStandardName()));
                 walletAccountRepository.save(walletAccountEntity);
             }
         }

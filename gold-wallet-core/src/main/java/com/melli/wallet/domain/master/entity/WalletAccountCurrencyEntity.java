@@ -28,6 +28,9 @@ public class WalletAccountCurrencyEntity extends BaseEntityAudit implements Seri
 	@Column(name = "name", nullable = false)
 	private String name;
 
+	@Column(name = "standard_name", nullable = false)
+	private String standardName;
+
 	@Column(name = "suffix")
 	private String suffix;
 

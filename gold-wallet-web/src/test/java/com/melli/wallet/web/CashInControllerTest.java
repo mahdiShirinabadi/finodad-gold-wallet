@@ -737,13 +737,7 @@ class CashInControllerTest extends WalletApplicationTests {
         
         // Step 2: Get minimum amount for cash in operation
         String amount = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService,USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_IN, walletAccountObjectOptional.getAccountNumber());
-        
-        // Step 3: Disable wallet status for testing
-        WalletAccountEntity walletAccountEntity = walletAccountRepositoryService.findByAccountNumber(walletAccountObjectOptional.getAccountNumber());
-        walletAccountEntity.getWalletEntity().setStatus(WalletStatusEnum.DISABLE);
-        walletRepositoryService.save(walletAccountEntity.getWalletEntity());
-        walletRepositoryService.clearAllCache();
-        
+
         // Step 4: Attempt to generate UUID with invalid national code - should fail
         generateCashInUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_INCORRECT, String.valueOf(amount), walletAccountObjectOptional.getAccountNumber(), HttpStatus.OK, StatusRepositoryService.INPUT_PARAMETER_NOT_VALID, false);
     }
@@ -771,6 +765,11 @@ class CashInControllerTest extends WalletApplicationTests {
         
         // Step 3: Attempt to generate UUID with invalid amount format - should fail
         generateCashInUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, String.valueOf("aa"), walletAccountObjectOptional.getAccountNumber(), HttpStatus.OK, StatusRepositoryService.INPUT_PARAMETER_NOT_VALID, false);
+
+        // Step 2: Disable wallet status for testing
+        walletAccountEntity.getWalletEntity().setStatus(WalletStatusEnum.ACTIVE);
+        walletRepositoryService.save(walletAccountEntity.getWalletEntity());
+        walletRepositoryService.clearAllCache();
     }
 
     /**
@@ -791,15 +790,39 @@ class CashInControllerTest extends WalletApplicationTests {
         
         // Step 2: Get minimum amount for cash in operation
         String amount = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService,USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_IN, walletAccountObjectOptional.getAccountNumber());
-        
+
+        // Step 4: Attempt to generate UUID with wallet is disable - should fail
+        generateCashInUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, String.valueOf(amount), "546fgdgdfg5", HttpStatus.OK, StatusRepositoryService.WALLET_ACCOUNT_NOT_FOUND, false);
+    }
+
+
+    /**
+     * Test cash in failure with invalid account number format.
+     * This method:
+     * - Gets user's RIAL account number
+     * - Gets minimum amount for cash in operation
+     * - Disables wallet status for testing
+     * - Attempts to generate UUID with invalid account number format
+     * - Expects INPUT_PARAMETER_NOT_VALID error
+     */
+    @Test
+    @Order(49)
+    @DisplayName("cashInFailInvalidAccountNumber")
+    void cashInFailDisableWallet() throws Exception {
+        // Step 1: Get user's RIAL account number
+        WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.RIAL);
+
+        // Step 2: Get minimum amount for cash in operation
+        String amount = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService,USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_IN, walletAccountObjectOptional.getAccountNumber());
+
         // Step 3: Disable wallet status for testing
         WalletAccountEntity walletAccountEntity = walletAccountRepositoryService.findByAccountNumber(walletAccountObjectOptional.getAccountNumber());
         walletAccountEntity.getWalletEntity().setStatus(WalletStatusEnum.DISABLE);
         walletRepositoryService.save(walletAccountEntity.getWalletEntity());
         walletRepositoryService.clearAllCache();
-        
-        // Step 4: Attempt to generate UUID with invalid account number format - should fail
-        generateCashInUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, String.valueOf(amount), "546fgdgdfg5", HttpStatus.OK, StatusRepositoryService.INPUT_PARAMETER_NOT_VALID, false);
+
+        // Step 4: Attempt to generate UUID with wallet is disable - should fail
+        generateCashInUniqueIdentifier(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, String.valueOf(amount), "546fgdgdfg5", HttpStatus.OK, StatusRepositoryService.WALLET_IS_NOT_ACTIVE, false);
     }
 
     //

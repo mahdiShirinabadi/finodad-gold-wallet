@@ -44,7 +44,7 @@ public class CashInWalletRequestJson {
     @JsonProperty(NamingProperty.CASH_IN_TYPE)
     private String cashInType;
 
-    @NumberValidation(label = "شماره حساب")
+    @StringValidation(label = "شماره حساب")
     @Schema(name = NamingProperty.WALLET_ACCOUNT_NUMBER, description = "شماره حساب کیف پول")
     @JsonProperty(NamingProperty.WALLET_ACCOUNT_NUMBER)
     private String accountNumber;

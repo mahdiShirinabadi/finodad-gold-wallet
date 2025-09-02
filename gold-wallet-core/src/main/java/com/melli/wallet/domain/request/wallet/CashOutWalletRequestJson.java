@@ -40,7 +40,7 @@ public class CashOutWalletRequestJson {
     @JsonProperty(NamingProperty.ADDITIONAL_DATA)
     private String additionalData;
 
-    @NumberValidation(label = "شماره حساب کیف پول")
+    @StringValidation(label = "شماره حساب کیف پول")
     @Schema(name = NamingProperty.WALLET_ACCOUNT_NUMBER, description = "شماره حساب کیف پول")
     @JsonProperty(NamingProperty.WALLET_ACCOUNT_NUMBER)
     private String accountNumber;

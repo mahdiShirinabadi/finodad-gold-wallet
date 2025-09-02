@@ -23,6 +23,7 @@ public class SellGenerateUuidRequestJson {
     @JsonProperty(NamingProperty.QUANTITY)
     private String quantity;
 
+    @StringValidation(label = "شماره حساب")
     @Schema(name = NamingProperty.WALLET_ACCOUNT_NUMBER, description = "شماره حساب")
     @JsonProperty(NamingProperty.WALLET_ACCOUNT_NUMBER)
     private String accountNumber;

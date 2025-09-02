@@ -126,16 +126,17 @@ CREATE TABLE if not exists wallet_account_currency
     created_at      TIMESTAMP WITHOUT TIME ZONE NOT NULL,
     updated_at      TIMESTAMP WITHOUT TIME ZONE,
     name            VARCHAR(100),
+    standard_name   VARCHAR(100),
     suffix          VARCHAR(100),
     additional_data VARCHAR(300),
     description     VARCHAR(100)
 );
 CREATE INDEX idx_wallet_account_currency_name ON wallet_account_currency (name);
 CREATE UNIQUE INDEX idx_wallet_account_currency_unique_name ON wallet_account_currency (LOWER(name));
-insert into wallet_account_currency(created_by, created_at, name, suffix, additional_data, description)
-VALUES ('System', now(), 'GOLD', 'گرم', '', 'طلا');
-insert into wallet_account_currency(created_by, created_at, name, suffix, additional_data, description)
-VALUES ('System', now(), 'RIAL', 'ریال', '', 'ریال');
+insert into wallet_account_currency(created_by, created_at, name, standard_name, suffix, additional_data, description)
+VALUES ('System', now(), 'GOLD','GL', 'گرم', '', 'طلا');
+insert into wallet_account_currency(created_by, created_at, name, standard_name, suffix, additional_data, description)
+VALUES ('System', now(), 'RIAL','RL', 'ریال', '', 'ریال');
 
 CREATE TABLE if not exists wallet_type
 (
@@ -226,6 +227,9 @@ CREATE TABLE if not exists wallet_account
     balance                    NUMERIC(25, 5) default 0,
     end_time                   TIMESTAMP WITHOUT TIME ZONE
 );
+
+ALTER TABLE wallet_account
+    ADD CONSTRAINT uk_wallet_account_number UNIQUE (account_number);
 
 CREATE TABLE if not exists wallet_iban
 (

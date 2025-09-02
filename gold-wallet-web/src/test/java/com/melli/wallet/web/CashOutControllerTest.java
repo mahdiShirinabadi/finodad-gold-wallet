@@ -980,7 +980,7 @@ class CashOutControllerTest extends WalletApplicationTests {
         BaseResponse<UuidResponse> uuidResponse = generateCashOutUuid(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, cashOutAmount, accountNumber, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
         String uniqueIdentifier = uuidResponse.getData().getUniqueIdentifier();
         // Step 7: This should fail due to invalid account number
-        cashOut(mockMvc, ACCESS_TOKEN, uniqueIdentifier, cashOutAmount, NATIONAL_CODE_CORRECT, "INVALID_ACCOUNT_NUMBER", VALID_IBAN, VALID_SIGN, ADDITIONAL_DATA, HttpStatus.OK, StatusRepositoryService.INPUT_PARAMETER_NOT_VALID, false);
+        cashOut(mockMvc, ACCESS_TOKEN, uniqueIdentifier, cashOutAmount, NATIONAL_CODE_CORRECT, "INVALID_ACCOUNT_NUMBER", VALID_IBAN, VALID_SIGN, ADDITIONAL_DATA, HttpStatus.OK, StatusRepositoryService.ACCOUNT_NUMBER_NOT_SAME_WITH_UUID, false);
     }
 
 }
