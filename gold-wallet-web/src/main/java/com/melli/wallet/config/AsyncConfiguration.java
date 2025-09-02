@@ -12,7 +12,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 @Configuration
 @EnableAsync
-//@Profile("!test")
+@Profile("!test")
 public class AsyncConfiguration {
 
     @Bean(name = "threadPoolExecutorForSlack")
