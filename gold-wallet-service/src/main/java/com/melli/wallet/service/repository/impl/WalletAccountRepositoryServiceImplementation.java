@@ -18,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -40,6 +41,7 @@ public class WalletAccountRepositoryServiceImplementation implements WalletAccou
     private final ReportWalletAccountRepository reportWalletAccountRepository;
     private final WalletAccountCurrencyRepositoryService walletAccountCurrencyRepositoryService;
     private final WalletAccountTypeRepositoryService walletAccountTypeRepositoryService;
+    private final AccountNumberGeneratorService accountNumberGeneratorService;
 
 
     @Override
@@ -132,66 +134,16 @@ public class WalletAccountRepositoryServiceImplementation implements WalletAccou
 
     @Override
     public void createAccount(List<String> walletAccountCurrencyList, WalletEntity wallet, List<String> walletAccountTypeList, ChannelEntity channel) throws InternalServiceException {
+        for (String currencyName : walletAccountCurrencyList) {
+            WalletAccountCurrencyEntity currencyEntity = findCurrencyEntity(currencyName);
+            if (currencyEntity == null) continue;
 
-        //inquiry currency and accountType
-        List<WalletAccountCurrencyEntity> walletAccountCurrencyEntityList = walletAccountCurrencyRepositoryService.getAll();
-        List<WalletAccountTypeEntity> walletAccountTypeEntityList = walletAccountTypeRepositoryService.getAllManaged();
-
-        for(String walletAccountCurrencyName : walletAccountCurrencyList) {
-            walletAccountCurrencyEntityList.stream().filter(walletAccountCurrencyEntity -> walletAccountCurrencyEntity.getName().equals(walletAccountCurrencyName)).findFirst().orElseThrow(()->{
-                log.error("walletAccountCurrency with name ({}) is not found", walletAccountCurrencyName);
-                return new InternalServiceException("walletAccountCurrency not found", StatusRepositoryService.WALLET_ACCOUNT_CURRENCY_NOT_FOUND, HttpStatus.OK);
-            });
-        }
-
-        for(String walletAccountTypeName : walletAccountTypeList) {
-            walletAccountTypeEntityList.stream().filter(walletAccountTypeEntity -> walletAccountTypeEntity.getName().equals(walletAccountTypeName)).findFirst().orElseThrow(()->{
-                log.error("walletAccountType with name ({}) is not found", walletAccountTypeName);
-                return new InternalServiceException("walletAccountCurrency not found", StatusRepositoryService.WALLET_ACCOUNT_TYPE_NOT_FOUND, HttpStatus.OK);
-            });
-        }
-
-
-        for(String walletAccountCurrencyName : walletAccountCurrencyList){
-            Optional<WalletAccountCurrencyEntity> walletAccountCurrencyEntity = walletAccountCurrencyEntityList.stream().filter(x -> x.getName().equals(walletAccountCurrencyName)).findFirst();
-            for(String walletAccountTypeName : walletAccountTypeList){
-                Optional<WalletAccountTypeEntity> walletAccountTypeEntity = walletAccountTypeEntityList.stream().filter(x -> x.getName().equals(walletAccountTypeName)).findFirst();
-                WalletAccountEntity walletAccountEntity = new WalletAccountEntity();
-                walletAccountEntity.setWalletEntity(wallet);
-                //we checked in above!!
-                walletAccountEntity.setWalletAccountTypeEntity(walletAccountTypeEntity.get());
-                walletAccountEntity.setWalletAccountCurrencyEntity(walletAccountCurrencyEntity.get());
-                walletAccountEntity.setStatus(WalletStatusEnum.ACTIVE);
-                walletAccountEntity.setCreatedAt(new Date());
-                walletAccountEntity.setCreatedBy(channel.getUsername());
-                walletAccountEntity.setAccountNumber(AccountNumberGeneratorService.generateAccountNumber(wallet.getId(), walletAccountCurrencyEntity.get().getStandardName()));
-                walletAccountRepository.save(walletAccountEntity);
+            for (String typeName : walletAccountTypeList) {
+                WalletAccountTypeEntity typeEntity = findTypeEntity(typeName);
+                if (typeEntity == null) continue;
+                createSingleWalletAccount(wallet, channel, currencyEntity, typeEntity);
             }
         }
-    }
-
-
-    private int generateCheckDigit(String str) {
-        int[] ints = new int[str.length()];
-        for (int i = 0; i < str.length(); i++) {
-            ints[i] = Integer.parseInt(str.substring(i, i + 1));
-        }
-        for (int i = ints.length - 1; i >= 0; i = i - 2) {
-            int j = ints[i];
-            j = j * 2;
-            if (j > 9) {
-                j = j % 10 + 1;
-            }
-            ints[i] = j;
-        }
-        int sum = 0;
-        for (int anInt : ints) {
-            sum += anInt;
-        }
-        if (sum % 10 == 0) {
-            return 0;
-        } else
-            return 10 - (sum % 10);
     }
 
     @Override
@@ -226,5 +178,95 @@ public class WalletAccountRepositoryServiceImplementation implements WalletAccou
         log.info("found {} account detail records", result.size());
         return result;
     }
+
+    /**
+     * Find currency entity by name
+     */
+    private WalletAccountCurrencyEntity findCurrencyEntity(String currencyName) {
+        List<WalletAccountCurrencyEntity> walletAccountCurrencyEntityList = walletAccountCurrencyRepositoryService.getAll();
+        return walletAccountCurrencyEntityList.stream()
+                .filter(x -> x.getName().equals(currencyName))
+                .findFirst()
+                .orElseGet(() -> {
+                    log.warn("Currency not found: {}", currencyName);
+                    return null;
+                });
+    }
+
+    /**
+     * Find type entity by name
+     */
+    private WalletAccountTypeEntity findTypeEntity(String typeName) {
+        List<WalletAccountTypeEntity> walletAccountTypeEntityList = walletAccountTypeRepositoryService.getAllManaged();
+        return walletAccountTypeEntityList.stream()
+                .filter(x -> x.getName().equals(typeName))
+                .findFirst()
+                .orElseGet(() -> {
+                    log.warn("Account type not found: {}", typeName);
+                    return null;
+                });
+    }
+
+    /**
+     * Create a single wallet account with retry logic
+     */
+    private void createSingleWalletAccount(WalletEntity wallet, ChannelEntity channel,
+                                           WalletAccountCurrencyEntity currencyEntity,
+                                           WalletAccountTypeEntity typeEntity) throws InternalServiceException {
+
+        int maxAttempts = 10;
+        int attempts = 0;
+
+        while (attempts < maxAttempts) {
+            try {
+                attempts++;
+
+                // Create wallet account entity
+                WalletAccountEntity walletAccountEntity = buildWalletAccountEntity(
+                        wallet, channel, currencyEntity, typeEntity
+                );
+
+                // Generate unique account number
+                String accountNumber = accountNumberGeneratorService.generateAccountNumberInternal(
+                        wallet.getId(),
+                        currencyEntity.getStandardName()
+                );
+                walletAccountEntity.setAccountNumber(accountNumber);
+                walletAccountRepository.save(walletAccountEntity);
+                log.info("Account created successfully for wallet {}: {}", wallet.getId(), accountNumber);
+                return; // Success - exit method
+
+            } catch (DataIntegrityViolationException e) {
+                log.warn("Attempt {}: Duplicate account number for wallet {}, regenerating...",
+                        attempts, wallet.getId());
+
+                if (attempts >= maxAttempts) {
+                    log.error("Cannot create unique account number for walletId ({}) after maximum attempts", wallet.getId());
+                    throw new InternalServiceException(
+                            "System cannot create unique account number after maximum attempts",
+                            StatusRepositoryService.ERROR_IN_SAVE_UNIQUE_ACCOUNT_NUMBER,
+                            HttpStatus.OK
+                    );
+                }
+            }
+        }
+    }
+
+    /**
+     * Build wallet account entity
+     */
+    private WalletAccountEntity buildWalletAccountEntity(WalletEntity wallet, ChannelEntity channel,
+                                                         WalletAccountCurrencyEntity currencyEntity,
+                                                         WalletAccountTypeEntity typeEntity) {
+        WalletAccountEntity entity = new WalletAccountEntity();
+        entity.setWalletEntity(wallet);
+        entity.setWalletAccountTypeEntity(typeEntity);
+        entity.setWalletAccountCurrencyEntity(currencyEntity);
+        entity.setStatus(WalletStatusEnum.ACTIVE);
+        entity.setCreatedAt(new Date());
+        entity.setCreatedBy(channel.getUsername());
+        return entity;
+    }
+
 }
 

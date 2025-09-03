@@ -99,7 +99,8 @@ public interface StatusRepositoryService {
     int RESOURCE_ALREADY_EXISTS = 79;
     int RESOURCE_IN_USE = 80;
     int CHANNEL_IS_DISABLE = 81;
-    
+    int ERROR_IN_SAVE_UNIQUE_ACCOUNT_NUMBER = 82;
+
     // General Error Codes
     int INTERNAL_ERROR = 99;
 
