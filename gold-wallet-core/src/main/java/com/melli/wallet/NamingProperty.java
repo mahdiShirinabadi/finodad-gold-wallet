@@ -12,7 +12,9 @@ public class NamingProperty {
     public static final String PASSWORD = "password";
     public static final String REFRESH_TOKEN = "refreshToken";
     public static final String NATIONAL_CODE = "nationalCode";
+    public static final String DEST_NATIONAL_CODE = "destNationalCode";
     public static final String WALLET_ACCOUNT_NUMBER = "walletAccountNumber";
+    public static final String DEST_WALLET_ACCOUNT_NUMBER = "destWalletAccountNumber";
     public static final String ID = "id";
     public static final String UNIQUE_IDENTIFIER = "uniqueIdentifier";
     public static final String QUANTITY = "quantity";

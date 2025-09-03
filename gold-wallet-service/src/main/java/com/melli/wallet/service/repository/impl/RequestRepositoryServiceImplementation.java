@@ -2,12 +2,10 @@ package com.melli.wallet.service.repository.impl;
 
 import com.melli.wallet.domain.dto.AggregationCashInDTO;
 import com.melli.wallet.domain.dto.AggregationCashOutDTO;
+import com.melli.wallet.domain.dto.AggregationP2PDTO;
 import com.melli.wallet.domain.dto.AggregationPurchaseDTO;
 import com.melli.wallet.domain.master.entity.*;
-import com.melli.wallet.domain.master.persistence.CashInRequestRepository;
-import com.melli.wallet.domain.master.persistence.CashOutRequestRepository;
-import com.melli.wallet.domain.master.persistence.PhysicalCashOutRequestRepository;
-import com.melli.wallet.domain.master.persistence.PurchaseRequestRepository;
+import com.melli.wallet.domain.master.persistence.*;
 import com.melli.wallet.domain.slave.entity.ReportCashOutRequestEntity;
 import com.melli.wallet.domain.slave.entity.ReportPhysicalCashOutRequestEntity;
 import com.melli.wallet.domain.slave.entity.ReportPurchaseRequestEntity;
@@ -42,6 +40,7 @@ public class RequestRepositoryServiceImplementation implements RequestRepository
     private final CashOutRequestRepository cashOutRequestRepository;
     private final ReportCashOutRequestRepository reportCashOutRequestRepository;
     private final PhysicalCashOutRequestRepository physicalCashOutRequestRepository;
+    private final P2PRequestRepository p2PRequestRepository;
 
 
     @Override
@@ -75,6 +74,8 @@ public class RequestRepositoryServiceImplementation implements RequestRepository
             resultRequest = cashOutRequestRepository.findByRrnEntityId(traceId);
         }else if (requestEntity instanceof PhysicalCashOutRequestEntity) {
             resultRequest = physicalCashOutRequestRepository.findByRrnEntityId(traceId);
+        }else if (requestEntity instanceof Person2PersonRequestEntity) {
+            resultRequest = p2PRequestRepository.findByRrnEntityId(traceId);
         }
 
         if (resultRequest != null) {
@@ -108,6 +109,14 @@ public class RequestRepositoryServiceImplementation implements RequestRepository
     }
 
     @Override
+    public Person2PersonRequestEntity findP2pWithRrnId(long rrnId) throws InternalServiceException {
+        return p2PRequestRepository.findOptionalByRrnEntityId(rrnId).orElseThrow(() -> {
+            log.error("findP2pWithRrnId with id ({}) not found", rrnId);
+            return new InternalServiceException("findP2pWithRrnId not found", StatusRepositoryService.RECORD_NOT_FOUND, HttpStatus.OK);
+        });
+    }
+
+    @Override
     public ReportCashOutRequestEntity findCashOutWithRrnId(long rrnId) throws InternalServiceException {
         return reportCashOutRequestRepository.findOptionalByRrnEntityId(rrnId).orElseThrow(() -> {
             log.error("cashOutRequest with id ({}) not found", rrnId);
@@ -130,6 +139,15 @@ public class RequestRepositoryServiceImplementation implements RequestRepository
            log.error("cashInDuplicateWithRrnId ({}) found", rrnId);
            throw new InternalServiceException("cashInDuplicateWithRrnId", StatusRepositoryService.DUPLICATE_UUID, HttpStatus.OK);
        }
+    }
+
+    @Override
+    public void findP2pDuplicateWithRrnId(long rrnId) throws InternalServiceException {
+        Person2PersonRequestEntity requestEntity = p2PRequestRepository.findByRrnEntityId(rrnId);
+        if(requestEntity != null) {
+            log.error("findP2pDuplicateWithRrnId ({}) found", rrnId);
+            throw new InternalServiceException("findP2pDuplicateWithRrnId", StatusRepositoryService.DUPLICATE_UUID, HttpStatus.OK);
+        }
     }
 
     @Override
@@ -178,5 +196,10 @@ public class RequestRepositoryServiceImplementation implements RequestRepository
     @Override
     public AggregationCashOutDTO findSumAmountPhysicalCashOutBetweenDate(long[] walletAccountId, Date fromDate, Date toDate) {
         return physicalCashOutRequestRepository.findSumAmountBetweenDate(walletAccountId, fromDate, toDate);
+    }
+
+    @Override
+    public AggregationP2PDTO findP2pSumAmountByTransactionTypeBetweenDate(long[] walletAccountId, Date fromDate, Date toDate) {
+        return p2PRequestRepository.findSumAmountBetweenDate(walletAccountId, fromDate, toDate);
     }
 }

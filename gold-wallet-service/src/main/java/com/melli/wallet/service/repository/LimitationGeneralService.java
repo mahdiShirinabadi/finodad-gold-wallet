@@ -55,6 +55,12 @@ public interface LimitationGeneralService {
     String MIN_QUANTITY_SELL = "MIN_QUANTITY_SELL";
     String MAX_QUANTITY_SELL = "MAX_QUANTITY_SELL";
 
+    //p2p
+    String MAX_DAILY_QUANTITY_P2P = "MAX_DAILY_QUANTITY_P2P";
+    String MAX_DAILY_COUNT_P2P = "MAX_DAILY_COUNT_P2P";
+    String MIN_QUANTITY_P2P = "MIN_QUANTITY_P2P";
+    String MAX_QUANTITY_P2P = "MAX_QUANTITY_P2P";
+
     List<LimitationGeneralEntity> getLimitationGeneralEntities() throws InternalServiceException;
     LimitationGeneralEntity getSetting(String name);
     LimitationGeneralEntity getById(Long id) throws InternalServiceException;

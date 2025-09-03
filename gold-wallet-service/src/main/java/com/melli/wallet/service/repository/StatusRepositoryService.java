@@ -100,6 +100,9 @@ public interface StatusRepositoryService {
     int RESOURCE_IN_USE = 80;
     int CHANNEL_IS_DISABLE = 81;
     int ERROR_IN_SAVE_UNIQUE_ACCOUNT_NUMBER = 82;
+    int SRC_ACCOUNT_SAME_DST_ACCOUNT_NUMBER = 83;
+    int CURRENCY_SRC_ACCOUNT_SAME_DST_ACCOUNT_NUMBER = 84;
+    int DST_ACCOUNT_NUMBER_NOT_FOUND = 85;
 
     // General Error Codes
     int INTERNAL_ERROR = 99;

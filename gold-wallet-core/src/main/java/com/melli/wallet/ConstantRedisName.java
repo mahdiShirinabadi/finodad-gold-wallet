@@ -23,4 +23,5 @@ public class ConstantRedisName {
     public static final String WALLET_PHYSICAL_CASH_OUT_LIMITATION = "wallet_physical_cash_out_limitation";
     public static final String WALLET_SELL_MONTHLY_LIMITATION = "wallet_sell_monthly_limitation";
     public static final String WALLET_SELL_DAILY_LIMITATION = "wallet_sell_daily_limitation";
+    public static final String WALLET_P2P_DAILY_LIMITATION = "wallet_p2p_daily_limitation";
 }

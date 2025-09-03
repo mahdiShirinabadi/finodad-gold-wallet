@@ -2,6 +2,7 @@ package com.melli.wallet.service.repository;
 
 import com.melli.wallet.domain.dto.AggregationCashInDTO;
 import com.melli.wallet.domain.dto.AggregationCashOutDTO;
+import com.melli.wallet.domain.dto.AggregationP2PDTO;
 import com.melli.wallet.domain.dto.AggregationPurchaseDTO;
 import com.melli.wallet.domain.master.entity.*;
 import com.melli.wallet.domain.slave.entity.ReportCashOutRequestEntity;
@@ -18,11 +19,14 @@ public interface RequestRepositoryService {
     void findSuccessCashInByRefNumber(String refNumber) throws InternalServiceException;
     ReportPurchaseRequestEntity findPurchaseRequestByRrnId(long traceId) throws InternalServiceException;
     CashInRequestEntity findCashInWithRrnId(long rrnId) throws InternalServiceException;
+    Person2PersonRequestEntity findP2pWithRrnId(long rrnId) throws InternalServiceException;
     ReportCashOutRequestEntity findCashOutWithRrnId(long rrnId) throws InternalServiceException;
     ReportPhysicalCashOutRequestEntity findPhysicalCashOutWithRrnId(long rrnId) throws InternalServiceException;
+    void findP2pDuplicateWithRrnId(long rrnId) throws InternalServiceException;
     void findCashInDuplicateWithRrnId(long rrnId) throws InternalServiceException;
     void findCashOutDuplicateWithRrnId(long rrnId) throws InternalServiceException;
     void findPhysicalCashOutDuplicateWithRrnId(long rrnId) throws InternalServiceException;
+    AggregationP2PDTO findP2pSumAmountByTransactionTypeBetweenDate(long[] walletAccountId, Date fromDate, Date toDate);
     AggregationPurchaseDTO findSumAmountByTransactionTypeBetweenDate(long[] walletAccountId, String transactionType, Date fromDate, Date toDate);
     AggregationPurchaseDTO findSumAmountByTransactionTypeBetweenDateByChannelId(long channelId, String transactionType, Date fromDate, Date toDate);
     AggregationPurchaseDTO findPhysicalByChannelAndDate(long channelId, Date fromDate, Date toDate);

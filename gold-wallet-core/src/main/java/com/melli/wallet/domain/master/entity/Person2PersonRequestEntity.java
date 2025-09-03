@@ -30,4 +30,10 @@ public class Person2PersonRequestEntity extends RequestEntity {
 	@ManyToOne
 	@JoinColumn(name = "src_wallet_account_id", nullable = false)
 	private WalletAccountEntity sourceAccountWalletEntity;
+
+	@Column(name = "commission", length = 500)
+	private BigDecimal commission;
+
+	@Column(name = "additional_data", length = 500)
+	private String additionalData;
 }

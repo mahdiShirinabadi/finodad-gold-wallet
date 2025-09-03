@@ -414,7 +414,8 @@ CREATE TABLE if not exists p_2_p_request
     rrn_id                 BIGINT NOT NULL REFERENCES rrn,
     amount                 NUMERIC(15, 5),
     src_wallet_account_id  BIGINT NOT NULL REFERENCES wallet_account,
-    dest_wallet_account_id BIGINT NOT NULL REFERENCES wallet_account
+    dest_wallet_account_id BIGINT NOT NULL REFERENCES wallet_account,
+    commission        NUMERIC(15, 5)
 );
 create unique index rrn_id_p_2_p_request_unique_idx on p_2_p_request (rrn_id);
 

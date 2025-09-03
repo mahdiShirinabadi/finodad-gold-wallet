@@ -11,6 +11,8 @@ import com.melli.wallet.domain.response.channel.ChannelObject;
 import com.melli.wallet.domain.response.limitation.*;
 import com.melli.wallet.domain.response.login.LoginResponse;
 import com.melli.wallet.domain.response.login.TokenObject;
+import com.melli.wallet.domain.response.p2p.P2pTrackResponse;
+import com.melli.wallet.domain.response.p2p.P2pUuidResponse;
 import com.melli.wallet.domain.response.panel.PanelResourceObject;
 import com.melli.wallet.domain.response.panel.PanelRoleListResponse;
 import com.melli.wallet.domain.response.panel.PanelRoleObject;
@@ -43,6 +45,8 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
 import java.util.*;
+
+import static org.json.XMLTokener.entity;
 
 
 @Service
@@ -106,6 +110,30 @@ public class Helper {
         response.setCreateTime(DateUtils.getLocaleDate(DateUtils.FARSI_LOCALE, cashInRequestEntity.getCreatedAt(), FORMAT_DATE_RESPONSE, false));
         response.setCreateTimeTimestamp(cashInRequestEntity.getCreatedAt().getTime());
 
+        return response;
+    }
+
+    public P2pTrackResponse fillP2pTrackResponse(Person2PersonRequestEntity entity, StatusRepositoryService statusRepositoryService) {
+        StatusEntity statusEntity = statusRepositoryService.findByCode(String.valueOf(entity.getResult()));
+        P2pTrackResponse response = new P2pTrackResponse();
+        response.setDestWalletAccountNumber(entity.getDestinationAccountWalletEntity().getAccountNumber());
+        response.setDestNationalCode(entity.getDestinationAccountWalletEntity().getWalletEntity().getNationalCode());
+        response.setId(entity.getId());
+        response.setNationalCode(entity.getSourceAccountWalletEntity().getWalletEntity().getNationalCode());
+        response.setQuantity(String.valueOf(entity.getAmount()));
+        response.setUniqueIdentifier(entity.getRrnEntity().getUuid());
+        response.setResult(entity.getResult());
+        response.setDescription(statusEntity != null ? statusEntity.getPersianDescription() : "");
+        response.setWalletAccountNumber(entity.getSourceAccountWalletEntity().getAccountNumber());
+        response.setCreateTime(DateUtils.getLocaleDate(DateUtils.FARSI_LOCALE, entity.getCreatedAt(), FORMAT_DATE_RESPONSE, false));
+        response.setCreateTimeTimestamp(entity.getCreatedAt().getTime());
+        return response;
+    }
+
+    public P2pUuidResponse fillP2pUuidResponse(String nationalCode, String uniqueIdentifier) {
+        P2pUuidResponse response = new P2pUuidResponse();
+        response.setDestNationalCode(nationalCode);
+        response.setUniqueIdentifier(uniqueIdentifier);
         return response;
     }
 
