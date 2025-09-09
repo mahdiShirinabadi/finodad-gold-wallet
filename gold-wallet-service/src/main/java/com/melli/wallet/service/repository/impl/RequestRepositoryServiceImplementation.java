@@ -50,6 +50,7 @@ public class RequestRepositoryServiceImplementation implements RequestRepository
             case CashInRequestEntity cashInRequestEntity -> cashInRequestRepository.save(cashInRequestEntity);
             case PurchaseRequestEntity purchaseRequestEntity -> purchaseRequestRepository.save(purchaseRequestEntity);
             case CashOutRequestEntity cashOutRequestEntity -> cashOutRequestRepository.save(cashOutRequestEntity);
+            case Person2PersonRequestEntity person2PersonRequestEntity -> p2PRequestRepository.save(person2PersonRequestEntity);
             case PhysicalCashOutRequestEntity physicalCashOutRequestEntity ->
                     physicalCashOutRequestRepository.save(physicalCashOutRequestEntity);
             case null, default -> {

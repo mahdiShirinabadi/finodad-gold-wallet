@@ -3,6 +3,7 @@ package com.melli.wallet.config;
 import com.melli.wallet.ConstantRedisName;
 import com.melli.wallet.service.operation.WalletBuyLimitationOperationService;
 import com.melli.wallet.service.operation.WalletCashLimitationOperationService;
+import com.melli.wallet.service.operation.WalletP2pLimitationOperationService;
 import com.melli.wallet.service.operation.WalletSellLimitationOperationService;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.log4j.Log4j2;
@@ -22,12 +23,14 @@ public class CacheClearService {
     private final WalletCashLimitationOperationService walletCashLimitationOperationService;
     private final WalletBuyLimitationOperationService walletBuyLimitationOperationService;
     private final WalletSellLimitationOperationService walletSellLimitationOperationService;
+    private final WalletP2pLimitationOperationService walletP2pLimitationOperationService;
 
-    public CacheClearService(CacheManager cacheManager, WalletCashLimitationOperationService walletCashLimitationOperationService, WalletBuyLimitationOperationService walletBuyLimitationOperationService, WalletSellLimitationOperationService walletSellLimitationOperationService) {
+    public CacheClearService(CacheManager cacheManager, WalletCashLimitationOperationService walletCashLimitationOperationService, WalletBuyLimitationOperationService walletBuyLimitationOperationService, WalletSellLimitationOperationService walletSellLimitationOperationService, WalletP2pLimitationOperationService walletP2pLimitationOperationService) {
         this.cacheManager = cacheManager;
         this.walletCashLimitationOperationService = walletCashLimitationOperationService;
         this.walletBuyLimitationOperationService = walletBuyLimitationOperationService;
         this.walletSellLimitationOperationService = walletSellLimitationOperationService;
+        this.walletP2pLimitationOperationService = walletP2pLimitationOperationService;
     }
 
     @PostConstruct
@@ -72,6 +75,7 @@ public class CacheClearService {
         walletCashLimitationOperationService.deleteAll();
         walletBuyLimitationOperationService.deleteAll();
         walletSellLimitationOperationService.deleteAll();
+        walletP2pLimitationOperationService.deleteAll();
         log.info("Redis repositories cleared successfully");
     }
 

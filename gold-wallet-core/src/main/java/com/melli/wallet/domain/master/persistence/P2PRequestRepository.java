@@ -19,7 +19,7 @@ public interface P2PRequestRepository extends CrudRepository<Person2PersonReques
     Person2PersonRequestEntity findByRrnEntity(RrnEntity rrn);
     Person2PersonRequestEntity findById(long requestId);
 
-    @Query(value = "select COALESCE(SUM(p.amount), 0) as sumAmount, count(*) as countRecord from {h-schema}p_2_p_request p inner join {h-schema}request r on p.request_id = r.id  where p.wallet_account_id in :walletAccountId" +
+    @Query(value = "select COALESCE(SUM(p.amount), 0) as sumQuantity, count(*) as countRecord from {h-schema}p_2_p_request p inner join {h-schema}request r on p.request_id = r.id  where p.src_wallet_account_id in :walletAccountId" +
             " and date(r.created_at) BETWEEN date(:fromDate) AND  date(:toDate) and r.result=0", nativeQuery = true)
     AggregationP2PDTO findSumAmountBetweenDate(@Param("walletAccountId") long[] walletAccountId, @Param("fromDate") Date fromDate, @Param("toDate") Date toDate);
 }

@@ -14,6 +14,8 @@ import com.melli.wallet.domain.response.UuidResponse;
 import com.melli.wallet.domain.response.base.BaseResponse;
 import com.melli.wallet.domain.response.cash.*;
 import com.melli.wallet.domain.response.login.LoginResponse;
+import com.melli.wallet.domain.response.p2p.P2pTrackResponse;
+import com.melli.wallet.domain.response.p2p.P2pUuidResponse;
 import com.melli.wallet.domain.response.purchase.MerchantResponse;
 import com.melli.wallet.domain.response.purchase.PurchaseResponse;
 import com.melli.wallet.domain.response.purchase.PurchaseTrackResponse;
@@ -26,6 +28,7 @@ import com.melli.wallet.sync.ResourceSyncService;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.junit.Assert;
 import org.junit.Test;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.TestMethodOrder;
@@ -658,5 +661,102 @@ public class WalletApplicationTests {
         TypeReference<BaseResponse<PhysicalCashOutTrackResponse>> typeReference = new TypeReference<>() {};
         return objectMapper.readValue(response, typeReference);
     }
+
+    /**
+     * Helper method to generate P2P UUID
+     */
+    public BaseResponse<P2pUuidResponse> generateP2pUuid(MockMvc mockMvc, String token, String nationalCode, String quantity, String accountNumber, String destAccountNumber, HttpStatus httpStatus, int errorCode, boolean success) throws Exception {
+        P2pGenerateUuidRequestJson request = new P2pGenerateUuidRequestJson();
+        request.setNationalCode(nationalCode);
+        request.setQuantity(quantity);
+        request.setAccountNumber(accountNumber);
+        request.setDestAccountNumber(destAccountNumber);
+
+        String requestJson = objectMapper.writeValueAsString(request);
+
+        MvcResult result = mockMvc.perform(post("/api/v1/p2p/generate/uuid")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestJson))
+                .andExpect(status().is(httpStatus.value()))
+                .andReturn();
+
+        String responseContent = result.getResponse().getContentAsString();
+        BaseResponse<P2pUuidResponse> response = objectMapper.readValue(responseContent, new TypeReference<BaseResponse<P2pUuidResponse>>() {});
+
+        if (success) {
+            Assert.assertTrue(response.getSuccess());
+            Assert.assertNotNull(response.getData());
+        } else {
+            Assert.assertFalse(response.getSuccess());
+            Assert.assertSame(errorCode, response.getErrorDetail().getCode());
+        }
+
+        return response;
+    }
+
+    /**
+     * Helper method to process P2P transaction
+     */
+    public BaseResponse<Void> processP2p(MockMvc mockMvc, String token, String uniqueIdentifier, String nationalCode, String quantity, String accountNumber, String destAccountNumber, String additionalData, CommissionObject commission, String currency, HttpStatus httpStatus, int errorCode, boolean success) throws Exception {
+        P2pRequestJson request = new P2pRequestJson();
+        request.setUniqueIdentifier(uniqueIdentifier);
+        request.setNationalCode(nationalCode);
+        request.setQuantity(quantity);
+        request.setAccountNumber(accountNumber);
+        request.setDestAccountNumber(destAccountNumber);
+        request.setAdditionalData(additionalData);
+        request.setCommissionObject(commission);
+        request.setCurrency(currency);
+
+        // Generate valid signature
+        request.setSign("");
+
+        String requestJson = objectMapper.writeValueAsString(request);
+
+        MvcResult result = mockMvc.perform(post("/api/v1/p2p/process")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestJson))
+                .andExpect(status().is(httpStatus.value()))
+                .andReturn();
+
+        String responseContent = result.getResponse().getContentAsString();
+        BaseResponse<Void> response = objectMapper.readValue(responseContent, new TypeReference<BaseResponse<Void>>() {});
+
+        if (success) {
+            Assert.assertTrue(response.getSuccess());
+        } else {
+            Assert.assertFalse(response.getSuccess());
+            Assert.assertSame(errorCode, response.getErrorDetail().getCode());
+        }
+
+        return response;
+    }
+
+    /**
+     * Helper method to inquiry P2P transaction
+     */
+    public BaseResponse<P2pTrackResponse> inquiryP2p(MockMvc mockMvc, String token, String uniqueIdentifier, HttpStatus httpStatus, int errorCode, boolean success) throws Exception {
+        MvcResult result = mockMvc.perform(get("/api/v1/p2p/inquiry")
+                        .header("Authorization", "Bearer " + token)
+                        .param("uniqueIdentifier", uniqueIdentifier))
+                .andExpect(status().is(httpStatus.value()))
+                .andReturn();
+
+        String responseContent = result.getResponse().getContentAsString();
+        BaseResponse<P2pTrackResponse> response = objectMapper.readValue(responseContent, new TypeReference<BaseResponse<P2pTrackResponse>>() {});
+
+        if (success) {
+            Assert.assertTrue(response.getSuccess());
+            Assert.assertNotNull(response.getData());
+        } else {
+            Assert.assertFalse(response.getSuccess());
+            Assert.assertSame(errorCode, response.getErrorDetail().getCode());
+        }
+
+        return response;
+    }
+
 
 }

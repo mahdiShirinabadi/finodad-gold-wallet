@@ -70,7 +70,7 @@ public class Person2PersonOperationServiceImplementation implements Person2Perso
             RrnEntity rrnEntity = rrnRepositoryService.generateTraceId(nationalCode, channelEntity, requestTypeRepositoryService.getRequestType(RequestTypeRepositoryService.P2P), accountNumber, amount);
             log.info("finish traceId ===> {}, username ({}), nationalCode ({})", rrnEntity.getUuid(), channelEntity.getUsername(), nationalCode);
 
-            return helper.fillP2pUuidResponse(rrnEntity.getUuid(), destinationWalletAccount.getWalletEntity().getNationalCode());
+            return helper.fillP2pUuidResponse(destinationWalletAccount.getWalletEntity().getNationalCode(), rrnEntity.getUuid());
         } catch (InternalServiceException e) {
             log.error("error in generate traceId with info ===> username ({}), nationalCode ({}) error ===> ({})", channelEntity.getUsername(), nationalCode, e.getMessage());
             throw e;
@@ -180,7 +180,7 @@ public class Person2PersonOperationServiceImplementation implements Person2Perso
 
     @Override
     public P2pTrackResponse inquiry(ChannelEntity channelEntity, String uuid, String channelIp) throws InternalServiceException {
-        RequestTypeEntity requestTypeEntity = requestTypeRepositoryService.getRequestType(RequestTypeRepositoryService.CASH_IN);
+        RequestTypeEntity requestTypeEntity = requestTypeRepositoryService.getRequestType(RequestTypeRepositoryService.P2P);
         RrnEntity rrnEntity = rrnRepositoryService.findByUid(uuid);
         rrnRepositoryService.checkRrn(uuid, channelEntity, requestTypeEntity, "", "");
         Person2PersonRequestEntity entity = requestRepositoryService.findP2pWithRrnId(rrnEntity.getId());
