@@ -208,6 +208,7 @@ public class CashOutOperationServiceImplementation implements CashOutOperationSe
             physicalCashOutRequestEntity.setAdditionalData(physicalCashOutRequestEntity.getAdditionalData());
 
             TransactionEntity transaction = new TransactionEntity();
+            transaction.setRrnEntity(rrnEntity);
             transaction.setAmount(physicalCashOutRequestEntity.getQuantity());
             transaction.setWalletAccountEntity(walletAccountEntity);
             transaction.setAdditionalData(physicalCashOutRequestEntity.getAdditionalData());
