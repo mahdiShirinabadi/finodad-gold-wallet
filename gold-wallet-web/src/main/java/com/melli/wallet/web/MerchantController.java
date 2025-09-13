@@ -3,10 +3,12 @@ package com.melli.wallet.web;
 import com.melli.wallet.annotation.LogExecutionTime;
 import com.melli.wallet.annotation.number.NumberValidation;
 import com.melli.wallet.annotation.string.StringValidation;
+import com.melli.wallet.domain.request.PanelBaseSearchJson;
 import com.melli.wallet.domain.request.merchant.MerchantBalanceRequest;
 import com.melli.wallet.domain.request.merchant.MerchantUpdateRequest;
 import com.melli.wallet.domain.response.base.BaseResponse;
 import com.melli.wallet.domain.response.purchase.MerchantResponse;
+import com.melli.wallet.domain.response.transaction.ReportTransactionResponse;
 import com.melli.wallet.domain.response.wallet.WalletBalanceResponse;
 import com.melli.wallet.exception.InternalServiceException;
 import com.melli.wallet.security.RequestContext;
@@ -14,6 +16,7 @@ import com.melli.wallet.service.repository.MerchantRepositoryService;
 import com.melli.wallet.service.repository.ResourceDefinition;
 import com.melli.wallet.service.repository.ResourceRepositoryService;
 import com.melli.wallet.service.operation.MerchantOperationService;
+import com.melli.wallet.service.repository.TransactionRepositoryService;
 import io.micrometer.core.annotation.Timed;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -45,6 +48,7 @@ public class MerchantController extends WebController {
     private final RequestContext requestContext;
     private final MerchantRepositoryService merchantRepositoryService;
     private final MerchantOperationService merchantOperationService;
+    private final TransactionRepositoryService transactionRepositoryService;
 
     @Timed(description = "Time taken to inquiry gold amount")
     @GetMapping(path = "/list", produces = {MediaType.APPLICATION_JSON_VALUE})
@@ -129,5 +133,31 @@ public class MerchantController extends WebController {
         
         log.info("finish decreaseBalance for merchant {} with amount {} and traceId {}", request.getMerchantId(), request.getAmount(), traceId);
         return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse<>(true, "Balance decreased successfully. TraceId: " + traceId));
+    }
+
+    @Timed(description = "Time taken to create wallet")
+    @PostMapping(path = "/report", produces = {MediaType.APPLICATION_JSON_VALUE})
+    @Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "گزارش تراکنش", description =
+            """
+                            {
+                              "map": {
+                                "merchantId": "1",
+                                "fromTime":"1403/01/01",
+                                "toTime":"1403/09/01",
+                                "page": "0",
+                                "size": "10",
+                                "orderBy": "id",
+                                "sort": "asc"
+                              }
+                            }
+                     """)
+    @PreAuthorize("hasAuthority('" + ResourceDefinition.MERCHANT_BALANCE_AUTH + "')")
+    @LogExecutionTime("Generate transaction report")
+    public ResponseEntity<BaseResponse<ReportTransactionResponse>> report(@RequestBody @Validated PanelBaseSearchJson request) throws InternalServiceException {
+        String channelIp = requestContext.getClientIp();
+        String username = requestContext.getChannelEntity().getUsername();
+        log.info("start call report transaction in username ===> {},from ip ===> {}", username, channelIp);
+        ReportTransactionResponse response = merchantOperationService.report(requestContext.getChannelEntity(), request.getMap());
+        return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse<>(true,response));
     }
 }

@@ -51,13 +51,13 @@ public interface ReportWalletRepository extends CrudRepository<ReportWalletEntit
 			"WHERE (:nationalCode IS NULL OR w.national_code = :nationalCode) " +
 			"AND (:mobile IS NULL OR w.mobile LIKE CONCAT('%', :mobile, '%')) " +
 			"AND (:fromTimeStr IS NULL OR w.created_at >= TO_TIMESTAMP(:fromTimeStr, 'YYYY-MM-DD HH24:MI:SS')) " +
-			"AND (:toTimeStr IS NULL OR w.created_at <= TO_TIMESTAMP(:toTimeStr, 'YYYY-MM-DD HH24:MI:SS')) " +
+			"AND (:toTimeStr IS NULL OR w.created_at <= TO_TIMESTAMP(:toTimeStr, 'YYYY-MM-DD HH24:MI:SS')) and  w.wallet_type_id = (select id from {h-schema}wallet_type where name='NORMAL_USER')" +
 			"ORDER BY w.id DESC",
 			countQuery = "SELECT COUNT(w.id) FROM {h-schema}wallet w " +
 					"WHERE (:nationalCode IS NULL OR w.national_code = :nationalCode) " +
 					"AND (:mobile IS NULL OR w.mobile LIKE CONCAT('%', :mobile, '%')) " +
 					"AND (:fromTimeStr IS NULL OR w.created_at >= TO_TIMESTAMP(:fromTimeStr, 'YYYY-MM-DD HH24:MI:SS')) " +
-					"AND (:toTimeStr IS NULL OR w.created_at <= TO_TIMESTAMP(:toTimeStr, 'YYYY-MM-DD HH24:MI:SS'))",
+					"AND (:toTimeStr IS NULL OR w.created_at <= TO_TIMESTAMP(:toTimeStr, 'YYYY-MM-DD HH24:MI:SS')) and w.wallet_type_id = (select id from {h-schema}wallet_type where name='NORMAL_USER')",
 			nativeQuery = true)
 	Page<ReportWalletEntity> findWalletsWithFilters(
 			@Param("nationalCode") String nationalCode,

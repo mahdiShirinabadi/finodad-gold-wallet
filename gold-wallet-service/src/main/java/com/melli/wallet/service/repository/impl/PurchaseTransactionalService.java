@@ -129,9 +129,13 @@ public class PurchaseTransactionalService {
         request.setPrice(purchaseObjectDto.getPrice().longValue());
         if (TransactionTypeEnum.BUY.equals(transactionTypeEnum)) {
             request.setTerminalAmount(purchaseObjectDto.getPrice().subtract(purchaseObjectDto.getCommission()));
+            //in buy we get a RIAL commission
+            request.setFinalQuantity(purchaseObjectDto.getQuantity());
         }
         if (TransactionTypeEnum.SELL.equals(transactionTypeEnum)) {
+            //in set we get a GOLD commission
             request.setTerminalAmount(purchaseObjectDto.getQuantity().subtract(purchaseObjectDto.getCommission()));
+            request.setFinalQuantity(purchaseObjectDto.getQuantity().subtract(purchaseObjectDto.getCommission()));
         }
         request.setQuantity(purchaseObjectDto.getQuantity());
         request.setWalletAccount(purchaseObjectDto.getUserCurrencyAccount());

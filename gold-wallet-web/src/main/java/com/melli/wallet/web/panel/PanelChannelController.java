@@ -1,6 +1,7 @@
 package com.melli.wallet.web.panel;
 
 import com.melli.wallet.annotation.LogExecutionTime;
+import com.melli.wallet.annotation.number.NumberValidation;
 import com.melli.wallet.domain.master.entity.ChannelEntity;
 import com.melli.wallet.domain.master.entity.MerchantEntity;
 import com.melli.wallet.domain.master.entity.MerchantWalletAccountCurrencyEntity;
@@ -12,9 +13,12 @@ import com.melli.wallet.domain.request.setup.MerchantCreateRequestJson;
 import com.melli.wallet.domain.response.PanelChannelResponse;
 import com.melli.wallet.domain.response.base.BaseResponse;
 import com.melli.wallet.domain.response.panel.PanelRoleListResponse;
+import com.melli.wallet.domain.response.transaction.ReportTransactionResponse;
 import com.melli.wallet.domain.response.wallet.CreateWalletResponse;
+import com.melli.wallet.domain.response.wallet.WalletBalanceResponse;
 import com.melli.wallet.exception.InternalServiceException;
 import com.melli.wallet.security.RequestContext;
+import com.melli.wallet.service.operation.ChannelOperationService;
 import com.melli.wallet.service.operation.WalletOperationalService;
 import com.melli.wallet.service.repository.*;
 import com.melli.wallet.service.repository.ResourceDefinition;
@@ -57,6 +61,7 @@ public class PanelChannelController extends WebController {
     private final WalletOperationalService walletOperationalService;
     private final WalletAccountCurrencyRepositoryService walletAccountCurrencyRepositoryService;
     private final MerchantWalletAccountCurrencyRepository merchantWalletAccountCurrencyRepository;
+    private final ChannelOperationService channelOperationService;
 
     @Timed(description = "Time taken to update limitation general")
     @PostMapping(path = "/channel/wallet/create", produces = {MediaType.APPLICATION_JSON_VALUE}, consumes = {MediaType.APPLICATION_JSON_VALUE})
@@ -119,6 +124,47 @@ public class PanelChannelController extends WebController {
         merchantWalletAccountCurrencyRepository.save(rialEntity);
 
         return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse<>(true, "merchant created successful"));
+    }
+
+
+    @Timed(description = "Time taken to inquiry gold amount")
+    @GetMapping(path = "/channel/balance", produces = {MediaType.APPLICATION_JSON_VALUE})
+    @Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "مانده پذیرنده")
+    @PreAuthorize("hasAuthority('" + ResourceDefinition.CHANNEL_MANAGE_AUTH + "')")
+    @LogExecutionTime("Get merchant balance")
+    public ResponseEntity<BaseResponse<WalletBalanceResponse>> getBalanceMerchant(@Valid @NumberValidation @RequestParam("channelId") String channelId) throws InternalServiceException {
+        String channelIp = requestContext.getClientIp();
+        String username = requestContext.getChannelEntity().getUsername();
+        log.info("start call balance getMerchant in username ===> {}, merchantId ===> {}, from ip ===> {}", username, channelId, channelIp);
+        WalletBalanceResponse response = channelOperationService.getBalance(channelRepositoryService.findById(Long.parseLong(channelId)));
+        return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse<>(true, response));
+    }
+
+
+    @Timed(description = "Time taken to create wallet")
+    @PostMapping(path = "/channel/report", produces = {MediaType.APPLICATION_JSON_VALUE})
+    @Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "گزارش تراکنش", description =
+            """
+                            {
+                              "map": {
+                                "channelId":"1"
+                                "fromTime":"1403/01/01",
+                                "toTime":"1403/09/01",
+                                "page": "0",
+                                "size": "10",
+                                "orderBy": "id",
+                                "sort": "asc"
+                              }
+                            }
+                     """)
+    @PreAuthorize("hasAuthority('" + ResourceDefinition.CHANNEL_MANAGE_AUTH + "')")
+    @LogExecutionTime("Generate transaction report")
+    public ResponseEntity<BaseResponse<ReportTransactionResponse>> report(@RequestBody @Validated PanelBaseSearchJson request) throws InternalServiceException {
+        String channelIp = requestContext.getClientIp();
+        String username = requestContext.getChannelEntity().getUsername();
+        log.info("start call report transaction in username ===> {},from ip ===> {}", username, channelIp);
+        ReportTransactionResponse response = channelOperationService.report(requestContext.getChannelEntity(), request.getMap());
+        return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse<>(true,response));
     }
 
 

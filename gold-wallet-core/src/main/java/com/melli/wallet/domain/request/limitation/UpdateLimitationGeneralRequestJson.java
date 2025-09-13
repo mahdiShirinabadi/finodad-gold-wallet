@@ -34,6 +34,5 @@ public class UpdateLimitationGeneralRequestJson {
 
     @Schema(name = NamingProperty.PATTERN)
     @JsonProperty(NamingProperty.PATTERN)
-    @StringValidation(label = "الگوی محدودیت")
     private String pattern;
 } 

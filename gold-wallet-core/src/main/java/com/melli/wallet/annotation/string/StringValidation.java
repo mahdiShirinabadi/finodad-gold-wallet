@@ -20,7 +20,7 @@ public @interface StringValidation {
     //error message
     String message() default "تعداد کاراکتر وارد شده در {label} نباید از {minLength} کمتر و از {maxLength} بیشتر باشد";
     String label() default "";
-    String minLength() default "2";
+    String minLength() default "1";
     String maxLength() default "1000";
     //represents group of constraints
     Class<?>[] groups() default {};

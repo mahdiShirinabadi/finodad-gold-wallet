@@ -86,23 +86,23 @@ public class PanelWalletController {
         return ResponseEntity.ok(new BaseResponse<>(true, response));
     }
 
-        @Timed(description = "Time taken to get customer list")
+    @Timed(description = "Time taken to get customer list")
     @PostMapping(path = "/customer/list", produces = {MediaType.APPLICATION_JSON_VALUE})
     @Operation(security = {@SecurityRequirement(name = "bearer-key")}, summary = "لیست مشتریان", description =
             """
-                            {
-                              "map": {
-                                "id": "44",
-                                "nationalCode": "1234567890",
-                                "fromTime":"1403/01/01",
-                                "toTime":"1403/09/01",
-                                "page": "0",
-                                "size": "10",
-                                "orderBy": "id",
-                                "sort": "asc"
-                              }
-                            }
-                     """)
+                           {
+                             "map": {
+                               "id": "44",
+                               "nationalCode": "1234567890",
+                               "fromTime":"1403/01/01",
+                               "toTime":"1403/09/01",
+                               "page": "0",
+                               "size": "10",
+                               "orderBy": "id",
+                               "sort": "asc"
+                             }
+                           }
+                    """)
     @PreAuthorize("hasAuthority('" + ResourceDefinition.LIMITATION_MANAGE_AUTH + "')")
     @LogExecutionTime("Get customer list")
     public ResponseEntity<BaseResponse<CustomerListResponse>> getCustomerList(@Valid @RequestBody PanelBaseSearchJson panelSearchJson) throws InternalServiceException {

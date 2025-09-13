@@ -321,7 +321,7 @@ class SellControllerTest extends WalletApplicationTests {
         String price = "100000";
         WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, accessToken, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.GOLD);
 
-        BaseResponse<PurchaseResponse> response = sell(mockMvc, accessToken, "invalid-uuid", quantity, price, CURRENCY_GOLD, "2000", NATIONAL_CODE_CORRECT, CURRENCY_GOLD, "1", walletAccountObjectOptional.getAccountNumber(), "", "test invalid uuid", HttpStatus.OK, "IR123456789012345678901234", StatusRepositoryService.UUID_NOT_FOUND, false);
+        BaseResponse<PurchaseResponse> response = sell(mockMvc, accessToken, "invalid-uuid", quantity, price, CURRENCY_GOLD, "0.003", NATIONAL_CODE_CORRECT, CURRENCY_GOLD, "1", walletAccountObjectOptional.getAccountNumber(), "", "test invalid uuid", HttpStatus.OK, "IR123456789012345678901234", StatusRepositoryService.UUID_NOT_FOUND, false);
         Assert.assertSame(StatusRepositoryService.UUID_NOT_FOUND, response.getErrorDetail().getCode());
     }
 
@@ -361,7 +361,7 @@ class SellControllerTest extends WalletApplicationTests {
         String uniqueIdentifier = uuidResponse.getData().getUniqueIdentifier();
 
         // Test with insufficient balance
-        BaseResponse<PurchaseResponse> response = sell(mockMvc, accessToken, uniqueIdentifier, quantity, price, CURRENCY_GOLD, "2000", NATIONAL_CODE_CORRECT, CURRENCY_GOLD, "1", walletAccountObjectOptional.getAccountNumber(), "", "test insufficient balance", HttpStatus.OK, "IR123456789012345678901234", StatusRepositoryService.BALANCE_IS_NOT_ENOUGH, false);
+        BaseResponse<PurchaseResponse> response = sell(mockMvc, accessToken, uniqueIdentifier, quantity, price, CURRENCY_GOLD, "0.003", NATIONAL_CODE_CORRECT, CURRENCY_GOLD, "1", walletAccountObjectOptional.getAccountNumber(), "", "test insufficient balance", HttpStatus.OK, "IR123456789012345678901234", StatusRepositoryService.BALANCE_IS_NOT_ENOUGH, false);
         Assert.assertSame(StatusRepositoryService.BALANCE_IS_NOT_ENOUGH, response.getErrorDetail().getCode());
     }
 
@@ -387,7 +387,7 @@ class SellControllerTest extends WalletApplicationTests {
         BaseResponse<UuidResponse> uuidResponse = generateSellUniqueIdentifier(mockMvc, accessToken, NATIONAL_CODE_CORRECT, quantity, walletAccountObjectOptional.getAccountNumber(), CURRENCY_GOLD, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
         String uniqueIdentifier = uuidResponse.getData().getUniqueIdentifier();
         // Step 4: Test with invalid merchant ID
-        BaseResponse<PurchaseResponse> response = sell(mockMvc, accessToken, uniqueIdentifier, quantity, price, CURRENCY_GOLD, "2000", NATIONAL_CODE_CORRECT, CURRENCY_GOLD, "999", walletAccountObjectOptional.getAccountNumber(), "", "test invalid merchant id", HttpStatus.OK, "IR123456789012345678901234", StatusRepositoryService.MERCHANT_IS_NOT_EXIST, false);
+        BaseResponse<PurchaseResponse> response = sell(mockMvc, accessToken, uniqueIdentifier, quantity, price, CURRENCY_GOLD, "0.003", NATIONAL_CODE_CORRECT, CURRENCY_GOLD, "999", walletAccountObjectOptional.getAccountNumber(), "", "test invalid merchant id", HttpStatus.OK, "IR123456789012345678901234", StatusRepositoryService.MERCHANT_IS_NOT_EXIST, false);
         Assert.assertSame(StatusRepositoryService.MERCHANT_IS_NOT_EXIST, response.getErrorDetail().getCode());
     }
 
@@ -450,10 +450,10 @@ class SellControllerTest extends WalletApplicationTests {
         BaseResponse<UuidResponse> uuidResponse = generateSellUniqueIdentifier(mockMvc, accessToken, NATIONAL_CODE_CORRECT, quantity, walletAccountObjectOptional.getAccountNumber(), CURRENCY_GOLD, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
         String uniqueIdentifier = uuidResponse.getData().getUniqueIdentifier();
         // Step 6: Perform first sell operation (should succeed)
-        BaseResponse<PurchaseResponse> response1 = sell(mockMvc, accessToken, uniqueIdentifier, quantity, price, CURRENCY_GOLD, "2000", NATIONAL_CODE_CORRECT, CURRENCY_GOLD, "1", walletAccountObjectOptional.getAccountNumber(), "", "test sell success", HttpStatus.OK, "IR123456789012345678901234", StatusRepositoryService.SUCCESSFUL, true);
+        BaseResponse<PurchaseResponse> response1 = sell(mockMvc, accessToken, uniqueIdentifier, quantity, price, CURRENCY_GOLD, "0.003", NATIONAL_CODE_CORRECT, CURRENCY_GOLD, "1", walletAccountObjectOptional.getAccountNumber(), "", "test sell success", HttpStatus.OK, "IR123456789012345678901234", StatusRepositoryService.SUCCESSFUL, true);
         Assert.assertNotNull(response1.getData());
         // Step 7: Try to perform the same sell operation again (should fail with duplicate)
-        BaseResponse<PurchaseResponse> response2 = sell(mockMvc, accessToken, uniqueIdentifier, quantity, price, CURRENCY_GOLD, "2000", NATIONAL_CODE_CORRECT, CURRENCY_GOLD, "1", walletAccountObjectOptional.getAccountNumber(), "", "test duplicate request", HttpStatus.OK, "IR123456789012345678901234", StatusRepositoryService.DUPLICATE_UUID, false);
+        BaseResponse<PurchaseResponse> response2 = sell(mockMvc, accessToken, uniqueIdentifier, quantity, price, CURRENCY_GOLD, "0.003", NATIONAL_CODE_CORRECT, CURRENCY_GOLD, "1", walletAccountObjectOptional.getAccountNumber(), "", "test duplicate request", HttpStatus.OK, "IR123456789012345678901234", StatusRepositoryService.DUPLICATE_UUID, false);
         Assert.assertSame(StatusRepositoryService.DUPLICATE_UUID, response2.getErrorDetail().getCode());
     }
 
@@ -491,7 +491,7 @@ class SellControllerTest extends WalletApplicationTests {
         BaseResponse<UuidResponse> uuidResponse = generateSellUniqueIdentifier(mockMvc, accessToken, NATIONAL_CODE_CORRECT, quantity, goldAccountObject.getAccountNumber(), CURRENCY_GOLD, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
         String uniqueIdentifier = uuidResponse.getData().getUniqueIdentifier();
         // Step 6: Perform sell operation
-        BaseResponse<PurchaseResponse> sellResponse = sell(mockMvc, accessToken, uniqueIdentifier, quantity, price, CURRENCY_GOLD, "2000", NATIONAL_CODE_CORRECT, CURRENCY_GOLD, "1", goldAccountObject.getAccountNumber(), "", "test sell for inquiry", HttpStatus.OK, "IR123456789012345678901234", StatusRepositoryService.SUCCESSFUL, true);
+        BaseResponse<PurchaseResponse> sellResponse = sell(mockMvc, accessToken, uniqueIdentifier, quantity, price, CURRENCY_GOLD, "0.002", NATIONAL_CODE_CORRECT, CURRENCY_GOLD, "1", goldAccountObject.getAccountNumber(), "", "test sell for inquiry", HttpStatus.OK, "IR123456789012345678901234", StatusRepositoryService.SUCCESSFUL, true);
         Assert.assertNotNull(sellResponse.getData());
         // Step 7: Inquiry the sell operation
         BaseResponse<PurchaseTrackResponse> inquiryResponse = inquiryPurchase(mockMvc, accessToken, uniqueIdentifier, "SELL", HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
@@ -737,7 +737,7 @@ class SellControllerTest extends WalletApplicationTests {
         // Setup
         String quantity = "0.1";
         String price = "100000";
-        String commission = "1000";
+        String commission = "0.002";
         String commissionType = "GOLD";
         String currency = "GOLD";
         String sign = "";
@@ -1050,7 +1050,7 @@ class SellControllerTest extends WalletApplicationTests {
         // Common setup
         String quantity = "1";
         String price = "100000";
-        String commission = "1000";
+        String commission = "0.01";
         String commissionType = "GOLD";
         String currency = "GOLD";
         String sign = "";
@@ -1299,7 +1299,7 @@ class SellControllerTest extends WalletApplicationTests {
         BaseResponse<UuidResponse> uuidResponse = generateSellUniqueIdentifier(mockMvc, accessToken, NATIONAL_CODE_CORRECT, quantity, walletAccountObjectOptional.getAccountNumber(), CURRENCY_GOLD, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
         String uniqueIdentifier = uuidResponse.getData().getUniqueIdentifier();
         // Step 13: Perform sell operation - should succeed within all limitations
-        BaseResponse<PurchaseResponse> response = sell(mockMvc, accessToken, uniqueIdentifier, quantity, price, CURRENCY_GOLD, "1000", NATIONAL_CODE_CORRECT, CURRENCY_GOLD, "1", walletAccountObjectOptional.getAccountNumber(), "", "test sell within limitations", HttpStatus.OK, "IR123456789012345678901234", StatusRepositoryService.SUCCESSFUL, true);
+        BaseResponse<PurchaseResponse> response = sell(mockMvc, accessToken, uniqueIdentifier, quantity, price, CURRENCY_GOLD, "0.001", NATIONAL_CODE_CORRECT, CURRENCY_GOLD, "1", walletAccountObjectOptional.getAccountNumber(), "", "test sell within limitations", HttpStatus.OK, "IR123456789012345678901234", StatusRepositoryService.SUCCESSFUL, true);
         Assert.assertNotNull(response.getData());
     }
 } 

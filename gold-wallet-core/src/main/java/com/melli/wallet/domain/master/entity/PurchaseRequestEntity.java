@@ -20,6 +20,9 @@ public class PurchaseRequestEntity extends RequestEntity {
 	@Column(name = "quantity", precision = 10, scale = 5)
 	private BigDecimal quantity; // Purchased quantity
 
+	@Column(name = "final_quantity", precision = 10, scale = 5)
+	private BigDecimal finalQuantity; // Purchased quantity
+
 	@ManyToOne
 	@JoinColumn(name = "wallet_account_id", nullable = false)
 	private WalletAccountEntity walletAccount;

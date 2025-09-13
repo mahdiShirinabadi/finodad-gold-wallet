@@ -116,6 +116,7 @@ public class Person2PersonOperationServiceImplementation implements Person2Perso
 
             Person2PersonRequestEntity requestEntity = new Person2PersonRequestEntity();
             requestEntity.setAmount(new BigDecimal(p2pObjectDTO.getQuantity()));
+            requestEntity.setFinalAmount(requestEntity.getAmount().subtract(p2pObjectDTO.getCommission()));
             requestEntity.setSourceAccountWalletEntity(srcWalletAccountEntity);
             requestEntity.setRrnEntity(rrnEntity);
             requestEntity.setChannel(p2pObjectDTO.getChannel());
@@ -148,7 +149,7 @@ public class Person2PersonOperationServiceImplementation implements Person2Perso
             log.info("start p2p transaction for uniqueIdentifier ({}), quantity ({}) for withdrawal walletAccountId ({})", requestEntity.getRrnEntity().getUuid(), requestEntity.getAmount(), srcWalletAccountEntity.getId());
 
             TransactionEntity accountNumberWithdrawal = createTransaction(
-                    srcWalletAccountEntity, requestEntity.getAmount().add(requestEntity.getCommission()),
+                    srcWalletAccountEntity, requestEntity.getAmount(),
                     messageResolverOperationService.resolve(depositTemplate, model), requestEntity.getAdditionalData(), requestEntity, requestEntity.getRrnEntity());
             transactionRepositoryService.insertWithdraw(accountNumberWithdrawal);
             log.info("finish p2p transaction for uniqueIdentifier ({}), quantity ({}) for withdrawal walletAccountId ({})", requestEntity.getRrnEntity().getUuid(), requestEntity.getAmount(), srcWalletAccountEntity.getId());
@@ -163,7 +164,7 @@ public class Person2PersonOperationServiceImplementation implements Person2Perso
             }
 
             log.info("start p2p transaction for uniqueIdentifier ({}), price ({}) for user deposit currency user walletAccountId({})", requestEntity.getRrnEntity().getUuid(), requestEntity.getAmount(), requestEntity.getDestinationAccountWalletEntity().getId());
-            TransactionEntity userDeposit = createTransaction(destinationWalletAccountEntity,requestEntity.getAmount(),
+            TransactionEntity userDeposit = createTransaction(destinationWalletAccountEntity,requestEntity.getAmount().subtract(requestEntity.getCommission()),
                     messageResolverOperationService.resolve(withdrawalTemplate, model), requestEntity.getAdditionalData(), requestEntity, requestEntity.getRrnEntity());
             transactionRepositoryService.insertDeposit(userDeposit);
             log.info("finish p2p transaction for uniqueIdentifier ({}), price ({}) for user deposit currency user walletAccountId({})", requestEntity.getRrnEntity().getUuid(), requestEntity.getAmount(), requestEntity.getDestinationAccountWalletEntity().getId());

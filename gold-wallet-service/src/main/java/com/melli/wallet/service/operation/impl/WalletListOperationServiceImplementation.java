@@ -157,6 +157,7 @@ public class WalletListOperationServiceImplementation implements WalletListOpera
         List<CustomerListResponse.CustomerObject> customers = new ArrayList<>();
         
         for (ReportWalletEntity wallet : wallets) {
+
             List<Object[]> walletAccounts = accountsByWalletId.getOrDefault(wallet.getId(), new ArrayList<>());
             
             // Create customer object

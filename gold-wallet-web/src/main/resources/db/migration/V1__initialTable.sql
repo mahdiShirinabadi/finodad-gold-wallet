@@ -397,6 +397,7 @@ CREATE TABLE if not exists purchase_request
     transaction_type  VARCHAR(50)        NOT NULL CHECK (transaction_type IN ('BUY', 'SELL')),
     price       BIGINT,         -- Purchased quantity price
     quantity          NUMERIC(15, 5), -- Purchased quantity
+    final_quantity                 NUMERIC(15, 5),
     wallet_account_id BIGINT             NOT NULL REFERENCES wallet_account,
     rrn_id            BIGINT             NOT NULL REFERENCES rrn,
     merchant_id       BIGINT             NOT NULL REFERENCES merchant,
@@ -413,6 +414,7 @@ CREATE TABLE if not exists p_2_p_request
     request_id             BIGINT NOT NULL REFERENCES request,
     rrn_id                 BIGINT NOT NULL REFERENCES rrn,
     amount                 NUMERIC(15, 5),
+    final_amount                 NUMERIC(15, 5),
     src_wallet_account_id  BIGINT NOT NULL REFERENCES wallet_account,
     dest_wallet_account_id BIGINT NOT NULL REFERENCES wallet_account,
     additional_data varchar(500),

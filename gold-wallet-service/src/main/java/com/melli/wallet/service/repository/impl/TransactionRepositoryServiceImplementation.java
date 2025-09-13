@@ -1,6 +1,7 @@
 package com.melli.wallet.service.repository.impl;
 
 import com.melli.wallet.domain.master.entity.*;
+import com.melli.wallet.domain.master.persistence.MerchantRepository;
 import com.melli.wallet.domain.master.persistence.TransactionRepository;
 import com.melli.wallet.domain.response.transaction.ReportTransactionResponse;
 import com.melli.wallet.domain.response.transaction.StatementResponse;
@@ -63,7 +64,7 @@ public class TransactionRepositoryServiceImplementation implements TransactionRe
     }
 
     @Override
-    public ReportTransactionResponse reportTransaction(ChannelEntity channelEntity, Map<String, String>mapParameter) {
+    public ReportTransactionResponse reportTransaction(ChannelEntity channelEntity, Map<String, String> mapParameter) {
 
         Pageable pageRequest = helper.getPageableConfig(settingGeneralRepositoryService,
                 Integer.parseInt(Optional.ofNullable(mapParameter.get("page")).orElse("0")),
@@ -105,7 +106,8 @@ public class TransactionRepositoryServiceImplementation implements TransactionRe
         }
 
         if (StringUtils.hasText(walletAccountNumber)) {
-            predicates.add(criteriaBuilder.equal(root.get("walletAccountEntity").get("accountNumber"), walletAccountNumber));
+            List<String> stringList = Arrays.stream(walletAccountNumber.split(",")).toList();
+            predicates.add(criteriaBuilder.in(root.get("walletAccountEntity").get("accountNumber")).value(stringList));
         }
 
         if (StringUtils.hasText(uniqueIdentifier)) {
@@ -144,12 +146,6 @@ public class TransactionRepositoryServiceImplementation implements TransactionRe
         }
     }
 
-    /**
-     * If called outside a transaction, it throws an exception, preventing non-transactional execution
-     *
-     * @param transaction
-     * @throws InternalServiceException
-     */
     @Override
     @Transactional(propagation = Propagation.REQUIRED)
     public void insertDeposit(TransactionEntity transaction) throws InternalServiceException {

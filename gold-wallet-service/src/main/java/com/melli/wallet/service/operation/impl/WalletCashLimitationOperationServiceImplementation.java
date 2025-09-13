@@ -177,7 +177,7 @@ public class WalletCashLimitationOperationServiceImplementation implements Walle
 
             if (amount.compareTo(maxAmount)> 0) {
                 log.error("checkCashOutLimitation: CashOut's amount({}) for wallet({}), is bigger than maxCashOut({}) !!!", amount, wallet.getNationalCode(), maxAmount);
-                throw new InternalServiceException("CashOut's amount is bigger than minCashIn", StatusRepositoryService.AMOUNT_BIGGER_THAN_MAX, HttpStatus.OK,
+                throw new InternalServiceException("CashOut's amount is bigger than maxCashOut", StatusRepositoryService.AMOUNT_BIGGER_THAN_MAX, HttpStatus.OK,
                         Map.ofEntries(
                                 entry("1", Utility.addComma(amount.longValue())),
                                 entry("2", Utility.addComma(maxAmount.longValue()))

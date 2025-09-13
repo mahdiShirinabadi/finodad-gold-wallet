@@ -19,6 +19,9 @@ public class Person2PersonRequestEntity extends RequestEntity {
 	@Column(name = "amount", precision = 10, scale = 5)
 	private BigDecimal amount; // quantity
 
+	@Column(name = "final_amount", precision = 10, scale = 5)
+	private BigDecimal finalAmount; // quantity
+
 	@ManyToOne
 	@JoinColumn(name = "rrn_id", nullable = false)
 	private RrnEntity rrnEntity;
