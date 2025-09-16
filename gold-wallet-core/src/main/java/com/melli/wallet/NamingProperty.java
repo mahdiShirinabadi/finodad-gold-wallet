@@ -90,6 +90,7 @@ public class NamingProperty {
     public static final String PUBLIC_KEY = "publicKey";
     public static final String EXPIRE_TIME_DURATION = "expireTimeDuration";
     public static final String IP = "ip";
+    public static final String CODE = "code";
 
 
     private NamingProperty() {

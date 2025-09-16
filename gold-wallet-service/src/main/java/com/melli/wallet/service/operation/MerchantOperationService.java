@@ -14,5 +14,5 @@ public interface MerchantOperationService {
     WalletBalanceResponse getBalance(ChannelEntity channelEntity, String currency) throws InternalServiceException;
     String increaseBalance(ChannelEntity channelEntity, String walletAccountNumber, String amount, String merchantId) throws InternalServiceException;
     String decreaseBalance(ChannelEntity channelEntity, String walletAccountNumber, String amount, String merchantId) throws InternalServiceException;
-    ReportTransactionResponse report(ChannelEntity channelEntity, Map<String, String> mapParameter);
+    ReportTransactionResponse report(ChannelEntity channelEntity, Map<String, String> mapParameter) throws InternalServiceException;
 }

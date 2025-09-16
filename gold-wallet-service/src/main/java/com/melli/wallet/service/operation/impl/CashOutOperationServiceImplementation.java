@@ -54,6 +54,7 @@ public class CashOutOperationServiceImplementation implements CashOutOperationSe
     private final MessageResolverOperationService messageResolverOperationService;
     private final StatusRepositoryService statusRepositoryService;
     private final WalletAccountTypeRepositoryService walletAccountTypeRepositoryService;
+    private final StockRepositoryService stockRepositoryService;
 
     @Override
     public UuidResponse generateUuid(ChannelEntity channelEntity, String nationalCode, String amount, String accountNumber) throws InternalServiceException {
@@ -240,6 +241,7 @@ public class CashOutOperationServiceImplementation implements CashOutOperationSe
             log.info("updating physicalCashOutLimitation for walletAccount ({}) is finished.", walletAccountEntity.getAccountNumber());
 
             BigDecimal walletAccountServiceBalance = walletAccountRepositoryService.getBalance(walletAccountEntity.getId());
+            stockRepositoryService.insertWithdraw(transaction);
 
             return helper.fillPhysicalCashOutResponse(physicalCashOutObjectDTO.getNationalCode(), rrnEntity.getUuid(), String.valueOf(walletAccountServiceBalance), walletAccountEntity.getAccountNumber());
         }, physicalCashOutObjectDTO.getUniqueIdentifier());

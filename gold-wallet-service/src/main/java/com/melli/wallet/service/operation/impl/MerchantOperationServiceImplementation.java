@@ -19,6 +19,7 @@ import jakarta.persistence.criteria.Root;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
@@ -51,7 +52,7 @@ public class MerchantOperationServiceImplementation implements MerchantOperation
     public WalletBalanceResponse getBalance(ChannelEntity channelEntity, String merchantId) throws InternalServiceException {
         log.info("start get balance for merchantId ({})", merchantId);
         MerchantEntity merchantEntity = merchantRepositoryService.findById(Integer.parseInt(merchantId));
-        if(merchantEntity == null){
+        if (merchantEntity == null) {
             log.error("merchant {} not found", merchantId);
             throw new InternalServiceException("merchant not found", StatusRepositoryService.MERCHANT_IS_NOT_EXIST, HttpStatus.OK);
         }
@@ -63,7 +64,7 @@ public class MerchantOperationServiceImplementation implements MerchantOperation
     public void updateStatus(ChannelEntity channelEntity, String merchantId, String status) throws InternalServiceException {
         log.info("start update status for merchantId ({}) and status ({}) with channel ({})", merchantId, status, channelEntity.getUsername());
         MerchantEntity merchantEntity = merchantRepositoryService.findById(Integer.parseInt(merchantId));
-        if(merchantEntity == null){
+        if (merchantEntity == null) {
             log.error("merchant {} not found", merchantId);
             throw new InternalServiceException("merchant not found", StatusRepositoryService.MERCHANT_IS_NOT_EXIST, HttpStatus.OK);
         }
@@ -131,20 +132,20 @@ public class MerchantOperationServiceImplementation implements MerchantOperation
     }
 
     @Override
-    public ReportTransactionResponse report(ChannelEntity channelEntity, Map<String, String> mapParameter) {
+    public ReportTransactionResponse report(ChannelEntity channelEntity, Map<String, String> mapParameter) throws InternalServiceException {
         Pageable pageRequest = helper.getPageableConfig(settingGeneralRepositoryService,
                 Integer.parseInt(Optional.ofNullable(mapParameter.get("page")).orElse("0")),
                 Integer.parseInt(Optional.ofNullable(mapParameter.get("size")).orElse("10")));
         String merchantId = mapParameter.get("merchantId");
         MerchantEntity merchantEntity = merchantRepositoryService.findById(Integer.parseInt(merchantId));
-        List<WalletAccountEntity> walletAccountEntityList = walletAccountRepositoryService.findByWallet(merchantEntity.getWalletEntity(), pageRequest);
+        List<WalletAccountEntity> walletAccountEntityList = walletAccountRepositoryService.findByWallet(merchantEntity.getWalletEntity());
         String accountNumbersStr = String.join(",", walletAccountEntityList.stream().map(WalletAccountEntity::getAccountNumber).toList());
         mapParameter.put("walletAccountNumber", accountNumbersStr);
         Specification<ReportTransactionEntity> specification = getReportTransactionEntityPredicate(mapParameter);
         Page<ReportTransactionEntity> reportTransactionEntityPage = reportTransactionRepository.findAll(specification, pageRequest);
         return helper.fillReportStatementResponse(reportTransactionEntityPage);
-    }
 
+    }
 
 
     private Specification<ReportTransactionEntity> getReportTransactionEntityPredicate(Map<String, String> searchCriteria) {

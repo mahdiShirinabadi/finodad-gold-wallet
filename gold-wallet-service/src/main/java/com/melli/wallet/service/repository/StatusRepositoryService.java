@@ -103,6 +103,7 @@ public interface StatusRepositoryService {
     int SRC_ACCOUNT_SAME_DST_ACCOUNT_NUMBER = 83;
     int CURRENCY_SRC_ACCOUNT_SAME_DST_ACCOUNT_NUMBER = 84;
     int DST_ACCOUNT_NUMBER_NOT_FOUND = 85;
+    int STOCK_NOT_FOUND = 86;
 
     // General Error Codes
     int INTERNAL_ERROR = 99;

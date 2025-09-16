@@ -65,7 +65,7 @@ public class ChannelOperationServiceImplementation implements ChannelOperationSe
             log.error("channel id {} not found", channelId);
             throw new InternalServiceException("channel Id not found", StatusRepositoryService.CHANNEL_NOT_FOUND, HttpStatus.OK);
         }
-        List<WalletAccountEntity> walletAccountEntityList = walletAccountRepositoryService.findByWallet(channelEntityReport.get().getWalletEntity(), pageRequest);
+        List<WalletAccountEntity> walletAccountEntityList = walletAccountRepositoryService.findByWallet(channelEntityReport.get().getWalletEntity());
         String accountNumbersStr = String.join(",", walletAccountEntityList.stream().map(WalletAccountEntity::getAccountNumber).toList());
         mapParameter.put("walletAccountNumber", accountNumbersStr);
         Specification<ReportTransactionEntity> specification = getReportTransactionEntityPredicate(mapParameter);

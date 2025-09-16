@@ -44,6 +44,7 @@ public class PurchaseTransactionalService {
     private final WalletBuyLimitationOperationService walletBuyLimitationOperationService;
     private final WalletSellLimitationOperationService walletSellLimitationOperationService;
     private final CashInOperationService cashInOperationService;
+    private final StockRepositoryService stockRepositoryService;
 
     @Transactional(propagation = Propagation.REQUIRED, rollbackFor = Exception.class)
     public PurchaseResponse processSell(
@@ -215,6 +216,8 @@ public class PurchaseTransactionalService {
         transactionRepositoryService.insertDeposit(userDepositTransaction);
         log.info("finish buy transaction for uniqueIdentifier ({}), quantity ({}) for deposit currency user walletAccountId({}), transactionId ({})", purchaseRequest.getRrnEntity().getUuid(), purchaseRequest.getQuantity(), userCurrencyAccount.getId(), userDepositTransaction.getId());
 
+        stockRepositoryService.insertDeposit(userDepositTransaction);
+
         log.info("terminate buyProcessTransactions for uniqueIdentifier ({})", purchaseRequest.getRrnEntity().getUuid());
     }
 
@@ -265,9 +268,9 @@ public class PurchaseTransactionalService {
 
         // user withdrawal (currency) (quantity)
         log.info("start sell transaction for uniqueIdentifier ({}), quantity ({}) for user withdrawal user walletAccountId({})", purchaseRequest.getRrnEntity().getUuid(), purchaseRequest.getQuantity(), merchantCurrencyAccount.getId());
-        TransactionEntity merchantCurrencyWithdrawal = createTransaction(userCurrencyAccount, (purchaseRequest.getQuantity()),
+        TransactionEntity userCurrencyWithdrawal = createTransaction(userCurrencyAccount, (purchaseRequest.getQuantity()),
                 messageResolverOperationService.resolve(withdrawalTemplate, model), purchaseRequest.getAdditionalData(), purchaseRequest, purchaseRequest.getRrnEntity());
-        transactionRepositoryService.insertWithdraw(merchantCurrencyWithdrawal);
+        transactionRepositoryService.insertWithdraw(userCurrencyWithdrawal);
         log.info("start sell transaction for uniqueIdentifier ({}), quantity ({}) for user withdrawal user walletAccountId({})", purchaseRequest.getRrnEntity().getUuid(), purchaseRequest.getQuantity(), merchantCurrencyAccount.getId());
 
         // merchant deposit (currency) (quantity - commission)
@@ -277,6 +280,7 @@ public class PurchaseTransactionalService {
         transactionRepositoryService.insertDeposit(merchantCurrencyDeposit);
         log.info("finish sell transaction for uniqueIdentifier ({}), quantity ({}) for merchant deposit currency user walletAccountId({}), transactionId ({})", purchaseRequest.getRrnEntity().getUuid(), purchaseRequest.getQuantity().subtract(commission), userCurrencyAccount.getId(), merchantCurrencyDeposit.getId());
         walletSellLimitationOperationService.updateLimitation(userCurrencyAccount, new BigDecimal(purchaseRequest.getPrice()), purchaseRequest.getQuantity(), purchaseRequest.getRrnEntity().getUuid());
+        stockRepositoryService.insertWithdraw(userCurrencyWithdrawal);
     }
 
     private TransactionEntity createTransaction(WalletAccountEntity account, BigDecimal amount, String description,

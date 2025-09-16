@@ -2,6 +2,7 @@ package com.melli.wallet.utils;
 
 import com.melli.wallet.domain.enumaration.WalletStatusEnum;
 import com.melli.wallet.domain.master.entity.*;
+import com.melli.wallet.domain.master.persistence.StockRepository;
 import com.melli.wallet.domain.response.PanelChannelObject;
 import com.melli.wallet.domain.response.PanelChannelResponse;
 import com.melli.wallet.domain.response.base.BaseResponse;
@@ -17,6 +18,10 @@ import com.melli.wallet.domain.response.panel.PanelResourceObject;
 import com.melli.wallet.domain.response.panel.PanelRoleListResponse;
 import com.melli.wallet.domain.response.panel.PanelRoleObject;
 import com.melli.wallet.domain.response.purchase.*;
+import com.melli.wallet.domain.response.stock.StockCurrencyListResponse;
+import com.melli.wallet.domain.response.stock.StockCurrencyObject;
+import com.melli.wallet.domain.response.stock.StockListResponse;
+import com.melli.wallet.domain.response.stock.StockObject;
 import com.melli.wallet.domain.response.transaction.ReportTransactionObject;
 import com.melli.wallet.domain.response.transaction.ReportTransactionResponse;
 import com.melli.wallet.domain.response.transaction.StatementObject;
@@ -487,7 +492,7 @@ public class Helper {
             throw new InternalServiceException("wallet for nationalCode (" + nationalCode + ") is not found!!", StatusRepositoryService.WALLET_NOT_FOUND, HttpStatus.OK);
         }
 
-        if (walletEntity.getStatus().getText() != WalletStatusEnum.ACTIVE.getText()) {
+        if (!Objects.equals(walletEntity.getStatus().getText(), WalletStatusEnum.ACTIVE.getText())) {
             log.error("wallet for nationalCode {} is not active and status is ({})!!!", nationalCode, walletEntity.getStatus().getText());
             throw new InternalServiceException("wallet for nationalCode (" + nationalCode + ") is not active!!", StatusRepositoryService.WALLET_IS_NOT_ACTIVE, HttpStatus.OK);
         }
@@ -501,6 +506,32 @@ public class Helper {
         response.setTotalPages(page.getTotalPages());
         response.setTotalElements(page.getTotalElements());
         response.setList(page.getContent().stream().map(this::fillChannelRoleListObject).toList());
+        return response;
+    }
+
+    public StockCurrencyListResponse fillStockCurrencyList(List<StockRepository.AggregationStockByCurrencyDTO> aggregationStockByCurrencyDTOList,
+                                                           WalletAccountCurrencyRepositoryService walletAccountCurrencyRepositoryService){
+        StockCurrencyListResponse response = new StockCurrencyListResponse();
+        List<StockCurrencyObject> stockCurrencyObjectList = new ArrayList<>();
+        for(StockRepository.AggregationStockByCurrencyDTO aggregationStockByCurrencyDTO : aggregationStockByCurrencyDTOList){
+            try{
+                WalletAccountCurrencyEntity walletAccountCurrencyEntity= walletAccountCurrencyRepositoryService.getById(Long.parseLong(aggregationStockByCurrencyDTO.getCurrency()));
+                stockCurrencyObjectList.add(new StockCurrencyObject(aggregationStockByCurrencyDTO.getBalance(), walletAccountCurrencyEntity.getName()));
+            }catch (InternalServiceException ex){
+                log.error("currency with Id ({}) not found", aggregationStockByCurrencyDTO.getCurrency());
+            }
+        }
+        response.setStockCurrencyObjectList(stockCurrencyObjectList);
+        return response;
+    }
+
+    public StockListResponse fillStockList(List<StockRepository.AggregationStockDTO> aggregationStockDTOList){
+        StockListResponse response = new StockListResponse();
+        List<StockObject> stockObjectList = new ArrayList<>();
+        for(StockRepository.AggregationStockDTO aggregationStockDTO : aggregationStockDTOList){
+            stockObjectList.add(new StockObject(aggregationStockDTO.getId(), aggregationStockDTO.getBalance(), aggregationStockDTO.getCode()));
+        }
+        response.setStockObjectList(stockObjectList);
         return response;
     }
 
