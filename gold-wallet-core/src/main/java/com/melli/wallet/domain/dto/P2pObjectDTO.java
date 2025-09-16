@@ -21,7 +21,7 @@ public class P2pObjectDTO {
     private String nationalCode;
     private String uniqueIdentifier;
     private String accountNumber;
-    private String quantity;
+    private BigDecimal quantity;
     private String destAccountNumber;
     private String additionalData;
     private String ip;

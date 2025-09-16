@@ -17,7 +17,7 @@ public class SellGenerateUuidRequestJson {
     @JsonProperty(NamingProperty.NATIONAL_CODE)
     private String nationalCode;
 
-    @NumberValidation(allowDecimal = true, minDecimalValue = "0.00001")
+    @NumberValidation(allowDecimal = true, minDecimalValue = "0.00001", allowNegative = false)
     @Schema(name = NamingProperty.QUANTITY
             , description = "تعداد", example = "1.1")
     @JsonProperty(NamingProperty.QUANTITY)

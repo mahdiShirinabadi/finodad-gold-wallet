@@ -173,6 +173,11 @@ public class CashOutOperationServiceImplementation implements CashOutOperationSe
         RequestTypeEntity requestTypeEntity = requestTypeRepositoryService.getRequestType(RequestTypeRepositoryService.PHYSICAL_CASH_OUT);
         WalletAccountEntity channelCommissionAccount = findChannelCommissionAccount(physicalCashOutObjectDTO.getChannel(), physicalCashOutObjectDTO.getCommissionType());
 
+        if((physicalCashOutObjectDTO.getQuantity().subtract(physicalCashOutObjectDTO.getCommission())).compareTo(new BigDecimal("0")) <= 0){
+            log.error("commission ({}) is bigger than quantity ({})", physicalCashOutObjectDTO.getCommission(), physicalCashOutObjectDTO.getQuantity());
+            throw new InternalServiceException("commission is bigger than quantity", StatusRepositoryService.COMMISSION_BIGGER_THAN_QUANTITY, HttpStatus.OK);
+        }
+
 
         RrnEntity rrnEntity = rrnRepositoryService.findByUid(physicalCashOutObjectDTO.getUniqueIdentifier());
 

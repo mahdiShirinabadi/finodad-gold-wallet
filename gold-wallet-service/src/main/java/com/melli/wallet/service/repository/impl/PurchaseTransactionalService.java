@@ -15,11 +15,13 @@ import com.melli.wallet.service.operation.CashInOperationService;
 import com.melli.wallet.utils.Helper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -102,6 +104,11 @@ public class PurchaseTransactionalService {
 
         log.info("start updateBuyLimitation for uniqueIdentifier ({}), walletAccountId ({})", purchaseRequest.getRrnEntity().getUuid(), purchaseRequest.getWalletAccount().getId());
         walletBuyLimitationOperationService.updateLimitation(purchaseObjectDto.getUserCurrencyAccount(), purchaseObjectDto.getPrice(), purchaseObjectDto.getQuantity(), purchaseObjectDto.getUniqueIdentifier(), purchaseRequest.getWalletAccount().getWalletAccountCurrencyEntity());
+
+        if((purchaseObjectDto.getQuantity().subtract(purchaseObjectDto.getCommission())).compareTo(new BigDecimal("0")) <= 0){
+            log.error("commission ({}) is bigger than quantity ({})", purchaseObjectDto.getCommission(), purchaseObjectDto.getQuantity());
+            throw new InternalServiceException("commission is bigger than quantity", StatusRepositoryService.COMMISSION_BIGGER_THAN_QUANTITY, HttpStatus.OK);
+        }
 
         // Finalize purchase
         purchaseRequest.setResult(StatusRepositoryService.SUCCESSFUL);

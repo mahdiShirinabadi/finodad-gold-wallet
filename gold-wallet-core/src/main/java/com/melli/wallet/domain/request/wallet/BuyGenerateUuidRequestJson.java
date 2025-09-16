@@ -30,7 +30,7 @@ public class BuyGenerateUuidRequestJson {
     @JsonProperty(NamingProperty.MERCHANT_ID)
     private String merchantId;
 
-    @NumberValidation(allowDecimal = true)
+    @NumberValidation(allowDecimal = true, allowNegative = false)
     @Schema(name = NamingProperty.QUANTITY, description = "گرم ", example = "1.1")
     @JsonProperty(NamingProperty.QUANTITY)
     private String quantity;

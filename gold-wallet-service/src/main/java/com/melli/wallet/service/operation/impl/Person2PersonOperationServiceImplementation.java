@@ -86,6 +86,10 @@ public class Person2PersonOperationServiceImplementation implements Person2Perso
             throw new InternalServiceException("src and dst account are same", StatusRepositoryService.SRC_ACCOUNT_SAME_DST_ACCOUNT_NUMBER, HttpStatus.OK);
         }
 
+        if((p2pObjectDTO.getQuantity().subtract(p2pObjectDTO.getCommission())).compareTo(new BigDecimal("0")) <= 0){
+            log.error("commission ({}) is bigger than quantity ({})", p2pObjectDTO.getCommission(), p2pObjectDTO.getQuantity());
+            throw new InternalServiceException("commission is bigger than quantity", StatusRepositoryService.COMMISSION_BIGGER_THAN_QUANTITY, HttpStatus.OK);
+        }
 
         RequestTypeEntity requestTypeEntity = requestTypeRepositoryService.getRequestType(RequestTypeRepositoryService.P2P);
         RrnEntity rrnEntity = rrnRepositoryService.findByUid(p2pObjectDTO.getUniqueIdentifier());
@@ -112,10 +116,10 @@ public class Person2PersonOperationServiceImplementation implements Person2Perso
             }
 
             walletP2pLimitationOperationService.checkDailyLimitation(p2pObjectDTO.getChannel(), srcWalletAccountEntity.getWalletEntity(),
-                    new BigDecimal(p2pObjectDTO.getQuantity()), srcWalletAccountEntity, p2pObjectDTO.getUniqueIdentifier());
+                    p2pObjectDTO.getQuantity(), srcWalletAccountEntity, p2pObjectDTO.getUniqueIdentifier());
 
             Person2PersonRequestEntity requestEntity = new Person2PersonRequestEntity();
-            requestEntity.setAmount(new BigDecimal(p2pObjectDTO.getQuantity()));
+            requestEntity.setAmount(p2pObjectDTO.getQuantity());
             requestEntity.setFinalAmount(requestEntity.getAmount().subtract(p2pObjectDTO.getCommission()));
             requestEntity.setSourceAccountWalletEntity(srcWalletAccountEntity);
             requestEntity.setRrnEntity(rrnEntity);
@@ -172,7 +176,7 @@ public class Person2PersonOperationServiceImplementation implements Person2Perso
             requestRepositoryService.save(requestEntity);
 
             log.info("Start updating CashInLimitation for walletAccount ({})", srcWalletAccountEntity.getAccountNumber());
-            walletP2pLimitationOperationService.updateLimitation(srcWalletAccountEntity, new BigDecimal(p2pObjectDTO.getQuantity()), p2pObjectDTO.getUniqueIdentifier());
+            walletP2pLimitationOperationService.updateLimitation(srcWalletAccountEntity, p2pObjectDTO.getQuantity(), p2pObjectDTO.getUniqueIdentifier());
             log.info("updating CashInLimitation for walletAccount ({}) is finished.", srcWalletAccountEntity.getAccountNumber());
             return null;
         }, p2pObjectDTO.getUniqueIdentifier());
