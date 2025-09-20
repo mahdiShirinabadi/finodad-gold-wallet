@@ -268,11 +268,11 @@ class P2pControllerTest extends WalletApplicationTests {
         chargeAccountForP2P(sourceAccount.getAccountNumber(), "100");
         
         // Step 3: Generate UUID
-        BaseResponse<P2pUuidResponse> uuidResponse = generateP2pUuid(mockMvc, accessToken, NATIONAL_CODE_CORRECT, "0.001", sourceAccount.getAccountNumber(), destAccount.getAccountNumber(), HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
+        BaseResponse<P2pUuidResponse> uuidResponse = generateP2pUuid(mockMvc, accessToken, NATIONAL_CODE_CORRECT, "0.002", sourceAccount.getAccountNumber(), destAccount.getAccountNumber(), HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
         
         // Step 4: Process P2P transaction
         CommissionObject commission = new CommissionObject("GOLD", "0.001");
-        BaseResponse<Void> response = processP2p(mockMvc, accessToken, uuidResponse.getData().getUniqueIdentifier(), NATIONAL_CODE_CORRECT, "0.001", sourceAccount.getAccountNumber(), destAccount.getAccountNumber(), "test data", commission, CURRENCY_GOLD, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
+        BaseResponse<Void> response = processP2p(mockMvc, accessToken, uuidResponse.getData().getUniqueIdentifier(), NATIONAL_CODE_CORRECT, "0.002", sourceAccount.getAccountNumber(), destAccount.getAccountNumber(), "test data", commission, CURRENCY_GOLD, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
         
         Assert.assertNotNull(response);
         Assert.assertTrue(response.getSuccess());
@@ -288,8 +288,8 @@ class P2pControllerTest extends WalletApplicationTests {
         WalletAccountObject destAccount = getAccountNumber(mockMvc, accessToken, NATIONAL_CODE_DEST, WalletAccountTypeRepositoryService.NORMAL, CURRENCY_GOLD);
         
         // Step 2: Try to process with invalid UUID
-        CommissionObject commission = new CommissionObject("RIAL", "1000");
-        BaseResponse<Void> response = processP2p(mockMvc, accessToken, "INVALID_UUID", NATIONAL_CODE_CORRECT, "0.001", sourceAccount.getAccountNumber(), destAccount.getAccountNumber(), "test data", commission, CURRENCY_GOLD, HttpStatus.OK, StatusRepositoryService.UUID_NOT_FOUND, false);
+        CommissionObject commission = new CommissionObject("RIAL", "0.01");
+        BaseResponse<Void> response = processP2p(mockMvc, accessToken, "INVALID_UUID", NATIONAL_CODE_CORRECT, "1", sourceAccount.getAccountNumber(), destAccount.getAccountNumber(), "test data", commission, CURRENCY_GOLD, HttpStatus.OK, StatusRepositoryService.UUID_NOT_FOUND, false);
         
         Assert.assertFalse(response.getSuccess());
         Assert.assertSame(StatusRepositoryService.UUID_NOT_FOUND, response.getErrorDetail().getCode());
@@ -304,16 +304,32 @@ class P2pControllerTest extends WalletApplicationTests {
         WalletAccountObject destAccount = getAccountNumber(mockMvc, accessToken, NATIONAL_CODE_DEST, WalletAccountTypeRepositoryService.NORMAL, CURRENCY_GOLD);
         
         // Step 2: Generate UUID
-        BaseResponse<P2pUuidResponse> uuidResponse = generateP2pUuid(mockMvc, accessToken, NATIONAL_CODE_CORRECT, "0.001", sourceAccount.getAccountNumber(), destAccount.getAccountNumber(), HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
+        BaseResponse<P2pUuidResponse> uuidResponse = generateP2pUuid(mockMvc, accessToken, NATIONAL_CODE_CORRECT, "0.05", sourceAccount.getAccountNumber(), destAccount.getAccountNumber(), HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
         
         // Step 3: Try to process without sufficient balance
-        CommissionObject commission = new CommissionObject("RIAL", "1000");
-        BaseResponse<Void> response = processP2p(mockMvc, accessToken, uuidResponse.getData().getUniqueIdentifier(), NATIONAL_CODE_CORRECT, "0.001", sourceAccount.getAccountNumber(), destAccount.getAccountNumber(), "test data", commission, CURRENCY_GOLD, HttpStatus.OK, StatusRepositoryService.BALANCE_IS_NOT_ENOUGH, false);
+        CommissionObject commission = new CommissionObject("RIAL", "0.001");
+        BaseResponse<Void> response = processP2p(mockMvc, accessToken, uuidResponse.getData().getUniqueIdentifier(), NATIONAL_CODE_CORRECT, "0.05", sourceAccount.getAccountNumber(), destAccount.getAccountNumber(), "test data", commission, CURRENCY_GOLD, HttpStatus.OK, StatusRepositoryService.BALANCE_IS_NOT_ENOUGH, false);
         
         Assert.assertFalse(response.getSuccess());
         Assert.assertSame(StatusRepositoryService.BALANCE_IS_NOT_ENOUGH, response.getErrorDetail().getCode());
     }
 
+    @Test
+    @Order(23)
+    @DisplayName("p2p-commission bigger than")
+    void p2pFailCommission() throws Exception {
+        // Step 1: Setup and process a P2P transaction
+        WalletAccountObject sourceAccount = getAccountNumber(mockMvc, accessToken, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, CURRENCY_GOLD);
+        WalletAccountObject destAccount = getAccountNumber(mockMvc, accessToken, NATIONAL_CODE_DEST, WalletAccountTypeRepositoryService.NORMAL, CURRENCY_GOLD);
+
+        chargeAccountForP2P(sourceAccount.getAccountNumber(), "10");
+
+        BaseResponse<P2pUuidResponse> uuidResponse = generateP2pUuid(mockMvc, accessToken, NATIONAL_CODE_CORRECT, "0.001", sourceAccount.getAccountNumber(), destAccount.getAccountNumber(), HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
+
+        CommissionObject commission = new CommissionObject("GOLD", "0.001");
+        processP2p(mockMvc, accessToken, uuidResponse.getData().getUniqueIdentifier(), NATIONAL_CODE_CORRECT, "0.001", sourceAccount.getAccountNumber(), destAccount.getAccountNumber(),
+                "test data", commission, CURRENCY_GOLD, HttpStatus.OK, StatusRepositoryService.COMMISSION_BIGGER_THAN_QUANTITY, false);
+    }
 
     // ==================== INQUIRY TESTS ====================
 
@@ -327,10 +343,10 @@ class P2pControllerTest extends WalletApplicationTests {
         
         chargeAccountForP2P(sourceAccount.getAccountNumber(), "10");
         
-        BaseResponse<P2pUuidResponse> uuidResponse = generateP2pUuid(mockMvc, accessToken, NATIONAL_CODE_CORRECT, "0.001", sourceAccount.getAccountNumber(), destAccount.getAccountNumber(), HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
+        BaseResponse<P2pUuidResponse> uuidResponse = generateP2pUuid(mockMvc, accessToken, NATIONAL_CODE_CORRECT, "0.002", sourceAccount.getAccountNumber(), destAccount.getAccountNumber(), HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
         
         CommissionObject commission = new CommissionObject("GOLD", "0.001");
-        processP2p(mockMvc, accessToken, uuidResponse.getData().getUniqueIdentifier(), NATIONAL_CODE_CORRECT, "0.001", sourceAccount.getAccountNumber(), destAccount.getAccountNumber(), "test data", commission, CURRENCY_GOLD, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
+        processP2p(mockMvc, accessToken, uuidResponse.getData().getUniqueIdentifier(), NATIONAL_CODE_CORRECT, "0.002", sourceAccount.getAccountNumber(), destAccount.getAccountNumber(), "test data", commission, CURRENCY_GOLD, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
         
         // Step 2: Inquiry the transaction
         BaseResponse<P2pTrackResponse> response = inquiryP2p(mockMvc, accessToken, uuidResponse.getData().getUniqueIdentifier(), HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
@@ -338,7 +354,7 @@ class P2pControllerTest extends WalletApplicationTests {
         Assert.assertNotNull(response.getData());
         Assert.assertEquals(uuidResponse.getData().getUniqueIdentifier(), response.getData().getUniqueIdentifier());
         Assert.assertEquals(NATIONAL_CODE_CORRECT, response.getData().getNationalCode());
-        Assert.assertSame(new BigDecimal("0.001").compareTo(new BigDecimal(response.getData().getQuantity())),0);
+        Assert.assertSame(new BigDecimal("0.002").compareTo(new BigDecimal(response.getData().getQuantity())),0);
         chargeAccountForP2PToZero(sourceAccount.getAccountNumber());
     }
 
@@ -370,14 +386,14 @@ class P2pControllerTest extends WalletApplicationTests {
         chargeAccountForP2P(sourceAccount.getAccountNumber(), "10");
         
         // Step 4: Generate UUID
-        BaseResponse<P2pUuidResponse> uuidResponse = generateP2pUuid(mockMvc, accessToken, NATIONAL_CODE_CORRECT, "0.001", sourceAccount.getAccountNumber(), destAccount.getAccountNumber(), HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
+        BaseResponse<P2pUuidResponse> uuidResponse = generateP2pUuid(mockMvc, accessToken, NATIONAL_CODE_CORRECT, "0.002", sourceAccount.getAccountNumber(), destAccount.getAccountNumber(), HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
 
         WalletAccountEntity sourceWalletAccount = walletAccountRepositoryService.findByAccountNumber(sourceAccount.getAccountNumber());
         sourceWalletAccount.setStatus(WalletStatusEnum.DISABLE);
         walletAccountRepositoryService.save(sourceWalletAccount);
         // Step 5: Try to process with inactive destination account
         CommissionObject commission = new CommissionObject(CURRENCY_GOLD, "0.001");
-        BaseResponse<Void> response = processP2p(mockMvc, accessToken, uuidResponse.getData().getUniqueIdentifier(), NATIONAL_CODE_CORRECT, "0.001", sourceAccount.getAccountNumber(), destAccount.getAccountNumber(), "test data", commission, CURRENCY_GOLD, HttpStatus.OK, StatusRepositoryService.WALLET_ACCOUNT_IS_NOT_ACTIVE, false);
+        BaseResponse<Void> response = processP2p(mockMvc, accessToken, uuidResponse.getData().getUniqueIdentifier(), NATIONAL_CODE_CORRECT, "0.002", sourceAccount.getAccountNumber(), destAccount.getAccountNumber(), "test data", commission, CURRENCY_GOLD, HttpStatus.OK, StatusRepositoryService.WALLET_ACCOUNT_IS_NOT_ACTIVE, false);
         
         Assert.assertFalse(response.getSuccess());
         Assert.assertSame(StatusRepositoryService.WALLET_ACCOUNT_IS_NOT_ACTIVE, response.getErrorDetail().getCode());
@@ -400,15 +416,15 @@ class P2pControllerTest extends WalletApplicationTests {
         chargeAccountForP2P(sourceAccount.getAccountNumber(), "10");
         
         // Step 3: Generate UUID
-        BaseResponse<P2pUuidResponse> uuidResponse = generateP2pUuid(mockMvc, accessToken, NATIONAL_CODE_CORRECT, "0.001", sourceAccount.getAccountNumber(), destAccount.getAccountNumber(), HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
+        BaseResponse<P2pUuidResponse> uuidResponse = generateP2pUuid(mockMvc, accessToken, NATIONAL_CODE_CORRECT, "0.002", sourceAccount.getAccountNumber(), destAccount.getAccountNumber(), HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
         
         // Step 4: Process P2P transaction successfully
         CommissionObject commission = new CommissionObject(CURRENCY_GOLD, "0.001");
-        BaseResponse<Void> firstResponse = processP2p(mockMvc, accessToken, uuidResponse.getData().getUniqueIdentifier(), NATIONAL_CODE_CORRECT, "0.001", sourceAccount.getAccountNumber(), destAccount.getAccountNumber(), "test data", commission, CURRENCY_GOLD, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
+        BaseResponse<Void> firstResponse = processP2p(mockMvc, accessToken, uuidResponse.getData().getUniqueIdentifier(), NATIONAL_CODE_CORRECT, "0.002", sourceAccount.getAccountNumber(), destAccount.getAccountNumber(), "test data", commission, CURRENCY_GOLD, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
         Assert.assertTrue(firstResponse.getSuccess());
         
         // Step 5: Try to process the same UUID again (duplicate request)
-        BaseResponse<Void> duplicateResponse = processP2p(mockMvc, accessToken, uuidResponse.getData().getUniqueIdentifier(), NATIONAL_CODE_CORRECT, "0.001", sourceAccount.getAccountNumber(), destAccount.getAccountNumber(), "test data", commission, CURRENCY_GOLD, HttpStatus.OK, StatusRepositoryService.DUPLICATE_UUID, false);
+        BaseResponse<Void> duplicateResponse = processP2p(mockMvc, accessToken, uuidResponse.getData().getUniqueIdentifier(), NATIONAL_CODE_CORRECT, "0.002", sourceAccount.getAccountNumber(), destAccount.getAccountNumber(), "test data", commission, CURRENCY_GOLD, HttpStatus.OK, StatusRepositoryService.DUPLICATE_UUID, false);
         
         Assert.assertFalse(duplicateResponse.getSuccess());
         Assert.assertSame(StatusRepositoryService.DUPLICATE_UUID, duplicateResponse.getErrorDetail().getCode());
@@ -424,11 +440,11 @@ class P2pControllerTest extends WalletApplicationTests {
         WalletAccountObject destAccount = getAccountNumber(mockMvc, accessToken, NATIONAL_CODE_DEST, WalletAccountTypeRepositoryService.NORMAL, CURRENCY_GOLD);
         
         // Step 2: Charge source account with enough balance for multiple transactions
-        chargeAccountForP2P(sourceAccount.getAccountNumber(), "200");
+        chargeAccountForP2P(sourceAccount.getAccountNumber(), "0.006");
         
         // Step 3: Generate multiple UUIDs for concurrent processing
-        BaseResponse<P2pUuidResponse> uuidResponse1 = generateP2pUuid(mockMvc, accessToken, NATIONAL_CODE_CORRECT, "0.001", sourceAccount.getAccountNumber(), destAccount.getAccountNumber(), HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
-        BaseResponse<P2pUuidResponse> uuidResponse2 = generateP2pUuid(mockMvc, accessToken, NATIONAL_CODE_CORRECT, "0.001", sourceAccount.getAccountNumber(), destAccount.getAccountNumber(), HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
+        BaseResponse<P2pUuidResponse> uuidResponse1 = generateP2pUuid(mockMvc, accessToken, NATIONAL_CODE_CORRECT, "0.003", sourceAccount.getAccountNumber(), destAccount.getAccountNumber(), HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
+        BaseResponse<P2pUuidResponse> uuidResponse2 = generateP2pUuid(mockMvc, accessToken, NATIONAL_CODE_CORRECT, "0.003", sourceAccount.getAccountNumber(), destAccount.getAccountNumber(), HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
         
         // Step 4: Process transactions concurrently
         ExecutorService executor = Executors.newFixedThreadPool(2);
@@ -439,7 +455,7 @@ class P2pControllerTest extends WalletApplicationTests {
         
         executor.submit(() -> {
             try {
-                BaseResponse<Void> response = processP2p(mockMvc, accessToken, uuidResponse1.getData().getUniqueIdentifier(), NATIONAL_CODE_CORRECT, "0.001", sourceAccount.getAccountNumber(), destAccount.getAccountNumber(), "concurrent test 1", commission, CURRENCY_GOLD, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
+                BaseResponse<Void> response = processP2p(mockMvc, accessToken, uuidResponse1.getData().getUniqueIdentifier(), NATIONAL_CODE_CORRECT, "0.003", sourceAccount.getAccountNumber(), destAccount.getAccountNumber(), "concurrent test 1", commission, CURRENCY_GOLD, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
                 results.add(response);
             } catch (Exception e) {
                 log.error("Error in concurrent transaction 1", e);
@@ -450,7 +466,7 @@ class P2pControllerTest extends WalletApplicationTests {
         
         executor.submit(() -> {
             try {
-                BaseResponse<Void> response = processP2p(mockMvc, accessToken, uuidResponse2.getData().getUniqueIdentifier(), NATIONAL_CODE_CORRECT, "0.001", sourceAccount.getAccountNumber(), destAccount.getAccountNumber(), "concurrent test 2", commission, CURRENCY_GOLD, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
+                BaseResponse<Void> response = processP2p(mockMvc, accessToken, uuidResponse2.getData().getUniqueIdentifier(), NATIONAL_CODE_CORRECT, "0.003", sourceAccount.getAccountNumber(), destAccount.getAccountNumber(), "concurrent test 2", commission, CURRENCY_GOLD, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
                 results.add(response);
             } catch (Exception e) {
                 log.error("Error in concurrent transaction 2", e);

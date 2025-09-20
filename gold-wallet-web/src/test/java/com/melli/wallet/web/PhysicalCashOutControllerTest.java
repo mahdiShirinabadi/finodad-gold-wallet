@@ -908,6 +908,61 @@ class PhysicalCashOutControllerTest extends WalletApplicationTests {
     }
 
     /**
+     * Test successful physical cash out operation.
+     * This method:
+     * - Gets user's GOLD account number
+     * - Increases account balance for testing
+     * - Enables physical cash out permission
+     * - Temporarily increases MAX_QUANTITY_PHYSICAL_CASH_OUT limit
+     * - Generates UUID for physical cash out
+     * - Performs physical cash out operation
+     * - Validates the response
+     * - Restores original MAX_QUANTITY_PHYSICAL_CASH_OUT limit
+     */
+    @Test
+    @Order(55)
+    @DisplayName("commission bigger than quantity")
+    void physicalCashOutFailCommissionBigger() throws Exception {
+        log.info("start physicalCashOutSuccess test");
+
+        // Step 1: Get user's GOLD account number
+        WalletAccountObject goldAccountObject = getAccountNumber(mockMvc, accessToken, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.GOLD);
+        String goldAccountNumber = goldAccountObject.getAccountNumber();
+
+        // Step 2: Increase account balance for testing
+        walletAccountRepositoryService.increaseBalance(walletAccountRepositoryService.findByAccountNumber(goldAccountNumber).getId(), new BigDecimal("5.05"));
+
+        // Step 3: Enable physical cash out permission if disabled
+        WalletAccountEntity goldWalletAccountEntity = walletAccountRepositoryService.findByAccountNumber(goldAccountNumber);
+        String physicalCashOutValue = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.ENABLE_PHYSICAL_CASH_OUT, goldAccountNumber);
+        if("false".equalsIgnoreCase(physicalCashOutValue)){
+            setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_PHYSICAL_CASH_OUT, goldWalletAccountEntity, "true");
+        }
+
+        // Step 4: Store original MAX_QUANTITY_PHYSICAL_CASH_OUT value for restoration
+        String valueMaxDailyPrice = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.MAX_QUANTITY_PHYSICAL_CASH_OUT, goldAccountObject.getAccountNumber());
+
+        // Step 5: Temporarily increase MAX_QUANTITY_PHYSICAL_CASH_OUT limit to allow operation
+        setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MAX_QUANTITY_PHYSICAL_CASH_OUT, goldWalletAccountEntity, "10");
+
+        // Step 6: Generate UUID for physical cash out operation
+        String physicalCashOutQuantity = "5.05";
+        String commission = "5.05";
+        BaseResponse<UuidResponse> physicalCashOutUuidResponse = generatePhysicalCashOutUuid(mockMvc, accessToken, NATIONAL_CODE_CORRECT, physicalCashOutQuantity, goldAccountNumber, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
+        String uniqueIdentifier = physicalCashOutUuidResponse.getData().getUniqueIdentifier();
+
+        // Step 7: Perform physical cash out operation
+
+        BaseResponse<PhysicalCashOutResponse> response = physicalCashOut(mockMvc, accessToken, uniqueIdentifier, physicalCashOutQuantity, NATIONAL_CODE_CORRECT, goldAccountNumber, "",
+                VALID_SIGN, ADDITIONAL_DATA, CURRENCY_GOLD, commission,CURRENCY_GOLD, HttpStatus.OK, StatusRepositoryService.COMMISSION_BIGGER_THAN_QUANTITY, false);
+        Assert.assertNotNull(response.getErrorDetail());
+        log.info("Physical cash out completed successfully");
+
+        // Step 8: Restore original MAX_QUANTITY_PHYSICAL_CASH_OUT limit
+        setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MAX_QUANTITY_PHYSICAL_CASH_OUT, goldWalletAccountEntity, valueMaxDailyPrice);
+    }
+
+    /**
      * Result class for capturing physical cash out operation results from concurrent threads
      */
     private static class PhysicalCashOutResult {

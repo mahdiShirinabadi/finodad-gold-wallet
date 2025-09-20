@@ -118,6 +118,10 @@ public class PurchaseOperationServiceImplementation implements PurchaseOperation
         WalletAccountCurrencyEntity currencyEntity = walletAccountCurrencyRepositoryService.findCurrency(sellRequestDTO.getCurrency());
         WalletAccountCurrencyEntity rialCurrencyEntity = walletAccountCurrencyRepositoryService.findCurrency(WalletAccountCurrencyRepositoryService.RIAL);
 
+        if((sellRequestDTO.getAmount().subtract(sellRequestDTO.getCommission())).compareTo(new BigDecimal("0")) <= 0){
+            log.error("commission ({}) is bigger than quantity ({})", sellRequestDTO.getCommission(), sellRequestDTO.getAmount());
+            throw new InternalServiceException("commission is bigger than quantity", StatusRepositoryService.COMMISSION_BIGGER_THAN_QUANTITY, HttpStatus.OK);
+        }
 
         // Validate merchant and wallet accounts
         MerchantEntity merchant = findMerchant(sellRequestDTO.getMerchantId());
@@ -229,6 +233,10 @@ public class PurchaseOperationServiceImplementation implements PurchaseOperation
             throw new InternalServiceException("merchant balance is not enough", StatusRepositoryService.MERCHANT_BALANCE_NOT_ENOUGH, HttpStatus.OK);
         }
 
+        if((new BigDecimal(buyRequestDTO.getPrice()).subtract(buyRequestDTO.getCommission())).compareTo(new BigDecimal("0")) <= 0){
+            log.error("commission ({}) is bigger than price ({})", buyRequestDTO.getCommission(), buyRequestDTO.getPrice());
+            throw new InternalServiceException("commission is bigger than quantity", StatusRepositoryService.COMMISSION_BIGGER_THAN_QUANTITY, HttpStatus.OK);
+        }
 
         // Validate user and wallet accounts
         WalletEntity userWallet = findUserWallet(buyRequestDTO.getNationalCode());

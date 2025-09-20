@@ -128,15 +128,15 @@ public class PanelChannelController extends WebController {
 
 
     @Timed(description = "Time taken to inquiry gold amount")
-    @GetMapping(path = "/channel/balance", produces = {MediaType.APPLICATION_JSON_VALUE})
-    @Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "مانده پذیرنده")
+    @GetMapping(path = "/wage/balance", produces = {MediaType.APPLICATION_JSON_VALUE})
+    @Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "مانده  کارمزد کانال")
     @PreAuthorize("hasAuthority('" + ResourceDefinition.CHANNEL_MANAGE_AUTH + "')")
-    @LogExecutionTime("Get merchant balance")
-    public ResponseEntity<BaseResponse<WalletBalanceResponse>> getBalanceMerchant(@Valid @NumberValidation @RequestParam("channelId") String channelId) throws InternalServiceException {
+    @LogExecutionTime("Get wage balance")
+    public ResponseEntity<BaseResponse<WalletBalanceResponse>> getBalanceMerchant() throws InternalServiceException {
         String channelIp = requestContext.getClientIp();
         String username = requestContext.getChannelEntity().getUsername();
-        log.info("start call balance getMerchant in username ===> {}, merchantId ===> {}, from ip ===> {}", username, channelId, channelIp);
-        WalletBalanceResponse response = channelOperationService.getBalance(channelRepositoryService.findById(Long.parseLong(channelId)));
+        log.info("start call balance getMerchant in username ===> {}, merchantId ===> {}, from ip ===> {}", username, requestContext.getChannelEntity().getId(), channelIp);
+        WalletBalanceResponse response = channelOperationService.getBalance(channelRepositoryService.findById(requestContext.getChannelEntity().getId()));
         return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse<>(true, response));
     }
 

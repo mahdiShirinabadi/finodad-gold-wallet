@@ -1073,6 +1073,43 @@ class SellControllerTest extends WalletApplicationTests {
         log.info("Comprehensive concurrent sell test completed successfully");
     }
 
+    @Test
+    @Order(100)
+    @DisplayName("commission bigger than quantity")
+    void sellFailCommissionBiggerQuantity() throws Exception {
+        log.info("start sellSuccess test");
+
+        // Step 1: Define test parameters
+        String quantity = "0.7";
+        String price = "100000";
+        String commission = "1";
+
+        // Step 2: Get user's GOLD account number
+        WalletAccountObject goldAccountObject = getAccountNumber(mockMvc, accessToken, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.GOLD);
+
+        // Step 3: Ensure user has enough GOLD balance for selling
+        WalletAccountEntity goldWalletAccountEntity = walletAccountRepositoryService.findByAccountNumber(goldAccountObject.getAccountNumber());
+        walletAccountRepositoryService.increaseBalance(goldWalletAccountEntity.getId(), new BigDecimal("2.0"));
+
+        // Step 4: Ensure merchant has enough RIAL balance for buying
+        WalletEntity walletMerchantEntity = walletRepositoryService.findByNationalCodeAndWalletTypeId("1111111111", walletTypeRepositoryService.getByName(WalletTypeRepositoryService.MERCHANT).getId());
+        List<WalletAccountEntity> merchantAccounts = walletAccountRepositoryService.findByWallet(walletMerchantEntity);
+        WalletAccountEntity merchantRialAccount = merchantAccounts.stream()
+                .filter(x -> x.getWalletAccountCurrencyEntity().getName().equals(WalletAccountCurrencyRepositoryService.RIAL))
+                .findFirst().orElse(null);
+        walletAccountRepositoryService.increaseBalance(merchantRialAccount.getId(), new BigDecimal("200000"));
+
+        setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MAX_DAILY_QUANTITY_SELL, goldWalletAccountEntity, "10");
+
+        // Step 5: Generate sell UUID
+        BaseResponse<UuidResponse> uuidResponse = generateSellUniqueIdentifier(mockMvc, accessToken, NATIONAL_CODE_CORRECT, quantity, goldAccountObject.getAccountNumber(), CURRENCY_GOLD, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
+        String uniqueIdentifier = uuidResponse.getData().getUniqueIdentifier();
+
+        // Step 6: Perform sell operation
+        BaseResponse<PurchaseResponse> response = sell(mockMvc, accessToken, uniqueIdentifier, quantity, price, CURRENCY_GOLD, commission, NATIONAL_CODE_CORRECT, CURRENCY_GOLD, "1", goldAccountObject.getAccountNumber(), "", "test sell commission biger", HttpStatus.OK, "IR123456789012345678901234", StatusRepositoryService.COMMISSION_BIGGER_THAN_QUANTITY, false);
+        Assert.assertNotNull(response.getErrorDetail());
+    }
+
 
     /**
      * Test Scenario 2: Same UUID sent to method simultaneously
