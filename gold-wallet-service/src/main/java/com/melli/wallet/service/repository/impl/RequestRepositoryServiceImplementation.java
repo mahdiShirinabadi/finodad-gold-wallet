@@ -1,9 +1,6 @@
 package com.melli.wallet.service.repository.impl;
 
-import com.melli.wallet.domain.dto.AggregationCashInDTO;
-import com.melli.wallet.domain.dto.AggregationCashOutDTO;
-import com.melli.wallet.domain.dto.AggregationP2PDTO;
-import com.melli.wallet.domain.dto.AggregationPurchaseDTO;
+import com.melli.wallet.domain.dto.*;
 import com.melli.wallet.domain.master.entity.*;
 import com.melli.wallet.domain.master.persistence.*;
 import com.melli.wallet.domain.slave.entity.ReportCashOutRequestEntity;
@@ -21,6 +18,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
+import java.util.Optional;
 
 /**
  * Class Name: RequestServiceImplementation
@@ -41,6 +39,7 @@ public class RequestRepositoryServiceImplementation implements RequestRepository
     private final ReportCashOutRequestRepository reportCashOutRequestRepository;
     private final PhysicalCashOutRequestRepository physicalCashOutRequestRepository;
     private final P2PRequestRepository p2PRequestRepository;
+    private final GiftCardRepository giftCardRepository;
 
 
     @Override
@@ -152,6 +151,15 @@ public class RequestRepositoryServiceImplementation implements RequestRepository
     }
 
     @Override
+    public void findGiftCardDuplicateWithRrnId(long rrnId) throws InternalServiceException {
+        Optional<GiftCardEntity> requestEntity = giftCardRepository.findByRrnEntity_Id(rrnId);
+        if(requestEntity.isPresent()) {
+            log.error("findGiftCardDuplicateWithRrnId ({}) found", rrnId);
+            throw new InternalServiceException("findGiftCardDuplicateWithRrnId", StatusRepositoryService.DUPLICATE_UUID, HttpStatus.OK);
+        }
+    }
+
+    @Override
     public void findCashOutDuplicateWithRrnId(long rrnId) throws InternalServiceException {
         CashOutRequestEntity cashOutRequestEntity = cashOutRequestRepository.findByRrnEntityId(rrnId);
         if(cashOutRequestEntity != null) {
@@ -202,5 +210,10 @@ public class RequestRepositoryServiceImplementation implements RequestRepository
     @Override
     public AggregationP2PDTO findP2pSumAmountByTransactionTypeBetweenDate(long[] walletAccountId, Date fromDate, Date toDate) {
         return p2PRequestRepository.findSumAmountBetweenDate(walletAccountId, fromDate, toDate);
+    }
+
+    @Override
+    public AggregationGiftCardDTO findGiftCardSumAmountByTransactionTypeBetweenDate(long[] walletAccountId, Date fromDate, Date toDate) {
+        return giftCardRepository.findSumAmountBetweenDate(walletAccountId, fromDate, toDate);
     }
 }

@@ -11,6 +11,7 @@ public interface SettingGeneralRepositoryService {
     String SMS_SEND_ALERT = "SMS_SEND_ALERT";
     String SETTLE_DEFAULT_PAGE = "SETTLE_DEFAULT_PAGE";
     String SETTLE_DEFAULT_SIZE = "SETTLE_DEFAULT_SIZE";
+    String GIFT_CARD_RANDOM_STRING = "GIFT_CARD_RANDOM_STRING";
 
 
     SettingGeneralEntity getSetting(String name);

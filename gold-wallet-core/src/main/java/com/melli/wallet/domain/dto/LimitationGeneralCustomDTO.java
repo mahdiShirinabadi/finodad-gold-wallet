@@ -22,4 +22,5 @@ public class LimitationGeneralCustomDTO {
     private String walletAccountCurrencyEntityId;
     private String walletTypeEntityId;
     private String channelEntityId;
+    private String additionalData;
 }

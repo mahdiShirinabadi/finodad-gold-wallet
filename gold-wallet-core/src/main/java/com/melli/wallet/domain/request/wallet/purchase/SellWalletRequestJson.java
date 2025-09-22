@@ -1,10 +1,11 @@
-package com.melli.wallet.domain.request.wallet;
+package com.melli.wallet.domain.request.wallet.purchase;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.melli.wallet.NamingProperty;
 import com.melli.wallet.annotation.national_code.NationalCodeValidation;
 import com.melli.wallet.annotation.number.NumberValidation;
 import com.melli.wallet.annotation.string.StringValidation;
+import com.melli.wallet.domain.request.wallet.CommissionObject;
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
@@ -28,7 +29,7 @@ SellWalletRequestJson {
     private String quantity;
 
     @NumberValidation
-    @Schema(name = NamingProperty.PRICE, description = "مبلغ با کارمزد به ریال", example = "1000")
+    @Schema(name = NamingProperty.PRICE, description = "مبلغ با محاسبه کارمزد به ریال", example = "1000")
     @JsonProperty(NamingProperty.PRICE)
     private String price;
 

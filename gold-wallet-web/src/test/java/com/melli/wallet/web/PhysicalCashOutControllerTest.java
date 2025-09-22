@@ -259,13 +259,16 @@ class PhysicalCashOutControllerTest extends WalletApplicationTests {
     @DisplayName("physicalCashOut-success")
     void physicalCashOutSuccess() throws Exception {
         log.info("start physicalCashOutSuccess test");
-        
+
+        BigDecimal quantityForCashOut = new BigDecimal("5.05");
+        BigDecimal quantityForCommission = new BigDecimal("0.05");
+
         // Step 1: Get user's GOLD account number
         WalletAccountObject goldAccountObject = getAccountNumber(mockMvc, accessToken, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.GOLD);
         String goldAccountNumber = goldAccountObject.getAccountNumber();
 
         // Step 2: Increase account balance for testing
-        walletAccountRepositoryService.increaseBalance(walletAccountRepositoryService.findByAccountNumber(goldAccountNumber).getId(), new BigDecimal("5.05"));
+        walletAccountRepositoryService.increaseBalance(walletAccountRepositoryService.findByAccountNumber(goldAccountNumber).getId(), quantityForCashOut.add(quantityForCommission));
 
         // Step 3: Enable physical cash out permission if disabled
         WalletAccountEntity goldWalletAccountEntity = walletAccountRepositoryService.findByAccountNumber(goldAccountNumber);
@@ -281,12 +284,11 @@ class PhysicalCashOutControllerTest extends WalletApplicationTests {
         setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MAX_QUANTITY_PHYSICAL_CASH_OUT, goldWalletAccountEntity, "10");
 
         // Step 6: Generate UUID for physical cash out operation
-        String physicalCashOutQuantity = "5.05";
-        BaseResponse<UuidResponse> physicalCashOutUuidResponse = generatePhysicalCashOutUuid(mockMvc, accessToken, NATIONAL_CODE_CORRECT, physicalCashOutQuantity, goldAccountNumber, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
+        BaseResponse<UuidResponse> physicalCashOutUuidResponse = generatePhysicalCashOutUuid(mockMvc, accessToken, NATIONAL_CODE_CORRECT, quantityForCashOut.toString(), goldAccountNumber, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
         String uniqueIdentifier = physicalCashOutUuidResponse.getData().getUniqueIdentifier();
         
         // Step 7: Perform physical cash out operation
-        BaseResponse<PhysicalCashOutResponse> response = physicalCashOut(mockMvc, accessToken, uniqueIdentifier, physicalCashOutQuantity, NATIONAL_CODE_CORRECT, goldAccountNumber, "", VALID_SIGN, ADDITIONAL_DATA, CURRENCY_GOLD, "0.05",CURRENCY_GOLD, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
+        BaseResponse<PhysicalCashOutResponse> response = physicalCashOut(mockMvc, accessToken, uniqueIdentifier, quantityForCashOut.toString(), NATIONAL_CODE_CORRECT, goldAccountNumber, "", VALID_SIGN, ADDITIONAL_DATA, CURRENCY_GOLD, quantityForCommission.toString(),CURRENCY_GOLD, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
         Assert.assertNotNull(response.getData());
         Assert.assertEquals(NATIONAL_CODE_CORRECT, response.getData().getNationalCode());
         Assert.assertEquals(goldAccountNumber, response.getData().getWalletAccountNumber());
@@ -310,7 +312,7 @@ class PhysicalCashOutControllerTest extends WalletApplicationTests {
     void physicalCashOutFailInvalidUniqueIdentifier() throws Exception {
         log.info("start physicalCashOutFailInvalidUniqueIdentifier test");
         String quantity = "1.07";
-        physicalCashOut(mockMvc, accessToken, "invalid_uuid", quantity, NATIONAL_CODE_CORRECT, "1234567890", "", VALID_SIGN, ADDITIONAL_DATA, CURRENCY_GOLD, "100",CURRENCY_GOLD, HttpStatus.OK, StatusRepositoryService.UUID_NOT_FOUND, false);
+        physicalCashOut(mockMvc, accessToken, "invalid_uuid", quantity, NATIONAL_CODE_CORRECT, "1234567890", "", VALID_SIGN, ADDITIONAL_DATA, CURRENCY_GOLD, "0.001",CURRENCY_GOLD, HttpStatus.OK, StatusRepositoryService.UUID_NOT_FOUND, false);
     }
 
     /**
@@ -456,7 +458,7 @@ class PhysicalCashOutControllerTest extends WalletApplicationTests {
         String goldAccountNumber = goldAccountObject.getAccountNumber();
         
         // Step 2: Increase account balance for testing
-        walletAccountRepositoryService.increaseBalance(walletAccountRepositoryService.findByAccountNumber(goldAccountNumber).getId(), new BigDecimal("10.01"));
+        walletAccountRepositoryService.increaseBalance(walletAccountRepositoryService.findByAccountNumber(goldAccountNumber).getId(), new BigDecimal("10.02"));
         
         // Step 3: Enable physical cash out permission if disabled
         WalletAccountEntity goldWalletAccountEntity = walletAccountRepositoryService.findByAccountNumber(goldAccountNumber);
@@ -508,7 +510,7 @@ class PhysicalCashOutControllerTest extends WalletApplicationTests {
         
         // Ensure user has enough GOLD balance for physical cash out
         WalletAccountEntity goldWalletAccountEntity = walletAccountRepositoryService.findByAccountNumber(walletAccountObjectOptional.getAccountNumber());
-        walletAccountRepositoryService.increaseBalance(goldWalletAccountEntity.getId(), new BigDecimal("5"));
+        walletAccountRepositoryService.increaseBalance(goldWalletAccountEntity.getId(), new BigDecimal("5.1"));
         
         // Generate UUID
         BaseResponse<UuidResponse> uuidResponse = generatePhysicalCashOutUuid(mockMvc, accessToken, NATIONAL_CODE_CORRECT, quantity, walletAccountObjectOptional.getAccountNumber(), HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
@@ -800,13 +802,14 @@ class PhysicalCashOutControllerTest extends WalletApplicationTests {
         log.info("=== Starting Concurrent Physical Cash Out UUID Generation Test ===");
 
         // Setup
-        String quantity = "5";
+        BigDecimal quantity = new BigDecimal("5");
+        BigDecimal commission = new BigDecimal("0.05");
         String currency = "GOLD";
 
         // Get account
         WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, accessToken, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, currency);
         setupBalancesForSellToZero(walletAccountObjectOptional);
-        setupBalancesForSell(walletAccountObjectOptional,"10","1000000");
+        setupBalancesForSell(walletAccountObjectOptional,"10.1","1000000");
 
         int numberOfThreads = 10;
         // Test with 3 threads generating UUIDs simultaneously
@@ -816,7 +819,7 @@ class PhysicalCashOutControllerTest extends WalletApplicationTests {
         // Generate different UUIDs for each thread
         List<String> uniqueIdentifiers = new ArrayList<>();
         for (int i = 0; i < numberOfThreads; i++) {
-            BaseResponse<UuidResponse> uuidResponse = generatePhysicalCashOutUuid(mockMvc, accessToken, NATIONAL_CODE_CORRECT, quantity, walletAccountObjectOptional.getAccountNumber(), HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
+            BaseResponse<UuidResponse> uuidResponse = generatePhysicalCashOutUuid(mockMvc, accessToken, NATIONAL_CODE_CORRECT, quantity.toString(), walletAccountObjectOptional.getAccountNumber(), HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
             uniqueIdentifiers.add(uuidResponse.getData().getUniqueIdentifier());
         }
 
@@ -827,7 +830,7 @@ class PhysicalCashOutControllerTest extends WalletApplicationTests {
             Thread thread = new Thread(() -> {
                 try {
                     log.info("Physical Cash Out UUID Thread 1 starting...");
-                    BaseResponse<PhysicalCashOutResponse> response = physicalCashOutWithoutCheckResult(mockMvc, accessToken, uniqueIdentifiers.get(threadId), quantity, NATIONAL_CODE_CORRECT, walletAccountObjectOptional.getAccountNumber(),"","","", currency, "0.05",currency);
+                    BaseResponse<PhysicalCashOutResponse> response = physicalCashOutWithoutCheckResult(mockMvc, accessToken, uniqueIdentifiers.get(threadId), quantity.toString(), NATIONAL_CODE_CORRECT, walletAccountObjectOptional.getAccountNumber(),"","","", currency, commission.toString(),currency);
 
                     PhysicalCashOutResult result = new PhysicalCashOutResult();
                     result.threadId = 1;

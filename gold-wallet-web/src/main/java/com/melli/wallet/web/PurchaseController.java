@@ -4,7 +4,7 @@ import com.melli.wallet.annotation.LogExecutionTime;
 import com.melli.wallet.annotation.fund_type.PurchaseTypeValidation;
 import com.melli.wallet.domain.dto.BuyRequestDTO;
 import com.melli.wallet.domain.dto.SellRequestDTO;
-import com.melli.wallet.domain.request.wallet.*;
+import com.melli.wallet.domain.request.wallet.purchase.*;
 import com.melli.wallet.domain.response.UuidResponse;
 import com.melli.wallet.domain.response.base.BaseResponse;
 import com.melli.wallet.domain.response.purchase.PurchaseResponse;
@@ -12,7 +12,6 @@ import com.melli.wallet.domain.response.purchase.PurchaseTrackResponse;
 import com.melli.wallet.exception.InternalServiceException;
 import com.melli.wallet.security.RequestContext;
 import com.melli.wallet.service.operation.PurchaseOperationService;
-import com.melli.wallet.service.repository.ResourceRepositoryService;
 import com.melli.wallet.service.repository.ResourceDefinition;
 import com.melli.wallet.service.operation.SecurityOperationService;
 import io.micrometer.core.annotation.Timed;
@@ -97,7 +96,7 @@ public class PurchaseController extends WebController {
         securityOperationService.checkSign(requestContext.getChannelEntity(), requestJson.getSign(), requestJson.getDataString());
 
         PurchaseResponse purchaseResponse = purchaseOperationService.buy(new BuyRequestDTO(requestContext.getChannelEntity(), requestJson.getUniqueIdentifier(), new BigDecimal(requestJson.getQuantity()),
-                Long.parseLong(requestJson.getTotalPrice()), requestJson.getWalletAccountNumber(), requestJson.getAdditionalData(), requestJson.getMerchantId(),
+                Long.parseLong(requestJson.getPrice()), requestJson.getWalletAccountNumber(), requestJson.getAdditionalData(), requestJson.getMerchantId(),
                 requestJson.getNationalCode(), new BigDecimal(requestJson.getCommissionObject().getAmount()), requestJson.getCurrency(), channelIp,"", requestJson.getCommissionObject().getCurrency()));
 
         return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse<>(true,purchaseResponse));

@@ -12,6 +12,7 @@ import java.util.List;
  */
 public interface WalletAccountTypeRepositoryService {
 
+    public static String GIFT_CARD = "GIFT_CARD";
     public static String NORMAL = "NORMAL";
     public static String WAGE = "WAGE";
 

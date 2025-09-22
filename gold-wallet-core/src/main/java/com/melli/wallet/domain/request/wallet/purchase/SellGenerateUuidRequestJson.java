@@ -1,4 +1,4 @@
-package com.melli.wallet.domain.request.wallet;
+package com.melli.wallet.domain.request.wallet.purchase;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.melli.wallet.NamingProperty;

@@ -6,7 +6,7 @@ import lombok.*;
 import java.math.BigDecimal;
 
 /**
- * Class Name: BuyRequestDTO
+ * Class Name: ChargeObjectDTO
  * Author: Mahdi Shirinabadi
  * Date: 5/6/2025
  */
@@ -15,18 +15,16 @@ import java.math.BigDecimal;
 @ToString
 @AllArgsConstructor
 @NoArgsConstructor
-public class BuyRequestDTO {
-    private ChannelEntity channel;
+public class GiftCardProcessObjectDTO {
+
+    private ChannelEntity channelEntity;
     private String uniqueIdentifier;
-    private BigDecimal quantity;
-    private long price;
-    private String walletAccountNumber;
-    private String additionalData;
-    private String merchantId;
-    private String nationalCode;
+    private String quantity;
     private BigDecimal commission;
-    private String currency;
-    private String ip;
-    private String refNumber;
     private String commissionType;
+    private String nationalCode;
+    private String accountNumber;
+    private String destinationNationalCode;
+    private String ip;
+    private String additionalData;
 }

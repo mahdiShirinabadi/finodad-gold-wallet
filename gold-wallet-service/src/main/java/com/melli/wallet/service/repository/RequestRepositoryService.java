@@ -1,9 +1,6 @@
 package com.melli.wallet.service.repository;
 
-import com.melli.wallet.domain.dto.AggregationCashInDTO;
-import com.melli.wallet.domain.dto.AggregationCashOutDTO;
-import com.melli.wallet.domain.dto.AggregationP2PDTO;
-import com.melli.wallet.domain.dto.AggregationPurchaseDTO;
+import com.melli.wallet.domain.dto.*;
 import com.melli.wallet.domain.master.entity.*;
 import com.melli.wallet.domain.slave.entity.ReportCashOutRequestEntity;
 import com.melli.wallet.domain.slave.entity.ReportPhysicalCashOutRequestEntity;
@@ -23,10 +20,12 @@ public interface RequestRepositoryService {
     ReportCashOutRequestEntity findCashOutWithRrnId(long rrnId) throws InternalServiceException;
     ReportPhysicalCashOutRequestEntity findPhysicalCashOutWithRrnId(long rrnId) throws InternalServiceException;
     void findP2pDuplicateWithRrnId(long rrnId) throws InternalServiceException;
+    void findGiftCardDuplicateWithRrnId(long rrnId) throws InternalServiceException;
     void findCashInDuplicateWithRrnId(long rrnId) throws InternalServiceException;
     void findCashOutDuplicateWithRrnId(long rrnId) throws InternalServiceException;
     void findPhysicalCashOutDuplicateWithRrnId(long rrnId) throws InternalServiceException;
     AggregationP2PDTO findP2pSumAmountByTransactionTypeBetweenDate(long[] walletAccountId, Date fromDate, Date toDate);
+    AggregationGiftCardDTO findGiftCardSumAmountByTransactionTypeBetweenDate(long[] walletAccountId, Date fromDate, Date toDate);
     AggregationPurchaseDTO findSumAmountByTransactionTypeBetweenDate(long[] walletAccountId, String transactionType, Date fromDate, Date toDate);
     AggregationPurchaseDTO findSumAmountByTransactionTypeBetweenDateByChannelId(long channelId, String transactionType, Date fromDate, Date toDate);
     AggregationPurchaseDTO findPhysicalByChannelAndDate(long channelId, Date fromDate, Date toDate);

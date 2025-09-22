@@ -1,4 +1,4 @@
-package com.melli.wallet.domain.request.wallet;
+package com.melli.wallet.domain.request.wallet.cash;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.melli.wallet.NamingProperty;
@@ -14,22 +14,22 @@ import lombok.ToString;
 @Setter
 @Getter
 @ToString
-public class CashInWalletRequestJson {
+public class CashOutWalletRequestJson {
 
     @StringValidation
     @Schema(name = NamingProperty.UNIQUE_IDENTIFIER, description = "شناسه یکتا")
     @JsonProperty(NamingProperty.UNIQUE_IDENTIFIER)
     private String uniqueIdentifier;
 
-    @StringValidation
-    @Schema(name = NamingProperty.REFERENCE_NUMBER, description = "شماره مرجع")
-    @JsonProperty(NamingProperty.REFERENCE_NUMBER)
-    private String referenceNumber;
-
     @NumberValidation
-    @Schema(name = NamingProperty.AMOUNT, description = "مبلغ به ریال", example = "1000")
+    @Schema(name = NamingProperty.AMOUNT, description = "مبلغ به ریال")
     @JsonProperty(NamingProperty.AMOUNT)
     private String amount;
+
+    @StringValidation(minLength = "26", maxLength = "26")
+    @Schema(name = NamingProperty.IBAN, description = "شماره شبا مقصد", example = "IR000000000000000000000000")
+    @JsonProperty(NamingProperty.IBAN)
+    private String iban;
 
     @NationalCodeValidation(label = "کد ملی")
     @Schema(name = NamingProperty.NATIONAL_CODE, description = "کدملی")
@@ -40,11 +40,7 @@ public class CashInWalletRequestJson {
     @JsonProperty(NamingProperty.ADDITIONAL_DATA)
     private String additionalData;
 
-    @Schema(name = NamingProperty.CASH_IN_TYPE, description = "نوع شارژ (IPG,ACCOUNT_TO_ACCOUNT)")
-    @JsonProperty(NamingProperty.CASH_IN_TYPE)
-    private String cashInType;
-
-    @StringValidation(label = "شماره حساب")
+    @StringValidation(label = "شماره حساب کیف پول")
     @Schema(name = NamingProperty.WALLET_ACCOUNT_NUMBER, description = "شماره حساب کیف پول")
     @JsonProperty(NamingProperty.WALLET_ACCOUNT_NUMBER)
     private String accountNumber;
@@ -56,6 +52,6 @@ public class CashInWalletRequestJson {
 
     @Hidden
     public String getDataString() {
-        return uniqueIdentifier + "|" + referenceNumber + "|" + amount + "|" + nationalCode;
+        return uniqueIdentifier + "|" + iban + "|" + amount + "|" + nationalCode;
     }
 }

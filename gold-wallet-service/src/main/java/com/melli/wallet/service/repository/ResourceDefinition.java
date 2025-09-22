@@ -44,7 +44,10 @@ public enum ResourceDefinition {
     CHANNEL_MANAGE("CHANNEL_MANAGE", "مدیریت کانال ها"),
     LIMITATION_MANAGE("LIMITATION_MANAGE", "مدیریت محدودیت ها"),
     LIMITATION_LIST("LIMITATION_LIST", "لیست محدودیت ها"),
-    
+
+    //GiftCard
+    GIFT_CARD("GIFT_CARD","کارت هدیه"),
+
     // Other Resources
     STATEMENT("STATEMENT", "صورتحساب"),
     SETTING_LIST("SETTING_LIST", "لیست تنظیمات"),
@@ -78,6 +81,7 @@ public enum ResourceDefinition {
     public static final String LIMITATION_LIST_AUTH = "LIMITATION_LIST";
     public static final String STATEMENT_AUTH = "STATEMENT";
     public static final String SETTING_LIST_AUTH = "SETTING_LIST";
+    public static final String GIFT_CARD_AUTH = "GIFT_CARD";
     public static final String LOGOUT_AUTH = "LOGOUT";
     
     private final String name;

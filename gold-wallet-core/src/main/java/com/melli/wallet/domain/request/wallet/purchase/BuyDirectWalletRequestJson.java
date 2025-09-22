@@ -1,10 +1,11 @@
-package com.melli.wallet.domain.request.wallet;
+package com.melli.wallet.domain.request.wallet.purchase;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.melli.wallet.NamingProperty;
 import com.melli.wallet.annotation.national_code.NationalCodeValidation;
 import com.melli.wallet.annotation.number.NumberValidation;
 import com.melli.wallet.annotation.string.StringValidation;
+import com.melli.wallet.domain.request.wallet.CommissionObject;
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
@@ -14,20 +15,20 @@ import lombok.ToString;
 @Setter
 @Getter
 @ToString
-public class BuyWalletRequestJson {
+public class BuyDirectWalletRequestJson {
 
     @StringValidation(label = "شناسه یکتا")
     @Schema(name = NamingProperty.UNIQUE_IDENTIFIER, description = "شناسه یکتا")
     @JsonProperty(NamingProperty.UNIQUE_IDENTIFIER)
     private String uniqueIdentifier;
 
-    @NumberValidation(allowDecimal = true)
+    @NumberValidation(allowDecimal = true, minDecimalValue = "0.00001")
     @Schema(name = NamingProperty.QUANTITY, description = "مقدار طلا", example = "1.1")
     @JsonProperty(NamingProperty.QUANTITY)
     private String quantity;
 
     @NumberValidation
-    @Schema(name = NamingProperty.PRICE, description = "مجموع مبلغ با کارمزد به ریال", example = "1000")
+    @Schema(name = NamingProperty.PRICE, description = " مبلغ بدون کارمزد به ریال", example = "1000")
     @JsonProperty(NamingProperty.PRICE)
     private String totalPrice;
 
@@ -57,6 +58,9 @@ public class BuyWalletRequestJson {
     @JsonProperty(NamingProperty.ADDITIONAL_DATA)
     private String additionalData;
 
+    @Schema(name = NamingProperty.REFERENCE_NUMBER, description = "شماره مرجع تراکنش")
+    @JsonProperty(NamingProperty.REFERENCE_NUMBER)
+    private String refNumber;
 
     @Schema(name = NamingProperty.SIGN, description = "عبارت امضا شده")
     @JsonProperty(NamingProperty.SIGN)

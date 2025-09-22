@@ -105,6 +105,8 @@ public interface StatusRepositoryService {
     int DST_ACCOUNT_NUMBER_NOT_FOUND = 85;
     int STOCK_NOT_FOUND = 86;
     int COMMISSION_BIGGER_THAN_QUANTITY = 87;
+    int GIFT_CARD_NOT_UNIQUE = 88;
+    int ACCOUNT_DONT_PERMISSION_FOR_GIFT_CARD = 89;
 
     // General Error Codes
     int INTERNAL_ERROR = 99;

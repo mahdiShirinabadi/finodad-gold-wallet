@@ -1,9 +1,10 @@
-package com.melli.wallet.domain.request.wallet;
+package com.melli.wallet.domain.request.wallet.giftcard;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.melli.wallet.NamingProperty;
 import com.melli.wallet.annotation.number.NumberValidation;
 import com.melli.wallet.annotation.string.StringValidation;
+import com.melli.wallet.domain.request.wallet.CommissionObject;
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
@@ -13,7 +14,7 @@ import lombok.ToString;
 @Setter
 @Getter
 @ToString
-public class P2pRequestJson {
+public class GiftCardProcessRequestJson {
 
     @NumberValidation(allowDecimal = true)
     @Schema(name = NamingProperty.QUANTITY, description = "مقدار", example = "0.001")
@@ -30,10 +31,10 @@ public class P2pRequestJson {
     @JsonProperty(NamingProperty.WALLET_ACCOUNT_NUMBER)
     private String accountNumber;
 
-    @StringValidation(label = "شماره حساب کیف")
-    @Schema(name = NamingProperty.DEST_WALLET_ACCOUNT_NUMBER, description = "شماره حساب کیف")
-    @JsonProperty(NamingProperty.DEST_WALLET_ACCOUNT_NUMBER)
-    private String destAccountNumber;
+    @StringValidation(label = "کد ملی مقصد")
+    @Schema(name = NamingProperty.DEST_NATIONAL_CODE, description = "برای امنیت بیشتر کد ملی مقصد")
+    @JsonProperty(NamingProperty.DEST_NATIONAL_CODE)
+    private String destinationNationalCode;
 
     @StringValidation(label = "اطلاعات تکمیلی")
     @Schema(name = NamingProperty.ADDITIONAL_DATA, description = "اطلاعات تکمیلی")
@@ -41,8 +42,8 @@ public class P2pRequestJson {
     private String additionalData;
 
 
-    @StringValidation(label = "شماره حساب کیف")
-    @Schema(name = NamingProperty.UNIQUE_IDENTIFIER, description = "شماره حساب کیف")
+    @StringValidation(label = "کد پیگیری")
+    @Schema(name = NamingProperty.UNIQUE_IDENTIFIER, description = "کد پیگیری")
     @JsonProperty(NamingProperty.UNIQUE_IDENTIFIER)
     private String uniqueIdentifier;
 

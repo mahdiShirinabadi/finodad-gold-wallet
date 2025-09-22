@@ -7,6 +7,7 @@ import com.melli.wallet.exception.InternalServiceException;
  * Created by shirinabadi on 03/11/2016.
  */
 public interface RequestTypeRepositoryService {
+	String GIFT_CARD = "giftCard";
 	String P2P = "p2p";
 	String CASH_IN = "cash_in";
 	String CASH_OUT = "cash_out";

@@ -18,6 +18,9 @@ public interface TemplateRepositoryService {
 	String SELL_WITHDRAWAL = "SELL_WITHDRAWAL";
 	String SELL_DEPOSIT = "SELL_DEPOSIT";
 
+	String GIFT_CARD_WITHDRAWAL = "GIFT_CARD_WITHDRAWAL";
+	String GIFT_CARD_DEPOSIT = "GIFT_CARD_DEPOSIT";
+
 	String getTemplate(String name);
 
 	List<TemplateEntity> findAllTemplate();

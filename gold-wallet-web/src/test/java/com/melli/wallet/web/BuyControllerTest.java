@@ -410,16 +410,20 @@ class BuyControllerTest extends WalletApplicationTests {
             setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, walletAccountEntity, "true");
         }
 
+        String commission = "2000";
+
+        Long finalChargePrice = Long.parseLong(price) + Long.parseLong(commission);
+
         // Step 6: Generate UUID for cash in operation
-        BaseResponse<UuidResponse> uniqueIdentifierCashIn = generateCashInUniqueIdentifier(mockMvc, accessToken, NATIONAL_CODE_CORRECT, price, walletAccountObjectOptionalRial.getAccountNumber(), HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
+        BaseResponse<UuidResponse> uniqueIdentifierCashIn = generateCashInUniqueIdentifier(mockMvc, accessToken, NATIONAL_CODE_CORRECT, String.valueOf(finalChargePrice), walletAccountObjectOptionalRial.getAccountNumber(), HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
         log.info("generate uuid " + uniqueIdentifierCashIn);
         
         // Step 7: Perform cash in operation to charge account
-        cashIn(mockMvc, accessToken, uniqueIdentifierCashIn.getData().getUniqueIdentifier(), String.valueOf(new Date().getTime()), price, NATIONAL_CODE_CORRECT, walletAccountObjectOptionalRial.getAccountNumber(), "", "", "ACCOUNT_TO_ACCOUNT", HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
+        cashIn(mockMvc, accessToken, uniqueIdentifierCashIn.getData().getUniqueIdentifier(), String.valueOf(new Date().getTime()), String.valueOf(finalChargePrice), NATIONAL_CODE_CORRECT, walletAccountObjectOptionalRial.getAccountNumber(), "", "", "ACCOUNT_TO_ACCOUNT", HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
 
         // Step 8: Define buy operation parameters
         String merchantId = "1";
-        String commission = "2000";
+
         String commissionType = "RIAL";
         String currency = CURRENCY_GOLD;
         String sign = "";

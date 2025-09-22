@@ -91,6 +91,8 @@ public class NamingProperty {
     public static final String EXPIRE_TIME_DURATION = "expireTimeDuration";
     public static final String IP = "ip";
     public static final String CODE = "code";
+    public static final String GIFT_CARD_UNIQUE_CODE = "giftCardUniqueCode";
+
 
 
     private NamingProperty() {

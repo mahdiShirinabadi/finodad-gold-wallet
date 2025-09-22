@@ -1061,7 +1061,7 @@ class SellControllerTest extends WalletApplicationTests {
 
         setupBalancesForSellToZero(walletAccountObjectOptional);
         // Setup sufficient balances
-        setupBalancesForSell(walletAccountObjectOptional, "2", "2000000");
+        setupBalancesForSell(walletAccountObjectOptional, "2.02", "2000000");
 
         // SCENARIO 1: Different UUIDs with same refNumber
         log.info("Testing Scenario 1: Different UUIDs with same refNumber");

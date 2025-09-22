@@ -1,6 +1,5 @@
 package com.melli.wallet.web;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.melli.wallet.WalletApplicationTests;
 import com.melli.wallet.config.CacheClearService;
 import com.melli.wallet.domain.enumaration.WalletStatusEnum;
@@ -8,11 +7,7 @@ import com.melli.wallet.domain.master.entity.ChannelEntity;
 import com.melli.wallet.domain.master.entity.WalletAccountEntity;
 import com.melli.wallet.domain.master.entity.WalletEntity;
 import com.melli.wallet.domain.request.wallet.CommissionObject;
-import com.melli.wallet.domain.request.wallet.P2pGenerateUuidRequestJson;
-import com.melli.wallet.domain.request.wallet.P2pRequestJson;
-import com.melli.wallet.domain.response.UuidResponse;
 import com.melli.wallet.domain.response.base.BaseResponse;
-import com.melli.wallet.domain.response.cash.CashInResponse;
 import com.melli.wallet.domain.response.login.LoginResponse;
 import com.melli.wallet.domain.response.p2p.P2pTrackResponse;
 import com.melli.wallet.domain.response.p2p.P2pUuidResponse;
@@ -26,9 +21,7 @@ import org.junit.Assert;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
@@ -44,7 +37,6 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * Class Name: P2pControllerTest
@@ -440,7 +432,7 @@ class P2pControllerTest extends WalletApplicationTests {
         WalletAccountObject destAccount = getAccountNumber(mockMvc, accessToken, NATIONAL_CODE_DEST, WalletAccountTypeRepositoryService.NORMAL, CURRENCY_GOLD);
         
         // Step 2: Charge source account with enough balance for multiple transactions
-        chargeAccountForP2P(sourceAccount.getAccountNumber(), "0.006");
+        chargeAccountForP2P(sourceAccount.getAccountNumber(), "0.01");
         
         // Step 3: Generate multiple UUIDs for concurrent processing
         BaseResponse<P2pUuidResponse> uuidResponse1 = generateP2pUuid(mockMvc, accessToken, NATIONAL_CODE_CORRECT, "0.003", sourceAccount.getAccountNumber(), destAccount.getAccountNumber(), HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);

@@ -194,7 +194,7 @@ public class CashOutOperationServiceImplementation implements CashOutOperationSe
             PhysicalCashOutRequestEntity physicalCashOutRequestEntity = new PhysicalCashOutRequestEntity();
             physicalCashOutRequestEntity.setQuantity(physicalCashOutObjectDTO.getQuantity());
             physicalCashOutRequestEntity.setCommission(physicalCashOutObjectDTO.getCommission());
-            physicalCashOutRequestEntity.setFinalQuantity(physicalCashOutObjectDTO.getQuantity().subtract(physicalCashOutObjectDTO.getCommission()));
+            physicalCashOutRequestEntity.setFinalQuantity(physicalCashOutObjectDTO.getQuantity().add(physicalCashOutObjectDTO.getCommission()));
             physicalCashOutRequestEntity.setWalletAccountEntity(walletAccountEntity);
             physicalCashOutRequestEntity.setRrnEntity(rrnEntity);
             physicalCashOutRequestEntity.setAdditionalData(physicalCashOutObjectDTO.getAdditionalData());
@@ -215,7 +215,7 @@ public class CashOutOperationServiceImplementation implements CashOutOperationSe
 
             TransactionEntity transaction = new TransactionEntity();
             transaction.setRrnEntity(rrnEntity);
-            transaction.setAmount(physicalCashOutRequestEntity.getQuantity());
+            transaction.setAmount(physicalCashOutRequestEntity.getQuantity().add(physicalCashOutRequestEntity.getCommission()));
             transaction.setWalletAccountEntity(walletAccountEntity);
             transaction.setAdditionalData(physicalCashOutRequestEntity.getAdditionalData());
             transaction.setRequestTypeId(physicalCashOutRequestEntity.getRequestTypeEntity().getId());

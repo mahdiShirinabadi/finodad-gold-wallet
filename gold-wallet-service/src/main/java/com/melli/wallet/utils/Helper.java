@@ -9,6 +9,7 @@ import com.melli.wallet.domain.response.base.BaseResponse;
 import com.melli.wallet.domain.response.base.ErrorDetail;
 import com.melli.wallet.domain.response.cash.*;
 import com.melli.wallet.domain.response.channel.ChannelObject;
+import com.melli.wallet.domain.response.giftcard.GiftCardUuidResponse;
 import com.melli.wallet.domain.response.limitation.*;
 import com.melli.wallet.domain.response.login.LoginResponse;
 import com.melli.wallet.domain.response.login.TokenObject;
@@ -135,9 +136,33 @@ public class Helper {
         return response;
     }
 
+
+    public P2pTrackResponse fillGiftCardTrackResponse(GiftCardEntity entity, StatusRepositoryService statusRepositoryService) {
+        StatusEntity statusEntity = statusRepositoryService.findByCode(String.valueOf(entity.getResult()));
+        P2pTrackResponse response = new P2pTrackResponse();
+        response.setDestWalletAccountNumber(entity.getDestinationAccountWalletEntity().getAccountNumber());
+        response.setDestNationalCode(entity.getDestinationAccountWalletEntity().getWalletEntity().getNationalCode());
+        response.setId(entity.getId());
+        response.setNationalCode(entity.getSourceAccountWalletEntity().getWalletEntity().getNationalCode());
+        response.setQuantity(String.valueOf(entity.getAmount()));
+        response.setUniqueIdentifier(entity.getRrnEntity().getUuid());
+        response.setResult(entity.getResult());
+        response.setDescription(statusEntity != null ? statusEntity.getPersianDescription() : "");
+        response.setWalletAccountNumber(entity.getSourceAccountWalletEntity().getAccountNumber());
+        response.setCreateTime(DateUtils.getLocaleDate(DateUtils.FARSI_LOCALE, entity.getCreatedAt(), FORMAT_DATE_RESPONSE, false));
+        response.setCreateTimeTimestamp(entity.getCreatedAt().getTime());
+        return response;
+    }
+
     public P2pUuidResponse fillP2pUuidResponse(String nationalCode, String uniqueIdentifier) {
         P2pUuidResponse response = new P2pUuidResponse();
         response.setDestNationalCode(nationalCode);
+        response.setUniqueIdentifier(uniqueIdentifier);
+        return response;
+    }
+
+    public GiftCardUuidResponse fillGiftCardUuidResponse(String uniqueIdentifier) {
+        GiftCardUuidResponse response = new GiftCardUuidResponse();
         response.setUniqueIdentifier(uniqueIdentifier);
         return response;
     }

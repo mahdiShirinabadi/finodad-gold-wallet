@@ -61,6 +61,13 @@ public interface LimitationGeneralService {
     String MIN_QUANTITY_P2P = "MIN_QUANTITY_P2P";
     String MAX_QUANTITY_P2P = "MAX_QUANTITY_P2P";
 
+    //giftCard
+    String MAX_DAILY_QUANTITY_GIFT_CARD = "MAX_DAILY_QUANTITY_GIFT_CARD";
+    String MAX_DAILY_COUNT_GIFT_CARD = "MAX_DAILY_COUNT_GIFT_CARD";
+    String MIN_QUANTITY_GIFT_CARD = "MIN_QUANTITY_GIFT_CARD";
+    String MAX_QUANTITY_GIFT_CARD = "MAX_QUANTITY_GIFT_CARD";
+    String ENABLE_GIFT_CARD = "ENABLE_GIFT_CARD";
+
     List<LimitationGeneralEntity> getLimitationGeneralEntities() throws InternalServiceException;
     LimitationGeneralEntity getSetting(String name);
     LimitationGeneralEntity getById(Long id) throws InternalServiceException;

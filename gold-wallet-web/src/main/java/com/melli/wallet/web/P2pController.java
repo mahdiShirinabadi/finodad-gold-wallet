@@ -1,8 +1,8 @@
 package com.melli.wallet.web;
 
 import com.melli.wallet.domain.dto.P2pObjectDTO;
-import com.melli.wallet.domain.request.wallet.P2pGenerateUuidRequestJson;
-import com.melli.wallet.domain.request.wallet.P2pRequestJson;
+import com.melli.wallet.domain.request.wallet.p2p.P2pGenerateUuidRequestJson;
+import com.melli.wallet.domain.request.wallet.p2p.P2pRequestJson;
 import com.melli.wallet.domain.response.base.BaseResponse;
 import com.melli.wallet.domain.response.p2p.P2pTrackResponse;
 import com.melli.wallet.domain.response.p2p.P2pUuidResponse;
