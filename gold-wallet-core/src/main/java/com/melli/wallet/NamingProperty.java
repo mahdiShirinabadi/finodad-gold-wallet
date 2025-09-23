@@ -18,7 +18,7 @@ public class NamingProperty {
     public static final String ID = "id";
     public static final String UNIQUE_IDENTIFIER = "uniqueIdentifier";
     public static final String QUANTITY = "quantity";
-    public static final String PRICE = "totalPrice";
+    public static final String PRICE = "price";
     public static final String COMMISSION_OBJECT = "commissionObject";
     public static final String CURRENCY = "currency";
     public static final String MERCHANT_ID = "merchantId";
@@ -50,6 +50,7 @@ public class NamingProperty {
     public static final String REFRESH_TOKEN_OBJECT = "refreshTokenObject";
     public static final String TOKEN = "token";
     public static final String EXPIRE_TIME = "expireTime";
+    public static final String EXPIRE_TIME_TIME_STAMP = "expireTimeTimeStamp";
     public static final String CHANNEL_NAME = "channelName";
     public static final String PURCHASE_TRACK_OBJECT_LIST = "purchaseTrackObjectList";
     public static final String TRANSACTION_OBJECT_LIST = "transactionObjectList";
@@ -91,7 +92,8 @@ public class NamingProperty {
     public static final String EXPIRE_TIME_DURATION = "expireTimeDuration";
     public static final String IP = "ip";
     public static final String CODE = "code";
-    public static final String GIFT_CARD_UNIQUE_CODE = "giftCardUniqueCode";
+    public static final String GIFT_CARD_ACTIVE_CODE = "giftCardActiveCode";
+    public static final String ACTIVE_CODE = "activeCode";
 
 
 

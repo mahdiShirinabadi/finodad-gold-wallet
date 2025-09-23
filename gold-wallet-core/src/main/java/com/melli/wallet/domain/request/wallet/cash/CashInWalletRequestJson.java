@@ -31,7 +31,7 @@ public class CashInWalletRequestJson {
     @JsonProperty(NamingProperty.AMOUNT)
     private String amount;
 
-    @NationalCodeValidation(label = "کد ملی")
+    @NationalCodeValidation(label = NamingProperty.NATIONAL_CODE)
     @Schema(name = NamingProperty.NATIONAL_CODE, description = "کدملی")
     @JsonProperty(NamingProperty.NATIONAL_CODE)
     private String nationalCode;
@@ -44,7 +44,7 @@ public class CashInWalletRequestJson {
     @JsonProperty(NamingProperty.CASH_IN_TYPE)
     private String cashInType;
 
-    @StringValidation(label = "شماره حساب")
+    @StringValidation(label = NamingProperty.WALLET_ACCOUNT_NUMBER)
     @Schema(name = NamingProperty.WALLET_ACCOUNT_NUMBER, description = "شماره حساب کیف پول")
     @JsonProperty(NamingProperty.WALLET_ACCOUNT_NUMBER)
     private String accountNumber;

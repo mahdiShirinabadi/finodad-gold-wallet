@@ -90,7 +90,7 @@ public class WalletController extends WebController {
 	@Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "دریافت اطلاعات کیف پول ")
 	@PreAuthorize("hasAuthority('" + ResourceDefinition.WALLET_INFO_AUTH + "')")
 	@LogExecutionTime("Get wallet info")
-	public ResponseEntity<BaseResponse<CreateWalletResponse>> getBalance(@Valid @RequestParam @NationalCodeValidation(label = "کد ملی") String nationalCode) throws InternalServiceException {
+	public ResponseEntity<BaseResponse<CreateWalletResponse>> getBalance(@Valid @RequestParam @NationalCodeValidation(label = "nationalCode") String nationalCode) throws InternalServiceException {
 		String channelIp = requestContext.getClientIp();
 		log.info("start get wallet with nationalCode ==> {}, from Ip ({})", nationalCode, channelIp);
 		CreateWalletResponse response = walletOperationalService.get(requestContext.getChannelEntity() ,nationalCode);

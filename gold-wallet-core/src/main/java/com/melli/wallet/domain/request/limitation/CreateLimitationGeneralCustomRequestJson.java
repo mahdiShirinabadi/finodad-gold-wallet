@@ -24,42 +24,42 @@ public class CreateLimitationGeneralCustomRequestJson {
     @Schema(name = NamingProperty.LIMITATION_GENERAL_ID)
     @JsonProperty(NamingProperty.LIMITATION_GENERAL_ID)
     @NotNull(message = "General limitation ID is required")
-    @NumberValidation(label = "شناسه محدودیت عمومی")
+    @NumberValidation(label = NamingProperty.LIMITATION_GENERAL_ID)
     private String limitationGeneralId;
 
     @Schema(name = NamingProperty.VALUE, required = true)
     @JsonProperty(NamingProperty.VALUE)
     @NotBlank(message = "Limitation value is required")
-    @StringValidation(label = "مقدار محدودیت")
+    @StringValidation(label = NamingProperty.VALUE)
     private String value;
 
     @Schema(name = NamingProperty.ADDITIONAL_DATA)
     @JsonProperty(NamingProperty.ADDITIONAL_DATA)
-    @StringValidation(label = "اطلاعات اضافی")
+    @StringValidation(label = NamingProperty.ADDITIONAL_DATA)
     private String additionalData;
 
     @Schema(name = "walletLevelId")
     @JsonProperty("walletLevelId")
-    @NumberValidation(label = "شناسه سطح کیف پول")
+    @NumberValidation(label = "walletLevelId")
     private String walletLevelId;
 
     @Schema(name = "walletAccountTypeId")
     @JsonProperty("walletAccountTypeId")
-    @NumberValidation(label = "شناسه نوع حساب کیف پول")
+    @NumberValidation(label = "walletAccountTypeId")
     private String walletAccountTypeId;
 
     @Schema(name = "walletAccountCurrencyId")
     @JsonProperty("walletAccountCurrencyId")
-    @NumberValidation(label = "شناسه ارز حساب کیف پول")
+    @NumberValidation(label = "walletAccountCurrencyId")
     private String walletAccountCurrencyId;
 
     @Schema(name = "walletTypeId")
     @JsonProperty("walletTypeId")
-    @NumberValidation(label = "شناسه نوع کیف پول")
+    @NumberValidation(label = "walletTypeId")
     private String walletTypeId;
 
     @Schema(name = "channelId")
     @JsonProperty("channelId")
-    @NumberValidation(label = "شناسه کانال")
+    @NumberValidation(label = "channelId")
     private String channelId;
 } 

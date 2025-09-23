@@ -69,4 +69,6 @@ public class GiftCardEntity extends BaseEntityAudit implements Serializable {
     @Column(name = "nationalCode_by", nullable = false)
     private String nationalCodeBy;
 
+
+
 }

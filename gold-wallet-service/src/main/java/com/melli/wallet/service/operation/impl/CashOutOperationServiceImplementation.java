@@ -147,7 +147,7 @@ public class CashOutOperationServiceImplementation implements CashOutOperationSe
 
 
     @Override
-    public UuidResponse physicalGenerateUuid(ChannelEntity channelEntity, String nationalCode, String quantity, String accountNumber) throws InternalServiceException {
+    public UuidResponse physicalGenerateUuid(ChannelEntity channelEntity, String nationalCode, String quantity, String accountNumber, String currency) throws InternalServiceException {
         try {
             WalletAccountEntity walletAccountEntity = helper.checkWalletAndWalletAccountForNormalUser(walletRepositoryService, nationalCode, walletAccountRepositoryService, accountNumber);
             walletCashLimitationOperationService.checkPhysicalCashOutLimitation(channelEntity, walletAccountEntity.getWalletEntity(), new BigDecimal(quantity), walletAccountEntity);

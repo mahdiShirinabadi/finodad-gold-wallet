@@ -3,8 +3,6 @@ package com.melli.wallet.service.operation.impl;
 import com.melli.wallet.domain.dto.AggregationPurchaseDTO;
 import com.melli.wallet.domain.enumaration.TransactionTypeEnum;
 import com.melli.wallet.domain.master.entity.*;
-import com.melli.wallet.domain.master.persistence.WalletDailySellLimitationRepository;
-import com.melli.wallet.domain.master.persistence.WalletMonthlySellLimitationRepository;
 import com.melli.wallet.domain.redis.WalletDailySellLimitationRedis;
 import com.melli.wallet.domain.redis.WalletMonthlySellLimitationRedis;
 import com.melli.wallet.exception.InternalServiceException;
@@ -123,7 +121,7 @@ public class WalletSellLimitationOperationServiceImplementation implements Walle
 
             if ((walletDailySellLimitationRedis.getQuantity().add(quantity).compareTo(maxQuantityDaily)) > 0) {
                 log.error("checkPurchaseDailyLimitation: wallet({}) on channel ({}) , exceeded amount limitation in purchase!!! SumPurchaseAmount plus amount is: {} and bigger than maxAmountDaily {}", wallet.getNationalCode(), wallet.getOwner().getId(), walletDailySellLimitationRedis.getQuantity().add(quantity), maxQuantityDaily);
-                throw new InternalServiceException("wallet sum amount sell exceeded the limitation !!!", StatusRepositoryService.SELL_EXCEEDED_AMOUNT_DAILY_LIMITATION, HttpStatus.OK, Map.ofEntries(
+                throw new InternalServiceException("wallet sum amount sell exceeded the limitation !!!", StatusRepositoryService.EXCEEDED_AMOUNT_DAILY_LIMITATION, HttpStatus.OK, Map.ofEntries(
                         entry("1", Utility.addComma(walletDailySellLimitationRedis.getAmount() + quantity.longValue())),
                         entry("2", Utility.addComma((maxQuantityDaily.longValue())))
                 ));
@@ -131,7 +129,7 @@ public class WalletSellLimitationOperationServiceImplementation implements Walle
 
             if ((walletDailySellLimitationRedis.getCount() + 1) > maxCountDaily.longValue()) {
                 log.error("checkPurchaseDailyLimitation: wallet({}) on channel ({}) , exceeded count limitation in purchase!!!SumPurchaseCount is: {}", wallet.getNationalCode(), wallet.getOwner().getId(), walletDailySellLimitationRedis.getCount());
-                throw new InternalServiceException("wallet count sell exceeded the limitation !!!", StatusRepositoryService.SELL_EXCEEDED_COUNT_DAILY_LIMITATION, HttpStatus.OK, Map.ofEntries(
+                throw new InternalServiceException("wallet count sell exceeded the limitation !!!", StatusRepositoryService.EXCEEDED_COUNT_DAILY_LIMITATION, HttpStatus.OK, Map.ofEntries(
                         entry("1", Utility.addComma(walletDailySellLimitationRedis.getAmount() + quantity.longValue())),
                         entry("2", Utility.addComma((maxCountDaily.longValue())))
                 ));
@@ -189,7 +187,7 @@ public class WalletSellLimitationOperationServiceImplementation implements Walle
 
             if (walletMonthlySellLimitationRedis.getQuantity().add(amount).compareTo(maxQuantityMonthly)> 0) {
                 log.error("checkSellMonthlyLimitation: wallet({}) on channel ({}) , exceeded amount limitation in purchase!!! SumPurchaseAmount plus amount is: {} and bigger than maxAmountMonthly {}", wallet.getNationalCode(), wallet.getOwner().getId(), walletMonthlySellLimitationRedis.getAmount() + amount.longValue(), maxQuantityMonthly);
-                throw new InternalServiceException("wallet sum amount sell exceeded the limitation !!!", StatusRepositoryService.SELL_EXCEEDED_AMOUNT_MONTHLY_LIMITATION, HttpStatus.OK, Map.ofEntries(
+                throw new InternalServiceException("wallet sum amount sell exceeded the limitation !!!", StatusRepositoryService.EXCEEDED_AMOUNT_MONTHLY_LIMITATION, HttpStatus.OK, Map.ofEntries(
                         entry("1", Utility.addComma(walletMonthlySellLimitationRedis.getAmount() + amount.longValue())),
                         entry("2", Utility.addComma((maxQuantityMonthly.longValue())))
                 ));
@@ -197,7 +195,7 @@ public class WalletSellLimitationOperationServiceImplementation implements Walle
 
             if ((walletMonthlySellLimitationRedis.getCount() + 1) > maxCountMonthly.longValue()) {
                 log.error("checkSellMonthlyLimitation: wallet({}) on channel ({}) , exceeded count limitation in purchase!!!SumPurchaseCount is: {}", wallet.getNationalCode(), wallet.getOwner().getId(), walletMonthlySellLimitationRedis.getCount());
-                throw new InternalServiceException("wallet count sell exceeded the limitation !!!", StatusRepositoryService.SELL_EXCEEDED_COUNT_MONTHLY_LIMITATION, HttpStatus.OK, Map.ofEntries(
+                throw new InternalServiceException("wallet count sell exceeded the limitation !!!", StatusRepositoryService.EXCEEDED_COUNT_MONTHLY_LIMITATION, HttpStatus.OK, Map.ofEntries(
                         entry("1", Utility.addComma(walletMonthlySellLimitationRedis.getAmount() + amount.longValue())),
                         entry("2", Utility.addComma((maxCountMonthly.longValue())))
                 ));

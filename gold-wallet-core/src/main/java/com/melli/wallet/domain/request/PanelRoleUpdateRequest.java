@@ -15,17 +15,17 @@ import java.util.List;
 @Setter
 public class PanelRoleUpdateRequest {
 
-    @NumberValidation(label = "شناسه", allowDecimal = false)
+    @NumberValidation(label = NamingProperty.ID, allowDecimal = false)
     @Schema(name = NamingProperty.ID, description = "شناسه")
     @JsonProperty(NamingProperty.ID)
     private String id;
 
-    @StringValidation(label = "عنوان نقش")
+    @StringValidation(label = NamingProperty.NAME)
     @Schema(name = NamingProperty.NAME, description = "عنوان نقش")
     @JsonProperty(required = true, value = NamingProperty.NAME)
     private String name;
 
-    @StringValidation(label = "توضیحات نقش")
+    @StringValidation(label = NamingProperty.PERSIAN_DESCRIPTION)
     @Schema(name = NamingProperty.PERSIAN_DESCRIPTION, description = "توضیحات نقش")
     @JsonProperty(required = true, value = NamingProperty.PERSIAN_DESCRIPTION)
     private String persianDescription;

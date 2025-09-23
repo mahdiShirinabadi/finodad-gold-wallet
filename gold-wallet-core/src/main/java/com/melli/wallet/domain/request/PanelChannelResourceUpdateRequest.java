@@ -20,7 +20,7 @@ import java.util.List;
 public class PanelChannelResourceUpdateRequest {
 
     @NotNull(message = "شناسه کانال نمی تواند خالی باشد")
-    @NumberValidation(label = "شناسه کانال")
+    @NumberValidation(label = NamingProperty.ID)
     @JsonProperty(NamingProperty.ID)
     @Schema(name = NamingProperty.ID, description = "شناسه کانال")
     private String id;

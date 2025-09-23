@@ -16,33 +16,32 @@ import lombok.ToString;
 @ToString
 public class GiftCardProcessRequestJson {
 
-    @NumberValidation(allowDecimal = true)
+    @NumberValidation(allowDecimal = true, label = NamingProperty.QUANTITY)
     @Schema(name = NamingProperty.QUANTITY, description = "مقدار", example = "0.001")
     @JsonProperty(NamingProperty.QUANTITY)
     private String quantity;
 
-    @StringValidation(label = "کد ملی مبدا")
+    @StringValidation(label = NamingProperty.NATIONAL_CODE)
     @Schema(name = NamingProperty.NATIONAL_CODE, description = "کد ملی مبدا")
     @JsonProperty(NamingProperty.NATIONAL_CODE)
     private String nationalCode;
 
-    @StringValidation(label = "شماره حساب کیف مبدا")
+    @StringValidation(label = NamingProperty.WALLET_ACCOUNT_NUMBER)
     @Schema(name = NamingProperty.WALLET_ACCOUNT_NUMBER, description = "شماره حساب کیف مبدا")
     @JsonProperty(NamingProperty.WALLET_ACCOUNT_NUMBER)
     private String accountNumber;
 
-    @StringValidation(label = "کد ملی مقصد")
     @Schema(name = NamingProperty.DEST_NATIONAL_CODE, description = "برای امنیت بیشتر کد ملی مقصد")
     @JsonProperty(NamingProperty.DEST_NATIONAL_CODE)
     private String destinationNationalCode;
 
-    @StringValidation(label = "اطلاعات تکمیلی")
+    @StringValidation(label = NamingProperty.ADDITIONAL_DATA)
     @Schema(name = NamingProperty.ADDITIONAL_DATA, description = "اطلاعات تکمیلی")
     @JsonProperty(NamingProperty.ADDITIONAL_DATA)
     private String additionalData;
 
 
-    @StringValidation(label = "کد پیگیری")
+    @StringValidation(label = NamingProperty.UNIQUE_IDENTIFIER)
     @Schema(name = NamingProperty.UNIQUE_IDENTIFIER, description = "کد پیگیری")
     @JsonProperty(NamingProperty.UNIQUE_IDENTIFIER)
     private String uniqueIdentifier;
@@ -55,7 +54,7 @@ public class GiftCardProcessRequestJson {
     @JsonProperty(NamingProperty.COMMISSION_OBJECT)
     private CommissionObject commissionObject;
 
-    @StringValidation(label = "نوع ارز")
+    @StringValidation(label = NamingProperty.CURRENCY)
     @Schema(name = NamingProperty.CURRENCY, description = "نوع ارز (مثال: GOLD, SILVER, PLATINUM)", example = "GOLD")
     @JsonProperty(NamingProperty.CURRENCY)
     private String currency;

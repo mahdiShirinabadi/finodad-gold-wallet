@@ -171,11 +171,11 @@ class CashOutControllerTest extends WalletApplicationTests {
         
         // Step 2: Charge the account with cash in to ensure sufficient balance
         String refNumber = new Date().getTime() + "";
-        String cashInAmount = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_IN, accountNumber);
+        String cashInAmount = getLimitationSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_IN, accountNumber);
         
         // Step 3: Enable cash in permission if disabled
         WalletAccountEntity walletAccountEntity = walletAccountRepositoryService.findByAccountNumber(accountNumber);
-        String cashInValue = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, accountNumber);
+        String cashInValue = getLimitationSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, accountNumber);
         if("false".equalsIgnoreCase(cashInValue)){
             setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, walletAccountEntity, "true");
         }
@@ -189,10 +189,10 @@ class CashOutControllerTest extends WalletApplicationTests {
         log.info("Account charged successfully with amount: {}", cashInAmount);
         
         // Step 6: Get amount for cash out operation
-        String cashOutAmount = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_OUT, accountNumber);
+        String cashOutAmount = getLimitationSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_OUT, accountNumber);
         
         // Step 7: Enable cash out permission if disabled
-        String cashOutValue = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_OUT, accountNumber);
+        String cashOutValue = getLimitationSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_OUT, accountNumber);
         if("false".equalsIgnoreCase(cashOutValue)){
             setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_OUT, walletAccountEntity, "true");
         }
@@ -229,7 +229,7 @@ class CashOutControllerTest extends WalletApplicationTests {
         WalletAccountObject walletAccountObject = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.RIAL);
         
         // Step 2: Get minimum amount for cash out operation
-        String amount = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_OUT, walletAccountObject.getAccountNumber());
+        String amount = getLimitationSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_OUT, walletAccountObject.getAccountNumber());
         
         // Step 3: Attempt cash out with invalid UUID - should fail
         cashOut(mockMvc, ACCESS_TOKEN, "invalid_uuid", amount, NATIONAL_CODE_CORRECT, walletAccountObject.getAccountNumber(), VALID_IBAN, VALID_SIGN, ADDITIONAL_DATA, HttpStatus.OK, StatusRepositoryService.UUID_NOT_FOUND, false);
@@ -257,11 +257,11 @@ class CashOutControllerTest extends WalletApplicationTests {
         
         // Step 2: Charge the account with cash in to have some balance
         String refNumber = new Date().getTime() + "";
-        String cashInAmount = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_IN, accountNumber);
+        String cashInAmount = getLimitationSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_IN, accountNumber);
         WalletAccountEntity walletAccountEntity = walletAccountRepositoryService.findByAccountNumber(accountNumber);
         
         // Step 3: Enable cash in permission if disabled
-        String cashInValue = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, accountNumber);
+        String cashInValue = getLimitationSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, accountNumber);
         if("false".equalsIgnoreCase(cashInValue)){
             setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, walletAccountEntity, "true"); //"test cashOutFailInsufficientBalance");
         }
@@ -306,7 +306,7 @@ class CashOutControllerTest extends WalletApplicationTests {
         WalletAccountObject walletAccountObject = getAccountNumber(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.RIAL);
         
         // Step 2: Get minimum amount for cash out operation
-        String amount = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_OUT, walletAccountObject.getAccountNumber());
+        String amount = getLimitationSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_OUT, walletAccountObject.getAccountNumber());
         
         // Step 3: Generate UUID for cash out operation
         BaseResponse<UuidResponse> uuidResponse = generateCashOutUuid(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, amount, walletAccountObject.getAccountNumber(), HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
@@ -341,10 +341,10 @@ class CashOutControllerTest extends WalletApplicationTests {
         String accountNumber = walletAccountObject.getAccountNumber();
         // Step 2: First, charge the account with cashIn to have sufficient balance
         String refNumber = new Date().getTime() + "";
-        String cashInAmount = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_IN, accountNumber);
+        String cashInAmount = getLimitationSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_IN, accountNumber);
         // Step 3: Enable cashIn if disabled
         WalletAccountEntity walletAccountEntity = walletAccountRepositoryService.findByAccountNumber(accountNumber);
-        String cashInValue = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, accountNumber);
+        String cashInValue = getLimitationSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, accountNumber);
         if("false".equalsIgnoreCase(cashInValue)){
             setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, walletAccountEntity, "true");
         }
@@ -355,9 +355,9 @@ class CashOutControllerTest extends WalletApplicationTests {
         Assert.assertNotNull(cashInResponse.getData());
         log.info("Account charged successfully with amount: {}", cashInAmount);
         // Step 6: Now perform a successful cashout
-        String cashOutAmount = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_OUT, accountNumber);
+        String cashOutAmount = getLimitationSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_OUT, accountNumber);
         // Step 7: Enable cashout if disabled
-        String cashOutValue = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_OUT, accountNumber);
+        String cashOutValue = getLimitationSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_OUT, accountNumber);
         if("false".equalsIgnoreCase(cashOutValue)){
             setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_OUT, walletAccountEntity, "true"); //"test inquiryCashOutSuccess");
         }
@@ -412,10 +412,10 @@ class CashOutControllerTest extends WalletApplicationTests {
         String accountNumber = walletAccountObject.getAccountNumber();
         // Step 2: First, charge the account with cashIn
         String refNumber = new Date().getTime() + "";
-        String cashInAmount = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_IN, accountNumber);
+        String cashInAmount = getLimitationSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_IN, accountNumber);
         WalletAccountEntity walletAccountEntity = walletAccountRepositoryService.findByAccountNumber(accountNumber);
         // Step 3: Enable cashIn if disabled
-        String cashInValue = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, accountNumber);
+        String cashInValue = getLimitationSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, accountNumber);
         if("false".equalsIgnoreCase(cashInValue)){
             setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, walletAccountEntity, "true"); //"test cashOutFailInvalidIban");
         }
@@ -425,7 +425,7 @@ class CashOutControllerTest extends WalletApplicationTests {
         BaseResponse<CashInResponse> cashInResponse = cashIn(mockMvc, ACCESS_TOKEN, cashInUuidResponse.getData().getUniqueIdentifier(), refNumber, cashInAmount, NATIONAL_CODE_CORRECT, accountNumber, "", "", "ACCOUNT_TO_ACCOUNT", HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
         Assert.assertNotNull(cashInResponse.getData());
         // Step 6: Now try to cashOut with invalid IBAN
-        String cashOutAmount = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_OUT, accountNumber);
+        String cashOutAmount = getLimitationSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_OUT, accountNumber);
         BaseResponse<UuidResponse> uuidResponse = generateCashOutUuid(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, cashOutAmount, accountNumber, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
         String uniqueIdentifier = uuidResponse.getData().getUniqueIdentifier();
         // Step 7: This should fail due to invalid IBAN
@@ -450,10 +450,10 @@ class CashOutControllerTest extends WalletApplicationTests {
         String accountNumber = walletAccountObject.getAccountNumber();
         // Step 2: First, charge the account with cashIn
         String refNumber = new Date().getTime() + "";
-        String cashInAmount = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_IN, accountNumber);
+        String cashInAmount = getLimitationSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_IN, accountNumber);
         WalletAccountEntity walletAccountEntity = walletAccountRepositoryService.findByAccountNumber(accountNumber);
         // Step 3: Enable cashIn if disabled
-        String cashInValue = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, accountNumber);
+        String cashInValue = getLimitationSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, accountNumber);
         if("false".equalsIgnoreCase(cashInValue)){
             setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, walletAccountEntity, "true"); //"test cashOutFailAmountLessThanMinimum");
         }
@@ -463,7 +463,7 @@ class CashOutControllerTest extends WalletApplicationTests {
         BaseResponse<CashInResponse> cashInResponse = cashIn(mockMvc, ACCESS_TOKEN, cashInUuidResponse.getData().getUniqueIdentifier(), refNumber, cashInAmount, NATIONAL_CODE_CORRECT, accountNumber, "", "", "ACCOUNT_TO_ACCOUNT", HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
         Assert.assertNotNull(cashInResponse.getData());
         // Step 6: Now try to cashOut with amount less than minimum
-        String minAmount = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_OUT, accountNumber);
+        String minAmount = getLimitationSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_OUT, accountNumber);
         String cashOutAmount = String.valueOf(Long.parseLong(minAmount) - 1);
         log.info("Attempting cashOut with amount: {} (less than minimum: {})", cashOutAmount, minAmount);
         // Step 7: This should fail due to amount less than minimum
@@ -488,10 +488,10 @@ class CashOutControllerTest extends WalletApplicationTests {
         String accountNumber = walletAccountObject.getAccountNumber();
         // Step 2: First, charge the account with cashIn
         String refNumber = new Date().getTime() + "";
-        String cashInAmount = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_IN, accountNumber);
+        String cashInAmount = getLimitationSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_IN, accountNumber);
         WalletAccountEntity walletAccountEntity = walletAccountRepositoryService.findByAccountNumber(accountNumber);
         // Step 3: Enable cashIn if disabled
-        String cashInValue = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, accountNumber);
+        String cashInValue = getLimitationSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, accountNumber);
         if("false".equalsIgnoreCase(cashInValue)){
             setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, walletAccountEntity, "true"); //"test cashOutFailAmountBiggerThanMaximum");
         }
@@ -501,7 +501,7 @@ class CashOutControllerTest extends WalletApplicationTests {
         BaseResponse<CashInResponse> cashInResponse = cashIn(mockMvc, ACCESS_TOKEN, cashInUuidResponse.getData().getUniqueIdentifier(), refNumber, cashInAmount, NATIONAL_CODE_CORRECT, accountNumber, "", "", "ACCOUNT_TO_ACCOUNT", HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
         Assert.assertNotNull(cashInResponse.getData());
         // Step 6: Now try to cashOut with amount bigger than maximum
-        String maxAmount = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.MAX_AMOUNT_CASH_OUT, accountNumber);
+        String maxAmount = getLimitationSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.MAX_AMOUNT_CASH_OUT, accountNumber);
         String cashOutAmount = String.valueOf(Long.parseLong(maxAmount) + 1);
         log.info("Attempting cashOut with amount: {} (bigger than maximum: {})", cashOutAmount, maxAmount);
         // Step 7: This should fail due to amount bigger than maximum
@@ -565,7 +565,7 @@ class CashOutControllerTest extends WalletApplicationTests {
         // Step 2: Disable cashOut
         setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_OUT, walletAccountEntity, "false");
         // Step 3: Get minimum cash out amount
-        String cashOutAmount = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_OUT, accountNumber);
+        String cashOutAmount = getLimitationSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_OUT, accountNumber);
         // Step 4: This should fail due to cashOut being disabled
         BaseResponse<UuidResponse> uuidResponse = generateCashOutUuid(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, cashOutAmount, accountNumber, HttpStatus.OK, StatusRepositoryService.ACCOUNT_DONT_PERMISSION_FOR_CASH_OUT, false);
         // Step 5: Re-enable cashOut for other tests
@@ -590,10 +590,10 @@ class CashOutControllerTest extends WalletApplicationTests {
         String accountNumber = walletAccountObject.getAccountNumber();
         // Step 2: First, charge the account with cashIn
         String refNumber = new Date().getTime() + "";
-        String cashInAmount = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_IN, accountNumber);
+        String cashInAmount = getLimitationSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_IN, accountNumber);
         WalletAccountEntity walletAccountEntity = walletAccountRepositoryService.findByAccountNumber(accountNumber);
         // Step 3: Enable cashIn if disabled
-        String cashInValue = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, accountNumber);
+        String cashInValue = getLimitationSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, accountNumber);
         if("false".equalsIgnoreCase(cashInValue)){
             setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, walletAccountEntity, "true"); //"test cashOutFailInvalidNationalCode");
         }
@@ -603,7 +603,7 @@ class CashOutControllerTest extends WalletApplicationTests {
         BaseResponse<CashInResponse> cashInResponse = cashIn(mockMvc, ACCESS_TOKEN, cashInUuidResponse.getData().getUniqueIdentifier(), refNumber, cashInAmount, NATIONAL_CODE_CORRECT, accountNumber, "", "", "ACCOUNT_TO_ACCOUNT", HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
         Assert.assertNotNull(cashInResponse.getData());
         // Step 6: Now try to cashOut with invalid national code
-        String cashOutAmount = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_OUT, accountNumber);
+        String cashOutAmount = getLimitationSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_OUT, accountNumber);
         BaseResponse<UuidResponse> uuidResponse = generateCashOutUuid(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, cashOutAmount, accountNumber, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
         String uniqueIdentifier = uuidResponse.getData().getUniqueIdentifier();
         // Step 7: This should fail due to invalid national code
@@ -963,10 +963,10 @@ class CashOutControllerTest extends WalletApplicationTests {
         String accountNumber = walletAccountObject.getAccountNumber();
         // Step 2: First, charge the account with cashIn
         String refNumber = new Date().getTime() + "";
-        String cashInAmount = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_IN, accountNumber);
+        String cashInAmount = getLimitationSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_IN, accountNumber);
         WalletAccountEntity walletAccountEntity = walletAccountRepositoryService.findByAccountNumber(accountNumber);
         // Step 3: Enable cashIn if disabled
-        String cashInValue = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, accountNumber);
+        String cashInValue = getLimitationSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, accountNumber);
         if("false".equalsIgnoreCase(cashInValue)){
             setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, walletAccountEntity, "true"); //"test cashOutFailInvalidAccountNumber");
         }
@@ -976,7 +976,7 @@ class CashOutControllerTest extends WalletApplicationTests {
         BaseResponse<CashInResponse> cashInResponse = cashIn(mockMvc, ACCESS_TOKEN, cashInUuidResponse.getData().getUniqueIdentifier(), refNumber, cashInAmount, NATIONAL_CODE_CORRECT, accountNumber, "", "", "ACCOUNT_TO_ACCOUNT", HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
         Assert.assertNotNull(cashInResponse.getData());
         // Step 6: Now try to cashOut with invalid account number
-        String cashOutAmount = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_OUT, accountNumber);
+        String cashOutAmount = getLimitationSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_OUT, accountNumber);
         BaseResponse<UuidResponse> uuidResponse = generateCashOutUuid(mockMvc, ACCESS_TOKEN, NATIONAL_CODE_CORRECT, cashOutAmount, accountNumber, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
         String uniqueIdentifier = uuidResponse.getData().getUniqueIdentifier();
         // Step 7: This should fail due to invalid account number

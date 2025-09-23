@@ -14,17 +14,17 @@ import lombok.ToString;
 @Getter
 @ToString
 public class CashGenerateUuidRequestJson {
-    @NationalCodeValidation(label = "کد ملی")
+    @NationalCodeValidation(label = NamingProperty.NATIONAL_CODE)
     @Schema(name = NamingProperty.NATIONAL_CODE, description = "کدملی", example = "0063360993")
     @JsonProperty(NamingProperty.NATIONAL_CODE)
     private String nationalCode;
 
-    @NumberValidation(label = "مبلغ")
+    @NumberValidation(label = NamingProperty.AMOUNT)
     @Schema(name = NamingProperty.AMOUNT, description = "مبلغ به ریال", example = "1000")
     @JsonProperty(NamingProperty.AMOUNT)
     private String amount;
 
-    @StringValidation(label = "شماره حساب")
+    @StringValidation(label = NamingProperty.WALLET_ACCOUNT_NUMBER)
     @Schema(name = NamingProperty.WALLET_ACCOUNT_NUMBER, description = "شماره حساب")
     @JsonProperty(NamingProperty.WALLET_ACCOUNT_NUMBER)
     private String accountNumber;

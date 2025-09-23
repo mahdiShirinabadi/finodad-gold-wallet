@@ -13,6 +13,9 @@ import com.melli.wallet.domain.request.wallet.*;
 import com.melli.wallet.domain.request.wallet.cash.CashGenerateUuidRequestJson;
 import com.melli.wallet.domain.request.wallet.cash.CashInWalletRequestJson;
 import com.melli.wallet.domain.request.wallet.cash.CashOutWalletRequestJson;
+import com.melli.wallet.domain.request.wallet.giftcard.GiftCardGenerateUuidRequestJson;
+import com.melli.wallet.domain.request.wallet.giftcard.GiftCardProcessRequestJson;
+import com.melli.wallet.domain.request.wallet.giftcard.PaymentGiftCardRequestJson;
 import com.melli.wallet.domain.request.wallet.p2p.P2pGenerateUuidRequestJson;
 import com.melli.wallet.domain.request.wallet.p2p.P2pRequestJson;
 import com.melli.wallet.domain.request.wallet.physical.PhysicalCashGenerateUuidRequestJson;
@@ -21,6 +24,9 @@ import com.melli.wallet.domain.request.wallet.purchase.*;
 import com.melli.wallet.domain.response.UuidResponse;
 import com.melli.wallet.domain.response.base.BaseResponse;
 import com.melli.wallet.domain.response.cash.*;
+import com.melli.wallet.domain.response.giftcard.GiftCardResponse;
+import com.melli.wallet.domain.response.giftcard.GiftCardUuidResponse;
+import com.melli.wallet.domain.response.giftcard.GiftCardTrackResponse;
 import com.melli.wallet.domain.response.login.LoginResponse;
 import com.melli.wallet.domain.response.p2p.P2pTrackResponse;
 import com.melli.wallet.domain.response.p2p.P2pUuidResponse;
@@ -50,6 +56,8 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.context.junit4.SpringRunner;
+
+
 import org.springframework.test.web.servlet.MockMvc;
 
 import org.springframework.test.web.servlet.MvcResult;
@@ -115,6 +123,11 @@ public class WalletApplicationTests {
     private static final String PHYSICAL_CASH_OUT_GENERATE_UUID_PATH = "/api/v1/physicalCashOut/generate/uuid";
     private static final String PHYSICAL_CASH_OUT_INQUIRY_PATH = "/api/v1/physicalCashOut/inquiry?uniqueIdentifier=";
     private static final String PHYSICAL_CASH_OUT_DO_PATH = "/api/v1/physicalCashOut/withdrawal";
+
+    private static final String GIFT_CARD_GENERATE_UUID_PATH = "/api/v1/giftCard/generate/uuid";
+    private static final String GIFT_CARD_PROCESS_PATH = "/api/v1/giftCard/process";
+    private static final String GIFT_CARD_INQUIRY_PATH = "/api/v1/giftCard/inquiry";
+    private static final String GIFT_CARD_PAYMENT_PATH = "/api/v1/giftCard/payment";
 
     private static final String NATIONAL_CODE_CORRECT = "0077847660";
     private static final String NATIONAL_CODE_INCORRECT = "0077847661";
@@ -394,7 +407,7 @@ public class WalletApplicationTests {
         BuyDirectWalletRequestJson requestJson = new BuyDirectWalletRequestJson();
         requestJson.setUniqueIdentifier(uniqueIdentifier);
         requestJson.setQuantity(quantity);
-        requestJson.setTotalPrice(price);
+        requestJson.setPrice(price);
         requestJson.setCommissionObject(new CommissionObject(commissionCurrency, commission));
         requestJson.setNationalCode(nationalCode);
         requestJson.setCurrency(currency);
@@ -415,7 +428,7 @@ public class WalletApplicationTests {
         BuyDirectWalletRequestJson requestJson = new BuyDirectWalletRequestJson();
         requestJson.setUniqueIdentifier(uniqueIdentifier);
         requestJson.setQuantity(quantity);
-        requestJson.setTotalPrice(price);
+        requestJson.setPrice(price);
         requestJson.setCommissionObject(new CommissionObject(commissionCurrency, commission));
         requestJson.setNationalCode(nationalCode);
         requestJson.setCurrency(currency);
@@ -562,7 +575,7 @@ public class WalletApplicationTests {
         return objectMapper.readValue(response, typeReference);
     }
 
-    public String getSettingValue(WalletAccountRepositoryService walletAccountRepositoryService, LimitationGeneralCustomRepositoryService limitationGeneralCustomRepositoryService, ChannelRepositoryService channelRepositoryService, String channelName, String limitationName, String accountNumber) throws Exception {
+    public String getLimitationSettingValue(WalletAccountRepositoryService walletAccountRepositoryService, LimitationGeneralCustomRepositoryService limitationGeneralCustomRepositoryService, ChannelRepositoryService channelRepositoryService, String channelName, String limitationName, String accountNumber) throws Exception {
         WalletAccountEntity walletAccountEntity = walletAccountRepositoryService.findByAccountNumber(accountNumber);
         return limitationGeneralCustomRepositoryService.getSetting(channelRepositoryService.getChannel(channelName),
                 limitationName, walletAccountEntity.getWalletEntity().getWalletLevelEntity(),
@@ -764,6 +777,62 @@ public class WalletApplicationTests {
         }
 
         return response;
+    }
+
+
+    // ==================== GIFT CARD METHODS ====================
+
+    public BaseResponse<GiftCardUuidResponse> generateGiftCardUuid(MockMvc mockMvc, String token, String nationalCode, String quantity, String accountNumber, String currency, HttpStatus httpStatus, int errorCode, boolean success) throws Exception {
+        GiftCardGenerateUuidRequestJson requestJson = new GiftCardGenerateUuidRequestJson();
+        requestJson.setNationalCode(nationalCode);
+        requestJson.setQuantity(quantity);
+        requestJson.setAccountNumber(accountNumber);
+        requestJson.setCurrency(currency);
+        
+        MockHttpServletRequestBuilder postRequest = buildPostRequest(token, GIFT_CARD_GENERATE_UUID_PATH, mapToJson(requestJson));
+        String response = performTest(mockMvc, postRequest, httpStatus, success, errorCode);
+        TypeReference<BaseResponse<GiftCardUuidResponse>> typeReference = new TypeReference<>() {};
+        return objectMapper.readValue(response, typeReference);
+    }
+
+    public BaseResponse<GiftCardResponse> processGiftCard(MockMvc mockMvc, String token, String uniqueIdentifier, String quantity, String nationalCode, String accountNumber, String destinationNationalCode, String additionalData, String sign, CommissionObject commissionObject, String currency, HttpStatus httpStatus, int errorCode, boolean success) throws Exception {
+        GiftCardProcessRequestJson requestJson = new GiftCardProcessRequestJson();
+        requestJson.setUniqueIdentifier(uniqueIdentifier);
+        requestJson.setQuantity(quantity);
+        requestJson.setNationalCode(nationalCode);
+        requestJson.setAccountNumber(accountNumber);
+        requestJson.setDestinationNationalCode(destinationNationalCode);
+        requestJson.setAdditionalData(additionalData);
+        requestJson.setSign(sign);
+        requestJson.setCommissionObject(commissionObject);
+        requestJson.setCurrency(currency);
+        
+        MockHttpServletRequestBuilder postRequest = buildPostRequest(token, GIFT_CARD_PROCESS_PATH, mapToJson(requestJson));
+        String response = performTest(mockMvc, postRequest, httpStatus, success, errorCode);
+        TypeReference<BaseResponse<GiftCardResponse>> typeReference = new TypeReference<>() {};
+        return objectMapper.readValue(response, typeReference);
+    }
+
+    public BaseResponse<GiftCardTrackResponse> inquiryGiftCard(MockMvc mockMvc, String token, String uniqueIdentifier, HttpStatus httpStatus, int errorCode, boolean success) throws Exception {
+        MockHttpServletRequestBuilder getRequest = buildGetRequest(token, GIFT_CARD_INQUIRY_PATH + "?uniqueIdentifier=" + uniqueIdentifier);
+        String response = performTest(mockMvc, getRequest, httpStatus, success, errorCode);
+        TypeReference<BaseResponse<GiftCardTrackResponse>> typeReference = new TypeReference<>() {};
+        return objectMapper.readValue(response, typeReference);
+    }
+
+    public BaseResponse<ObjectUtils.Null> paymentGiftCard(MockMvc mockMvc, String token, String giftCardUniqueCode, String quantity, String currency, String nationalCode, String accountNumber, String additionalData, HttpStatus httpStatus, int errorCode, boolean success) throws Exception {
+        PaymentGiftCardRequestJson requestJson = new PaymentGiftCardRequestJson();
+        requestJson.setGiftCardUniqueCode(giftCardUniqueCode);
+        requestJson.setQuantity(quantity);
+        requestJson.setCurrency(currency);
+        requestJson.setNationalCode(nationalCode);
+        requestJson.setAccountNumber(accountNumber);
+        requestJson.setAdditionalData(additionalData);
+        
+        MockHttpServletRequestBuilder postRequest = buildPostRequest(token, GIFT_CARD_PAYMENT_PATH, mapToJson(requestJson));
+        String response = performTest(mockMvc, postRequest, httpStatus, success, errorCode);
+        TypeReference<BaseResponse<ObjectUtils.Null>> typeReference = new TypeReference<>() {};
+        return objectMapper.readValue(response, typeReference);
     }
 
 

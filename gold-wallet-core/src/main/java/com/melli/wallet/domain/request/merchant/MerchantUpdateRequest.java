@@ -17,13 +17,11 @@ import lombok.Setter;
 @Setter
 public class MerchantUpdateRequest {
 
-    @Valid
-    @NumberValidation(label = "وضعیت")
+    @NumberValidation(label = NamingProperty.STATUS)
     @JsonProperty(NamingProperty.STATUS)
     private String status;
 
-    @Valid
-    @NumberValidation(label = "شناسه پذیرنده")
+    @NumberValidation(label = NamingProperty.MERCHANT_ID)
     @JsonProperty(NamingProperty.MERCHANT_ID)
     private String merchantId;
 } 

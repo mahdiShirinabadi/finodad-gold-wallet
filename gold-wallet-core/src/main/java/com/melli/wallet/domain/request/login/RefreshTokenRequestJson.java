@@ -15,13 +15,13 @@ import lombok.ToString;
 public class RefreshTokenRequestJson {
 
     @NotNull(message = "نام کاربری نمی تواند خالی باشد")
-    @StringValidation(label = "نام کاربری")
+    @StringValidation(label = NamingProperty.USERNAME)
     @Schema(name = NamingProperty.USERNAME)
     @JsonProperty(value = NamingProperty.USERNAME, required = true)
     private String username;
 
     @NotNull(message = "refreshToken نمی تواند خالی باشد")
-    @StringValidation(label = "refreshToken")
+    @StringValidation(label = NamingProperty.REFRESH_TOKEN)
     @Schema(name = NamingProperty.REFRESH_TOKEN)
     @JsonProperty(value = NamingProperty.REFRESH_TOKEN, required = true)
     private String refreshToken;

@@ -22,12 +22,12 @@ public class PhysicalCashOutWalletRequestJson {
     @JsonProperty(NamingProperty.UNIQUE_IDENTIFIER)
     private String uniqueIdentifier;
 
-    @NumberValidation(label = "مقدار" ,allowDecimal = true)
+    @NumberValidation(label = NamingProperty.QUANTITY ,allowDecimal = true)
     @Schema(name = NamingProperty.QUANTITY, description = "مقدار ارز")
     @JsonProperty(NamingProperty.QUANTITY)
     private String quantity;
 
-    @NationalCodeValidation(label = "کد ملی")
+    @NationalCodeValidation(label = NamingProperty.NATIONAL_CODE)
     @Schema(name = NamingProperty.NATIONAL_CODE, description = "کدملی")
     @JsonProperty(NamingProperty.NATIONAL_CODE)
     private String nationalCode;
@@ -36,7 +36,7 @@ public class PhysicalCashOutWalletRequestJson {
     @JsonProperty(NamingProperty.ADDITIONAL_DATA)
     private String additionalData;
 
-    @StringValidation(label = "شماره حساب")
+    @StringValidation(label = NamingProperty.WALLET_ACCOUNT_NUMBER)
     @Schema(name = NamingProperty.WALLET_ACCOUNT_NUMBER, description = "شماره حساب")
     @JsonProperty(NamingProperty.WALLET_ACCOUNT_NUMBER)
     private String accountNumber;
@@ -50,7 +50,7 @@ public class PhysicalCashOutWalletRequestJson {
     @JsonProperty(NamingProperty.COMMISSION_OBJECT)
     private CommissionObject commissionObject;
 
-    @StringValidation(label = "نوع ارز")
+    @StringValidation(label = NamingProperty.CURRENCY)
     @Schema(name = NamingProperty.CURRENCY, description = "نوع ارز (مثال: GOLD, SILVER, PLATINUM)", example = "GOLD")
     @JsonProperty(NamingProperty.CURRENCY)
     private String currency;

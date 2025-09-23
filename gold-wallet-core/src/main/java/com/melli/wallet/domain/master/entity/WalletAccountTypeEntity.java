@@ -22,7 +22,7 @@ public class WalletAccountTypeEntity extends BaseEntityAudit implements Serializ
 
 	//WAGE
 	//NORMAL
-	//
+	//GIFT_CARD
 	@Column(name = "name")
 	private String name;
 
@@ -31,4 +31,7 @@ public class WalletAccountTypeEntity extends BaseEntityAudit implements Serializ
 
 	@Column(name = "additional_data")
 	private String additionalData;
+
+	@Column(name = "display", columnDefinition = "boolean default true")
+	private Boolean display;
 }

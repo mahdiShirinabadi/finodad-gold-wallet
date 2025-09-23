@@ -23,12 +23,12 @@ public class SellGenerateUuidRequestJson {
     @JsonProperty(NamingProperty.QUANTITY)
     private String quantity;
 
-    @StringValidation(label = "شماره حساب")
+    @StringValidation(label = NamingProperty.WALLET_ACCOUNT_NUMBER)
     @Schema(name = NamingProperty.WALLET_ACCOUNT_NUMBER, description = "شماره حساب")
     @JsonProperty(NamingProperty.WALLET_ACCOUNT_NUMBER)
     private String accountNumber;
 
-    @StringValidation(label = "نوع واحد فروش")
+    @StringValidation(label = NamingProperty.CURRENCY)
     @Schema(name = NamingProperty.CURRENCY, description = "نوع واحد فروش", allowableValues = {"GOLD","SILVER"})
     @JsonProperty(NamingProperty.CURRENCY)
     private String currency;

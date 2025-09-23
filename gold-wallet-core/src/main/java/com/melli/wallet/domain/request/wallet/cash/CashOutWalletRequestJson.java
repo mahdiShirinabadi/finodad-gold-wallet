@@ -31,7 +31,7 @@ public class CashOutWalletRequestJson {
     @JsonProperty(NamingProperty.IBAN)
     private String iban;
 
-    @NationalCodeValidation(label = "کد ملی")
+    @NationalCodeValidation(label = NamingProperty.NATIONAL_CODE)
     @Schema(name = NamingProperty.NATIONAL_CODE, description = "کدملی")
     @JsonProperty(NamingProperty.NATIONAL_CODE)
     private String nationalCode;
@@ -40,7 +40,7 @@ public class CashOutWalletRequestJson {
     @JsonProperty(NamingProperty.ADDITIONAL_DATA)
     private String additionalData;
 
-    @StringValidation(label = "شماره حساب کیف پول")
+    @StringValidation(label = NamingProperty.WALLET_ACCOUNT_NUMBER)
     @Schema(name = NamingProperty.WALLET_ACCOUNT_NUMBER, description = "شماره حساب کیف پول")
     @JsonProperty(NamingProperty.WALLET_ACCOUNT_NUMBER)
     private String accountNumber;

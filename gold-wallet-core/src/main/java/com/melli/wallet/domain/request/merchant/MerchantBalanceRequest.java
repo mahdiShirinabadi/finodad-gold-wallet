@@ -18,17 +18,17 @@ import lombok.Setter;
 public class MerchantBalanceRequest {
 
     @Valid
-    @StringValidation(label = "شماره حساب کیف پول")
+    @StringValidation(label = NamingProperty.WALLET_ACCOUNT_NUMBER)
     @JsonProperty(NamingProperty.WALLET_ACCOUNT_NUMBER)
     private String walletAccountNumber;
 
     @Valid
-    @StringValidation(label = "مبلغ")
+    @StringValidation(label = NamingProperty.AMOUNT)
     @JsonProperty(NamingProperty.AMOUNT)
     private String amount;
 
     @Valid
-    @NumberValidation(label = "شناسه پذیرنده")
+    @NumberValidation(label = NamingProperty.MERCHANT_ID)
     @JsonProperty(NamingProperty.MERCHANT_ID)
     private String merchantId;
 } 

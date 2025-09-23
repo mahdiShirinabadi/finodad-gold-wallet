@@ -22,13 +22,17 @@ public class GiftCardTrackResponse {
     @JsonProperty(NamingProperty.QUANTITY)
     private String quantity;
 
+    @Schema(name = NamingProperty.ACTIVE_CODE)
+    @JsonProperty(NamingProperty.ACTIVE_CODE)
+    private String activeCode;
+
     @Schema(name = NamingProperty.UNIQUE_IDENTIFIER)
     @JsonProperty(NamingProperty.UNIQUE_IDENTIFIER)
     private String uniqueIdentifier;
 
-    @Schema(name = NamingProperty.RESULT)
-    @JsonProperty(NamingProperty.RESULT)
-    private int result;
+    @Schema(name = NamingProperty.STATUS)
+    @JsonProperty(NamingProperty.STATUS)
+    private String status;
 
     @Schema(name = NamingProperty.DESCRIPTION)
     @JsonProperty(NamingProperty.DESCRIPTION)
@@ -53,4 +57,12 @@ public class GiftCardTrackResponse {
     @Schema(name = NamingProperty.CREATE_TIMESTAMP)
     @JsonProperty(NamingProperty.CREATE_TIMESTAMP)
     private long createTimeTimestamp;
+
+    @Schema(name = NamingProperty.EXPIRE_TIME)
+    @JsonProperty(NamingProperty.EXPIRE_TIME)
+    private String expireTime;
+
+    @Schema(name = NamingProperty.EXPIRE_TIME_TIME_STAMP)
+    @JsonProperty(NamingProperty.EXPIRE_TIME_TIME_STAMP)
+    private Long expireTimeTimeStamp;
 }

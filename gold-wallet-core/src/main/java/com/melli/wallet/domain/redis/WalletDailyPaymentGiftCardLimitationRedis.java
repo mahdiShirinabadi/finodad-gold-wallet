@@ -9,10 +9,10 @@ import org.springframework.data.redis.core.RedisHash;
 import java.io.Serializable;
 import java.math.BigDecimal;
 
-@RedisHash(value = ConstantRedisName.WALLET_GIFT_CARD_DAILY_LIMITATION, timeToLive = 86400L) // 1 day
+@RedisHash(value = ConstantRedisName.WALLET_GIFT_CARD_PAYMENT_DAILY_LIMITATION, timeToLive = 86400L) // 1 day
 @Setter
 @Getter
-public class WalletDailyGiftCardLimitationRedis implements Serializable {
+public class WalletDailyPaymentGiftCardLimitationRedis implements Serializable {
 
 	@Id
 	private String id; // walletAccountId + date

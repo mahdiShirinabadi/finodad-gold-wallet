@@ -33,7 +33,7 @@ public class GiftCardRepositoryServiceImplementation implements GiftCardReposito
 
     @Override
     public Optional<GiftCardEntity> findByRrnId(long rrnId) {
-        return giftCardRepository.findById(rrnId);
+        return giftCardRepository.findByRrnEntity_Id(rrnId);
     }
 
     @Override

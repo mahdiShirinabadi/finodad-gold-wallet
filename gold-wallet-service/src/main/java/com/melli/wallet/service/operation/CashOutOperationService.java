@@ -17,7 +17,7 @@ public interface CashOutOperationService {
 	CashOutResponse withdrawal(CashOutObjectDTO cashOutObjectDTO) throws InternalServiceException;
 	CashOutTrackResponse inquiry(ChannelEntity channelEntity, String uuid, String channelIp)throws InternalServiceException;
 
-	UuidResponse physicalGenerateUuid(ChannelEntity channelEntity, String nationalCode, String quantity, String accountNumber) throws InternalServiceException;
+	UuidResponse physicalGenerateUuid(ChannelEntity channelEntity, String nationalCode, String quantity, String accountNumber, String currency) throws InternalServiceException;
 	PhysicalCashOutResponse physicalWithdrawal(PhysicalCashOutObjectDTO physicalCashOutObjectDTO) throws InternalServiceException;
 	PhysicalCashOutTrackResponse physicalInquiry(ChannelEntity channelEntity, String uuid, String channelIp)throws InternalServiceException;
 }

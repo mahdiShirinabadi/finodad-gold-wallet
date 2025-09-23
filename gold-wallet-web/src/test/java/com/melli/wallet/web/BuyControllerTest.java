@@ -206,7 +206,7 @@ class BuyControllerTest extends WalletApplicationTests {
         WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, accessToken, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.GOLD);
         
         // Step 3: Get minimum quantity and calculate quantity below minimum
-        String minAmount = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.MIN_QUANTITY_BUY, walletAccountObjectOptional.getAccountNumber());
+        String minAmount = getLimitationSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.MIN_QUANTITY_BUY, walletAccountObjectOptional.getAccountNumber());
         String quantity = String.valueOf(new BigDecimal(minAmount).subtract(new BigDecimal("0.00001")));
         
         // Step 4: Increase merchant balance for testing
@@ -239,7 +239,7 @@ class BuyControllerTest extends WalletApplicationTests {
         WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, accessToken, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.GOLD);
         
         // Step 3: Get maximum quantity and calculate quantity above maximum
-        String minAmount = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.MAX_QUANTITY_BUY, walletAccountObjectOptional.getAccountNumber());
+        String minAmount = getLimitationSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.MAX_QUANTITY_BUY, walletAccountObjectOptional.getAccountNumber());
         String quantity = String.valueOf(new BigDecimal(minAmount).add(new BigDecimal("0.00001")));
         
         // Step 4: Increase merchant balance for testing
@@ -398,13 +398,13 @@ class BuyControllerTest extends WalletApplicationTests {
         increaseMerchantBalance("1.07", WalletAccountCurrencyRepositoryService.GOLD, "1111111111");
 
         // Step 5: Enable cash in permission if disabled
-        String value = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, walletAccountObjectOptional.getAccountNumber());
+        String value = getLimitationSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, walletAccountObjectOptional.getAccountNumber());
         if ("false".equalsIgnoreCase(value)) {
             WalletAccountEntity walletAccountEntity = walletAccountRepositoryService.findByAccountNumber(walletAccountObjectOptional.getAccountNumber());
             setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, walletAccountEntity, "true");
         }
 
-        String valueRial = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, walletAccountObjectOptionalRial.getAccountNumber());
+        String valueRial = getLimitationSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, walletAccountObjectOptionalRial.getAccountNumber());
         if ("false".equalsIgnoreCase(valueRial)) {
             WalletAccountEntity walletAccountEntity = walletAccountRepositoryService.findByAccountNumber(walletAccountObjectOptionalRial.getAccountNumber());
             setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, walletAccountEntity, "true");
@@ -465,8 +465,8 @@ class BuyControllerTest extends WalletApplicationTests {
 
         // Step 4: Get current buy statistics and limitation values
         WalletAccountEntity walletAccountEntity = walletAccountRepositoryService.findByAccountNumber(walletAccountCurrencyObjectOptional.getAccountNumber());
-        String valueMaxDailyCount = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.MAX_DAILY_COUNT_BUY, walletAccountCurrencyObjectOptional.getAccountNumber());
-        String valueMaxDailyPrice = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.MAX_DAILY_QUANTITY_BUY, walletAccountCurrencyObjectOptional.getAccountNumber());
+        String valueMaxDailyCount = getLimitationSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.MAX_DAILY_COUNT_BUY, walletAccountCurrencyObjectOptional.getAccountNumber());
+        String valueMaxDailyPrice = getLimitationSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.MAX_DAILY_QUANTITY_BUY, walletAccountCurrencyObjectOptional.getAccountNumber());
         AggregationPurchaseDTO aggregationPurchaseDTO = requestRepositoryService.findSumAmountByTransactionTypeBetweenDate(new long[]{walletAccountEntity.getId()}, TransactionTypeEnum.BUY.name(), new Date(), new Date());
 
         // Step 5: Temporarily set MAX_DAILY_COUNT_BUY to current count
@@ -518,8 +518,8 @@ class BuyControllerTest extends WalletApplicationTests {
 
         // Step 4: Get current buy statistics and limitation values
         WalletAccountEntity walletAccountCurrencyEntity = walletAccountRepositoryService.findByAccountNumber(walletAccountCurrencyObjectOptional.getAccountNumber());
-        String valueMaxDailyCount = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.MAX_DAILY_COUNT_BUY, walletAccountCurrencyObjectOptional.getAccountNumber());
-        String valueMaxDailyQuantity = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.MAX_DAILY_QUANTITY_BUY, walletAccountCurrencyObjectOptional.getAccountNumber());
+        String valueMaxDailyCount = getLimitationSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.MAX_DAILY_COUNT_BUY, walletAccountCurrencyObjectOptional.getAccountNumber());
+        String valueMaxDailyQuantity = getLimitationSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.MAX_DAILY_QUANTITY_BUY, walletAccountCurrencyObjectOptional.getAccountNumber());
         AggregationPurchaseDTO aggregationPurchaseDTO = requestRepositoryService.findSumAmountByTransactionTypeBetweenDate(new long[]{walletAccountCurrencyEntity.getId()}, TransactionTypeEnum.BUY.name(), new Date(), new Date());
 
         // Step 5: Temporarily set MAX_DAILY_COUNT_BUY to current count we want generateUuid will be success
@@ -572,9 +572,9 @@ class BuyControllerTest extends WalletApplicationTests {
         // Step 4: Update balance merchant wallet-account
         WalletAccountEntity walletAccountEntity = walletAccountRepositoryService.findByAccountNumber(walletAccountCurrencyObjectOptional.getAccountNumber());
         // Step 5: Get current monthly limitation values for backup
-        String valueMaxMonthlyCount = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.MAX_MONTHLY_COUNT_BUY, walletAccountEntity.getAccountNumber());
-        String valueMaxMonthlyQuantity = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.MAX_MONTHLY_QUANTITY_BUY, walletAccountEntity.getAccountNumber());
-        String valueCheckMonthly = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.MONTHLY_VALIDATION_CHECK_BUY, walletAccountEntity.getAccountNumber());
+        String valueMaxMonthlyCount = getLimitationSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.MAX_MONTHLY_COUNT_BUY, walletAccountEntity.getAccountNumber());
+        String valueMaxMonthlyQuantity = getLimitationSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.MAX_MONTHLY_QUANTITY_BUY, walletAccountEntity.getAccountNumber());
+        String valueCheckMonthly = getLimitationSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.MONTHLY_VALIDATION_CHECK_BUY, walletAccountEntity.getAccountNumber());
         // Step 6: Calculate current monthly usage period
         Date fromDate = DateUtils.findFirstDateOfPersianMonth(new Date());
         Date untilDate = new Date();
@@ -630,7 +630,7 @@ class BuyControllerTest extends WalletApplicationTests {
             log.error("walletAccountCurrencyEntityGold not found", ex);
         }
         // Step 6: Enable cash-in if disabled
-        String valueCashInGold = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, walletAccountObjectOptional.getAccountNumber());
+        String valueCashInGold = getLimitationSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, walletAccountObjectOptional.getAccountNumber());
         if ("false".equalsIgnoreCase(valueCashInGold)) {
             WalletAccountEntity walletAccountEntity = walletAccountRepositoryService.findByAccountNumber(walletAccountObjectOptional.getAccountNumber());
             setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, walletAccountEntity, "true");
@@ -685,9 +685,9 @@ class BuyControllerTest extends WalletApplicationTests {
         WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, accessToken, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.GOLD);
         // Step 3: Charge account first
         String refNumber = new Date().getTime() + "";
-        String cashInAmount = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_IN, walletAccountObjectOptional.getAccountNumber());
+        String cashInAmount = getLimitationSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_IN, walletAccountObjectOptional.getAccountNumber());
         WalletAccountEntity walletAccountEntity = walletAccountRepositoryService.findByAccountNumber(walletAccountObjectOptional.getAccountNumber());
-        String cashInValue = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, walletAccountObjectOptional.getAccountNumber());
+        String cashInValue = getLimitationSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, walletAccountObjectOptional.getAccountNumber());
         if("false".equalsIgnoreCase(cashInValue)){
             setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, walletAccountEntity, "true");
         }
@@ -761,9 +761,9 @@ class BuyControllerTest extends WalletApplicationTests {
         WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, accessToken, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.GOLD);
         // Step 3: Charge account first
         String refNumber = new Date().getTime() + "";
-        String cashInAmount = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_IN, walletAccountObjectOptional.getAccountNumber());
+        String cashInAmount = getLimitationSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_IN, walletAccountObjectOptional.getAccountNumber());
         WalletAccountEntity walletAccountEntity = walletAccountRepositoryService.findByAccountNumber(walletAccountObjectOptional.getAccountNumber());
-        String cashInValue = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, walletAccountObjectOptional.getAccountNumber());
+        String cashInValue = getLimitationSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, walletAccountObjectOptional.getAccountNumber());
         if("false".equalsIgnoreCase(cashInValue)){
             setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, walletAccountEntity, "true");
         }
@@ -810,9 +810,9 @@ class BuyControllerTest extends WalletApplicationTests {
         WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, accessToken, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.GOLD);
         // Step 3: Charge account first
         String refNumber = new Date().getTime() + "";
-        String cashInAmount = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_IN, walletAccountObjectOptional.getAccountNumber());
+        String cashInAmount = getLimitationSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_IN, walletAccountObjectOptional.getAccountNumber());
         WalletAccountEntity walletAccountEntity = walletAccountRepositoryService.findByAccountNumber(walletAccountObjectOptional.getAccountNumber());
-        String cashInValue = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, walletAccountObjectOptional.getAccountNumber());
+        String cashInValue = getLimitationSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, walletAccountObjectOptional.getAccountNumber());
         if("false".equalsIgnoreCase(cashInValue)){
             setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, walletAccountEntity, "true");
         }
@@ -858,9 +858,9 @@ class BuyControllerTest extends WalletApplicationTests {
         WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, accessToken, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.GOLD);
         // Step 3: Charge account first
         String refNumber = new Date().getTime() + "";
-        String cashInAmount = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_IN, walletAccountObjectOptional.getAccountNumber());
+        String cashInAmount = getLimitationSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.MIN_AMOUNT_CASH_IN, walletAccountObjectOptional.getAccountNumber());
         WalletAccountEntity walletAccountEntity = walletAccountRepositoryService.findByAccountNumber(walletAccountObjectOptional.getAccountNumber());
-        String cashInValue = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, walletAccountObjectOptional.getAccountNumber());
+        String cashInValue = getLimitationSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, walletAccountObjectOptional.getAccountNumber());
         if("false".equalsIgnoreCase(cashInValue)){
             setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_CASH_IN, walletAccountEntity, "true");
         }

@@ -14,10 +14,10 @@ import lombok.*;
 @ToString
 public class PanelResourceCreateRequest {
 
-    @StringValidation(label = "نام دسترسی")
+    @StringValidation(label = "name")
     private String name;
 
-    @StringValidation(label = "نام فارسی دسترسی")
+    @StringValidation(label = NamingProperty.FARSI_NAME)
     @JsonProperty(NamingProperty.FARSI_NAME)
     private String faName;
 

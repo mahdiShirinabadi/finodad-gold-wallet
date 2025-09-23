@@ -6,6 +6,8 @@ import com.melli.wallet.domain.request.wallet.giftcard.GiftCardProcessRequestJso
 import com.melli.wallet.domain.request.wallet.giftcard.GiftCardGenerateUuidRequestJson;
 import com.melli.wallet.domain.request.wallet.giftcard.PaymentGiftCardRequestJson;
 import com.melli.wallet.domain.response.base.BaseResponse;
+import com.melli.wallet.domain.response.giftcard.GiftCardResponse;
+import com.melli.wallet.domain.response.giftcard.GiftCardTrackResponse;
 import com.melli.wallet.domain.response.giftcard.GiftCardUuidResponse;
 import com.melli.wallet.domain.response.p2p.P2pTrackResponse;
 import com.melli.wallet.exception.InternalServiceException;
@@ -57,28 +59,28 @@ public class GiftCardController extends WebController{
 
     @Timed(description = "GiftCardController.process")
     @PostMapping(path = "/process", produces = {MediaType.APPLICATION_JSON_VALUE})
-    @Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "حساب به حساب")
+    @Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "ایحاد کیف پول")
     @PreAuthorize("hasAuthority('" + ResourceDefinition.GIFT_CARD_AUTH + "')")
-    public ResponseEntity<BaseResponse<Null>> process(@Valid @RequestBody GiftCardProcessRequestJson requestJson) throws InternalServiceException {
+    public ResponseEntity<BaseResponse<GiftCardResponse>> process(@Valid @RequestBody GiftCardProcessRequestJson requestJson) throws InternalServiceException {
         String channelIp = requestContext.getClientIp();
         String username = requestContext.getChannelEntity().getUsername();
         securityService.checkSign(requestContext.getChannelEntity(), requestJson.getSign(), requestJson.getDataString());
         log.info("start call p2p in username ===> {}, nationalCode ===> {}, from ip ===> {}", username, requestJson.getNationalCode(), channelIp);
-        giftCardOperationService.process(new GiftCardProcessObjectDTO(requestContext.getChannelEntity(), requestJson.getUniqueIdentifier(),
+        GiftCardResponse response = giftCardOperationService.process(new GiftCardProcessObjectDTO(requestContext.getChannelEntity(), requestJson.getUniqueIdentifier(),
                 requestJson.getQuantity(), new BigDecimal(requestJson.getCommissionObject().getAmount()), requestJson.getCommissionObject().getCurrency(),
-                requestJson.getNationalCode(),  requestJson.getAccountNumber(), requestJson.getDestinationNationalCode(),requestContext.getClientIp()));
-        return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse<>(true));
+                requestJson.getNationalCode(),  requestJson.getAccountNumber(), requestJson.getDestinationNationalCode(),requestContext.getClientIp(), requestJson.getAdditionalData()));
+        return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse<>(true, response));
     }
 
     @Timed(description = "GiftCardController.payment.inquiry")
     @GetMapping(path = "/inquiry", produces = {MediaType.APPLICATION_JSON_VALUE})
     @Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "استعلام کارت هدیه")
     @PreAuthorize("hasAuthority('" + ResourceDefinition.GIFT_CARD_AUTH + "')")
-    public ResponseEntity<BaseResponse<P2pTrackResponse>> inquiry(@Valid @RequestParam("uniqueIdentifier") String uniqueIdentifier) throws InternalServiceException {
+    public ResponseEntity<BaseResponse<GiftCardTrackResponse>> inquiry(@Valid @RequestParam("uniqueIdentifier") String uniqueIdentifier) throws InternalServiceException {
         String channelIp = requestContext.getClientIp();
         String username = requestContext.getChannelEntity().getUsername();
         log.info("start call track p2p in username ===> {}, nationalCode ===> {}, from ip ===> {}", username, uniqueIdentifier, channelIp);
-        P2pTrackResponse response = giftCardOperationService.inquiry(requestContext.getChannelEntity(), uniqueIdentifier, requestContext.getClientIp());
+        GiftCardTrackResponse response = giftCardOperationService.inquiry(requestContext.getChannelEntity(), uniqueIdentifier, requestContext.getClientIp());
         return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse<>(true,response));
     }
 
@@ -91,7 +93,7 @@ public class GiftCardController extends WebController{
         String username = requestContext.getChannelEntity().getUsername();
         log.info("start call payment in username ===> {}, nationalCode ===> {}, from ip ===> {}", username, requestJson.getNationalCode(), channelIp);
         giftCardOperationService.payment(new GiftCardPaymentObjectDTO(requestContext.getChannelEntity(), requestJson.getGiftCardUniqueCode(),
-                requestJson.getQuantity(), requestJson.getCurrency(), requestJson.getNationalCode(), channelIp));
+                requestJson.getQuantity(), requestJson.getCurrency(), requestJson.getNationalCode(), channelIp, requestJson.getAccountNumber(), requestJson.getAdditionalData()));
         return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse<>(true));
     }
 }

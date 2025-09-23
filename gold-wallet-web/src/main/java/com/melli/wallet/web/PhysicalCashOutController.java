@@ -52,7 +52,7 @@ public class PhysicalCashOutController extends WebController {
     @LogExecutionTime("Generate physical cash out UUID")
     public ResponseEntity<BaseResponse<UuidResponse>> physicalCashOutGenerateUuid(@Valid @RequestBody PhysicalCashGenerateUuidRequestJson requestJson) throws InternalServiceException {
         log.info("start call uuid nationalCode ===> {}", requestJson.getNationalCode());
-        UuidResponse response = cashOutOperationService.physicalGenerateUuid(requestContext.getChannelEntity(), requestJson.getNationalCode(), requestJson.getQuantity(), requestJson.getAccountNumber());
+        UuidResponse response = cashOutOperationService.physicalGenerateUuid(requestContext.getChannelEntity(), requestJson.getNationalCode(), requestJson.getQuantity(), requestJson.getAccountNumber(), requestJson.getCurrency());
         return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse<>(true,response));
     }
 

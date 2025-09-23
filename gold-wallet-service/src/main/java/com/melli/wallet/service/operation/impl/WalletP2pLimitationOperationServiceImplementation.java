@@ -118,7 +118,7 @@ public class WalletP2pLimitationOperationServiceImplementation implements Wallet
 
             if ((walletDailyP2pLimitationRedis.getQuantity().add(quantity).compareTo(maxQuantityDaily)) > 0) {
                 log.error("checkPurchaseDailyLimitation: wallet({}) on channel ({}) , exceeded amount limitation in purchase!!! SumPurchaseAmount plus amount is: {} and bigger than maxAmountDaily {}", wallet.getNationalCode(), wallet.getOwner().getId(), walletDailyP2pLimitationRedis.getQuantity().add(quantity), maxQuantityDaily);
-                throw new InternalServiceException("wallet sum amount sell exceeded the limitation !!!", StatusRepositoryService.SELL_EXCEEDED_AMOUNT_DAILY_LIMITATION, HttpStatus.OK, Map.ofEntries(
+                throw new InternalServiceException("wallet sum amount sell exceeded the limitation !!!", StatusRepositoryService.EXCEEDED_AMOUNT_DAILY_LIMITATION, HttpStatus.OK, Map.ofEntries(
                         entry("1", String.valueOf(walletDailyP2pLimitationRedis.getQuantity().add(quantity))),
                         entry("2", String.valueOf(maxQuantityDaily))
                 ));
@@ -126,7 +126,7 @@ public class WalletP2pLimitationOperationServiceImplementation implements Wallet
 
             if ((walletDailyP2pLimitationRedis.getCount() + 1) > maxCountDaily.longValue()) {
                 log.error("checkPurchaseDailyLimitation: wallet({}) on channel ({}) , exceeded count limitation in p2p!!!SumCount is: {}", wallet.getNationalCode(), wallet.getOwner().getId(), walletDailyP2pLimitationRedis.getCount());
-                throw new InternalServiceException("wallet count sell exceeded the limitation !!!", StatusRepositoryService.SELL_EXCEEDED_COUNT_DAILY_LIMITATION, HttpStatus.OK, Map.ofEntries(
+                throw new InternalServiceException("wallet count sell exceeded the limitation !!!", StatusRepositoryService.EXCEEDED_COUNT_DAILY_LIMITATION, HttpStatus.OK, Map.ofEntries(
                         entry("1", Utility.addComma(walletDailyP2pLimitationRedis.getCount() + 1)),
                         entry("2", Utility.addComma((maxCountDaily.longValue())))
                 ));

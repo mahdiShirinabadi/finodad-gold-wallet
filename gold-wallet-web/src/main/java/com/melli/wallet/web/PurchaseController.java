@@ -115,7 +115,7 @@ public class PurchaseController extends WebController {
         securityOperationService.checkSign(requestContext.getChannelEntity(), requestJson.getSign(), requestJson.getDataString());
 
         PurchaseResponse purchaseResponse = purchaseOperationService.buyDirect(new BuyRequestDTO(requestContext.getChannelEntity(), requestJson.getUniqueIdentifier(), new BigDecimal(requestJson.getQuantity()),
-                Long.parseLong(requestJson.getTotalPrice()), requestJson.getWalletAccountNumber(), requestJson.getAdditionalData(), requestJson.getMerchantId(),
+                Long.parseLong(requestJson.getPrice()), requestJson.getWalletAccountNumber(), requestJson.getAdditionalData(), requestJson.getMerchantId(),
                 requestJson.getNationalCode(), new BigDecimal(requestJson.getCommissionObject().getAmount()), requestJson.getCurrency(), channelIp,requestJson.getRefNumber(), requestJson.getCommissionObject().getCurrency()));
 
         return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse<>(true,purchaseResponse));

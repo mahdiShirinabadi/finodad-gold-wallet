@@ -9,6 +9,8 @@ import com.melli.wallet.domain.response.base.BaseResponse;
 import com.melli.wallet.domain.response.base.ErrorDetail;
 import com.melli.wallet.domain.response.cash.*;
 import com.melli.wallet.domain.response.channel.ChannelObject;
+import com.melli.wallet.domain.response.giftcard.GiftCardResponse;
+import com.melli.wallet.domain.response.giftcard.GiftCardTrackResponse;
 import com.melli.wallet.domain.response.giftcard.GiftCardUuidResponse;
 import com.melli.wallet.domain.response.limitation.*;
 import com.melli.wallet.domain.response.login.LoginResponse;
@@ -51,8 +53,6 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
 import java.util.*;
-
-import static org.json.XMLTokener.entity;
 
 
 @Service
@@ -137,20 +137,21 @@ public class Helper {
     }
 
 
-    public P2pTrackResponse fillGiftCardTrackResponse(GiftCardEntity entity, StatusRepositoryService statusRepositoryService) {
-        StatusEntity statusEntity = statusRepositoryService.findByCode(String.valueOf(entity.getResult()));
-        P2pTrackResponse response = new P2pTrackResponse();
-        response.setDestWalletAccountNumber(entity.getDestinationAccountWalletEntity().getAccountNumber());
-        response.setDestNationalCode(entity.getDestinationAccountWalletEntity().getWalletEntity().getNationalCode());
+    public GiftCardTrackResponse fillGiftCardTrackResponse(GiftCardEntity entity) {
+        GiftCardTrackResponse response = new GiftCardTrackResponse();
+        response.setDestWalletAccountNumber(entity.getActivatedBy());
+        response.setDestNationalCode(entity.getNationalCodeBy());
         response.setId(entity.getId());
-        response.setNationalCode(entity.getSourceAccountWalletEntity().getWalletEntity().getNationalCode());
-        response.setQuantity(String.valueOf(entity.getAmount()));
+        response.setNationalCode(entity.getWalletAccountEntity().getWalletEntity().getNationalCode());
+        response.setQuantity(String.valueOf(entity.getQuantity()));
         response.setUniqueIdentifier(entity.getRrnEntity().getUuid());
-        response.setResult(entity.getResult());
-        response.setDescription(statusEntity != null ? statusEntity.getPersianDescription() : "");
-        response.setWalletAccountNumber(entity.getSourceAccountWalletEntity().getAccountNumber());
+        response.setStatus(entity.getStatus().getText());
+        response.setWalletAccountNumber(entity.getWalletAccountEntity().getAccountNumber());
         response.setCreateTime(DateUtils.getLocaleDate(DateUtils.FARSI_LOCALE, entity.getCreatedAt(), FORMAT_DATE_RESPONSE, false));
         response.setCreateTimeTimestamp(entity.getCreatedAt().getTime());
+        response.setActiveCode(entity.getActiveCode());
+        response.setExpireTime(DateUtils.getLocaleDate(DateUtils.FARSI_LOCALE, entity.getExpireAt(), FORMAT_DATE_RESPONSE, false));
+        response.setExpireTimeTimeStamp(entity.getExpireAt().getTime());
         return response;
     }
 
@@ -164,6 +165,16 @@ public class Helper {
     public GiftCardUuidResponse fillGiftCardUuidResponse(String uniqueIdentifier) {
         GiftCardUuidResponse response = new GiftCardUuidResponse();
         response.setUniqueIdentifier(uniqueIdentifier);
+        return response;
+    }
+
+    public GiftCardResponse fillGiftCardResponse(String activeCode, String quantity, Date expireTime, String currency) {
+        GiftCardResponse response = new GiftCardResponse();
+        response.setActiveCode(activeCode);
+        response.setQuantity(String.valueOf(quantity));
+        response.setCurrency(currency);
+        response.setExpireTime(DateUtils.getLocaleDate(DateUtils.FARSI_LOCALE, expireTime, FORMAT_DATE_RESPONSE, false));
+        response.setExpireTimeTimeStamp(expireTime.getTime());
         return response;
     }
 

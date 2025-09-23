@@ -29,6 +29,6 @@ public interface GiftCardRepository extends CrudRepository<GiftCardEntity, Long>
     Long countByActiveCode(@Param("activeCode") String activeCode);
 
     @Query(value = "select COALESCE(SUM(p.quantity), 0) as sumQuantity, count(*) as countRecord from {h-schema}gift_card p where p.wallet_account_id in :walletAccountId" +
-            " and date(r.created_at) BETWEEN date(:fromDate) AND  date(:toDate) and r.result=0", nativeQuery = true)
+            " and date(p.created_at) BETWEEN date(:fromDate) AND  date(:toDate)", nativeQuery = true)
     AggregationGiftCardDTO findSumAmountBetweenDate(@Param("walletAccountId") long[] walletAccountId, @Param("fromDate") Date fromDate, @Param("toDate") Date toDate);
 }

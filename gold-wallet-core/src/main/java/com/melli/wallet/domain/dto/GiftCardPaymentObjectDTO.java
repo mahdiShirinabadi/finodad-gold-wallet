@@ -23,4 +23,6 @@ public class GiftCardPaymentObjectDTO {
     private String currency;
     private String nationalCode;
     private String ip;
+    private String accountNumber;
+    private String additionalData;
 }

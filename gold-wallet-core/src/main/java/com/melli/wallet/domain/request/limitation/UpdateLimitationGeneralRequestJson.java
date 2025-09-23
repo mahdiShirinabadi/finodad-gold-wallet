@@ -23,13 +23,13 @@ public class UpdateLimitationGeneralRequestJson {
     @Schema(name = NamingProperty.ID)
     @JsonProperty(NamingProperty.ID)
     @NotNull(message = "Limitation ID is required")
-    @StringValidation(label = "شناسه محدودیت")
+    @StringValidation(label = "id")
     private String id;
 
     @Schema(name = NamingProperty.VALUE)
     @JsonProperty(NamingProperty.VALUE)
     @NotBlank(message = "Limitation value is required")
-    @StringValidation(label = "مقدار محدودیت")
+    @StringValidation(label = "value")
     private String value;
 
     @Schema(name = NamingProperty.PATTERN)

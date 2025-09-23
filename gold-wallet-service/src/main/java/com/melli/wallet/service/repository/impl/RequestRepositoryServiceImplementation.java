@@ -40,6 +40,7 @@ public class RequestRepositoryServiceImplementation implements RequestRepository
     private final PhysicalCashOutRequestRepository physicalCashOutRequestRepository;
     private final P2PRequestRepository p2PRequestRepository;
     private final GiftCardRepository giftCardRepository;
+    private final GiftCardPaymentRequestRepository giftCardPaymentRequestRepository;
 
 
     @Override
@@ -52,6 +53,7 @@ public class RequestRepositoryServiceImplementation implements RequestRepository
             case Person2PersonRequestEntity person2PersonRequestEntity -> p2PRequestRepository.save(person2PersonRequestEntity);
             case PhysicalCashOutRequestEntity physicalCashOutRequestEntity ->
                     physicalCashOutRequestRepository.save(physicalCashOutRequestEntity);
+            case GiftCardPaymentRequestEntity giftCardPaymentRequestEntity -> giftCardPaymentRequestRepository.save(giftCardPaymentRequestEntity);
             case null, default -> {
                 log.error("requestEntity is not instanceof");
                 throw new InternalServiceException("error in save request, instance not define", StatusRepositoryService.GENERAL_ERROR, HttpStatus.OK);
@@ -76,6 +78,8 @@ public class RequestRepositoryServiceImplementation implements RequestRepository
             resultRequest = physicalCashOutRequestRepository.findByRrnEntityId(traceId);
         }else if (requestEntity instanceof Person2PersonRequestEntity) {
             resultRequest = p2PRequestRepository.findByRrnEntityId(traceId);
+        }else if (requestEntity instanceof GiftCardPaymentRequestEntity) {
+            resultRequest = giftCardPaymentRequestRepository.findByRrnEntityId(traceId);
         }
 
         if (resultRequest != null) {
@@ -215,5 +219,10 @@ public class RequestRepositoryServiceImplementation implements RequestRepository
     @Override
     public AggregationGiftCardDTO findGiftCardSumAmountByTransactionTypeBetweenDate(long[] walletAccountId, Date fromDate, Date toDate) {
         return giftCardRepository.findSumAmountBetweenDate(walletAccountId, fromDate, toDate);
+    }
+
+    @Override
+    public AggregationGiftCardPaymentDTO findGiftCardPaymentSumAmountByTransactionTypeBetweenDate(long[] walletAccountId, Date fromDate, Date toDate) {
+        return giftCardPaymentRequestRepository.findSumAmountBetweenDate(walletAccountId, fromDate, toDate);
     }
 }

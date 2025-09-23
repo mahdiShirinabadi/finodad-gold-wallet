@@ -583,13 +583,13 @@ class SellControllerTest extends WalletApplicationTests {
                 .findFirst().orElse(null);
         walletAccountRepositoryService.increaseBalance(merchantRialAccount.getId(), new BigDecimal("1000000"));
         // Step 5: Get current daily quantity limitation
-        String maxDailyQuantity = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.MAX_DAILY_QUANTITY_SELL, walletAccountObjectOptional.getAccountNumber());
+        String maxDailyQuantity = getLimitationSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.MAX_DAILY_QUANTITY_SELL, walletAccountObjectOptional.getAccountNumber());
 
         // Step 6: Set a very low daily quantity limitation to trigger the error
         setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MAX_DAILY_QUANTITY_SELL, goldWalletAccountEntity, "0.5");
         // Step 7: Generate sell UUID - should fail due to daily quantity limitation
-        BaseResponse<UuidResponse> uuidResponse = generateSellUniqueIdentifier(mockMvc, accessToken, NATIONAL_CODE_CORRECT, quantity, goldWalletAccountEntity.getAccountNumber(), CURRENCY_GOLD, HttpStatus.OK, StatusRepositoryService.SELL_EXCEEDED_AMOUNT_DAILY_LIMITATION, false);
-        Assert.assertSame(StatusRepositoryService.SELL_EXCEEDED_AMOUNT_DAILY_LIMITATION, uuidResponse.getErrorDetail().getCode());
+        BaseResponse<UuidResponse> uuidResponse = generateSellUniqueIdentifier(mockMvc, accessToken, NATIONAL_CODE_CORRECT, quantity, goldWalletAccountEntity.getAccountNumber(), CURRENCY_GOLD, HttpStatus.OK, StatusRepositoryService.EXCEEDED_AMOUNT_DAILY_LIMITATION, false);
+        Assert.assertSame(StatusRepositoryService.EXCEEDED_AMOUNT_DAILY_LIMITATION, uuidResponse.getErrorDetail().getCode());
         // Step 8: Restore original daily quantity limitation
         setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MAX_DAILY_QUANTITY_SELL, goldWalletAccountEntity, maxDailyQuantity);
     }
@@ -623,13 +623,13 @@ class SellControllerTest extends WalletApplicationTests {
                 .findFirst().orElse(null);
         walletAccountRepositoryService.increaseBalance(merchantRialAccount.getId(), new BigDecimal("1000000"));
         // Step 5: Get current daily count limitation
-        String maxDailyCount = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.MAX_DAILY_COUNT_SELL, walletAccountObjectOptional.getAccountNumber());
+        String maxDailyCount = getLimitationSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.MAX_DAILY_COUNT_SELL, walletAccountObjectOptional.getAccountNumber());
         WalletAccountEntity walletAccountEntity = walletAccountRepositoryService.findByAccountNumber(walletAccountObjectOptional.getAccountNumber());
         // Step 6: Set a very low daily count limitation to trigger the error
         setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MAX_DAILY_COUNT_SELL, walletAccountEntity, "1");
         // Step 7: Perform first sell operation (should succeed)
-        BaseResponse<UuidResponse> uuidResponse2 = generateSellUniqueIdentifier(mockMvc, accessToken, NATIONAL_CODE_CORRECT, quantity, walletAccountObjectOptional.getAccountNumber(), CURRENCY_GOLD, HttpStatus.OK, StatusRepositoryService.SELL_EXCEEDED_COUNT_DAILY_LIMITATION, false);
-        Assert.assertSame(StatusRepositoryService.SELL_EXCEEDED_COUNT_DAILY_LIMITATION, uuidResponse2.getErrorDetail().getCode());
+        BaseResponse<UuidResponse> uuidResponse2 = generateSellUniqueIdentifier(mockMvc, accessToken, NATIONAL_CODE_CORRECT, quantity, walletAccountObjectOptional.getAccountNumber(), CURRENCY_GOLD, HttpStatus.OK, StatusRepositoryService.EXCEEDED_COUNT_DAILY_LIMITATION, false);
+        Assert.assertSame(StatusRepositoryService.EXCEEDED_COUNT_DAILY_LIMITATION, uuidResponse2.getErrorDetail().getCode());
         // Step 8: Restore original daily count limitation
         setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MAX_DAILY_COUNT_SELL, walletAccountEntity, maxDailyCount);
     }
@@ -663,12 +663,12 @@ class SellControllerTest extends WalletApplicationTests {
                 .findFirst().orElse(null);
         walletAccountRepositoryService.increaseBalance(merchantRialAccount.getId(), new BigDecimal("1000000"));
         // Step 5: Get current monthly quantity limitation
-        String maxMonthlyQuantity = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.MAX_MONTHLY_QUANTITY_SELL, walletAccountObjectOptional.getAccountNumber());
+        String maxMonthlyQuantity = getLimitationSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.MAX_MONTHLY_QUANTITY_SELL, walletAccountObjectOptional.getAccountNumber());
         // Step 6: Set a very low monthly quantity limitation to trigger the error
         setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MAX_MONTHLY_QUANTITY_SELL, goldWalletAccountEntity, "0.5");
         setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MONTHLY_VALIDATION_CHECK_SELL, goldWalletAccountEntity, "true");
         // Step 7: Generate sell UUID - should fail due to monthly quantity limitation
-        generateSellUniqueIdentifier(mockMvc, accessToken, NATIONAL_CODE_CORRECT, quantity, goldWalletAccountEntity.getAccountNumber(), CURRENCY_GOLD, HttpStatus.OK, StatusRepositoryService.SELL_EXCEEDED_AMOUNT_MONTHLY_LIMITATION, false);
+        generateSellUniqueIdentifier(mockMvc, accessToken, NATIONAL_CODE_CORRECT, quantity, goldWalletAccountEntity.getAccountNumber(), CURRENCY_GOLD, HttpStatus.OK, StatusRepositoryService.EXCEEDED_AMOUNT_MONTHLY_LIMITATION, false);
         // Step 8: Restore original monthly quantity limitation
         setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MAX_MONTHLY_QUANTITY_SELL, goldWalletAccountEntity, maxMonthlyQuantity);
         setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MONTHLY_VALIDATION_CHECK_SELL, goldWalletAccountEntity, "false");
@@ -703,13 +703,13 @@ class SellControllerTest extends WalletApplicationTests {
                 .findFirst().orElse(null);
         walletAccountRepositoryService.increaseBalance(merchantRialAccount.getId(), new BigDecimal("1000000"));
         // Step 5: Get current monthly count limitation
-        String maxMonthlyCountValue = getSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.MAX_MONTHLY_COUNT_SELL, walletAccountObjectOptional.getAccountNumber());
+        String maxMonthlyCountValue = getLimitationSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.MAX_MONTHLY_COUNT_SELL, walletAccountObjectOptional.getAccountNumber());
         WalletAccountEntity walletAccountEntity = walletAccountRepositoryService.findByAccountNumber(walletAccountObjectOptional.getAccountNumber());
         // Step 6: Set a very low monthly count limitation to trigger the error
         setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MAX_MONTHLY_COUNT_SELL, walletAccountEntity, "1");
         setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MONTHLY_VALIDATION_CHECK_SELL, walletAccountEntity, "true");
         // Step 7: Perform first sell operation (should succeed)
-        generateSellUniqueIdentifier(mockMvc, accessToken, NATIONAL_CODE_CORRECT, quantity, walletAccountObjectOptional.getAccountNumber(), CURRENCY_GOLD, HttpStatus.OK, StatusRepositoryService.SELL_EXCEEDED_COUNT_MONTHLY_LIMITATION, false);
+        generateSellUniqueIdentifier(mockMvc, accessToken, NATIONAL_CODE_CORRECT, quantity, walletAccountObjectOptional.getAccountNumber(), CURRENCY_GOLD, HttpStatus.OK, StatusRepositoryService.EXCEEDED_COUNT_MONTHLY_LIMITATION, false);
         // Step 8: Restore original monthly count limitation
         setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MAX_MONTHLY_COUNT_SELL, walletAccountEntity, maxMonthlyCountValue);
         setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MONTHLY_VALIDATION_CHECK_SELL, walletAccountEntity, "false");

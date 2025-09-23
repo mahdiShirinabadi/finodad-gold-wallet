@@ -1,0 +1,981 @@
+{
+	"info": {
+		"_postman_id": "complete-wallet-api-collection",
+		"name": "Complete Wallet API Collection",
+		"description": "Complete collection for all Wallet API endpoints with variable dependencies",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Authentication",
+			"item": [
+				{
+					"name": "Channel Login",
+					"request": {
+						"method": "POST",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"{{username}}\",\n    \"password\": \"{{password}}\"\n}"
+						},
+						"url": {"raw": "{{baseUrl}}/api/v1/auth/login", "host": ["{{baseUrl}}"], "path": ["api", "v1", "auth", "login"]}
+					},
+					"event": [{
+						"listen": "test",
+						"script": {
+							"exec": [
+								"if (pm.response.code === 200) {",
+								"    const response = pm.response.json();",
+								"    if (response.success && response.data && response.data.accessTokenObject) {",
+								"        pm.collectionVariables.set('accessToken', response.data.accessTokenObject.token);",
+								"    }",
+								"}"
+							],
+							"type": "text/javascript"
+						}
+					}]
+				},
+				{
+					"name": "Refresh Token",
+					"request": {
+						"method": "POST",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"refreshToken\": \"{{refreshToken}}\"\n}"
+						},
+						"url": {"raw": "{{baseUrl}}/api/v1/auth/refresh", "host": ["{{baseUrl}}"], "path": ["api", "v1", "auth", "refresh"]}
+					}
+				}
+			]
+		},
+		{
+			"name": "Wallet Management",
+			"item": [
+				{
+					"name": "Create Wallet",
+					"request": {
+						"method": "POST",
+						"header": [
+							{"key": "Content-Type", "value": "application/json"},
+							{"key": "Authorization", "value": "Bearer {{accessToken}}"}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"nationalCode\": \"{{nationalCode}}\",\n    \"mobile\": \"{{mobile}}\"\n}"
+						},
+						"url": {"raw": "{{baseUrl}}/api/v1/wallet/create", "host": ["{{baseUrl}}"], "path": ["api", "v1", "wallet", "create"]}
+					},
+					"event": [{
+						"listen": "test",
+						"script": {
+							"exec": [
+								"if (pm.response.code === 200) {",
+								"    const response = pm.response.json();",
+								"    if (response.success && response.data && response.data.walletId) {",
+								"        pm.collectionVariables.set('walletId', response.data.walletId);",
+								"    }",
+								"}"
+							],
+							"type": "text/javascript"
+						}
+					}]
+				},
+				{
+					"name": "Get Wallet Info",
+					"request": {
+						"method": "GET",
+						"header": [{"key": "Authorization", "value": "Bearer {{accessToken}}"}],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/wallet/get?nationalCode={{nationalCode}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "wallet", "get"],
+							"query": [{"key": "nationalCode", "value": "{{nationalCode}}"}]
+						}
+					}
+				},
+				{
+					"name": "Activate Wallet",
+					"request": {
+						"method": "POST",
+						"header": [
+							{"key": "Content-Type", "value": "application/json"},
+							{"key": "Authorization", "value": "Bearer {{accessToken}}"}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"id\": \"{{walletId}}\"\n}"
+						},
+						"url": {"raw": "{{baseUrl}}/api/v1/wallet/activate", "host": ["{{baseUrl}}"], "path": ["api", "v1", "wallet", "activate"]}
+					}
+				},
+				{
+					"name": "Deactivate Wallet",
+					"request": {
+						"method": "POST",
+						"header": [
+							{"key": "Content-Type", "value": "application/json"},
+							{"key": "Authorization", "value": "Bearer {{accessToken}}"}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"id\": \"{{walletId}}\"\n}"
+						},
+						"url": {"raw": "{{baseUrl}}/api/v1/wallet/deactivate", "host": ["{{baseUrl}}"], "path": ["api", "v1", "wallet", "deactivate"]}
+					}
+				},
+				{
+					"name": "Delete Wallet",
+					"request": {
+						"method": "POST",
+						"header": [
+							{"key": "Content-Type", "value": "application/json"},
+							{"key": "Authorization", "value": "Bearer {{accessToken}}"}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"id\": \"{{walletId}}\"\n}"
+						},
+						"url": {"raw": "{{baseUrl}}/api/v1/wallet/delete", "host": ["{{baseUrl}}"], "path": ["api", "v1", "wallet", "delete"]}
+					}
+				}
+			]
+		},
+		{
+			"name": "Cash In Operations",
+			"item": [
+				{
+					"name": "Generate Cash In UUID",
+					"request": {
+						"method": "POST",
+						"header": [
+							{"key": "Content-Type", "value": "application/json"},
+							{"key": "Authorization", "value": "Bearer {{accessToken}}"}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"nationalCode\": \"{{nationalCode}}\",\n    \"amount\": \"{{cashInAmount}}\",\n    \"accountNumber\": \"{{sourceAccountNumber}}\",\n    \"currency\": \"{{currency}}\"\n}"
+						},
+						"url": {"raw": "{{baseUrl}}/api/v1/cashIn/generate/uuid", "host": ["{{baseUrl}}"], "path": ["api", "v1", "cashIn", "generate", "uuid"]}
+					},
+					"event": [{
+						"listen": "test",
+						"script": {
+							"exec": [
+								"if (pm.response.code === 200) {",
+								"    const response = pm.response.json();",
+								"    if (response.success && response.data && response.data.uniqueIdentifier) {",
+								"        pm.collectionVariables.set('cashInUUID', response.data.uniqueIdentifier);",
+								"    }",
+								"}"
+							],
+							"type": "text/javascript"
+						}
+					}]
+				},
+				{
+					"name": "Process Cash In",
+					"request": {
+						"method": "POST",
+						"header": [
+							{"key": "Content-Type", "value": "application/json"},
+							{"key": "Authorization", "value": "Bearer {{accessToken}}"}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"uniqueIdentifier\": \"{{cashInUUID}}\",\n    \"amount\": \"{{cashInAmount}}\",\n    \"nationalCode\": \"{{nationalCode}}\",\n    \"accountNumber\": \"{{sourceAccountNumber}}\",\n    \"additionalData\": \"{{additionalData}}\",\n    \"sign\": \"{{generatedSign}}\",\n    \"currency\": \"{{currency}}\"\n}"
+						},
+						"url": {"raw": "{{baseUrl}}/api/v1/cashIn/process", "host": ["{{baseUrl}}"], "path": ["api", "v1", "cashIn", "process"]}
+					}
+				},
+				{
+					"name": "Inquiry Cash In",
+					"request": {
+						"method": "GET",
+						"header": [{"key": "Authorization", "value": "Bearer {{accessToken}}"}],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/cashIn/inquiry?uniqueIdentifier={{cashInUUID}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "cashIn", "inquiry"],
+							"query": [{"key": "uniqueIdentifier", "value": "{{cashInUUID}}"}]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Cash Out Operations",
+			"item": [
+				{
+					"name": "Generate Cash Out UUID",
+					"request": {
+						"method": "POST",
+						"header": [
+							{"key": "Content-Type", "value": "application/json"},
+							{"key": "Authorization", "value": "Bearer {{accessToken}}"}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"nationalCode\": \"{{nationalCode}}\",\n    \"amount\": \"{{cashOutAmount}}\",\n    \"accountNumber\": \"{{sourceAccountNumber}}\",\n    \"currency\": \"{{currency}}\"\n}"
+						},
+						"url": {"raw": "{{baseUrl}}/api/v1/cashOut/generate/uuid", "host": ["{{baseUrl}}"], "path": ["api", "v1", "cashOut", "generate", "uuid"]}
+					},
+					"event": [{
+						"listen": "test",
+						"script": {
+							"exec": [
+								"if (pm.response.code === 200) {",
+								"    const response = pm.response.json();",
+								"    if (response.success && response.data && response.data.uniqueIdentifier) {",
+								"        pm.collectionVariables.set('cashOutUUID', response.data.uniqueIdentifier);",
+								"    }",
+								"}"
+							],
+							"type": "text/javascript"
+						}
+					}]
+				},
+				{
+					"name": "Process Cash Out",
+					"request": {
+						"method": "POST",
+						"header": [
+							{"key": "Content-Type", "value": "application/json"},
+							{"key": "Authorization", "value": "Bearer {{accessToken}}"}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"uniqueIdentifier\": \"{{cashOutUUID}}\",\n    \"amount\": \"{{cashOutAmount}}\",\n    \"nationalCode\": \"{{nationalCode}}\",\n    \"accountNumber\": \"{{sourceAccountNumber}}\",\n    \"additionalData\": \"{{additionalData}}\",\n    \"sign\": \"{{generatedSign}}\",\n    \"currency\": \"{{currency}}\"\n}"
+						},
+						"url": {"raw": "{{baseUrl}}/api/v1/cashOut/process", "host": ["{{baseUrl}}"], "path": ["api", "v1", "cashOut", "process"]}
+					}
+				},
+				{
+					"name": "Inquiry Cash Out",
+					"request": {
+						"method": "GET",
+						"header": [{"key": "Authorization", "value": "Bearer {{accessToken}}"}],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/cashOut/inquiry?uniqueIdentifier={{cashOutUUID}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "cashOut", "inquiry"],
+							"query": [{"key": "uniqueIdentifier", "value": "{{cashOutUUID}}"}]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "P2P Operations",
+			"item": [
+				{
+					"name": "Generate P2P UUID",
+					"request": {
+						"method": "POST",
+						"header": [
+							{"key": "Content-Type", "value": "application/json"},
+							{"key": "Authorization", "value": "Bearer {{accessToken}}"}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"nationalCode\": \"{{nationalCode}}\",\n    \"amount\": \"{{p2pAmount}}\",\n    \"accountNumber\": \"{{sourceAccountNumber}}\",\n    \"destinationNationalCode\": \"{{destinationNationalCode}}\",\n    \"currency\": \"{{currency}}\"\n}"
+						},
+						"url": {"raw": "{{baseUrl}}/api/v1/p2p/generate/uuid", "host": ["{{baseUrl}}"], "path": ["api", "v1", "p2p", "generate", "uuid"]}
+					},
+					"event": [{
+						"listen": "test",
+						"script": {
+							"exec": [
+								"if (pm.response.code === 200) {",
+								"    const response = pm.response.json();",
+								"    if (response.success && response.data && response.data.uniqueIdentifier) {",
+								"        pm.collectionVariables.set('p2pUUID', response.data.uniqueIdentifier);",
+								"    }",
+								"}"
+							],
+							"type": "text/javascript"
+						}
+					}]
+				},
+				{
+					"name": "Process P2P",
+					"request": {
+						"method": "POST",
+						"header": [
+							{"key": "Content-Type", "value": "application/json"},
+							{"key": "Authorization", "value": "Bearer {{accessToken}}"}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"uniqueIdentifier\": \"{{p2pUUID}}\",\n    \"amount\": \"{{p2pAmount}}\",\n    \"nationalCode\": \"{{nationalCode}}\",\n    \"accountNumber\": \"{{sourceAccountNumber}}\",\n    \"destinationNationalCode\": \"{{destinationNationalCode}}\",\n    \"additionalData\": \"{{additionalData}}\",\n    \"sign\": \"{{generatedSign}}\",\n    \"currency\": \"{{currency}}\"\n}"
+						},
+						"url": {"raw": "{{baseUrl}}/api/v1/p2p/process", "host": ["{{baseUrl}}"], "path": ["api", "v1", "p2p", "process"]}
+					}
+				},
+				{
+					"name": "Inquiry P2P",
+					"request": {
+						"method": "GET",
+						"header": [{"key": "Authorization", "value": "Bearer {{accessToken}}"}],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/p2p/inquiry?uniqueIdentifier={{p2pUUID}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "p2p", "inquiry"],
+							"query": [{"key": "uniqueIdentifier", "value": "{{p2pUUID}}"}]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Purchase Operations",
+			"item": [
+				{
+					"name": "Generate Buy UUID",
+					"request": {
+						"method": "POST",
+						"header": [
+							{"key": "Content-Type", "value": "application/json"},
+							{"key": "Authorization", "value": "Bearer {{accessToken}}"}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"nationalCode\": \"{{nationalCode}}\",\n    \"quantity\": \"{{buyQuantity}}\",\n    \"accountNumber\": \"{{sourceAccountNumber}}\",\n    \"currency\": \"{{currency}}\"\n}"
+						},
+						"url": {"raw": "{{baseUrl}}/api/v1/purchase/buy/generate/uuid", "host": ["{{baseUrl}}"], "path": ["api", "v1", "purchase", "buy", "generate", "uuid"]}
+					},
+					"event": [{
+						"listen": "test",
+						"script": {
+							"exec": [
+								"if (pm.response.code === 200) {",
+								"    const response = pm.response.json();",
+								"    if (response.success && response.data && response.data.uniqueIdentifier) {",
+								"        pm.collectionVariables.set('buyUUID', response.data.uniqueIdentifier);",
+								"    }",
+								"}"
+							],
+							"type": "text/javascript"
+						}
+					}]
+				},
+				{
+					"name": "Process Buy",
+					"request": {
+						"method": "POST",
+						"header": [
+							{"key": "Content-Type", "value": "application/json"},
+							{"key": "Authorization", "value": "Bearer {{accessToken}}"}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"uniqueIdentifier\": \"{{buyUUID}}\",\n    \"quantity\": \"{{buyQuantity}}\",\n    \"nationalCode\": \"{{nationalCode}}\",\n    \"accountNumber\": \"{{sourceAccountNumber}}\",\n    \"additionalData\": \"{{additionalData}}\",\n    \"sign\": \"{{generatedSign}}\",\n    \"currency\": \"{{currency}}\"\n}"
+						},
+						"url": {"raw": "{{baseUrl}}/api/v1/purchase/buy/process", "host": ["{{baseUrl}}"], "path": ["api", "v1", "purchase", "buy", "process"]}
+					}
+				},
+				{
+					"name": "Generate Sell UUID",
+					"request": {
+						"method": "POST",
+						"header": [
+							{"key": "Content-Type", "value": "application/json"},
+							{"key": "Authorization", "value": "Bearer {{accessToken}}"}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"nationalCode\": \"{{nationalCode}}\",\n    \"quantity\": \"{{sellQuantity}}\",\n    \"accountNumber\": \"{{sourceAccountNumber}}\",\n    \"currency\": \"{{currency}}\"\n}"
+						},
+						"url": {"raw": "{{baseUrl}}/api/v1/purchase/sell/generate/uuid", "host": ["{{baseUrl}}"], "path": ["api", "v1", "purchase", "sell", "generate", "uuid"]}
+					},
+					"event": [{
+						"listen": "test",
+						"script": {
+							"exec": [
+								"if (pm.response.code === 200) {",
+								"    const response = pm.response.json();",
+								"    if (response.success && response.data && response.data.uniqueIdentifier) {",
+								"        pm.collectionVariables.set('sellUUID', response.data.uniqueIdentifier);",
+								"    }",
+								"}"
+							],
+							"type": "text/javascript"
+						}
+					}]
+				},
+				{
+					"name": "Process Sell",
+					"request": {
+						"method": "POST",
+						"header": [
+							{"key": "Content-Type", "value": "application/json"},
+							{"key": "Authorization", "value": "Bearer {{accessToken}}"}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"uniqueIdentifier\": \"{{sellUUID}}\",\n    \"quantity\": \"{{sellQuantity}}\",\n    \"nationalCode\": \"{{nationalCode}}\",\n    \"accountNumber\": \"{{sourceAccountNumber}}\",\n    \"additionalData\": \"{{additionalData}}\",\n    \"sign\": \"{{generatedSign}}\",\n    \"currency\": \"{{currency}}\"\n}"
+						},
+						"url": {"raw": "{{baseUrl}}/api/v1/purchase/sell/process", "host": ["{{baseUrl}}"], "path": ["api", "v1", "purchase", "sell", "process"]}
+					}
+				}
+			]
+		},
+		{
+			"name": "Gift Card Operations",
+			"item": [
+				{
+					"name": "Generate Gift Card UUID",
+					"request": {
+						"method": "POST",
+						"header": [
+							{"key": "Content-Type", "value": "application/json"},
+							{"key": "Authorization", "value": "Bearer {{accessToken}}"}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"nationalCode\": \"{{nationalCode}}\",\n    \"quantity\": \"{{giftCardQuantity}}\",\n    \"accountNumber\": \"{{sourceAccountNumber}}\",\n    \"currency\": \"{{currency}}\"\n}"
+						},
+						"url": {"raw": "{{baseUrl}}/api/v1/giftCard/generate/uuid", "host": ["{{baseUrl}}"], "path": ["api", "v1", "giftCard", "generate", "uuid"]}
+					},
+					"event": [{
+						"listen": "test",
+						"script": {
+							"exec": [
+								"if (pm.response.code === 200) {",
+								"    const response = pm.response.json();",
+								"    if (response.success && response.data && response.data.uniqueIdentifier) {",
+								"        pm.collectionVariables.set('giftCardUUID', response.data.uniqueIdentifier);",
+								"    }",
+								"}"
+							],
+							"type": "text/javascript"
+						}
+					}]
+				},
+				{
+					"name": "Process Gift Card",
+					"request": {
+						"method": "POST",
+						"header": [
+							{"key": "Content-Type", "value": "application/json"},
+							{"key": "Authorization", "value": "Bearer {{accessToken}}"}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"uniqueIdentifier\": \"{{giftCardUUID}}\",\n    \"quantity\": \"{{giftCardQuantity}}\",\n    \"nationalCode\": \"{{nationalCode}}\",\n    \"accountNumber\": \"{{sourceAccountNumber}}\",\n    \"destinationNationalCode\": \"{{destinationNationalCode}}\",\n    \"additionalData\": \"{{additionalData}}\",\n    \"sign\": \"{{generatedSign}}\",\n    \"commissionObject\": {\n        \"currency\": \"{{commissionCurrency}}\",\n        \"amount\": \"{{commissionAmount}}\"\n    },\n    \"currency\": \"{{currency}}\"\n}"
+						},
+						"url": {"raw": "{{baseUrl}}/api/v1/giftCard/process", "host": ["{{baseUrl}}"], "path": ["api", "v1", "giftCard", "process"]}
+					}
+				},
+				{
+					"name": "Inquiry Gift Card",
+					"request": {
+						"method": "GET",
+						"header": [{"key": "Authorization", "value": "Bearer {{accessToken}}"}],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/giftCard/inquiry?uniqueIdentifier={{giftCardUUID}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "giftCard", "inquiry"],
+							"query": [{"key": "uniqueIdentifier", "value": "{{giftCardUUID}}"}]
+						}
+					}
+				},
+				{
+					"name": "Payment Gift Card",
+					"request": {
+						"method": "POST",
+						"header": [
+							{"key": "Content-Type", "value": "application/json"},
+							{"key": "Authorization", "value": "Bearer {{accessToken}}"}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"giftCardUniqueCode\": \"{{giftCardUUID}}\",\n    \"quantity\": \"{{giftCardQuantity}}\",\n    \"currency\": \"{{currency}}\",\n    \"nationalCode\": \"{{destinationNationalCode}}\",\n    \"accountNumber\": \"{{destinationAccountNumber}}\",\n    \"additionalData\": \"{{paymentAdditionalData}}\"\n}"
+						},
+						"url": {"raw": "{{baseUrl}}/api/v1/giftCard/payment", "host": ["{{baseUrl}}"], "path": ["api", "v1", "giftCard", "payment"]}
+					}
+				}
+			]
+		},
+		{
+			"name": "Transaction Management",
+			"item": [
+				{
+					"name": "Get Transaction History",
+					"request": {
+						"method": "GET",
+						"header": [{"key": "Authorization", "value": "Bearer {{accessToken}}"}],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/transaction/history?nationalCode={{nationalCode}}&page={{page}}&size={{size}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "transaction", "history"],
+							"query": [
+								{"key": "nationalCode", "value": "{{nationalCode}}"},
+								{"key": "page", "value": "{{page}}"},
+								{"key": "size", "value": "{{size}}"}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Transaction Details",
+					"request": {
+						"method": "GET",
+						"header": [{"key": "Authorization", "value": "Bearer {{accessToken}}"}],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/transaction/details?uniqueIdentifier={{transactionUUID}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "transaction", "details"],
+							"query": [{"key": "uniqueIdentifier", "value": "{{transactionUUID}}"}]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Physical Cash Out Operations",
+			"item": [
+				{
+					"name": "Generate Physical Cash Out UUID",
+					"request": {
+						"method": "POST",
+						"header": [
+							{"key": "Content-Type", "value": "application/json"},
+							{"key": "Authorization", "value": "Bearer {{accessToken}}"}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"nationalCode\": \"{{nationalCode}}\",\n    \"amount\": \"{{physicalCashOutAmount}}\",\n    \"accountNumber\": \"{{sourceAccountNumber}}\",\n    \"currency\": \"{{currency}}\"\n}"
+						},
+						"url": {"raw": "{{baseUrl}}/api/v1/physicalCashOut/generate/uuid", "host": ["{{baseUrl}}"], "path": ["api", "v1", "physicalCashOut", "generate", "uuid"]}
+					},
+					"event": [{
+						"listen": "test",
+						"script": {
+							"exec": [
+								"if (pm.response.code === 200) {",
+								"    const response = pm.response.json();",
+								"    if (response.success && response.data && response.data.uniqueIdentifier) {",
+								"        pm.collectionVariables.set('physicalCashOutUUID', response.data.uniqueIdentifier);",
+								"    }",
+								"}"
+							],
+							"type": "text/javascript"
+						}
+					}]
+				},
+				{
+					"name": "Process Physical Cash Out",
+					"request": {
+						"method": "POST",
+						"header": [
+							{"key": "Content-Type", "value": "application/json"},
+							{"key": "Authorization", "value": "Bearer {{accessToken}}"}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"uniqueIdentifier\": \"{{physicalCashOutUUID}}\",\n    \"amount\": \"{{physicalCashOutAmount}}\",\n    \"nationalCode\": \"{{nationalCode}}\",\n    \"accountNumber\": \"{{sourceAccountNumber}}\",\n    \"additionalData\": \"{{additionalData}}\",\n    \"sign\": \"{{generatedSign}}\",\n    \"currency\": \"{{currency}}\"\n}"
+						},
+						"url": {"raw": "{{baseUrl}}/api/v1/physicalCashOut/process", "host": ["{{baseUrl}}"], "path": ["api", "v1", "physicalCashOut", "process"]}
+					}
+				},
+				{
+					"name": "Inquiry Physical Cash Out",
+					"request": {
+						"method": "GET",
+						"header": [{"key": "Authorization", "value": "Bearer {{accessToken}}"}],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/physicalCashOut/inquiry?uniqueIdentifier={{physicalCashOutUUID}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "physicalCashOut", "inquiry"],
+							"query": [{"key": "uniqueIdentifier", "value": "{{physicalCashOutUUID}}"}]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Merchant Operations",
+			"item": [
+				{
+					"name": "Get Merchant List",
+					"request": {
+						"method": "GET",
+						"header": [{"key": "Authorization", "value": "Bearer {{accessToken}}"}],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/merchant/list?page={{page}}&size={{size}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "merchant", "list"],
+							"query": [
+								{"key": "page", "value": "{{page}}"},
+								{"key": "size", "value": "{{size}}"}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Merchant Details",
+					"request": {
+						"method": "GET",
+						"header": [{"key": "Authorization", "value": "Bearer {{accessToken}}"}],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/merchant/details?merchantId={{merchantId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "merchant", "details"],
+							"query": [{"key": "merchantId", "value": "{{merchantId}}"}]
+						}
+					}
+				},
+				{
+					"name": "Get Merchant Balance",
+					"request": {
+						"method": "POST",
+						"header": [
+							{"key": "Content-Type", "value": "application/json"},
+							{"key": "Authorization", "value": "Bearer {{accessToken}}"}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"merchantId\": \"{{merchantId}}\",\n    \"currency\": \"{{currency}}\"\n}"
+						},
+						"url": {"raw": "{{baseUrl}}/api/v1/merchant/balance", "host": ["{{baseUrl}}"], "path": ["api", "v1", "merchant", "balance"]}
+					}
+				},
+				{
+					"name": "Update Merchant",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{"key": "Content-Type", "value": "application/json"},
+							{"key": "Authorization", "value": "Bearer {{accessToken}}"}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"merchantId\": \"{{merchantId}}\",\n    \"name\": \"{{merchantName}}\",\n    \"description\": \"{{merchantDescription}}\",\n    \"status\": \"{{merchantStatus}}\"\n}"
+						},
+						"url": {"raw": "{{baseUrl}}/api/v1/merchant/update", "host": ["{{baseUrl}}"], "path": ["api", "v1", "merchant", "update"]}
+					}
+				},
+				{
+					"name": "Get Merchant Transactions",
+					"request": {
+						"method": "GET",
+						"header": [{"key": "Authorization", "value": "Bearer {{accessToken}}"}],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/merchant/transactions?merchantId={{merchantId}}&page={{page}}&size={{size}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "merchant", "transactions"],
+							"query": [
+								{"key": "merchantId", "value": "{{merchantId}}"},
+								{"key": "page", "value": "{{page}}"},
+								{"key": "size", "value": "{{size}}"}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Merchant Report",
+					"request": {
+						"method": "GET",
+						"header": [{"key": "Authorization", "value": "Bearer {{accessToken}}"}],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/merchant/report?merchantId={{merchantId}}&fromDate={{fromDate}}&toDate={{toDate}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "merchant", "report"],
+							"query": [
+								{"key": "merchantId", "value": "{{merchantId}}"},
+								{"key": "fromDate", "value": "{{fromDate}}"},
+								{"key": "toDate", "value": "{{toDate}}"}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Limitation Management",
+			"item": [
+				{
+					"name": "Get User Limitations",
+					"request": {
+						"method": "GET",
+						"header": [{"key": "Authorization", "value": "Bearer {{accessToken}}"}],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/limitation/user?nationalCode={{nationalCode}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "limitation", "user"],
+							"query": [{"key": "nationalCode", "value": "{{nationalCode}}"}]
+						}
+					}
+				},
+				{
+					"name": "Update User Limitations",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{"key": "Content-Type", "value": "application/json"},
+							{"key": "Authorization", "value": "Bearer {{accessToken}}"}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"nationalCode\": \"{{nationalCode}}\",\n    \"dailyLimit\": \"{{dailyLimit}}\",\n    \"monthlyLimit\": \"{{monthlyLimit}}\",\n    \"transactionLimit\": \"{{transactionLimit}}\"\n}"
+						},
+						"url": {"raw": "{{baseUrl}}/api/v1/limitation/user", "host": ["{{baseUrl}}"], "path": ["api", "v1", "limitation", "user"]}
+					}
+				}
+			]
+		},
+		{
+			"name": "Panel Wallet Management",
+			"item": [
+				{
+					"name": "Get Wallet Account Currency List",
+					"request": {
+						"method": "GET",
+						"header": [{"key": "Authorization", "value": "Bearer {{accessToken}}"}],
+						"url": {"raw": "{{baseUrl}}/api/v1/panel/wallet/accountCurrency/list", "host": ["{{baseUrl}}"], "path": ["api", "v1", "panel", "wallet", "accountCurrency", "list"]}
+					}
+				},
+				{
+					"name": "Get Wallet Account Type List",
+					"request": {
+						"method": "GET",
+						"header": [{"key": "Authorization", "value": "Bearer {{accessToken}}"}],
+						"url": {"raw": "{{baseUrl}}/api/v1/panel/wallet/accountType/list", "host": ["{{baseUrl}}"], "path": ["api", "v1", "panel", "wallet", "accountType", "list"]}
+					}
+				},
+				{
+					"name": "Get Wallet Level List",
+					"request": {
+						"method": "GET",
+						"header": [{"key": "Authorization", "value": "Bearer {{accessToken}}"}],
+						"url": {"raw": "{{baseUrl}}/api/v1/panel/wallet/level/list", "host": ["{{baseUrl}}"], "path": ["api", "v1", "panel", "wallet", "level", "list"]}
+					}
+				},
+				{
+					"name": "Get Wallet Type List",
+					"request": {
+						"method": "GET",
+						"header": [{"key": "Authorization", "value": "Bearer {{accessToken}}"}],
+						"url": {"raw": "{{baseUrl}}/api/v1/panel/wallet/type/list", "host": ["{{baseUrl}}"], "path": ["api", "v1", "panel", "wallet", "type", "list"]}
+					}
+				},
+				{
+					"name": "Get Customer List",
+					"request": {
+						"method": "POST",
+						"header": [
+							{"key": "Content-Type", "value": "application/json"},
+							{"key": "Authorization", "value": "Bearer {{accessToken}}"}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"page\": {{page}},\n    \"size\": {{size}}\n}"
+						},
+						"url": {"raw": "{{baseUrl}}/api/v1/panel/wallet/customer/list", "host": ["{{baseUrl}}"], "path": ["api", "v1", "panel", "wallet", "customer", "list"]}
+					}
+				}
+			]
+		},
+		{
+			"name": "Panel Channel Management",
+			"item": [
+				{
+					"name": "Create Channel",
+					"request": {
+						"method": "POST",
+						"header": [
+							{"key": "Content-Type", "value": "application/json"},
+							{"key": "Authorization", "value": "Bearer {{accessToken}}"}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"{{channelName}}\",\n    \"description\": \"{{channelDescription}}\",\n    \"status\": \"{{channelStatus}}\"\n}"
+						},
+						"url": {"raw": "{{baseUrl}}/api/v1/panel/channel/create", "host": ["{{baseUrl}}"], "path": ["api", "v1", "panel", "channel", "create"]}
+					},
+					"event": [{
+						"listen": "test",
+						"script": {
+							"exec": [
+								"if (pm.response.code === 200) {",
+								"    const response = pm.response.json();",
+								"    if (response.success && response.data && response.data.id) {",
+								"        pm.collectionVariables.set('channelId', response.data.id);",
+								"    }",
+								"}"
+							],
+							"type": "text/javascript"
+						}
+					}]
+				},
+				{
+					"name": "Get Channel List",
+					"request": {
+						"method": "POST",
+						"header": [
+							{"key": "Content-Type", "value": "application/json"},
+							{"key": "Authorization", "value": "Bearer {{accessToken}}"}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"page\": {{page}},\n    \"size\": {{size}}\n}"
+						},
+						"url": {"raw": "{{baseUrl}}/api/v1/panel/channel/list", "host": ["{{baseUrl}}"], "path": ["api", "v1", "panel", "channel", "list"]}
+					}
+				},
+				{
+					"name": "Get Channel Details",
+					"request": {
+						"method": "GET",
+						"header": [{"key": "Authorization", "value": "Bearer {{accessToken}}"}],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/panel/channel/details?id={{channelId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "panel", "channel", "details"],
+							"query": [{"key": "id", "value": "{{channelId}}"}]
+						}
+					}
+				},
+				{
+					"name": "Update Channel",
+					"request": {
+						"method": "POST",
+						"header": [
+							{"key": "Content-Type", "value": "application/json"},
+							{"key": "Authorization", "value": "Bearer {{accessToken}}"}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"id\": \"{{channelId}}\",\n    \"name\": \"{{channelName}}\",\n    \"description\": \"{{channelDescription}}\",\n    \"status\": \"{{channelStatus}}\"\n}"
+						},
+						"url": {"raw": "{{baseUrl}}/api/v1/panel/channel/update", "host": ["{{baseUrl}}"], "path": ["api", "v1", "panel", "channel", "update"]}
+					}
+				},
+				{
+					"name": "Create Merchant",
+					"request": {
+						"method": "POST",
+						"header": [
+							{"key": "Content-Type", "value": "application/json"},
+							{"key": "Authorization", "value": "Bearer {{accessToken}}"}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"{{merchantName}}\",\n    \"description\": \"{{merchantDescription}}\",\n    \"status\": \"{{merchantStatus}}\"\n}"
+						},
+						"url": {"raw": "{{baseUrl}}/api/v1/panel/channel/merchant/create", "host": ["{{baseUrl}}"], "path": ["api", "v1", "panel", "channel", "merchant", "create"]}
+					},
+					"event": [{
+						"listen": "test",
+						"script": {
+							"exec": [
+								"if (pm.response.code === 200) {",
+								"    const response = pm.response.json();",
+								"    if (response.success && response.data && response.data.id) {",
+								"        pm.collectionVariables.set('merchantId', response.data.id);",
+								"    }",
+								"}"
+							],
+							"type": "text/javascript"
+						}
+					}]
+				},
+				{
+					"name": "Get Role List",
+					"request": {
+						"method": "GET",
+						"header": [{"key": "Authorization", "value": "Bearer {{accessToken}}"}],
+						"url": {"raw": "{{baseUrl}}/api/v1/panel/channel/role/list", "host": ["{{baseUrl}}"], "path": ["api", "v1", "panel", "channel", "role", "list"]}
+					}
+				},
+				{
+					"name": "Update Channel Resources",
+					"request": {
+						"method": "POST",
+						"header": [
+							{"key": "Content-Type", "value": "application/json"},
+							{"key": "Authorization", "value": "Bearer {{accessToken}}"}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"channelId\": \"{{channelId}}\",\n    \"resources\": [\"WALLET_CREATE\", \"WALLET_ACTIVE\", \"WALLET_DEACTIVATE\"]\n}"
+						},
+						"url": {"raw": "{{baseUrl}}/api/v1/panel/channel/updateResources", "host": ["{{baseUrl}}"], "path": ["api", "v1", "panel", "channel", "updateResources"]}
+					}
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Generate sign for process requests",
+					"const processRequests = ['Process Cash In', 'Process Cash Out', 'Process P2P', 'Process Buy', 'Process Sell', 'Process Gift Card'];",
+					"if (processRequests.includes(pm.info.requestName)) {",
+					"    const uuid = pm.collectionVariables.get('cashInUUID') || pm.collectionVariables.get('cashOutUUID') || pm.collectionVariables.get('p2pUUID') || pm.collectionVariables.get('buyUUID') || pm.collectionVariables.get('sellUUID') || pm.collectionVariables.get('giftCardUUID');",
+					"    const amount = pm.collectionVariables.get('cashInAmount') || pm.collectionVariables.get('cashOutAmount') || pm.collectionVariables.get('p2pAmount') || pm.collectionVariables.get('buyQuantity') || pm.collectionVariables.get('sellQuantity') || pm.collectionVariables.get('giftCardQuantity');",
+					"    const nationalCode = pm.collectionVariables.get('nationalCode');",
+					"    ",
+					"    if (uuid && amount && nationalCode) {",
+					"        const signData = `${uuid}|${amount}|${nationalCode}`;",
+					"        const generatedSign = btoa(signData); // Base64 encode for demo",
+					"        pm.collectionVariables.set('generatedSign', generatedSign);",
+					"    }",
+					"}"
+				]
+			}
+		}
+	],
+	"variable": [
+		{"key": "baseUrl", "value": "http://localhost:8080", "type": "string"},
+		{"key": "username", "value": "test_channel", "type": "string"},
+		{"key": "password", "value": "test_password", "type": "string"},
+		{"key": "accessToken", "value": "", "type": "string"},
+		{"key": "refreshToken", "value": "", "type": "string"},
+		{"key": "nationalCode", "value": "1234567890", "type": "string"},
+		{"key": "mobile", "value": "09120000000", "type": "string"},
+		{"key": "destinationNationalCode", "value": "0987654321", "type": "string"},
+		{"key": "destinationMobile", "value": "09130000000", "type": "string"},
+		{"key": "walletId", "value": "", "type": "string"},
+		{"key": "destinationWalletId", "value": "", "type": "string"},
+		{"key": "sourceAccountNumber", "value": "", "type": "string"},
+		{"key": "destinationAccountNumber", "value": "", "type": "string"},
+		{"key": "accountType", "value": "NORMAL", "type": "string"},
+		{"key": "currency", "value": "GOLD", "type": "string"},
+		{"key": "cashInAmount", "value": "10.0", "type": "string"},
+		{"key": "cashOutAmount", "value": "5.0", "type": "string"},
+		{"key": "p2pAmount", "value": "2.0", "type": "string"},
+		{"key": "buyQuantity", "value": "0.001", "type": "string"},
+		{"key": "sellQuantity", "value": "0.001", "type": "string"},
+		{"key": "giftCardQuantity", "value": "0.002", "type": "string"},
+		{"key": "cashInUUID", "value": "", "type": "string"},
+		{"key": "cashOutUUID", "value": "", "type": "string"},
+		{"key": "p2pUUID", "value": "", "type": "string"},
+		{"key": "buyUUID", "value": "", "type": "string"},
+		{"key": "sellUUID", "value": "", "type": "string"},
+		{"key": "giftCardUUID", "value": "", "type": "string"},
+		{"key": "transactionUUID", "value": "", "type": "string"},
+		{"key": "commissionAmount", "value": "0.001", "type": "string"},
+		{"key": "commissionCurrency", "value": "GOLD", "type": "string"},
+		{"key": "additionalData", "value": "test data", "type": "string"},
+		{"key": "paymentAdditionalData", "value": "payment test", "type": "string"},
+		{"key": "generatedSign", "value": "", "type": "string"},
+		{"key": "page", "value": "0", "type": "string"},
+		{"key": "size", "value": "10", "type": "string"},
+		{"key": "dailyLimit", "value": "100.0", "type": "string"},
+		{"key": "monthlyLimit", "value": "1000.0", "type": "string"},
+		{"key": "transactionLimit", "value": "50.0", "type": "string"},
+		{"key": "channelId", "value": "", "type": "string"},
+		{"key": "channelName", "value": "Test Channel", "type": "string"},
+		{"key": "channelDescription", "value": "Test Channel Description", "type": "string"},
+		{"key": "channelStatus", "value": "ACTIVE", "type": "string"},
+		{"key": "physicalCashOutAmount", "value": "15.0", "type": "string"},
+		{"key": "physicalCashOutUUID", "value": "", "type": "string"},
+		{"key": "fromDate", "value": "2024-01-01", "type": "string"},
+		{"key": "toDate", "value": "2024-12-31", "type": "string"}
+	]
+}

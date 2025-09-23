@@ -6,7 +6,8 @@ import lombok.Getter;
 @Getter
 public enum GiftCardStepStatus {
     INITIAL("INITIAL", "ایجاد شده"),
-    USED("USED", "استفاده شده");
+    USED("USED", "استفاده شده"),
+    DEACTIVATED("DEACTIVATED", "غیرفعال شده");
 
     private final String text;
     private final String persianDescription;

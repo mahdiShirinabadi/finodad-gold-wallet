@@ -15,13 +15,13 @@ import lombok.ToString;
 public class LoginRequestJson {
 
     @NotNull(message = "نام کاربری نمی تواند خالی باشد")
-    @StringValidation(label = "نام کاربری")
+    @StringValidation(label = NamingProperty.USERNAME)
     @Schema(name = NamingProperty.USERNAME)
     @JsonProperty(value = NamingProperty.USERNAME, required = true)
     private String username;
 
     @NotNull(message = "گذرواژه نمی تواند خالی باشد")
-    @StringValidation(label = "گذرواژه")
+    @StringValidation(label = NamingProperty.PASSWORD)
     @Schema(name = NamingProperty.PASSWORD)
     @JsonProperty(value = NamingProperty.PASSWORD, required = true)
     @ToString.Exclude

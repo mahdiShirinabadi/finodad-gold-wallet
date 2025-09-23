@@ -14,16 +14,16 @@ import lombok.*;
 @ToString
 public class PanelResourceUpdateRequest {
 
-    @NumberValidation(label = "شناسه")
+    @NumberValidation(label = NamingProperty.ID)
     @Schema(name = NamingProperty.ID, description = "شناسه")
     @JsonProperty(NamingProperty.ID)
     private String id;
 
-    @StringValidation(label = "نام دسترسی")
+    @StringValidation(label = NamingProperty.NAME)
     @JsonProperty(NamingProperty.NAME)
     private String name;
 
-    @StringValidation(label = "نام فارسی دسترسی")
+    @StringValidation(label = NamingProperty.FARSI_NAME)
     @JsonProperty(NamingProperty.FARSI_NAME)
     private String faName;
 

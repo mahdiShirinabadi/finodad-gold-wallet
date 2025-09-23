@@ -26,6 +26,7 @@ public interface RequestRepositoryService {
     void findPhysicalCashOutDuplicateWithRrnId(long rrnId) throws InternalServiceException;
     AggregationP2PDTO findP2pSumAmountByTransactionTypeBetweenDate(long[] walletAccountId, Date fromDate, Date toDate);
     AggregationGiftCardDTO findGiftCardSumAmountByTransactionTypeBetweenDate(long[] walletAccountId, Date fromDate, Date toDate);
+    AggregationGiftCardPaymentDTO findGiftCardPaymentSumAmountByTransactionTypeBetweenDate(long[] walletAccountId, Date fromDate, Date toDate);
     AggregationPurchaseDTO findSumAmountByTransactionTypeBetweenDate(long[] walletAccountId, String transactionType, Date fromDate, Date toDate);
     AggregationPurchaseDTO findSumAmountByTransactionTypeBetweenDateByChannelId(long channelId, String transactionType, Date fromDate, Date toDate);
     AggregationPurchaseDTO findPhysicalByChannelAndDate(long channelId, Date fromDate, Date toDate);

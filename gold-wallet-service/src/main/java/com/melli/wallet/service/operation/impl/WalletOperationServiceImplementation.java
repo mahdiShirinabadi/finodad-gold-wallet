@@ -143,6 +143,7 @@ public class WalletOperationServiceImplementation implements WalletOperationalSe
         }
 
         List<WalletAccountEntity> walletAccountEntityList = walletAccountRepositoryService.findByWallet(walletEntity);
+        walletAccountEntityList = walletAccountEntityList.stream().filter(x-> (x.getWalletAccountTypeEntity().getDisplay() == Boolean.TRUE)).toList();
         return helper.fillCreateWalletResponse(walletEntity, walletAccountEntityList, walletAccountRepositoryService);
     }
 
