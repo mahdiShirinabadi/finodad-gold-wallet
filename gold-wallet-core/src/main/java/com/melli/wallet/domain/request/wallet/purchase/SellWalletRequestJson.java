@@ -28,7 +28,7 @@ SellWalletRequestJson {
     @JsonProperty(NamingProperty.QUANTITY)
     private String quantity;
 
-    @NumberValidation(minDecimalValue = NamingProperty.PRICE)
+    @NumberValidation(label = NamingProperty.PRICE)
     @Schema(name = NamingProperty.PRICE, description = "مبلغ با محاسبه کارمزد به ریال", example = "1000")
     @JsonProperty(NamingProperty.PRICE)
     private String price;

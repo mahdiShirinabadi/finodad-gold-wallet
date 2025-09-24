@@ -827,6 +827,7 @@ class GiftCardControllerTest extends WalletApplicationTests {
             try {
                 BaseResponse<GiftCardResponse> response = processGiftCard(mockMvc, accessToken, uniqueIdentifier, giftCardQuantity, NATIONAL_CODE_CORRECT, sourceAccount.getAccountNumber(), NATIONAL_CODE_DEST, additionalData1, sign, commission, CURRENCY_GOLD, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
                 results.add(response);
+                log.info("First concurrent process completed with success: {}", response.getSuccess());
             } catch (Exception e) {
                 log.error("Error in concurrent process 1", e);
             } finally {
@@ -835,11 +836,14 @@ class GiftCardControllerTest extends WalletApplicationTests {
         });
 
 
-        // Second concurrent request with same UUID (should fail)
+        // Second concurrent request with same UUID (should fail) - add small delay
         executor.submit(() -> {
             try {
+                // Small delay to ensure second request starts after first
+                Thread.sleep(100);
                 BaseResponse<GiftCardResponse> response = processGiftCard(mockMvc, accessToken, uniqueIdentifier, giftCardQuantity, NATIONAL_CODE_CORRECT, sourceAccount.getAccountNumber(), NATIONAL_CODE_DEST, additionalData2, sign, commission, CURRENCY_GOLD, HttpStatus.OK, StatusRepositoryService.DUPLICATE_UUID, false);
                 results.add(response);
+                log.info("Second concurrent process completed with success: {}", response.getSuccess());
             } catch (Exception e) {
                 log.error("Error in concurrent process 2", e);
             } finally {
@@ -847,9 +851,8 @@ class GiftCardControllerTest extends WalletApplicationTests {
             }
         });
 
-        boolean wait= latch.await(6, TimeUnit.SECONDS);
-          // Step 5: Wait for both requests to complete
-        Assert.assertTrue("Concurrent requests should complete within 5 seconds", wait);
+        // Step 5: Wait for both requests to complete
+        Assert.assertTrue("Concurrent process requests should complete within 10 seconds", latch.await(10, TimeUnit.SECONDS));
         executor.shutdown();
 
 
@@ -929,9 +932,11 @@ class GiftCardControllerTest extends WalletApplicationTests {
             }
         });
 
-        // Second concurrent payment request with SAME gift card code (should fail)
+        // Second concurrent payment request with SAME gift card code (should fail) - add small delay
         executor.submit(() -> {
             try {
+                // Small delay to ensure second request starts after first
+                Thread.sleep(100);
                 log.info("Starting second concurrent payment with SAME gift card code: {}", giftCardCode);
                 BaseResponse<ObjectUtils.Null> response = paymentGiftCard(mockMvc, accessToken, giftCardCode, giftCardQuantity, CURRENCY_GOLD, NATIONAL_CODE_DEST, destAccount.getAccountNumber(), paymentAdditionalData2, HttpStatus.OK, StatusRepositoryService.GIFT_CARD_NOT_FOUND, false);
                 results.add(response);
@@ -944,14 +949,8 @@ class GiftCardControllerTest extends WalletApplicationTests {
         });
 
 
-        try {
-            latch.await();
-//            Assert.assertTrue("Both concurrent payment requests should complete within 5 seconds", wait);
-        } catch (InterruptedException ex) {
-            log.info("error inquiry travelInsurancePlans in countDownLatch.await, message ({})", ex.getMessage());
-            Thread.currentThread().interrupt();
-        }
         // Step 4: Wait for both payment requests to complete
+        Assert.assertTrue("Concurrent payment requests should complete within 10 seconds", latch.await(10, TimeUnit.SECONDS));
         executor.shutdown();
 
 

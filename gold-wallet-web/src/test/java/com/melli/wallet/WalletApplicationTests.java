@@ -631,11 +631,12 @@ public class WalletApplicationTests {
     }
 
     // Helper methods for physical cash operations
-    public BaseResponse<UuidResponse> generatePhysicalCashOutUuid(MockMvc mockMvc, String token, String nationalCode, String quantity, String accountNumber, HttpStatus httpStatus, int errorCode, boolean success) throws Exception {
+    public BaseResponse<UuidResponse> generatePhysicalCashOutUuid(MockMvc mockMvc, String token, String nationalCode, String quantity, String accountNumber, HttpStatus httpStatus, int errorCode, boolean success, String currency) throws Exception {
         PhysicalCashGenerateUuidRequestJson requestJson = new PhysicalCashGenerateUuidRequestJson();
         requestJson.setNationalCode(nationalCode);
         requestJson.setQuantity(quantity);
         requestJson.setAccountNumber(accountNumber);
+        requestJson.setCurrency(currency);
         MockHttpServletRequestBuilder postRequest = buildPostRequest(token, PHYSICAL_CASH_OUT_GENERATE_UUID_PATH, mapToJson(requestJson));
         String response = performTest(mockMvc, postRequest, httpStatus, success, errorCode);
         TypeReference<BaseResponse<UuidResponse>> typeReference = new TypeReference<>() {};
