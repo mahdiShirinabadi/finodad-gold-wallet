@@ -19,6 +19,7 @@ public class PaymentGiftCardRequestJson {
     @JsonProperty(NamingProperty.GIFT_CARD_ACTIVE_CODE)
     private String giftCardUniqueCode;
 
+    @NumberValidation(allowDecimal = true, label = NamingProperty.QUANTITY)
     @Schema(name = NamingProperty.QUANTITY, description = "مقدار", example = "0.001")
     @JsonProperty(NamingProperty.QUANTITY)
     private String quantity;

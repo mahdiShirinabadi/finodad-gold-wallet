@@ -32,6 +32,7 @@ public class NamingProperty {
     public static final String TOTAL_PAGES = "totalPages";
     public static final String TOTAL_ELEMENTS = "totalElements";
     public static final String BALANCE = "balance";
+    public static final String AVAILABLE_BALANCE = "availableBalance";
     public static final String RESULT = "result";
     public static final String DESCRIPTION = "description";
     public static final String CREATE_BY = "createBy";
@@ -94,6 +95,7 @@ public class NamingProperty {
     public static final String CODE = "code";
     public static final String GIFT_CARD_ACTIVE_CODE = "giftCardActiveCode";
     public static final String ACTIVE_CODE = "activeCode";
+    public static final String COLLATERAL_CODE = "collateralCode";
 
 
 

@@ -9,6 +9,7 @@ import com.melli.wallet.domain.response.base.BaseResponse;
 import com.melli.wallet.domain.response.base.ErrorDetail;
 import com.melli.wallet.domain.response.cash.*;
 import com.melli.wallet.domain.response.channel.ChannelObject;
+import com.melli.wallet.domain.response.collateral.CreateCollateralResponse;
 import com.melli.wallet.domain.response.giftcard.GiftCardResponse;
 import com.melli.wallet.domain.response.giftcard.GiftCardTrackResponse;
 import com.melli.wallet.domain.response.giftcard.GiftCardUuidResponse;
@@ -165,6 +166,14 @@ public class Helper {
     public GiftCardUuidResponse fillGiftCardUuidResponse(String uniqueIdentifier) {
         GiftCardUuidResponse response = new GiftCardUuidResponse();
         response.setUniqueIdentifier(uniqueIdentifier);
+        return response;
+    }
+
+    public CreateCollateralResponse fillCreateCollateralResponse(String collateralCode, String nationalCode, BigDecimal quantity) {
+        CreateCollateralResponse response = new CreateCollateralResponse();
+        response.setCollateralCode(collateralCode);
+        response.setNationalCode(nationalCode);
+        response.setQuantity(quantity.toString());
         return response;
     }
 
@@ -429,7 +438,8 @@ public class Helper {
             walletAccountObject.setWalletAccountCurrencyObject(SubHelper.convertWalletAccountCurrencyEntityToObject(walletAccountEntity.getWalletAccountCurrencyEntity()));
             walletAccountObject.setAccountNumber(walletAccountEntity.getAccountNumber());
             walletAccountObject.setStatus(String.valueOf(walletAccountEntity.getStatus()));
-            walletAccountObject.setBalance(String.valueOf(walletAccountRepositoryService.getBalance(walletAccountEntity.getId())));
+            walletAccountObject.setBalance(String.valueOf(walletAccountRepositoryService.getBalance(walletAccountEntity.getId()).getRealBalance()));
+            walletAccountObject.setAvailableBalance(String.valueOf(walletAccountRepositoryService.getBalance(walletAccountEntity.getId()).getAvailableBalance()));
             walletAccountObject.setStatus(walletAccountEntity.getStatus().getText());
             walletAccountObject.setStatusDescription(walletAccountEntity.getStatus().getPersianDescription());
             walletAccountObjectList.add(walletAccountObject);
@@ -448,7 +458,8 @@ public class Helper {
             walletAccountObject.setWalletAccountCurrencyObject(SubHelper.convertWalletAccountCurrencyEntityToObject(walletAccountEntity.getWalletAccountCurrencyEntity()));
             walletAccountObject.setAccountNumber(walletAccountEntity.getAccountNumber());
             walletAccountObject.setStatus(String.valueOf(walletAccountEntity.getStatus()));
-            walletAccountObject.setBalance(prettyBalance(walletAccountRepositoryService.getBalance(walletAccountEntity.getId())));
+            walletAccountObject.setBalance(prettyBalance(walletAccountRepositoryService.getBalance(walletAccountEntity.getId()).getRealBalance()));
+            walletAccountObject.setAvailableBalance(String.valueOf(walletAccountRepositoryService.getBalance(walletAccountEntity.getId()).getAvailableBalance()));
             walletAccountObject.setStatus(walletAccountEntity.getStatus().getText());
             walletAccountObject.setStatusDescription(walletAccountEntity.getStatus().getPersianDescription());
             walletAccountObjectList.add(walletAccountObject);

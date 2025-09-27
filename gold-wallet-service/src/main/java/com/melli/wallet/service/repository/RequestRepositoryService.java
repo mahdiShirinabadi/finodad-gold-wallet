@@ -24,6 +24,8 @@ public interface RequestRepositoryService {
     void findCashInDuplicateWithRrnId(long rrnId) throws InternalServiceException;
     void findCashOutDuplicateWithRrnId(long rrnId) throws InternalServiceException;
     void findPhysicalCashOutDuplicateWithRrnId(long rrnId) throws InternalServiceException;
+    void findCreateCollateralDuplicateWithRrnId(long rrnId) throws InternalServiceException;
+    void findReleaseCollateralDuplicateWithRrnId(long rrnId) throws InternalServiceException;
     AggregationP2PDTO findP2pSumAmountByTransactionTypeBetweenDate(long[] walletAccountId, Date fromDate, Date toDate);
     AggregationGiftCardDTO findGiftCardSumAmountByTransactionTypeBetweenDate(long[] walletAccountId, Date fromDate, Date toDate);
     AggregationGiftCardPaymentDTO findGiftCardPaymentSumAmountByTransactionTypeBetweenDate(long[] walletAccountId, Date fromDate, Date toDate);

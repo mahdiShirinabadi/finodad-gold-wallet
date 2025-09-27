@@ -9,7 +9,7 @@ import com.melli.wallet.domain.master.persistence.ChannelRoleRepository;
 import com.melli.wallet.domain.master.entity.RoleResourceEntity;
 import com.melli.wallet.domain.master.entity.ChannelEntity;
 import com.melli.wallet.domain.master.entity.ChannelRoleEntity;
-import com.melli.wallet.service.repository.ResourceDefinition;
+import com.melli.wallet.domain.enumaration.ResourceDefinition;
 import com.melli.wallet.service.repository.RoleRepositoryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;

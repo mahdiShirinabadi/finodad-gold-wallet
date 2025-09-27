@@ -28,6 +28,10 @@ public class WalletAccountObject {
     @JsonProperty(NamingProperty.BALANCE)
     private String balance;
 
+    @Schema(name = NamingProperty.AVAILABLE_BALANCE)
+    @JsonProperty(NamingProperty.AVAILABLE_BALANCE)
+    private String availableBalance;
+
     @Schema(name = NamingProperty.STATUS)
     @JsonProperty(NamingProperty.STATUS)
     private String status;

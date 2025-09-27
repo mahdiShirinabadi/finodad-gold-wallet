@@ -41,6 +41,8 @@ public class RequestRepositoryServiceImplementation implements RequestRepository
     private final P2PRequestRepository p2PRequestRepository;
     private final GiftCardRepository giftCardRepository;
     private final GiftCardPaymentRequestRepository giftCardPaymentRequestRepository;
+    private final CreateCollateralRequestRepository createCollateralRequestRepository;
+    private final ReleaseCollateralRequestRepository releaseCollateralRequestRepository;
 
 
     @Override
@@ -54,6 +56,8 @@ public class RequestRepositoryServiceImplementation implements RequestRepository
             case PhysicalCashOutRequestEntity physicalCashOutRequestEntity ->
                     physicalCashOutRequestRepository.save(physicalCashOutRequestEntity);
             case GiftCardPaymentRequestEntity giftCardPaymentRequestEntity -> giftCardPaymentRequestRepository.save(giftCardPaymentRequestEntity);
+            case CreateCollateralRequestEntity createCollateralRequestEntity -> createCollateralRequestRepository.save(createCollateralRequestEntity);
+            case ReleaseCollateralRequestEntity releaseCollateralRequestEntity -> releaseCollateralRequestRepository.save(releaseCollateralRequestEntity);
             case null, default -> {
                 log.error("requestEntity is not instanceof");
                 throw new InternalServiceException("error in save request, instance not define", StatusRepositoryService.GENERAL_ERROR, HttpStatus.OK);
@@ -80,6 +84,8 @@ public class RequestRepositoryServiceImplementation implements RequestRepository
             resultRequest = p2PRequestRepository.findByRrnEntityId(traceId);
         }else if (requestEntity instanceof GiftCardPaymentRequestEntity) {
             resultRequest = giftCardPaymentRequestRepository.findByRrnEntityId(traceId);
+        }else if (requestEntity instanceof CreateCollateralRequestEntity) {
+            resultRequest = createCollateralRequestRepository.findByRrnEntityId(traceId);
         }
 
         if (resultRequest != null) {
@@ -167,7 +173,7 @@ public class RequestRepositoryServiceImplementation implements RequestRepository
     public void findCashOutDuplicateWithRrnId(long rrnId) throws InternalServiceException {
         CashOutRequestEntity cashOutRequestEntity = cashOutRequestRepository.findByRrnEntityId(rrnId);
         if(cashOutRequestEntity != null) {
-            log.error("cashOutDuplicateWithRrnId ({}) found", rrnId);
+            log.error("findCashOutDuplicateWithRrnId ({}) found", rrnId);
             throw new InternalServiceException("cashInDuplicateWithRrnId", StatusRepositoryService.DUPLICATE_UUID, HttpStatus.OK);
         }
     }
@@ -176,8 +182,26 @@ public class RequestRepositoryServiceImplementation implements RequestRepository
     public void findPhysicalCashOutDuplicateWithRrnId(long rrnId) throws InternalServiceException {
         PhysicalCashOutRequestEntity physicalCashOutRequestEntity = physicalCashOutRequestRepository.findByRrnEntityId(rrnId);
         if(physicalCashOutRequestEntity != null) {
-            log.error("cashOutDuplicateWithRrnId ({}) found", rrnId);
+            log.error("findPhysicalCashOutDuplicateWithRrnId ({}) found", rrnId);
             throw new InternalServiceException("physicalCashOutDuplicateWithRrnId", StatusRepositoryService.DUPLICATE_UUID, HttpStatus.OK);
+        }
+    }
+
+    @Override
+    public void findCreateCollateralDuplicateWithRrnId(long rrnId) throws InternalServiceException {
+        Optional<CreateCollateralRequestEntity> createCollateralRequestEntityOptional = createCollateralRequestRepository.findOptionalByRrnEntityId(rrnId);
+        if(createCollateralRequestEntityOptional.isEmpty()) {
+            log.error("createCollateralRequestEntityOptional WithRrnId ({}) found", rrnId);
+            throw new InternalServiceException("createCollateralRequestEntityOptional", StatusRepositoryService.DUPLICATE_UUID, HttpStatus.OK);
+        }
+    }
+
+    @Override
+    public void findReleaseCollateralDuplicateWithRrnId(long rrnId) throws InternalServiceException {
+        Optional<ReleaseCollateralRequestEntity> releaseCollateralRequestEntityOptional = releaseCollateralRequestRepository.findOptionalByRrnEntityId(rrnId);
+        if(releaseCollateralRequestEntityOptional.isEmpty()) {
+            log.error("releaseCollateralRequestEntityOptional WithRrnId ({}) found", rrnId);
+            throw new InternalServiceException("releaseCollateralRequestEntityOptional", StatusRepositoryService.DUPLICATE_UUID, HttpStatus.OK);
         }
     }
 

@@ -225,6 +225,7 @@ CREATE TABLE if not exists wallet_account
     version                    BIGINT,
     pin                        VARCHAR(100),
     balance                    NUMERIC(25, 5) default 0,
+    block_amount            NUMERIC(25, 5) default 0,
     end_time                   TIMESTAMP WITHOUT TIME ZONE
 );
 
@@ -419,7 +420,7 @@ CREATE TABLE if not exists p_2_p_request
     dest_wallet_account_id BIGINT NOT NULL REFERENCES wallet_account,
     additional_data varchar(500),
     commission        NUMERIC(15, 5)
-);
+    );
 create unique index rrn_id_p_2_p_request_unique_idx on p_2_p_request (rrn_id);
 
 CREATE TABLE if not exists cash_in_request

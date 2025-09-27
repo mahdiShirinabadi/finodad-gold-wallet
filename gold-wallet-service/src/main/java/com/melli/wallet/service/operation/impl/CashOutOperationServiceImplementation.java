@@ -1,5 +1,6 @@
 package com.melli.wallet.service.operation.impl;
 
+import com.melli.wallet.domain.dto.BalanceDTO;
 import com.melli.wallet.domain.dto.CashOutObjectDTO;
 import com.melli.wallet.domain.dto.PhysicalCashOutObjectDTO;
 import com.melli.wallet.domain.master.entity.*;
@@ -53,7 +54,6 @@ public class CashOutOperationServiceImplementation implements CashOutOperationSe
     private final TransactionRepositoryService transactionRepositoryService;
     private final MessageResolverOperationService messageResolverOperationService;
     private final StatusRepositoryService statusRepositoryService;
-    private final WalletAccountTypeRepositoryService walletAccountTypeRepositoryService;
     private final StockRepositoryService stockRepositoryService;
 
     @Override
@@ -130,9 +130,9 @@ public class CashOutOperationServiceImplementation implements CashOutOperationSe
             walletCashLimitationOperationService.updateCashOutLimitation(walletAccountEntity, BigDecimal.valueOf(Long.parseLong(cashOutObjectDTO.getAmount())));
             log.info("updating CashOutLimitation for walletAccount ({}) is finished.", walletAccountEntity.getAccountNumber());
 
-            BigDecimal walletAccountServiceBalance = walletAccountRepositoryService.getBalance(walletAccountEntity.getId());
+            BalanceDTO walletAccountServiceBalance = walletAccountRepositoryService.getBalance(walletAccountEntity.getId());
 
-            return helper.fillCashOutResponse(cashOutObjectDTO.getNationalCode(), rrnEntity.getUuid(), String.valueOf(walletAccountServiceBalance), walletAccountEntity.getAccountNumber());
+            return helper.fillCashOutResponse(cashOutObjectDTO.getNationalCode(), rrnEntity.getUuid(), String.valueOf(walletAccountServiceBalance.getAvailableBalance()), walletAccountEntity.getAccountNumber());
         }, cashOutObjectDTO.getUniqueIdentifier());
     }
 
@@ -171,7 +171,7 @@ public class CashOutOperationServiceImplementation implements CashOutOperationSe
         }
 
         RequestTypeEntity requestTypeEntity = requestTypeRepositoryService.getRequestType(RequestTypeRepositoryService.PHYSICAL_CASH_OUT);
-        WalletAccountEntity channelCommissionAccount = findChannelCommissionAccount(physicalCashOutObjectDTO.getChannel(), physicalCashOutObjectDTO.getCommissionType());
+        WalletAccountEntity channelCommissionAccount = walletAccountRepositoryService.findChannelCommissionAccount(physicalCashOutObjectDTO.getChannel(), physicalCashOutObjectDTO.getCommissionType());
 
         if((physicalCashOutObjectDTO.getQuantity().subtract(physicalCashOutObjectDTO.getCommission())).compareTo(new BigDecimal("0")) <= 0){
             log.error("commission ({}) is bigger than quantity ({})", physicalCashOutObjectDTO.getCommission(), physicalCashOutObjectDTO.getQuantity());
@@ -245,10 +245,10 @@ public class CashOutOperationServiceImplementation implements CashOutOperationSe
             walletCashLimitationOperationService.updatePhysicalCashOutLimitation(walletAccountEntity, physicalCashOutRequestEntity.getFinalQuantity());
             log.info("updating physicalCashOutLimitation for walletAccount ({}) is finished.", walletAccountEntity.getAccountNumber());
 
-            BigDecimal walletAccountServiceBalance = walletAccountRepositoryService.getBalance(walletAccountEntity.getId());
+            BalanceDTO walletAccountServiceBalance = walletAccountRepositoryService.getBalance(walletAccountEntity.getId());
             stockRepositoryService.insertWithdraw(transaction);
 
-            return helper.fillPhysicalCashOutResponse(physicalCashOutObjectDTO.getNationalCode(), rrnEntity.getUuid(), String.valueOf(walletAccountServiceBalance), walletAccountEntity.getAccountNumber());
+            return helper.fillPhysicalCashOutResponse(physicalCashOutObjectDTO.getNationalCode(), rrnEntity.getUuid(), String.valueOf(walletAccountServiceBalance.getRealBalance()), walletAccountEntity.getAccountNumber());
         }, physicalCashOutObjectDTO.getUniqueIdentifier());
     }
 
@@ -262,27 +262,6 @@ public class CashOutOperationServiceImplementation implements CashOutOperationSe
     }
 
 
-    private WalletAccountEntity findChannelCommissionAccount(ChannelEntity channel, String walletAccountTypeName) throws InternalServiceException {
-
-        List<WalletAccountEntity> accounts = walletAccountRepositoryService.findByWallet(channel.getWalletEntity());
-        if (accounts.isEmpty()) {
-            log.error("No wallet accounts found for channel {}", channel.getUsername());
-            throw new InternalServiceException("na wallet account found for channel", StatusRepositoryService.CHANNEL_WALLET_ACCOUNT_NOT_FOUND, HttpStatus.OK);
-        }
-
-        WalletAccountTypeEntity wageType = walletAccountTypeRepositoryService.findByNameManaged(WalletAccountTypeRepositoryService.WAGE);
-        if (wageType == null) {
-            log.error("Wallet account type wage not found for channel {}", channel.getUsername());
-            throw new InternalServiceException("Wallet account type wage not found", StatusRepositoryService.WALLET_ACCOUNT_TYPE_NOT_FOUND, HttpStatus.OK);
-        }
-
-        return accounts.stream()
-                .filter(x -> x.getWalletAccountCurrencyEntity().getName().equalsIgnoreCase(walletAccountTypeName)
-                        && x.getWalletAccountTypeEntity().getName().equalsIgnoreCase(wageType.getName())).findFirst().orElseThrow(() -> {
-                    log.error("Commission account not found for channel {}", channel.getUsername());
-                    return new InternalServiceException("Commission account not found", StatusRepositoryService.CHANNEL_WALLET_ACCOUNT_NOT_FOUND, HttpStatus.OK);
-                });
-    }
 
     private TransactionEntity createTransaction(WalletAccountEntity account, BigDecimal amount, String description,
                                                 String additionalData, long requestTypeId,

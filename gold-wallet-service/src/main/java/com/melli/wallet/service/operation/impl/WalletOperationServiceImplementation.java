@@ -203,4 +203,19 @@ public class WalletOperationServiceImplementation implements WalletOperationalSe
             query.orderBy(criteriaBuilder.desc(root.get(orderBy)));
         }
     }
+
+    public WalletEntity findUserWallet(String nationalCode) throws InternalServiceException {
+        WalletTypeEntity walletType = walletTypeRepositoryService.getByNameManaged(WalletTypeRepositoryService.NORMAL_USER);
+        if (walletType == null) {
+            log.error("Wallet type {} not found", WalletTypeRepositoryService.NORMAL_USER);
+            throw new InternalServiceException("Wallet type not found", StatusRepositoryService.WALLET_TYPE_NOT_FOUND, HttpStatus.OK);
+        }
+
+        WalletEntity wallet = walletRepositoryService.findByNationalCodeAndWalletTypeId(nationalCode, walletType.getId());
+        if (wallet == null) {
+            log.error("National code {} doesn't exist", nationalCode);
+            throw new InternalServiceException("National code doesn't exist", StatusRepositoryService.NATIONAL_CODE_NOT_FOUND, HttpStatus.OK);
+        }
+        return wallet;
+    }
 }

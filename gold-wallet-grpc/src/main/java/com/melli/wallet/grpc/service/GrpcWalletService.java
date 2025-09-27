@@ -12,7 +12,7 @@ import com.melli.wallet.grpc.config.RequestContext;
 import com.melli.wallet.grpc.exception.GrpcErrorHandler;
 import com.melli.wallet.service.operation.WalletOperationalService;
 import com.melli.wallet.service.repository.*;
-import com.melli.wallet.service.repository.ResourceDefinition;
+import com.melli.wallet.domain.enumaration.ResourceDefinition;
 import com.melli.wallet.util.Utility;
 import io.grpc.stub.StreamObserver;
 import lombok.RequiredArgsConstructor;

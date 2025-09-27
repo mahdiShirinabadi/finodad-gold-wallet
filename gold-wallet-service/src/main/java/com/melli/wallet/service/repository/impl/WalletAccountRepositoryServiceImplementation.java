@@ -1,7 +1,7 @@
 package com.melli.wallet.service.repository.impl;
 
 import com.melli.wallet.ConstantRedisName;
-import com.melli.wallet.domain.dto.BalanceObjectDTO;
+import com.melli.wallet.domain.dto.BalanceDTO;
 import com.melli.wallet.domain.enumaration.WalletStatusEnum;
 import com.melli.wallet.domain.master.entity.*;
 import com.melli.wallet.domain.master.persistence.WalletAccountRepository;
@@ -11,15 +11,13 @@ import com.melli.wallet.service.repository.StatusRepositoryService;
 import com.melli.wallet.service.repository.WalletAccountCurrencyRepositoryService;
 import com.melli.wallet.service.repository.WalletAccountRepositoryService;
 import com.melli.wallet.service.repository.WalletAccountTypeRepositoryService;
-import com.melli.wallet.util.Validator;
 import com.melli.wallet.utils.AccountNumberGeneratorService;
-import com.melli.wallet.utils.Helper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -28,7 +26,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
-import java.util.Optional;
 
 
 @Service
@@ -87,7 +84,7 @@ public class WalletAccountRepositoryServiceImplementation implements WalletAccou
     }
 
     @Override
-    public BigDecimal getBalance(long walletAccountId) {
+    public BalanceDTO getBalance(long walletAccountId) {
         return walletAccountRepository.getBalance(walletAccountId);
     }
 
@@ -105,14 +102,14 @@ public class WalletAccountRepositoryServiceImplementation implements WalletAccou
 
     @Transactional
     @Override
-    public void blockAmount(long walletAccountId, long amount) {
-        walletAccountRepository.blockAmount(walletAccountId, amount);
+    public int blockAmount(long walletAccountId, BigDecimal amount) {
+       return walletAccountRepository.blockAmount(walletAccountId, amount);
     }
 
     @Transactional
     @Override
-    public void unblockAmount(long walletAccountId, long amount) {
-        walletAccountRepository.unblockAmount(walletAccountId, amount);
+    public int unblockAmount(long walletAccountId, BigDecimal amount) {
+       return walletAccountRepository.unblockAmount(walletAccountId, amount);
     }
 
     @Transactional
@@ -150,14 +147,6 @@ public class WalletAccountRepositoryServiceImplementation implements WalletAccou
         log.info("start delete all wallet");
     }
 
-    @Override
-    public BalanceObjectDTO getAllBalance(long walletAccountId) {
-        BalanceObjectDTO balanceObject = walletAccountRepository.getBalanceById(walletAccountId);
-        if (balanceObject.getBalance() < 0) {
-            balanceObject.setBalance(0);
-        }
-        return balanceObject;
-    }
 
     @Override
     public List<WalletAccountEntity> findByWalletIds(List<Long> walletIds) {
@@ -175,6 +164,66 @@ public class WalletAccountRepositoryServiceImplementation implements WalletAccou
         List<Object[]> result = reportWalletAccountRepository.findAccountDetailsByWalletIds(walletIds);
         log.info("found {} account detail records", result.size());
         return result;
+    }
+
+
+    public WalletAccountEntity findUserWalletAccount(
+            WalletEntity walletEntity,
+            WalletAccountCurrencyEntity currencyEntity,
+            String currency
+    ) throws InternalServiceException {
+
+        List<WalletAccountEntity> accounts = findByWallet(walletEntity);
+
+        if (CollectionUtils.isEmpty(accounts)) {
+            log.error("No wallet accounts found for nationalCode {}", walletEntity.getNationalCode());
+            throw new InternalServiceException("user wallet account not found", StatusRepositoryService.MERCHANT_WALLET_ACCOUNT_NOT_FOUND, HttpStatus.OK);
+        }
+
+        return accounts.stream().filter(x -> x.getWalletAccountCurrencyEntity().getId() == (currencyEntity.getId())).findFirst().orElseThrow(() -> {
+            log.error("Wallet account with currency {} not found for user nationalCode {}", currency, walletEntity.getNationalCode());
+            return new InternalServiceException("Wallet account not found for nationalCode", StatusRepositoryService.MERCHANT_WALLET_ACCOUNT_NOT_FOUND, HttpStatus.OK);
+        });
+    }
+
+
+
+    public WalletAccountEntity checkUserAccount(WalletEntity wallet, WalletAccountCurrencyEntity currencyEntity, String walletAccountNumber, String nationalCode) throws InternalServiceException {
+        List<WalletAccountEntity> accounts = findByWallet(wallet);
+        return accounts.stream().filter(x -> x.getWalletAccountCurrencyEntity().getId() == (currencyEntity.getId())
+                && x.getAccountNumber().equalsIgnoreCase(walletAccountNumber)).findFirst().orElseThrow(() -> {
+            log.error("Rial wallet account not found for user {}", nationalCode);
+            return new InternalServiceException("Wallet account not found for user", StatusRepositoryService.WALLET_ACCOUNT_NOT_FOUND, HttpStatus.OK);
+        });
+    }
+
+    public WalletAccountEntity findUserAccount(WalletEntity wallet, WalletAccountCurrencyEntity currencyEntity, String nationalCode) throws InternalServiceException {
+        List<WalletAccountEntity> accounts = findByWallet(wallet);
+        return accounts.stream().filter(x -> x.getWalletAccountCurrencyEntity().getId() == (currencyEntity.getId()) && x.getEndTime() == null).findFirst().orElseThrow(() -> {
+            log.error("Rial wallet account not found for user {}", nationalCode);
+            return new InternalServiceException("Wallet account not found for user", StatusRepositoryService.WALLET_ACCOUNT_NOT_FOUND, HttpStatus.OK);
+        });
+    }
+
+    public WalletAccountEntity findChannelCommissionAccount(ChannelEntity channel, String walletAccountTypeName) throws InternalServiceException {
+        List<WalletAccountEntity> accounts = findByWallet(channel.getWalletEntity());
+        if (accounts.isEmpty()) {
+            log.error("No wallet accounts found for channel {}", channel.getUsername());
+            throw new InternalServiceException("na wallet account found for channel", StatusRepositoryService.CHANNEL_WALLET_ACCOUNT_NOT_FOUND, HttpStatus.OK);
+        }
+
+        WalletAccountTypeEntity wageType = walletAccountTypeRepositoryService.findByNameManaged(WalletAccountTypeRepositoryService.WAGE);
+        if (wageType == null) {
+            log.error("Wallet account type wage not found for channel {}", channel.getUsername());
+            throw new InternalServiceException("Wallet account type wage not found", StatusRepositoryService.WALLET_ACCOUNT_TYPE_NOT_FOUND, HttpStatus.OK);
+        }
+
+        return accounts.stream()
+                .filter(x -> x.getWalletAccountCurrencyEntity().getName().equalsIgnoreCase(walletAccountTypeName)
+                        && x.getWalletAccountTypeEntity().getName().equalsIgnoreCase(wageType.getName())).findFirst().orElseThrow(() -> {
+                    log.error("Commission account not found for channel {}", channel.getUsername());
+                    return new InternalServiceException("Commission account not found", StatusRepositoryService.CHANNEL_WALLET_ACCOUNT_NOT_FOUND, HttpStatus.OK);
+                });
     }
 
     /**

@@ -10,7 +10,7 @@ import com.melli.wallet.exception.InternalServiceException;
 import com.melli.wallet.security.RequestContext;
 import com.melli.wallet.service.operation.Person2PersonOperationService;
 import com.melli.wallet.service.operation.SecurityOperationService;
-import com.melli.wallet.service.repository.ResourceDefinition;
+import com.melli.wallet.domain.enumaration.ResourceDefinition;
 import io.micrometer.core.annotation.Timed;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;

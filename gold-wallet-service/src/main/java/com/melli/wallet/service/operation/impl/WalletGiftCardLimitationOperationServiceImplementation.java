@@ -57,7 +57,7 @@ public class WalletGiftCardLimitationOperationServiceImplementation implements W
             log.error("checkGiftCadLimitation: ENABLE_GIFT_CARD in for channel {}, walletAccountCurrencyEntity ({}) and walletAccountTypeEntity ({}) walletTypeEntity ({}) is not permission !!!", channel.getUsername(), walletAccountCurrencyEntity.getName(), walletAccountTypeEntity.getName(), walletTypeEntity.getName());
             StringBuilder st;
             st = new StringBuilder();
-            st.append("checkGiftCadLimitation: account (").append( walletAccount.getAccountNumber()).append(") dont permission to cashIn");
+            st.append("checkGiftCadLimitation: account (").append( walletAccount.getAccountNumber()).append(") dont permission to giftCard");
             throw new InternalServiceException(st.toString(), StatusRepositoryService.ACCOUNT_DONT_PERMISSION_FOR_GIFT_CARD, HttpStatus.OK);
         }
 

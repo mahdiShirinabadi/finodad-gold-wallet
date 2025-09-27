@@ -11,7 +11,7 @@ import com.melli.wallet.domain.response.cash.CashInTrackResponse;
 import com.melli.wallet.exception.InternalServiceException;
 import com.melli.wallet.security.RequestContext;
 import com.melli.wallet.service.operation.CashInOperationService;
-import com.melli.wallet.service.repository.ResourceDefinition;
+import com.melli.wallet.domain.enumaration.ResourceDefinition;
 import com.melli.wallet.service.operation.SecurityOperationService;
 import io.micrometer.core.annotation.Timed;
 import io.swagger.v3.oas.annotations.Operation;

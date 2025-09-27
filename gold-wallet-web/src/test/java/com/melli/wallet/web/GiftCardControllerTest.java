@@ -1002,7 +1002,7 @@ class GiftCardControllerTest extends WalletApplicationTests {
      */
     private void chargeAccountForGiftCardToZero(String accountNumber) throws Exception {
         WalletAccountEntity walletAccountEntity = walletAccountRepositoryService.findByAccountNumber(accountNumber);
-        walletAccountRepositoryService.decreaseBalance(walletAccountEntity.getId(), walletAccountRepositoryService.getBalance(walletAccountEntity.getId()));
+        walletAccountRepositoryService.decreaseBalance(walletAccountEntity.getId(), walletAccountRepositoryService.getBalance(walletAccountEntity.getId()).getRealBalance());
     }
 
     /**

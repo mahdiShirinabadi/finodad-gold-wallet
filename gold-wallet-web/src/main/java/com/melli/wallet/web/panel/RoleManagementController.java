@@ -16,7 +16,7 @@ import com.melli.wallet.security.RequestContext;
 import com.melli.wallet.service.operation.RoleResourceOperationService;
 import com.melli.wallet.service.operation.ChannelRoleOperationService;
 import com.melli.wallet.service.repository.ResourceRepositoryService;
-import com.melli.wallet.service.repository.ResourceDefinition;
+import com.melli.wallet.domain.enumaration.ResourceDefinition;
 import com.melli.wallet.service.repository.RoleRepositoryService;
 import com.melli.wallet.web.WebController;
 import io.micrometer.core.annotation.Timed;

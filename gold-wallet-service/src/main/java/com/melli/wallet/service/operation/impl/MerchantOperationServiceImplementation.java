@@ -1,5 +1,6 @@
 package com.melli.wallet.service.operation.impl;
 
+import com.melli.wallet.domain.dto.BalanceDTO;
 import com.melli.wallet.domain.master.entity.*;
 import com.melli.wallet.domain.response.transaction.ReportTransactionResponse;
 import com.melli.wallet.domain.response.wallet.WalletBalanceResponse;
@@ -245,9 +246,9 @@ public class MerchantOperationServiceImplementation implements MerchantOperation
             }
 
             // Check if merchant has sufficient balance
-            BigDecimal currentBalance = walletAccountRepositoryService.getBalance(walletAccount.getId());
+            BalanceDTO currentBalance = walletAccountRepositoryService.getBalance(walletAccount.getId());
             BigDecimal requestedAmount = new BigDecimal(amount);
-            if (currentBalance.compareTo(requestedAmount) < 0) {
+            if (currentBalance.getRealBalance().compareTo(requestedAmount) < 0) {
                 log.error("Insufficient balance for merchant {}. Current: {}, Requested: {}", merchantId, currentBalance, requestedAmount);
                 throw new InternalServiceException("Insufficient balance", StatusRepositoryService.BALANCE_IS_NOT_ENOUGH, HttpStatus.OK);
             }

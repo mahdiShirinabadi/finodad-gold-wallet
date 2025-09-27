@@ -1229,7 +1229,7 @@ class SellControllerTest extends WalletApplicationTests {
     private void setupBalancesForSellToZero(WalletAccountObject walletAccountObjectOptional) {
         // Ensure user has enough GOLD balance for selling
         WalletAccountEntity goldWalletAccountEntity = walletAccountRepositoryService.findByAccountNumber(walletAccountObjectOptional.getAccountNumber());
-        BigDecimal balance = walletAccountRepositoryService.getBalance(goldWalletAccountEntity.getId());
+        BigDecimal balance = walletAccountRepositoryService.getBalance(goldWalletAccountEntity.getId()).getRealBalance();
         walletAccountRepositoryService.decreaseBalance(goldWalletAccountEntity.getId(), balance);
     }
 

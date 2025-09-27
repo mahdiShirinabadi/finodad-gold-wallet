@@ -1,6 +1,7 @@
 package com.melli.wallet.web;
 
 import com.melli.wallet.annotation.LogExecutionTime;
+import com.melli.wallet.domain.enumaration.ResourceDefinition;
 import com.melli.wallet.domain.master.entity.ChannelAccessTokenEntity;
 import com.melli.wallet.domain.master.entity.ChannelEntity;
 import com.melli.wallet.domain.request.login.LoginRequestJson;

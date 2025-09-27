@@ -16,6 +16,8 @@ public interface RequestTypeRepositoryService {
 	String SELL = "sell";
 	String MERCHANT_INCREASE_BALANCE = "merchant_increase_balance";
 	String MERCHANT_DECREASE_BALANCE = "merchant_decrease_balance";
+	String CREATE_COLLATERAL = "create_collateral";
+	String RELEASE_COLLATERAL = "release_collateral";
 	RequestTypeEntity getRequestType(String name);
 	void clearCache (long id)throws InternalServiceException;
 	void clearCacheAllData();

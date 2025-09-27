@@ -1,5 +1,6 @@
 package com.melli.wallet.service.operation.impl;
 
+import com.melli.wallet.domain.dto.BalanceDTO;
 import com.melli.wallet.domain.dto.ChargeObjectDTO;
 import com.melli.wallet.domain.enumaration.CashInPaymentTypeEnum;
 import com.melli.wallet.domain.master.entity.*;
@@ -168,9 +169,9 @@ public class CashInOperationServiceImplementation implements CashInOperationServ
             walletCashLimitationOperationService.updateCashInLimitation(walletAccountEntity, BigDecimal.valueOf(Long.parseLong(chargeObjectDTO.getAmount())));
             log.info("updating CashInLimitation for walletAccount ({}) is finished.", walletAccountEntity.getAccountNumber());
 
-            BigDecimal walletAccountServiceBalance = walletAccountRepositoryService.getBalance(walletAccountEntity.getId());
+            BalanceDTO walletAccountServiceBalance = walletAccountRepositoryService.getBalance(walletAccountEntity.getId());
 
-            return helper.fillCashInResponse(chargeObjectDTO.getNationalCode(), rrnEntity.getUuid(), String.valueOf(walletAccountServiceBalance), walletAccountEntity.getAccountNumber());
+            return helper.fillCashInResponse(chargeObjectDTO.getNationalCode(), rrnEntity.getUuid(), String.valueOf(walletAccountServiceBalance.getAvailableBalance()), walletAccountEntity.getAccountNumber());
         }, chargeObjectDTO.getUniqueIdentifier());
     }
 

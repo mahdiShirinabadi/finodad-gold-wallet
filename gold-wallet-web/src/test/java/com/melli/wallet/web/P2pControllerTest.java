@@ -497,7 +497,7 @@ class P2pControllerTest extends WalletApplicationTests {
     private void chargeAccountForP2PToZero(String accountNumber) throws Exception {
         // Step 2: Enable cash in permission if disabled
         WalletAccountEntity walletAccountEntity = walletAccountRepositoryService.findByAccountNumber(accountNumber);
-        walletAccountRepositoryService.decreaseBalance(walletAccountEntity.getId(), walletAccountRepositoryService.getBalance(walletAccountEntity.getId()));
+        walletAccountRepositoryService.decreaseBalance(walletAccountEntity.getId(), walletAccountRepositoryService.getBalance(walletAccountEntity.getId()).getRealBalance());
     }
 
        /**

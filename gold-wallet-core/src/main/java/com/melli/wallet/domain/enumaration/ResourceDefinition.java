@@ -1,4 +1,4 @@
-package com.melli.wallet.service.repository;
+package com.melli.wallet.domain.enumaration;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -48,10 +48,16 @@ public enum ResourceDefinition {
     //GiftCard
     GIFT_CARD("GIFT_CARD","کارت هدیه"),
 
+
+    //Collateral
+    COLLATERAL("COLLATERAL","وثیقه"),
+
     // Other Resources
     STATEMENT("STATEMENT", "صورتحساب"),
     SETTING_LIST("SETTING_LIST", "لیست تنظیمات"),
     LOGOUT("LOGOUT", "خروج");
+
+
     
     // Compile-time constants for @PreAuthorize annotations
     // These are automatically synchronized with the enum values
@@ -83,7 +89,8 @@ public enum ResourceDefinition {
     public static final String SETTING_LIST_AUTH = "SETTING_LIST";
     public static final String GIFT_CARD_AUTH = "GIFT_CARD";
     public static final String LOGOUT_AUTH = "LOGOUT";
-    
+    public static final String COLLATERAL_AUTH = "COLLATERAL";
+
     private final String name;
     private final String persianDescription;
     

@@ -12,6 +12,7 @@ import com.melli.wallet.domain.slave.entity.ReportPurchaseRequestEntity;
 import com.melli.wallet.exception.InternalServiceException;
 import com.melli.wallet.service.operation.PurchaseOperationService;
 import com.melli.wallet.service.operation.WalletBuyLimitationOperationService;
+import com.melli.wallet.service.operation.WalletOperationalService;
 import com.melli.wallet.service.operation.WalletSellLimitationOperationService;
 import com.melli.wallet.service.repository.*;
 import com.melli.wallet.service.repository.impl.PurchaseTransactionalService;
@@ -51,14 +52,15 @@ public class PurchaseOperationServiceImplementation implements PurchaseOperation
     private final WalletBuyLimitationOperationService walletBuyLimitationOperationService;
     private final WalletSellLimitationOperationService walletSellLimitationOperationService;
     private final PurchaseTransactionalService purchaseTransactionalService;
+    private final WalletOperationalService walletOperationalService;
 
     @Override
     public UuidResponse buyGenerateUuid(BuyRequestDTO buyRequestDTO) throws InternalServiceException {
         try {
             log.info("start generate traceId, username ===> ({}), nationalCode ({})", buyRequestDTO.getChannel().getUsername(), buyRequestDTO.getNationalCode());
-            WalletEntity walletEntity = findUserWallet(buyRequestDTO.getNationalCode());
+            WalletEntity walletEntity = walletOperationalService.findUserWallet(buyRequestDTO.getNationalCode());
             WalletAccountCurrencyEntity currencyEntity = walletAccountCurrencyRepositoryService.findCurrency(buyRequestDTO.getCurrency());
-            WalletAccountEntity userCurrencyWalletAccount = checkUserAccount(walletEntity, currencyEntity, buyRequestDTO.getWalletAccountNumber(), buyRequestDTO.getNationalCode());
+            WalletAccountEntity userCurrencyWalletAccount = walletAccountRepositoryService.checkUserAccount(walletEntity, currencyEntity, buyRequestDTO.getWalletAccountNumber(), buyRequestDTO.getNationalCode());
             RrnEntity rrnEntity = rrnRepositoryService.generateTraceId(buyRequestDTO.getNationalCode(), buyRequestDTO.getChannel(), requestTypeRepositoryService.getRequestType(TransactionTypeEnum.BUY.name()), buyRequestDTO.getWalletAccountNumber(), String.valueOf(buyRequestDTO.getPrice()));
             log.info("finish traceId ===> {}, username ({}), nationalCode ({})", rrnEntity.getUuid(), buyRequestDTO.getChannel().getUsername(), buyRequestDTO.getNationalCode());
             MerchantEntity merchant = findMerchant(buyRequestDTO.getMerchantId());
@@ -75,7 +77,7 @@ public class PurchaseOperationServiceImplementation implements PurchaseOperation
 
 
             WalletAccountEntity merchantCurrencyAccount = findMerchantWalletAccount(merchant, currencyEntity);
-            if (walletAccountRepositoryService.getBalance(merchantCurrencyAccount.getId()).compareTo(buyRequestDTO.getQuantity()) < 0) {
+            if (walletAccountRepositoryService.getBalance(merchantCurrencyAccount.getId()).getRealBalance().compareTo(buyRequestDTO.getQuantity()) < 0) {
                 log.error("balance for merchant id ({}) and walletAccount ({}) for currency ({}) is less than ({})", merchant.getId(), merchantCurrencyAccount.getId(), buyRequestDTO.getCurrency(), buyRequestDTO.getQuantity());
                 throw new InternalServiceException("merchant balance is not enough", StatusRepositoryService.MERCHANT_BALANCE_NOT_ENOUGH, HttpStatus.OK);
             }
@@ -91,9 +93,9 @@ public class PurchaseOperationServiceImplementation implements PurchaseOperation
     public UuidResponse sellGenerateUuid(ChannelEntity channelEntity, String nationalCode, String quantity, String walletAccountNumber, String currency) throws InternalServiceException {
         try {
             log.info("start generate sell uuid, username ===> ({}), nationalCode ({})", channelEntity.getUsername(), nationalCode);
-            WalletEntity walletEntity = findUserWallet(nationalCode);
+            WalletEntity walletEntity = walletOperationalService.findUserWallet(nationalCode);
             WalletAccountCurrencyEntity walletAccountCurrencyEntity = walletAccountCurrencyRepositoryService.findCurrency(currency);
-            WalletAccountEntity walletAccountEntity = checkUserAccount(walletEntity, walletAccountCurrencyEntity, walletAccountNumber, nationalCode);
+            WalletAccountEntity walletAccountEntity = walletAccountRepositoryService.checkUserAccount(walletEntity, walletAccountCurrencyEntity, walletAccountNumber, nationalCode);
             RrnEntity rrnEntity = rrnRepositoryService.generateTraceId(nationalCode, channelEntity, requestTypeRepositoryService.getRequestType(TransactionTypeEnum.SELL.name()), walletAccountNumber, quantity);
             log.info("finish sell uuid ===> {}, username ({}), nationalCode ({})", rrnEntity.getUuid(), channelEntity.getUsername(), nationalCode);
             walletSellLimitationOperationService.checkGeneral(channelEntity, walletEntity, new BigDecimal(quantity), walletAccountEntity, walletAccountNumber);
@@ -135,12 +137,12 @@ public class PurchaseOperationServiceImplementation implements PurchaseOperation
         WalletAccountEntity merchantRialAccount = findMerchantWalletAccount(merchant, rialCurrencyEntity);
 
         // Validate user and wallet accounts
-        WalletEntity userWallet = findUserWallet(sellRequestDTO.getNationalCode());
-        WalletAccountEntity userRialAccount = findUserWalletAccount(userWallet, rialCurrencyEntity, sellRequestDTO.getCurrency());
-        WalletAccountEntity userCurrencyAccount = checkUserAccount(userWallet, currencyEntity, sellRequestDTO.getWalletAccountNumber(), sellRequestDTO.getNationalCode());
+        WalletEntity userWallet = walletOperationalService.findUserWallet(sellRequestDTO.getNationalCode());
+        WalletAccountEntity userRialAccount = walletAccountRepositoryService.findUserWalletAccount(userWallet, rialCurrencyEntity, sellRequestDTO.getCurrency());
+        WalletAccountEntity userCurrencyAccount = walletAccountRepositoryService.checkUserAccount(userWallet, currencyEntity, sellRequestDTO.getWalletAccountNumber(), sellRequestDTO.getNationalCode());
 
         // Validate channel commission account
-        WalletAccountEntity channelCommissionAccount = findChannelCommissionAccount(sellRequestDTO.getChannel(), sellRequestDTO.getCommissionCurrency());
+        WalletAccountEntity channelCommissionAccount = walletAccountRepositoryService.findChannelCommissionAccount(sellRequestDTO.getChannel(), sellRequestDTO.getCommissionCurrency());
 
         return redisLockService.runAfterLock(sellRequestDTO.getWalletAccountNumber(), this.getClass(), () -> purchaseTransactionalService.processSell(new PurchaseObjectDto(
                 sellRequestDTO.getChannel(),
@@ -183,16 +185,16 @@ public class PurchaseOperationServiceImplementation implements PurchaseOperation
         WalletAccountEntity merchantRialAccount = findMerchantWalletAccount(merchant, rialCurrencyEntity);
 
         // Validate user and wallet accounts
-        WalletEntity userWallet = findUserWallet(buyRequestDTO.getNationalCode());
-        WalletAccountEntity userCurrencyAccount = findUserWalletAccount(userWallet, currencyEntity, buyRequestDTO.getCurrency());
-        WalletAccountEntity userRialAccount = findUserAccount(userWallet, rialCurrencyEntity, buyRequestDTO.getNationalCode());
+        WalletEntity userWallet = walletOperationalService.findUserWallet(buyRequestDTO.getNationalCode());
+        WalletAccountEntity userCurrencyAccount = walletAccountRepositoryService.findUserWalletAccount(userWallet, currencyEntity, buyRequestDTO.getCurrency());
+        WalletAccountEntity userRialAccount = walletAccountRepositoryService.findUserAccount(userWallet, rialCurrencyEntity, buyRequestDTO.getNationalCode());
 
         // Validate channel commission account
         if (!WalletAccountCurrencyRepositoryService.RIAL.equalsIgnoreCase(buyRequestDTO.getCommissionType())) {
             log.error("commission type in buy must it rial!!!");
             throw new InternalServiceException("commission type must be rial", StatusRepositoryService.COMMISSION_CURRENCY_NOT_VALID, HttpStatus.OK);
         }
-        WalletAccountEntity channelCommissionAccount = findChannelCommissionAccount(buyRequestDTO.getChannel(), WalletAccountCurrencyRepositoryService.RIAL);
+        WalletAccountEntity channelCommissionAccount = walletAccountRepositoryService.findChannelCommissionAccount(buyRequestDTO.getChannel(), WalletAccountCurrencyRepositoryService.RIAL);
 
         walletBuyLimitationOperationService.checkGeneral(buyRequestDTO.getChannel(), userCurrencyAccount.getWalletEntity(), buyRequestDTO.getQuantity(), userCurrencyAccount, buyRequestDTO.getUniqueIdentifier(), currencyEntity);
         walletBuyLimitationOperationService.checkDailyLimitation(buyRequestDTO.getChannel(), userCurrencyAccount.getWalletEntity(), buyRequestDTO.getQuantity(), userCurrencyAccount, buyRequestDTO.getUniqueIdentifier(), currencyEntity);
@@ -228,7 +230,7 @@ public class PurchaseOperationServiceImplementation implements PurchaseOperation
 
         // Validate merchant and wallet accounts
         WalletAccountEntity merchantCurrencyAccount = findMerchantWalletAccount(merchant, currencyEntity);
-        if (walletAccountRepositoryService.getBalance(merchantCurrencyAccount.getId()).compareTo(buyRequestDTO.getQuantity()) < 0) {
+        if (walletAccountRepositoryService.getBalance(merchantCurrencyAccount.getId()).getRealBalance().compareTo(buyRequestDTO.getQuantity()) < 0) {
             log.error("balance for merchant id ({}) and walletAccount ({}) for currency ({}) is less than ({})", merchant.getId(), merchantCurrencyAccount.getId(), buyRequestDTO.getCurrency(), buyRequestDTO.getQuantity());
             throw new InternalServiceException("merchant balance is not enough", StatusRepositoryService.MERCHANT_BALANCE_NOT_ENOUGH, HttpStatus.OK);
         }
@@ -239,9 +241,9 @@ public class PurchaseOperationServiceImplementation implements PurchaseOperation
         }
 
         // Validate user and wallet accounts
-        WalletEntity userWallet = findUserWallet(buyRequestDTO.getNationalCode());
-        WalletAccountEntity userCurrencyAccount = findUserWalletAccount(userWallet, currencyEntity, buyRequestDTO.getCurrency());
-        WalletAccountEntity userRialAccount = findUserAccount(userWallet, rialCurrencyEntity, buyRequestDTO.getNationalCode());
+        WalletEntity userWallet = walletOperationalService.findUserWallet(buyRequestDTO.getNationalCode());
+        WalletAccountEntity userCurrencyAccount = walletAccountRepositoryService.findUserWalletAccount(userWallet, currencyEntity, buyRequestDTO.getCurrency());
+        WalletAccountEntity userRialAccount = walletAccountRepositoryService.findUserAccount(userWallet, rialCurrencyEntity, buyRequestDTO.getNationalCode());
 
 
         //first charge rial account and after that purchase (only in accountToAccount)
@@ -255,7 +257,7 @@ public class PurchaseOperationServiceImplementation implements PurchaseOperation
             throw new InternalServiceException("commission type must be rial", StatusRepositoryService.COMMISSION_CURRENCY_NOT_VALID, HttpStatus.OK);
         }
 
-        WalletAccountEntity channelCommissionAccount = findChannelCommissionAccount(buyRequestDTO.getChannel(), WalletAccountCurrencyRepositoryService.RIAL);
+        WalletAccountEntity channelCommissionAccount = walletAccountRepositoryService.findChannelCommissionAccount(buyRequestDTO.getChannel(), WalletAccountCurrencyRepositoryService.RIAL);
 
         walletBuyLimitationOperationService.checkGeneral(buyRequestDTO.getChannel(), userCurrencyAccount.getWalletEntity(), buyRequestDTO.getQuantity(), userCurrencyAccount, buyRequestDTO.getUniqueIdentifier(), walletAccountCurrencyRepositoryService.findCurrency(buyRequestDTO.getCurrency()));
         walletBuyLimitationOperationService.checkDailyLimitation(buyRequestDTO.getChannel(), userCurrencyAccount.getWalletEntity(), buyRequestDTO.getQuantity(), userCurrencyAccount, buyRequestDTO.getUniqueIdentifier(), walletAccountCurrencyRepositoryService.findCurrency(buyRequestDTO.getCurrency()));
@@ -313,78 +315,6 @@ public class PurchaseOperationServiceImplementation implements PurchaseOperation
                             StatusRepositoryService.MERCHANT_WALLET_ACCOUNT_NOT_FOUND,
                             HttpStatus.OK
                     );
-                });
-    }
-
-    private WalletAccountEntity findUserWalletAccount(
-            WalletEntity walletEntity,
-            WalletAccountCurrencyEntity currencyEntity,
-            String currency
-    ) throws InternalServiceException {
-
-        List<WalletAccountEntity> accounts = walletAccountRepositoryService.findByWallet(walletEntity);
-
-        if (CollectionUtils.isEmpty(accounts)) {
-            log.error("No wallet accounts found for nationalCode {}", walletEntity.getNationalCode());
-            throw new InternalServiceException("user wallet account not found", StatusRepositoryService.MERCHANT_WALLET_ACCOUNT_NOT_FOUND, HttpStatus.OK);
-        }
-
-        return accounts.stream().filter(x -> x.getWalletAccountCurrencyEntity().getId() == (currencyEntity.getId())).findFirst().orElseThrow(() -> {
-            log.error("Wallet account with currency {} not found for user nationalCode {}", currency, walletEntity.getNationalCode());
-            return new InternalServiceException("Wallet account not found for nationalCode", StatusRepositoryService.MERCHANT_WALLET_ACCOUNT_NOT_FOUND, HttpStatus.OK);
-        });
-    }
-
-    private WalletEntity findUserWallet(String nationalCode) throws InternalServiceException {
-        WalletTypeEntity walletType = walletTypeRepositoryService.getByNameManaged(WalletTypeRepositoryService.NORMAL_USER);
-        if (walletType == null) {
-            log.error("Wallet type {} not found", WalletTypeRepositoryService.NORMAL_USER);
-            throw new InternalServiceException("Wallet type not found", StatusRepositoryService.WALLET_TYPE_NOT_FOUND, HttpStatus.OK);
-        }
-
-        WalletEntity wallet = walletRepositoryService.findByNationalCodeAndWalletTypeId(nationalCode, walletType.getId());
-        if (wallet == null) {
-            log.error("National code {} doesn't exist", nationalCode);
-            throw new InternalServiceException("National code doesn't exist", StatusRepositoryService.NATIONAL_CODE_NOT_FOUND, HttpStatus.OK);
-        }
-        return wallet;
-    }
-
-    private WalletAccountEntity checkUserAccount(WalletEntity wallet, WalletAccountCurrencyEntity currencyEntity, String walletAccountNumber, String nationalCode) throws InternalServiceException {
-        List<WalletAccountEntity> accounts = walletAccountRepositoryService.findByWallet(wallet);
-        return accounts.stream().filter(x -> x.getWalletAccountCurrencyEntity().getId() == (currencyEntity.getId())
-                && x.getAccountNumber().equalsIgnoreCase(walletAccountNumber)).findFirst().orElseThrow(() -> {
-            log.error("Rial wallet account not found for user {}", nationalCode);
-            return new InternalServiceException("Wallet account not found for user", StatusRepositoryService.WALLET_ACCOUNT_NOT_FOUND, HttpStatus.OK);
-        });
-    }
-
-    private WalletAccountEntity findUserAccount(WalletEntity wallet, WalletAccountCurrencyEntity currencyEntity, String nationalCode) throws InternalServiceException {
-        List<WalletAccountEntity> accounts = walletAccountRepositoryService.findByWallet(wallet);
-        return accounts.stream().filter(x -> x.getWalletAccountCurrencyEntity().getId() == (currencyEntity.getId()) && x.getEndTime() == null).findFirst().orElseThrow(() -> {
-            log.error("Rial wallet account not found for user {}", nationalCode);
-            return new InternalServiceException("Wallet account not found for user", StatusRepositoryService.WALLET_ACCOUNT_NOT_FOUND, HttpStatus.OK);
-        });
-    }
-
-    private WalletAccountEntity findChannelCommissionAccount(ChannelEntity channel, String walletAccountTypeName) throws InternalServiceException {
-        List<WalletAccountEntity> accounts = walletAccountRepositoryService.findByWallet(channel.getWalletEntity());
-        if (accounts.isEmpty()) {
-            log.error("No wallet accounts found for channel {}", channel.getUsername());
-            throw new InternalServiceException("na wallet account found for channel", StatusRepositoryService.CHANNEL_WALLET_ACCOUNT_NOT_FOUND, HttpStatus.OK);
-        }
-
-        WalletAccountTypeEntity wageType = walletAccountTypeRepositoryService.findByNameManaged(WalletAccountTypeRepositoryService.WAGE);
-        if (wageType == null) {
-            log.error("Wallet account type wage not found for channel {}", channel.getUsername());
-            throw new InternalServiceException("Wallet account type wage not found", StatusRepositoryService.WALLET_ACCOUNT_TYPE_NOT_FOUND, HttpStatus.OK);
-        }
-
-        return accounts.stream()
-                .filter(x -> x.getWalletAccountCurrencyEntity().getName().equalsIgnoreCase(walletAccountTypeName)
-                        && x.getWalletAccountTypeEntity().getName().equalsIgnoreCase(wageType.getName())).findFirst().orElseThrow(() -> {
-                    log.error("Commission account not found for channel {}", channel.getUsername());
-                    return new InternalServiceException("Commission account not found", StatusRepositoryService.CHANNEL_WALLET_ACCOUNT_NOT_FOUND, HttpStatus.OK);
                 });
     }
 

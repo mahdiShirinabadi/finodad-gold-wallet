@@ -1664,6 +1664,6 @@ class BuyControllerTest extends WalletApplicationTests {
         long finalId = id;
         WalletAccountEntity walletAccountEntity = walletAccountEntityList.stream().filter(
                 x -> x.getWalletAccountCurrencyEntity().getId() == finalId).findFirst().orElse(null);
-        walletAccountRepositoryService.decreaseBalance(walletAccountEntity.getId(), walletAccountRepositoryService.getBalance(walletAccountEntity.getId()));
+        walletAccountRepositoryService.decreaseBalance(walletAccountEntity.getId(), walletAccountRepositoryService.getBalance(walletAccountEntity.getId()).getRealBalance());
     }
 }

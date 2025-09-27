@@ -21,7 +21,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 
@@ -47,7 +46,6 @@ public class Person2PersonOperationServiceImplementation implements Person2Perso
     private final TransactionRepositoryService transactionRepositoryService;
     private final MessageResolverOperationService messageResolverOperationService;
     private final StatusRepositoryService statusRepositoryService;
-    private final WalletAccountTypeRepositoryService walletAccountTypeRepositoryService;
 
     @Override
     public P2pUuidResponse generateUuid(ChannelEntity channelEntity, String nationalCode, String amount, String accountNumber, String destAccountNumber) throws InternalServiceException {
@@ -159,7 +157,7 @@ public class Person2PersonOperationServiceImplementation implements Person2Perso
             log.info("finish p2p transaction for uniqueIdentifier ({}), quantity ({}) for withdrawal walletAccountId ({})", requestEntity.getRrnEntity().getUuid(), requestEntity.getAmount(), srcWalletAccountEntity.getId());
 
             if (requestEntity.getCommission().compareTo(BigDecimal.valueOf(0L)) > 0) {
-                WalletAccountEntity channelCommissionAccount = findChannelCommissionAccount(p2pObjectDTO.getChannel(), WalletAccountCurrencyRepositoryService.GOLD);
+                WalletAccountEntity channelCommissionAccount = walletAccountRepositoryService.findChannelCommissionAccount(p2pObjectDTO.getChannel(), WalletAccountCurrencyRepositoryService.GOLD);
                 log.info("start sell transaction for uniqueIdentifier ({}), commission ({}) for deposit commission from nationalCode ({}), walletAccountId ({})", requestEntity.getRrnEntity().getUuid(), requestEntity.getCommission(), requestEntity.getSourceAccountWalletEntity().getWalletEntity().getNationalCode(), channelCommissionAccount.getId());
                 TransactionEntity commissionDeposit = createTransaction(channelCommissionAccount, requestEntity.getCommission(),
                         messageResolverOperationService.resolve(depositTemplate, model), requestEntity.getAdditionalData(), requestEntity, requestEntity.getRrnEntity());
@@ -207,24 +205,4 @@ public class Person2PersonOperationServiceImplementation implements Person2Perso
         return transaction;
     }
 
-    private WalletAccountEntity findChannelCommissionAccount(ChannelEntity channel, String walletAccountTypeName) throws InternalServiceException {
-        List<WalletAccountEntity> accounts = walletAccountRepositoryService.findByWallet(channel.getWalletEntity());
-        if (accounts.isEmpty()) {
-            log.error("No wallet accounts found for channel {}", channel.getUsername());
-            throw new InternalServiceException("na wallet account found for channel", StatusRepositoryService.CHANNEL_WALLET_ACCOUNT_NOT_FOUND, HttpStatus.OK);
-        }
-
-        WalletAccountTypeEntity wageType = walletAccountTypeRepositoryService.findByNameManaged(WalletAccountTypeRepositoryService.WAGE);
-        if (wageType == null) {
-            log.error("Wallet account type wage not found for channel {}", channel.getUsername());
-            throw new InternalServiceException("Wallet account type wage not found", StatusRepositoryService.WALLET_ACCOUNT_TYPE_NOT_FOUND, HttpStatus.OK);
-        }
-
-        return accounts.stream()
-                .filter(x -> x.getWalletAccountCurrencyEntity().getName().equalsIgnoreCase(walletAccountTypeName)
-                        && x.getWalletAccountTypeEntity().getName().equalsIgnoreCase(wageType.getName())).findFirst().orElseThrow(() -> {
-                    log.error("Commission account not found for channel {}", channel.getUsername());
-                    return new InternalServiceException("Commission account not found", StatusRepositoryService.CHANNEL_WALLET_ACCOUNT_NOT_FOUND, HttpStatus.OK);
-                });
-    }
 }

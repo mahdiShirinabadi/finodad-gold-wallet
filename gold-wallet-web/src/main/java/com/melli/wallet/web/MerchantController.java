@@ -13,7 +13,7 @@ import com.melli.wallet.domain.response.wallet.WalletBalanceResponse;
 import com.melli.wallet.exception.InternalServiceException;
 import com.melli.wallet.security.RequestContext;
 import com.melli.wallet.service.repository.MerchantRepositoryService;
-import com.melli.wallet.service.repository.ResourceDefinition;
+import com.melli.wallet.domain.enumaration.ResourceDefinition;
 import com.melli.wallet.service.operation.MerchantOperationService;
 import com.melli.wallet.service.repository.TransactionRepositoryService;
 import io.micrometer.core.annotation.Timed;

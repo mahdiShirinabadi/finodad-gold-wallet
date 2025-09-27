@@ -1,40 +1,28 @@
 package com.melli.wallet.web;
 
 import com.melli.wallet.annotation.LogExecutionTime;
-import com.melli.wallet.annotation.fund_type.PurchaseTypeValidation;
 import com.melli.wallet.annotation.national_code.NationalCodeValidation;
 import com.melli.wallet.annotation.string.StringValidation;
 import com.melli.wallet.domain.request.PanelBaseSearchJson;
-import com.melli.wallet.domain.request.wallet.ActiveWalletRequestJson;
-import com.melli.wallet.domain.request.wallet.CreateWalletRequestJson;
-import com.melli.wallet.domain.request.wallet.DeactivatedWalletRequestJson;
-import com.melli.wallet.domain.request.wallet.DeleteWalletRequestJson;
 import com.melli.wallet.domain.response.base.BaseResponse;
 import com.melli.wallet.domain.response.transaction.ReportTransactionResponse;
 import com.melli.wallet.domain.response.transaction.StatementResponse;
-import com.melli.wallet.domain.response.wallet.CreateWalletResponse;
-import com.melli.wallet.domain.slave.persistence.ReportTransactionRepository;
 import com.melli.wallet.exception.InternalServiceException;
 import com.melli.wallet.security.RequestContext;
-import com.melli.wallet.service.operation.WalletOperationalService;
 import com.melli.wallet.service.repository.*;
-import com.melli.wallet.service.repository.ResourceDefinition;
-import com.melli.wallet.util.Utility;
+import com.melli.wallet.domain.enumaration.ResourceDefinition;
 import io.micrometer.core.annotation.Timed;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
-import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 
 @RestController

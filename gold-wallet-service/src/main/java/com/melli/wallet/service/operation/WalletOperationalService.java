@@ -3,6 +3,7 @@ package com.melli.wallet.service.operation;
 
 import com.melli.wallet.domain.master.entity.ChannelEntity;
 import com.melli.wallet.domain.master.entity.SettingGeneralEntity;
+import com.melli.wallet.domain.master.entity.WalletEntity;
 import com.melli.wallet.domain.response.base.BaseResponse;
 import com.melli.wallet.domain.response.wallet.CreateWalletResponse;
 import com.melli.wallet.exception.InternalServiceException;
@@ -30,5 +31,6 @@ public interface WalletOperationalService {
     BaseResponse<ObjectUtils.Null> deactivateWallet(ChannelEntity channel, String walletId, String ip) throws InternalServiceException;
     BaseResponse<ObjectUtils.Null> deleteWallet(ChannelEntity channel, String walletId, String ip) throws InternalServiceException;
     BaseResponse<ObjectUtils.Null> activateWallet(ChannelEntity channel, String walletId, String ip) throws InternalServiceException;
+    public WalletEntity findUserWallet(String nationalCode) throws InternalServiceException;
 
 }

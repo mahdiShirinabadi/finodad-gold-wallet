@@ -1,6 +1,6 @@
 package com.melli.wallet.domain.slave.persistence;
 
-import com.melli.wallet.domain.dto.BalanceObjectDTO;
+import com.melli.wallet.domain.dto.BalanceDTO;
 import com.melli.wallet.domain.enumaration.WalletStatusEnum;
 import com.melli.wallet.domain.slave.entity.ReportWalletAccountEntity;
 import com.melli.wallet.domain.slave.entity.ReportWalletEntity;
@@ -56,7 +56,7 @@ public interface ReportWalletAccountRepository extends CrudRepository<ReportWall
     List<ReportWalletAccountEntity> findAllByWalletEntityAndWalletAccountTypeEntityId(ReportWalletEntity wallet, long accountTypeId);
 
     @Query(value = "SELECT w.balance AS balance, w.block_amount AS blockAmount  FROM {h-schema}wallet_account w where id=:id", nativeQuery = true)
-    BalanceObjectDTO getBalanceById(@Param("id") long id);
+    BalanceDTO getBalanceById(@Param("id") long id);
 
     @Query(value = "SELECT " +
             "wa.id as accountId, " +

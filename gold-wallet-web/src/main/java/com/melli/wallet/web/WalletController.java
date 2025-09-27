@@ -2,6 +2,7 @@ package com.melli.wallet.web;
 
 import com.melli.wallet.annotation.LogExecutionTime;
 import com.melli.wallet.annotation.national_code.NationalCodeValidation;
+import com.melli.wallet.domain.enumaration.ResourceDefinition;
 import com.melli.wallet.domain.request.wallet.ActiveWalletRequestJson;
 import com.melli.wallet.domain.request.wallet.CreateWalletRequestJson;
 import com.melli.wallet.domain.request.wallet.DeactivatedWalletRequestJson;

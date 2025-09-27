@@ -70,6 +70,9 @@ public interface LimitationGeneralService {
     String MAX_QUANTITY_GIFT_CARD = "MAX_QUANTITY_GIFT_CARD";
     String ENABLE_GIFT_CARD = "ENABLE_GIFT_CARD";
 
+    //Collateral
+    String ENABLE_COLLATERAL = "ENABLE_COLLATERAL";
+
     List<LimitationGeneralEntity> getLimitationGeneralEntities() throws InternalServiceException;
     LimitationGeneralEntity getSetting(String name);
     LimitationGeneralEntity getById(Long id) throws InternalServiceException;

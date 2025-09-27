@@ -2,6 +2,7 @@ package com.melli.wallet.service.operation.impl;
 
 import com.melli.wallet.domain.dto.AggregationCashInDTO;
 import com.melli.wallet.domain.dto.AggregationCashOutDTO;
+import com.melli.wallet.domain.dto.BalanceDTO;
 import com.melli.wallet.domain.master.entity.*;
 import com.melli.wallet.domain.master.persistence.WalletCashInLimitationRepository;
 import com.melli.wallet.domain.master.persistence.WalletCashOutLimitationRepository;
@@ -106,12 +107,12 @@ public class WalletCashLimitationOperationServiceImplementation implements Walle
                 ));
             }
 
-            BigDecimal balance = walletAccountRepositoryService.getBalance(walletAccount.getId());
+            BalanceDTO balance = walletAccountRepositoryService.getBalance(walletAccount.getId());
 
-            if (balance.add(amount).compareTo(maxBalance)> 0) {
+            if (balance.getRealBalance().add(amount).compareTo(maxBalance)> 0) {
                 log.error("cashIn's amount({}) for wallet({}) with balance ({}), is more than maxBalance({}) !!!", amount, wallet.getNationalCode(), balance, maxBalance.longValue());
                 throw new InternalServiceException("cashIn's amount is more than maxBalance", StatusRepositoryService.BALANCE_MORE_THAN_STANDARD, HttpStatus.OK, Map.ofEntries(
-                        entry("1", Utility.addComma(balance.add(amount).longValue())),
+                        entry("1", Utility.addComma(balance.getRealBalance().add(amount).longValue())),
                         entry("2", Utility.addComma(maxBalance.longValue()))
                 ));
             }

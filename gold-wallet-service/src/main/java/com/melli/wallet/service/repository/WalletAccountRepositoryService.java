@@ -1,7 +1,8 @@
 package com.melli.wallet.service.repository;
 
-import com.melli.wallet.domain.dto.BalanceObjectDTO;
+import com.melli.wallet.domain.dto.BalanceDTO;
 import com.melli.wallet.domain.master.entity.ChannelEntity;
+import com.melli.wallet.domain.master.entity.WalletAccountCurrencyEntity;
 import com.melli.wallet.domain.master.entity.WalletAccountEntity;
 import com.melli.wallet.domain.master.entity.WalletEntity;
 import com.melli.wallet.exception.InternalServiceException;
@@ -33,15 +34,15 @@ public interface WalletAccountRepositoryService {
     WalletAccountEntity findByAccountNumber(String account);
     WalletAccountEntity findById(Long id) throws InternalServiceException;
 
-    BigDecimal getBalance(long walletAccountId);
+    BalanceDTO getBalance(long walletAccountId);
 
     void increaseBalance(long walletAccountId, BigDecimal amount);
 
     int decreaseBalance(long walletAccountId, BigDecimal amount);
 
-    void blockAmount(long walletAccountId, long amount);
+    int blockAmount(long walletAccountId, BigDecimal amount);
 
-    void unblockAmount(long walletAccountId, long amount);
+    int unblockAmount(long walletAccountId, BigDecimal amount);
 
     void save(WalletAccountEntity walletAccount) throws InternalServiceException;
 
@@ -51,12 +52,19 @@ public interface WalletAccountRepositoryService {
 
     void clearAllCache();
 
-    BalanceObjectDTO getAllBalance(long walletAccountId);
-
     WalletAccountEntity findByAccountNumberAndEndTimeIsNull(String accountNumber);
 
     List<WalletAccountEntity> findByWalletIds(List<Long> walletIds);
 
     List<Object[]> findAccountDetailsByWalletIds(List<Long> walletIds);
+
+    WalletAccountEntity findChannelCommissionAccount(ChannelEntity channel, String walletAccountTypeName) throws InternalServiceException;
+    WalletAccountEntity findUserAccount(WalletEntity wallet, WalletAccountCurrencyEntity currencyEntity, String nationalCode) throws InternalServiceException;
+    WalletAccountEntity checkUserAccount(WalletEntity wallet, WalletAccountCurrencyEntity currencyEntity, String walletAccountNumber, String nationalCode) throws InternalServiceException;
+    public WalletAccountEntity findUserWalletAccount(
+            WalletEntity walletEntity,
+            WalletAccountCurrencyEntity currencyEntity,
+            String currency
+    ) throws InternalServiceException;
 
 }

@@ -41,14 +41,11 @@ public class GiftCardOperationServiceImplementation implements GiftCardOperation
     private final Helper helper;
     private final WalletRepositoryService walletRepositoryService;
     private final WalletAccountRepositoryService walletAccountRepositoryService;
-    private final WalletGiftCardLimitationRepositoryService walletGiftCardLimitationRepositoryService;
     private final WalletGiftCardLimitationOperationService walletGiftCardLimitationOperationService;
     private final RequestTypeRepositoryService requestTypeRepositoryService;
     private final TemplateRepositoryService templateRepositoryService;
     private final TransactionRepositoryService transactionRepositoryService;
     private final MessageResolverOperationService messageResolverOperationService;
-    private final StatusRepositoryService statusRepositoryService;
-    private final WalletAccountTypeRepositoryService walletAccountTypeRepositoryService;
     private final SettingGeneralRepositoryService settingGeneralRepositoryService;
     private final GiftCardRepositoryService giftCardRepositoryService;
     private final WalletOperationalService walletOperationalService;
@@ -253,7 +250,7 @@ public class GiftCardOperationServiceImplementation implements GiftCardOperation
             log.info("finish giftCard transaction for uniqueIdentifier ({}), quantity ({}) for withdrawal walletAccountId ({})", rrnEntity.getUuid(), giftCardEntity.getQuantity(), walletAccountEntity.getId());
 
             if (giftCardProcessObjectDTO.getCommission().compareTo(BigDecimal.valueOf(0L)) > 0) {
-                WalletAccountEntity channelCommissionAccount = findChannelCommissionAccount(giftCardProcessObjectDTO.getChannelEntity(), WalletAccountCurrencyRepositoryService.GOLD);
+                WalletAccountEntity channelCommissionAccount = walletAccountRepositoryService.findChannelCommissionAccount(giftCardProcessObjectDTO.getChannelEntity(), WalletAccountCurrencyRepositoryService.GOLD);
                 log.info("start sell transaction for uniqueIdentifier ({}), commission ({}) for deposit commission from nationalCode ({}), walletAccountId ({})", rrnEntity.getUuid(), giftCardEntity.getCommission(), giftCardEntity.getWalletAccountEntity().getWalletEntity().getNationalCode(), channelCommissionAccount.getId());
                 TransactionEntity commissionDeposit = createTransaction(channelCommissionAccount, giftCardEntity.getCommission(),
                         messageResolverOperationService.resolve(depositTemplate, model), giftCardProcessObjectDTO.getAdditionalData(), requestTypeEntity, rrnEntity);
@@ -326,25 +323,4 @@ public class GiftCardOperationServiceImplementation implements GiftCardOperation
         return transaction;
     }
 
-
-    private WalletAccountEntity findChannelCommissionAccount(ChannelEntity channel, String walletAccountTypeName) throws InternalServiceException {
-        List<WalletAccountEntity> accounts = walletAccountRepositoryService.findByWallet(channel.getWalletEntity());
-        if (accounts.isEmpty()) {
-            log.error("No wallet accounts found for channel {}", channel.getUsername());
-            throw new InternalServiceException("na wallet account found for channel", StatusRepositoryService.CHANNEL_WALLET_ACCOUNT_NOT_FOUND, HttpStatus.OK);
-        }
-
-        WalletAccountTypeEntity wageType = walletAccountTypeRepositoryService.findByNameManaged(WalletAccountTypeRepositoryService.WAGE);
-        if (wageType == null) {
-            log.error("Wallet account type wage not found for channel {}", channel.getUsername());
-            throw new InternalServiceException("Wallet account type wage not found", StatusRepositoryService.WALLET_ACCOUNT_TYPE_NOT_FOUND, HttpStatus.OK);
-        }
-
-        return accounts.stream()
-                .filter(x -> x.getWalletAccountCurrencyEntity().getName().equalsIgnoreCase(walletAccountTypeName)
-                        && x.getWalletAccountTypeEntity().getName().equalsIgnoreCase(wageType.getName())).findFirst().orElseThrow(() -> {
-                    log.error("Commission account not found for channel {}", channel.getUsername());
-                    return new InternalServiceException("Commission account not found", StatusRepositoryService.CHANNEL_WALLET_ACCOUNT_NOT_FOUND, HttpStatus.OK);
-                });
-    }
 }
