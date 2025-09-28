@@ -23,7 +23,7 @@ public class CreateUniqueIdentifierCollateralRequestJson {
     @JsonProperty(NamingProperty.NATIONAL_CODE)
     private String nationalCode;
 
-    @NumberValidation(allowNegative = true, label =  NamingProperty.QUANTITY)
+    @NumberValidation(allowDecimal = true, label =  NamingProperty.QUANTITY)
     @Schema(name = NamingProperty.QUANTITY, description = "تعداد", example = "1000")
     @JsonProperty(NamingProperty.QUANTITY)
     private String quantity;

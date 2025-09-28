@@ -190,7 +190,7 @@ public class RequestRepositoryServiceImplementation implements RequestRepository
     @Override
     public void findCreateCollateralDuplicateWithRrnId(long rrnId) throws InternalServiceException {
         Optional<CreateCollateralRequestEntity> createCollateralRequestEntityOptional = createCollateralRequestRepository.findOptionalByRrnEntityId(rrnId);
-        if(createCollateralRequestEntityOptional.isEmpty()) {
+        if(createCollateralRequestEntityOptional.isPresent()) {
             log.error("createCollateralRequestEntityOptional WithRrnId ({}) found", rrnId);
             throw new InternalServiceException("createCollateralRequestEntityOptional", StatusRepositoryService.DUPLICATE_UUID, HttpStatus.OK);
         }
@@ -199,7 +199,7 @@ public class RequestRepositoryServiceImplementation implements RequestRepository
     @Override
     public void findReleaseCollateralDuplicateWithRrnId(long rrnId) throws InternalServiceException {
         Optional<ReleaseCollateralRequestEntity> releaseCollateralRequestEntityOptional = releaseCollateralRequestRepository.findOptionalByRrnEntityId(rrnId);
-        if(releaseCollateralRequestEntityOptional.isEmpty()) {
+        if(releaseCollateralRequestEntityOptional.isPresent()) {
             log.error("releaseCollateralRequestEntityOptional WithRrnId ({}) found", rrnId);
             throw new InternalServiceException("releaseCollateralRequestEntityOptional", StatusRepositoryService.DUPLICATE_UUID, HttpStatus.OK);
         }

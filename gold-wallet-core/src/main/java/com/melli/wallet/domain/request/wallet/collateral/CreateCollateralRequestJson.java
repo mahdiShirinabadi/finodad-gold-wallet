@@ -29,12 +29,11 @@ public class CreateCollateralRequestJson {
     @JsonProperty(NamingProperty.QUANTITY)
     private String quantity;
 
-    @NumberValidation
+    @StringValidation
     @Schema(name = NamingProperty.WALLET_ACCOUNT_NUMBER, description = "شماره حساب کیف پول", example = "")
     @JsonProperty(NamingProperty.WALLET_ACCOUNT_NUMBER)
     private String accountNumber;
 
-    @NumberValidation
     @Schema(name = NamingProperty.DESCRIPTION, description = "تعداد", example = "1000")
     @JsonProperty(NamingProperty.DESCRIPTION)
     private String description;

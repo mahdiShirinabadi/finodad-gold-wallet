@@ -16,7 +16,7 @@ public class FlywayConfig {
     }
 
     @Bean
-    @Profile({"test"})
+    @Profile({"test","dev1"})
     public FlywayMigrationStrategy cleanMigrate() {
         return flyway -> {
             flyway.clean();

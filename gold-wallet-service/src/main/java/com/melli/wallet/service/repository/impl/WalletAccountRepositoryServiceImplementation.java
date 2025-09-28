@@ -192,7 +192,7 @@ public class WalletAccountRepositoryServiceImplementation implements WalletAccou
         List<WalletAccountEntity> accounts = findByWallet(wallet);
         return accounts.stream().filter(x -> x.getWalletAccountCurrencyEntity().getId() == (currencyEntity.getId())
                 && x.getAccountNumber().equalsIgnoreCase(walletAccountNumber)).findFirst().orElseThrow(() -> {
-            log.error("Rial wallet account not found for user {}", nationalCode);
+            log.error("wallet account ({}) not found for user {}", currencyEntity.getName(), nationalCode);
             return new InternalServiceException("Wallet account not found for user", StatusRepositoryService.WALLET_ACCOUNT_NOT_FOUND, HttpStatus.OK);
         });
     }
@@ -200,7 +200,7 @@ public class WalletAccountRepositoryServiceImplementation implements WalletAccou
     public WalletAccountEntity findUserAccount(WalletEntity wallet, WalletAccountCurrencyEntity currencyEntity, String nationalCode) throws InternalServiceException {
         List<WalletAccountEntity> accounts = findByWallet(wallet);
         return accounts.stream().filter(x -> x.getWalletAccountCurrencyEntity().getId() == (currencyEntity.getId()) && x.getEndTime() == null).findFirst().orElseThrow(() -> {
-            log.error("Rial wallet account not found for user {}", nationalCode);
+            log.error("wallet account ({}) not found for user {}", currencyEntity.getName(), nationalCode);
             return new InternalServiceException("Wallet account not found for user", StatusRepositoryService.WALLET_ACCOUNT_NOT_FOUND, HttpStatus.OK);
         });
     }

@@ -16,6 +16,9 @@ import com.melli.wallet.domain.request.wallet.cash.CashOutWalletRequestJson;
 import com.melli.wallet.domain.request.wallet.giftcard.GiftCardGenerateUuidRequestJson;
 import com.melli.wallet.domain.request.wallet.giftcard.GiftCardProcessRequestJson;
 import com.melli.wallet.domain.request.wallet.giftcard.PaymentGiftCardRequestJson;
+import com.melli.wallet.domain.request.wallet.collateral.CreateUniqueIdentifierCollateralRequestJson;
+import com.melli.wallet.domain.request.wallet.collateral.CreateCollateralRequestJson;
+import com.melli.wallet.domain.request.wallet.collateral.ReleaseCollateralRequestJson;
 import com.melli.wallet.domain.request.wallet.p2p.P2pGenerateUuidRequestJson;
 import com.melli.wallet.domain.request.wallet.p2p.P2pRequestJson;
 import com.melli.wallet.domain.request.wallet.physical.PhysicalCashGenerateUuidRequestJson;
@@ -27,6 +30,7 @@ import com.melli.wallet.domain.response.cash.*;
 import com.melli.wallet.domain.response.giftcard.GiftCardResponse;
 import com.melli.wallet.domain.response.giftcard.GiftCardUuidResponse;
 import com.melli.wallet.domain.response.giftcard.GiftCardTrackResponse;
+import com.melli.wallet.domain.response.collateral.CreateCollateralResponse;
 import com.melli.wallet.domain.response.login.LoginResponse;
 import com.melli.wallet.domain.response.p2p.P2pTrackResponse;
 import com.melli.wallet.domain.response.p2p.P2pUuidResponse;
@@ -128,6 +132,10 @@ public class WalletApplicationTests {
     private static final String GIFT_CARD_PROCESS_PATH = "/api/v1/giftCard/process";
     private static final String GIFT_CARD_INQUIRY_PATH = "/api/v1/giftCard/inquiry";
     private static final String GIFT_CARD_PAYMENT_PATH = "/api/v1/giftCard/payment";
+
+    private static final String COLLATERAL_GENERATE_UUID_PATH = "/api/v1/collateral/generate/uuid";
+    private static final String COLLATERAL_CREATE_PATH = "/api/v1/collateral/create";
+    private static final String COLLATERAL_RELEASE_PATH = "/api/v1/collateral/release";
 
     private static final String NATIONAL_CODE_CORRECT = "0077847660";
     private static final String NATIONAL_CODE_INCORRECT = "0077847661";
@@ -831,6 +839,51 @@ public class WalletApplicationTests {
         requestJson.setAdditionalData(additionalData);
         
         MockHttpServletRequestBuilder postRequest = buildPostRequest(token, GIFT_CARD_PAYMENT_PATH, mapToJson(requestJson));
+        String response = performTest(mockMvc, postRequest, httpStatus, success, errorCode);
+        TypeReference<BaseResponse<ObjectUtils.Null>> typeReference = new TypeReference<>() {};
+        return objectMapper.readValue(response, typeReference);
+    }
+
+    // ==================== COLLATERAL METHODS ====================
+
+    public BaseResponse<UuidResponse> generateCollateralUuid(MockMvc mockMvc, String token, String nationalCode, String quantity, String currency, String walletAccountNumber, HttpStatus httpStatus, int errorCode, boolean success) throws Exception {
+        CreateUniqueIdentifierCollateralRequestJson requestJson = new CreateUniqueIdentifierCollateralRequestJson();
+        requestJson.setNationalCode(nationalCode);
+        requestJson.setQuantity(quantity);
+        requestJson.setCurrency(currency);
+        requestJson.setWalletAccountNumber(walletAccountNumber);
+        
+        MockHttpServletRequestBuilder postRequest = buildPostRequest(token, COLLATERAL_GENERATE_UUID_PATH, mapToJson(requestJson));
+        String response = performTest(mockMvc, postRequest, httpStatus, success, errorCode);
+        TypeReference<BaseResponse<UuidResponse>> typeReference = new TypeReference<>() {};
+        return objectMapper.readValue(response, typeReference);
+    }
+
+    public BaseResponse<CreateCollateralResponse> createCollateral(MockMvc mockMvc, String token, String uniqueIdentifier, String quantity, String accountNumber, String description, String sign, CommissionObject commissionObject, HttpStatus httpStatus, int errorCode, boolean success) throws Exception {
+        CreateCollateralRequestJson requestJson = new CreateCollateralRequestJson();
+        requestJson.setUniqueIdentifier(uniqueIdentifier);
+        requestJson.setQuantity(quantity);
+        requestJson.setAccountNumber(accountNumber);
+        requestJson.setDescription(description);
+        requestJson.setSign(sign);
+        requestJson.setCommissionObject(commissionObject);
+        
+        MockHttpServletRequestBuilder postRequest = buildPostRequest(token, COLLATERAL_CREATE_PATH, mapToJson(requestJson));
+        String response = performTest(mockMvc, postRequest, httpStatus, success, errorCode);
+        TypeReference<BaseResponse<CreateCollateralResponse>> typeReference = new TypeReference<>() {};
+        return objectMapper.readValue(response, typeReference);
+    }
+
+    public BaseResponse<ObjectUtils.Null> releaseCollateral(MockMvc mockMvc, String token, String collateralCode, String quantity, String nationalCode, String additionalData, String sign, CommissionObject commissionObject, HttpStatus httpStatus, int errorCode, boolean success) throws Exception {
+        ReleaseCollateralRequestJson requestJson = new ReleaseCollateralRequestJson();
+        requestJson.setCollateralCode(collateralCode);
+        requestJson.setQuantity(quantity);
+        requestJson.setNationalCode(nationalCode);
+        requestJson.setAdditionalData(additionalData);
+        requestJson.setSign(sign);
+        requestJson.setCommissionObject(commissionObject);
+        
+        MockHttpServletRequestBuilder postRequest = buildPostRequest(token, COLLATERAL_RELEASE_PATH, mapToJson(requestJson));
         String response = performTest(mockMvc, postRequest, httpStatus, success, errorCode);
         TypeReference<BaseResponse<ObjectUtils.Null>> typeReference = new TypeReference<>() {};
         return objectMapper.readValue(response, typeReference);

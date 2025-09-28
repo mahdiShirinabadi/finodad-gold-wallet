@@ -182,28 +182,26 @@ CREATE TABLE if not exists create_collateral_request
 create unique index rrn_id_create_collateral_request_unique_idx on create_collateral_request (rrn_id);
 
 
-CREATE TABLE if not exists create_collateral_request
-(
-    request_id             BIGINT NOT NULL REFERENCES request,
-    wallet_account_id      BIGINT NOT NULL REFERENCES wallet_account,
-    rrn_id                 BIGINT NOT NULL REFERENCES rrn,
-    code                   varchar(200),
-    additional_data        varchar(500),
-    status                 varchar(100),
-    quantity               NUMERIC(15, 5),
-    commission           NUMERIC(15, 5)
-);
-create unique index rrn_id_create_collateral_request_unique_idx on create_collateral_request (rrn_id);
-
-
 CREATE TABLE if not exists release_collateral_request
 (
     request_id             BIGINT NOT NULL REFERENCES request,
     wallet_account_id      BIGINT NOT NULL REFERENCES wallet_account,
     rrn_id                 BIGINT NOT NULL REFERENCES rrn,
-    create_collateral_request_id                 BIGINT NOT NULL REFERENCES create_collateral_request,
+    create_collateral_request_id                 BIGINT NOT NULL REFERENCES request,
     additional_data        varchar(500),
     quantity               NUMERIC(15, 5),
     commission           NUMERIC(15, 5)
 );
 create unique index rrn_id_release_collateral_request_unique_idx on release_collateral_request (rrn_id);
+
+INSERT INTO limitation_general(created_by, created_at, name, value, additional_data)
+VALUES ('System', now(), 'ENABLE_COLLATERAL', 'false', 'فعال/غیرفعال بودن وثیقه')
+on conflict do nothing;
+
+insert into request_type(created_by, created_at, name, fa_name, display)
+VALUES ('System', now(), 'create_collateral', 'ایجاد وثیقه', 1)
+on conflict do nothing;
+
+insert into request_type(created_by, created_at, name, fa_name, display)
+VALUES ('System', now(), 'release_collateral', 'آزادسازی وثیقه', 1)
+on conflict do nothing;
