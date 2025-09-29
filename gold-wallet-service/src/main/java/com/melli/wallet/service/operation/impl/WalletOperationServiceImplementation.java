@@ -143,7 +143,7 @@ public class WalletOperationServiceImplementation implements WalletOperationalSe
         }
 
         List<WalletAccountEntity> walletAccountEntityList = walletAccountRepositoryService.findByWallet(walletEntity);
-        walletAccountEntityList = walletAccountEntityList.stream().filter(x-> (x.getWalletAccountTypeEntity().getDisplay() == Boolean.TRUE)).toList();
+        walletAccountEntityList = walletAccountEntityList.stream().filter(x -> (x.getWalletAccountTypeEntity().getDisplay() == Boolean.TRUE)).toList();
         return helper.fillCreateWalletResponse(walletEntity, walletAccountEntityList, walletAccountRepositoryService);
     }
 
@@ -215,6 +215,11 @@ public class WalletOperationServiceImplementation implements WalletOperationalSe
         if (wallet == null) {
             log.error("National code {} doesn't exist", nationalCode);
             throw new InternalServiceException("National code doesn't exist", StatusRepositoryService.NATIONAL_CODE_NOT_FOUND, HttpStatus.OK);
+        }
+
+        if (!Objects.equals(wallet.getStatus().getText(), WalletStatusEnum.ACTIVE.getText())) {
+            log.error("wallet for nationalCode {} is not active and status is ({})!!!", nationalCode, wallet.getStatus().getText());
+            throw new InternalServiceException("wallet for nationalCode (" + nationalCode + ") is not active!!", StatusRepositoryService.WALLET_IS_NOT_ACTIVE, HttpStatus.OK);
         }
         return wallet;
     }

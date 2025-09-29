@@ -88,6 +88,11 @@ public class WalletAccountRepositoryServiceImplementation implements WalletAccou
         return walletAccountRepository.getBalance(walletAccountId);
     }
 
+    @Override
+    public BigDecimal getBlockAmount(long walletAccountId) {
+        return walletAccountRepository.getBlock(walletAccountId);
+    }
+
     @Transactional
     @Override
     public void increaseBalance(long walletAccountId, BigDecimal amount) {
@@ -98,6 +103,12 @@ public class WalletAccountRepositoryServiceImplementation implements WalletAccou
     @Override
     public int decreaseBalance(long walletAccountId, BigDecimal amount) {
         return walletAccountRepository.decreaseBalance(walletAccountId, amount);
+    }
+
+    @Transactional
+    @Override
+    public int unblockAndDecreaseAmount(long walletAccountId, BigDecimal amount) {
+        return walletAccountRepository.unblockAndDecreaseAmount(walletAccountId,amount);
     }
 
     @Transactional
@@ -173,6 +184,11 @@ public class WalletAccountRepositoryServiceImplementation implements WalletAccou
             String currency
     ) throws InternalServiceException {
 
+        if(!walletEntity.getStatus().equals(WalletStatusEnum.ACTIVE)){
+            log.error("wallet id ({}) for nationalCode ({}) is not ACTIVE", walletEntity.getId(), walletEntity.getNationalCode());
+            throw new InternalServiceException("wallet is not active", StatusRepositoryService.WALLET_IS_NOT_ACTIVE, HttpStatus.OK);
+        }
+
         List<WalletAccountEntity> accounts = findByWallet(walletEntity);
 
         if (CollectionUtils.isEmpty(accounts)) {
@@ -189,23 +205,47 @@ public class WalletAccountRepositoryServiceImplementation implements WalletAccou
 
 
     public WalletAccountEntity checkUserAccount(WalletEntity wallet, WalletAccountCurrencyEntity currencyEntity, String walletAccountNumber, String nationalCode) throws InternalServiceException {
+
+        if(!wallet.getStatus().equals(WalletStatusEnum.ACTIVE)){
+            log.error("wallet id ({}) for nationalCode ({}) is not ACTIVE", wallet.getId(), nationalCode);
+            throw new InternalServiceException("wallet is not active", StatusRepositoryService.WALLET_IS_NOT_ACTIVE, HttpStatus.OK);
+        }
+
         List<WalletAccountEntity> accounts = findByWallet(wallet);
-        return accounts.stream().filter(x -> x.getWalletAccountCurrencyEntity().getId() == (currencyEntity.getId())
+        WalletAccountEntity walletAccountEntity = accounts.stream().filter(x -> x.getWalletAccountCurrencyEntity().getId() == (currencyEntity.getId())
                 && x.getAccountNumber().equalsIgnoreCase(walletAccountNumber)).findFirst().orElseThrow(() -> {
             log.error("wallet account ({}) not found for user {}", currencyEntity.getName(), nationalCode);
             return new InternalServiceException("Wallet account not found for user", StatusRepositoryService.WALLET_ACCOUNT_NOT_FOUND, HttpStatus.OK);
         });
+
+        if(walletAccountEntity.getStatus().equals(WalletStatusEnum.ACTIVE)){
+            return walletAccountEntity;
+        }
+        log.error("wallet account id ({}), currency ({}) for nationalCode ({}) is not ACTIVE", walletAccountEntity.getId(), currencyEntity.getId(), nationalCode);
+        throw new InternalServiceException("wallet account is not active", StatusRepositoryService.WALLET_ACCOUNT_IS_NOT_ACTIVE, HttpStatus.OK);
     }
 
     public WalletAccountEntity findUserAccount(WalletEntity wallet, WalletAccountCurrencyEntity currencyEntity, String nationalCode) throws InternalServiceException {
+
+        if(!wallet.getStatus().equals(WalletStatusEnum.ACTIVE)){
+            log.error("wallet id ({}) for nationalCode ({}) is not ACTIVE", wallet.getId(), nationalCode);
+            throw new InternalServiceException("wallet is not active", StatusRepositoryService.WALLET_IS_NOT_ACTIVE, HttpStatus.OK);
+        }
+
         List<WalletAccountEntity> accounts = findByWallet(wallet);
-        return accounts.stream().filter(x -> x.getWalletAccountCurrencyEntity().getId() == (currencyEntity.getId()) && x.getEndTime() == null).findFirst().orElseThrow(() -> {
+        WalletAccountEntity walletAccountEntity = accounts.stream().filter(x -> x.getWalletAccountCurrencyEntity().getId() == (currencyEntity.getId()) && x.getEndTime() == null).findFirst().orElseThrow(() -> {
             log.error("wallet account ({}) not found for user {}", currencyEntity.getName(), nationalCode);
             return new InternalServiceException("Wallet account not found for user", StatusRepositoryService.WALLET_ACCOUNT_NOT_FOUND, HttpStatus.OK);
         });
+
+        if(walletAccountEntity.getStatus().equals(WalletStatusEnum.ACTIVE)){
+            return walletAccountEntity;
+        }
+        log.error("wallet account id ({}), currency ({}) for nationalCode ({}) is not ACTIVE", walletAccountEntity.getId(), currencyEntity.getId(), nationalCode);
+        throw new InternalServiceException("wallet account is not active", StatusRepositoryService.WALLET_ACCOUNT_IS_NOT_ACTIVE, HttpStatus.OK);
     }
 
-    public WalletAccountEntity findChannelCommissionAccount(ChannelEntity channel, String walletAccountTypeName) throws InternalServiceException {
+    public WalletAccountEntity findChannelCommissionAccount(ChannelEntity channel, String walletAccountCurrencyName) throws InternalServiceException {
         List<WalletAccountEntity> accounts = findByWallet(channel.getWalletEntity());
         if (accounts.isEmpty()) {
             log.error("No wallet accounts found for channel {}", channel.getUsername());
@@ -219,7 +259,7 @@ public class WalletAccountRepositoryServiceImplementation implements WalletAccou
         }
 
         return accounts.stream()
-                .filter(x -> x.getWalletAccountCurrencyEntity().getName().equalsIgnoreCase(walletAccountTypeName)
+                .filter(x -> x.getWalletAccountCurrencyEntity().getName().equalsIgnoreCase(walletAccountCurrencyName)
                         && x.getWalletAccountTypeEntity().getName().equalsIgnoreCase(wageType.getName())).findFirst().orElseThrow(() -> {
                     log.error("Commission account not found for channel {}", channel.getUsername());
                     return new InternalServiceException("Commission account not found", StatusRepositoryService.CHANNEL_WALLET_ACCOUNT_NOT_FOUND, HttpStatus.OK);

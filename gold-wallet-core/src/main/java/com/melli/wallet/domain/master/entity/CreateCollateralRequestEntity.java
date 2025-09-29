@@ -22,9 +22,13 @@ public class CreateCollateralRequestEntity extends RequestEntity {
 	@JoinColumn(name = "wallet_account_id", nullable = false)
 	private WalletAccountEntity walletAccountEntity;
 
-	@ManyToOne(fetch = FetchType.LAZY)
+	@ManyToOne(fetch = FetchType.EAGER)
 	@JoinColumn(name = "rrn_id", nullable = false)
 	private RrnEntity rrnEntity;
+
+	@ManyToOne(fetch = FetchType.EAGER)
+	@JoinColumn(name = "collateral_id", nullable = false)
+	private CollateralEntity collateralEntity;
 
 	@Column(name = "code")
 	private String code;
@@ -38,6 +42,9 @@ public class CreateCollateralRequestEntity extends RequestEntity {
 
 	@Column(name = "quantity")
 	private BigDecimal quantity;
+
+	@Column(name = "final_block_quantity")
+	private BigDecimal finalBlockQuantity;
 
 	@Column(name = "commission")
 	private BigDecimal commission;

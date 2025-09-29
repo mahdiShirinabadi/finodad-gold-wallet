@@ -11,7 +11,7 @@ import java.util.Map;
 public interface MerchantOperationService {
 
     void updateStatus(ChannelEntity channelEntity, String merchantId, String status) throws InternalServiceException;
-    WalletBalanceResponse getBalance(ChannelEntity channelEntity, String currency) throws InternalServiceException;
+    WalletBalanceResponse getBalance(ChannelEntity channelEntity, String merchantId) throws InternalServiceException;
     String increaseBalance(ChannelEntity channelEntity, String walletAccountNumber, String amount, String merchantId) throws InternalServiceException;
     String decreaseBalance(ChannelEntity channelEntity, String walletAccountNumber, String amount, String merchantId) throws InternalServiceException;
     ReportTransactionResponse report(ChannelEntity channelEntity, Map<String, String> mapParameter) throws InternalServiceException;

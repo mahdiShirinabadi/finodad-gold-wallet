@@ -7,8 +7,8 @@ import com.melli.wallet.domain.response.wallet.WalletBalanceResponse;
 import com.melli.wallet.domain.slave.entity.ReportTransactionEntity;
 import com.melli.wallet.domain.slave.persistence.ReportTransactionRepository;
 import com.melli.wallet.exception.InternalServiceException;
-import com.melli.wallet.service.repository.*;
 import com.melli.wallet.service.operation.MerchantOperationService;
+import com.melli.wallet.service.repository.*;
 import com.melli.wallet.util.StringUtils;
 import com.melli.wallet.util.date.DateUtils;
 import com.melli.wallet.utils.Helper;
@@ -20,7 +20,6 @@ import jakarta.persistence.criteria.Root;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
@@ -248,7 +247,7 @@ public class MerchantOperationServiceImplementation implements MerchantOperation
             // Check if merchant has sufficient balance
             BalanceDTO currentBalance = walletAccountRepositoryService.getBalance(walletAccount.getId());
             BigDecimal requestedAmount = new BigDecimal(amount);
-            if (currentBalance.getRealBalance().compareTo(requestedAmount) < 0) {
+            if (currentBalance.getAvailableBalance().compareTo(requestedAmount) < 0) {
                 log.error("Insufficient balance for merchant {}. Current: {}, Requested: {}", merchantId, currentBalance, requestedAmount);
                 throw new InternalServiceException("Insufficient balance", StatusRepositoryService.BALANCE_IS_NOT_ENOUGH, HttpStatus.OK);
             }

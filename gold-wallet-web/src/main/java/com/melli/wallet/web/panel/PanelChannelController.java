@@ -92,7 +92,6 @@ public class PanelChannelController extends WebController {
         merchantEntity.setName(requestJson.getName());
         merchantEntity.setDescription("create merchant");
         merchantEntity.setMobile(requestJson.getMobileNumber());
-        merchantEntity.setNationalCode(requestJson.getEconomicCode());
         merchantEntity.setEconomicalCode(requestJson.getEconomicCode());
         merchantEntity.setLogo("");
         merchantEntity.setWalletEntity(walletRepositoryService.findById(Long.parseLong(createWalletResponse.getWalletId())));

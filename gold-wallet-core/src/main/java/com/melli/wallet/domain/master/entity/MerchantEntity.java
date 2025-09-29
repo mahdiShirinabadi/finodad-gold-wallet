@@ -26,9 +26,6 @@ public class MerchantEntity extends BaseEntityAudit implements Serializable {
 	@Column(name = "mobile", nullable = false)
 	private String mobile;
 
-	@Column(name = "national_code", nullable = false)
-	private String nationalCode;
-
 	@Column(name = "economical_code")
 	private String economicalCode;
 

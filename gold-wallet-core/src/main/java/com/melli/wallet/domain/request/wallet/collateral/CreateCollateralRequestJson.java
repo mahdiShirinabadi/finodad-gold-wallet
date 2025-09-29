@@ -2,6 +2,7 @@ package com.melli.wallet.domain.request.wallet.collateral;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.melli.wallet.NamingProperty;
+import com.melli.wallet.annotation.national_code.NationalCodeValidation;
 import com.melli.wallet.annotation.number.NumberValidation;
 import com.melli.wallet.annotation.string.StringValidation;
 import com.melli.wallet.domain.request.wallet.CommissionObject;
@@ -23,6 +24,11 @@ public class CreateCollateralRequestJson {
     @Schema(name = NamingProperty.UNIQUE_IDENTIFIER, description = "شناسه یکتا")
     @JsonProperty(NamingProperty.UNIQUE_IDENTIFIER)
     private String uniqueIdentifier;
+
+    @NationalCodeValidation(label =  NamingProperty.COLLATERAL_ID)
+    @Schema(name = NamingProperty.COLLATERAL_ID, description = "شرکت خواهان وثیقه")
+    @JsonProperty(NamingProperty.COLLATERAL_ID)
+    private String collateralId;
 
     @NumberValidation(allowDecimal = true, label = NamingProperty.QUANTITY)
     @Schema(name = NamingProperty.QUANTITY, description = "تعداد", example = "1000")

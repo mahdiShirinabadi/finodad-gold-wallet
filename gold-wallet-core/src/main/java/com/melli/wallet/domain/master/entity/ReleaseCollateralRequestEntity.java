@@ -21,11 +21,11 @@ public class ReleaseCollateralRequestEntity extends RequestEntity {
 	@JoinColumn(name = "wallet_account_id", nullable = false)
 	private WalletAccountEntity walletAccountEntity;
 
-	@ManyToOne(fetch = FetchType.LAZY)
+	@ManyToOne(fetch = FetchType.EAGER)
 	@JoinColumn(name = "rrn_id", nullable = false)
 	private RrnEntity rrnEntity;
 
-	@ManyToOne(fetch = FetchType.LAZY)
+	@ManyToOne(fetch = FetchType.EAGER)
 	@JoinColumn(name = "create_collateral_request_id", nullable = false)
 	private CreateCollateralRequestEntity createCollateralRequestEntity;
 

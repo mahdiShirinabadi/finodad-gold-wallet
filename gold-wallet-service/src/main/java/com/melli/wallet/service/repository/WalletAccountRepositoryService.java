@@ -35,10 +35,13 @@ public interface WalletAccountRepositoryService {
     WalletAccountEntity findById(Long id) throws InternalServiceException;
 
     BalanceDTO getBalance(long walletAccountId);
+    BigDecimal getBlockAmount(long walletAccountId);
 
     void increaseBalance(long walletAccountId, BigDecimal amount);
 
     int decreaseBalance(long walletAccountId, BigDecimal amount);
+
+    int unblockAndDecreaseAmount(long walletAccountId, BigDecimal amount);
 
     int blockAmount(long walletAccountId, BigDecimal amount);
 

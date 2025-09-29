@@ -7,6 +7,7 @@ import lombok.Getter;
 public enum WalletStatusEnum {
     ACTIVE("ACTIVE", "فعال"),
     DISABLE("DISABLE", "غیرفعال"),
+    SUSPEND("SUSPEND", "معلق"),
     DELETED("DELETED", "حذف شده");
 
     private final String text;
@@ -25,6 +26,7 @@ public enum WalletStatusEnum {
             case "ACTIVE" -> ACTIVE.persianDescription;
             case "DISABLE" -> DISABLE.persianDescription;
             case "DELETED" -> DELETED.persianDescription;
+            case "SUSPEND" -> SUSPEND.persianDescription;
             default -> "";
         };
     }

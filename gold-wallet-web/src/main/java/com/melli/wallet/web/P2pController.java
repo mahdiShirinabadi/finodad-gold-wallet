@@ -44,7 +44,7 @@ public class P2pController extends WebController{
     private final RequestContext requestContext;
     private final SecurityOperationService securityService;
 
-    @Timed(description = "P2pController.p2p.generate.uuid")
+    @Timed(description = "P2pController.generate.uuid")
     @PostMapping(path = "/generate/uuid", produces = {MediaType.APPLICATION_JSON_VALUE})
     @Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "ایجاد شناسه یکتا")
     @PreAuthorize("hasAuthority('" + ResourceDefinition.P2P_AUTH + "')")
@@ -69,7 +69,7 @@ public class P2pController extends WebController{
         return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse<>(true));
     }
 
-    @Timed(description = "CashEndPoint.p2p.inquiry")
+    @Timed(description = "P2pController.inquiry")
     @GetMapping(path = "/inquiry", produces = {MediaType.APPLICATION_JSON_VALUE})
     @Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "استعلام حساب به حساب")
     @PreAuthorize("hasAuthority('" + ResourceDefinition.P2P_AUTH + "')")

@@ -9,7 +9,7 @@ import com.melli.wallet.domain.response.base.BaseResponse;
 import com.melli.wallet.domain.response.base.ErrorDetail;
 import com.melli.wallet.domain.response.cash.*;
 import com.melli.wallet.domain.response.channel.ChannelObject;
-import com.melli.wallet.domain.response.collateral.CreateCollateralResponse;
+import com.melli.wallet.domain.response.collateral.*;
 import com.melli.wallet.domain.response.giftcard.GiftCardResponse;
 import com.melli.wallet.domain.response.giftcard.GiftCardTrackResponse;
 import com.melli.wallet.domain.response.giftcard.GiftCardUuidResponse;
@@ -39,6 +39,7 @@ import com.melli.wallet.service.repository.*;
 import com.melli.wallet.util.StringUtils;
 import com.melli.wallet.util.date.DateUtils;
 import lombok.extern.log4j.Log4j2;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -167,6 +168,68 @@ public class Helper {
         GiftCardUuidResponse response = new GiftCardUuidResponse();
         response.setUniqueIdentifier(uniqueIdentifier);
         return response;
+    }
+
+    public CollateralTrackResponse fillCollateralTrackResponse(CreateCollateralRequestEntity createCollateralRequestEntity, List<ReleaseCollateralRequestEntity> releaseCollateralRequestEntityList,
+                                                               List<IncreaseCollateralRequestEntity> increaseCollateralRequestEntityList, StatusRepositoryService statusRepositoryService) {
+        CollateralTrackResponse response = new CollateralTrackResponse();
+        response.setCollateralCreateTrackObject(convertToCreateCollateralTrackResponse(createCollateralRequestEntity, statusRepositoryService));
+        if(CollectionUtils.isNotEmpty(releaseCollateralRequestEntityList)){
+            response.setCollateralReleaseTrackObject(releaseCollateralRequestEntityList.stream().map(x->convertToCollateralRelease(x, statusRepositoryService)).toList());
+        }
+        if(CollectionUtils.isNotEmpty(increaseCollateralRequestEntityList)){
+            response.setCollateralIncreaseTrackObject(increaseCollateralRequestEntityList.stream().map(x->convertToCollateralIncrease(x, statusRepositoryService)).toList());
+        }
+        return response;
+    }
+
+    private CollateralCreateTrackObject convertToCreateCollateralTrackResponse(CreateCollateralRequestEntity createCollateralRequestEntity, StatusRepositoryService statusRepositoryService){
+        StatusEntity statusEntity = statusRepositoryService.findByCode(String.valueOf(createCollateralRequestEntity.getResult()));
+        CollateralCreateTrackObject response = new CollateralCreateTrackObject();
+        response.setUniqueIdentifier(createCollateralRequestEntity.getRrnEntity().getUuid());
+        response.setCollateralCode(createCollateralRequestEntity.getCode());
+        response.setQuantity(String.valueOf(createCollateralRequestEntity.getQuantity().stripTrailingZeros()));
+        response.setFinalQuantityBlock(String.valueOf(createCollateralRequestEntity.getFinalBlockQuantity().stripTrailingZeros()));
+        response.setCommission(String.valueOf(createCollateralRequestEntity.getCommission().stripTrailingZeros()));
+        response.setNationalCode(createCollateralRequestEntity.getWalletAccountEntity().getWalletEntity().getNationalCode());
+        response.setStatus(createCollateralRequestEntity.getCollateralStatusEnum().toString());
+        response.setStatusDescription(createCollateralRequestEntity.getCollateralStatusEnum().toString());
+        response.setAdditionalData(createCollateralRequestEntity.getAdditionalData());
+        response.setCurrency(createCollateralRequestEntity.getWalletAccountEntity().getWalletAccountCurrencyEntity().getName());
+        response.setWalletAccountNumber(createCollateralRequestEntity.getWalletAccountEntity().getAccountNumber());
+        response.setChannelName(createCollateralRequestEntity.getChannel().getUsername());
+        response.setCreateTime(DateUtils.getLocaleDate(DateUtils.FARSI_LOCALE, createCollateralRequestEntity.getCreatedAt(), FORMAT_DATE_RESPONSE, false));
+        response.setCreateTimeTimestamp(createCollateralRequestEntity.getCreatedAt().getTime());
+        response.setResult(String.valueOf(createCollateralRequestEntity.getResult()));
+        response.setDescription(statusEntity != null ? statusEntity.getPersianDescription() : "");
+        return response;
+    }
+
+    private CollateralReleaseTrackObject convertToCollateralRelease(ReleaseCollateralRequestEntity releaseCollateralRequestEntity, StatusRepositoryService statusRepositoryService) {
+        StatusEntity statusEntity = statusRepositoryService.findByCode(String.valueOf(releaseCollateralRequestEntity.getResult()));
+        CollateralReleaseTrackObject trackObject = new CollateralReleaseTrackObject();
+        trackObject.setChannelName(releaseCollateralRequestEntity.getChannel().getUsername());
+        trackObject.setCreateTime(DateUtils.getLocaleDate(DateUtils.FARSI_LOCALE, releaseCollateralRequestEntity.getCreatedAt(), FORMAT_DATE_RESPONSE, false));
+        trackObject.setCreateTimeTimestamp(releaseCollateralRequestEntity.getCreatedAt().getTime());
+        trackObject.setQuantity(String.valueOf(releaseCollateralRequestEntity.getQuantity().stripTrailingZeros()));
+        trackObject.setResult(String.valueOf(releaseCollateralRequestEntity.getResult()));
+        trackObject.setCommission(String.valueOf(releaseCollateralRequestEntity.getCommission().stripTrailingZeros()));
+        trackObject.setDescription(statusEntity != null ? statusEntity.getPersianDescription() : "");
+        return trackObject;
+    }
+
+    private CollateralIncreaseTrackObject convertToCollateralIncrease(IncreaseCollateralRequestEntity increaseCollateralRequestEntity, StatusRepositoryService statusRepositoryService) {
+        StatusEntity statusEntity = statusRepositoryService.findByCode(String.valueOf(increaseCollateralRequestEntity.getResult()));
+        CollateralIncreaseTrackObject trackObject = new CollateralIncreaseTrackObject();
+        trackObject.setId(String.valueOf(increaseCollateralRequestEntity.getId()));
+        trackObject.setChannelName(increaseCollateralRequestEntity.getChannel().getUsername());
+        trackObject.setCreateTime(DateUtils.getLocaleDate(DateUtils.FARSI_LOCALE, increaseCollateralRequestEntity.getCreatedAt(), FORMAT_DATE_RESPONSE, false));
+        trackObject.setCreateTimeTimestamp(increaseCollateralRequestEntity.getCreatedAt().getTime());
+        trackObject.setQuantity(String.valueOf(increaseCollateralRequestEntity.getQuantity().stripTrailingZeros()));
+        trackObject.setResult(String.valueOf(increaseCollateralRequestEntity.getResult()));
+        trackObject.setCommission(String.valueOf(increaseCollateralRequestEntity.getCommission().stripTrailingZeros()));
+        trackObject.setDescription(statusEntity != null ? statusEntity.getPersianDescription() : "");
+        return trackObject;
     }
 
     public CreateCollateralResponse fillCreateCollateralResponse(String collateralCode, String nationalCode, BigDecimal quantity) {
@@ -389,6 +452,16 @@ public class Helper {
         return statementResponse;
     }
 
+    public CollateralListResponse fillCollateralResponse(Page<CreateCollateralRequestEntity> createCollateralRequestEntityPage, StatusRepositoryService statusRepositoryService) {
+        CollateralListResponse response = new CollateralListResponse();
+        response.setNumber(createCollateralRequestEntityPage.getNumber());
+        response.setSize(createCollateralRequestEntityPage.getSize());
+        response.setTotalElements(createCollateralRequestEntityPage.getTotalElements());
+        response.setTotalPages(createCollateralRequestEntityPage.getTotalPages());
+        response.setCollateralCreateTrackObjectList(createCollateralRequestEntityPage.stream().map(x->convertToCreateCollateralTrackResponse(x, statusRepositoryService)).toList());
+        return response;
+    }
+
     public StatementObject convertToStatementObject(ReportTransactionEntity reportTransactionEntity) {
         StatementObject statementObject = new StatementObject();
         statementObject.setId(String.valueOf(reportTransactionEntity.getId()));
@@ -438,8 +511,8 @@ public class Helper {
             walletAccountObject.setWalletAccountCurrencyObject(SubHelper.convertWalletAccountCurrencyEntityToObject(walletAccountEntity.getWalletAccountCurrencyEntity()));
             walletAccountObject.setAccountNumber(walletAccountEntity.getAccountNumber());
             walletAccountObject.setStatus(String.valueOf(walletAccountEntity.getStatus()));
-            walletAccountObject.setBalance(String.valueOf(walletAccountRepositoryService.getBalance(walletAccountEntity.getId()).getRealBalance()));
-            walletAccountObject.setAvailableBalance(String.valueOf(walletAccountRepositoryService.getBalance(walletAccountEntity.getId()).getAvailableBalance()));
+            walletAccountObject.setBalance(String.valueOf(walletAccountRepositoryService.getBalance(walletAccountEntity.getId()).getRealBalance().stripTrailingZeros()));
+            walletAccountObject.setAvailableBalance(String.valueOf(walletAccountRepositoryService.getBalance(walletAccountEntity.getId()).getAvailableBalance().stripTrailingZeros()));
             walletAccountObject.setStatus(walletAccountEntity.getStatus().getText());
             walletAccountObject.setStatusDescription(walletAccountEntity.getStatus().getPersianDescription());
             walletAccountObjectList.add(walletAccountObject);
@@ -458,8 +531,8 @@ public class Helper {
             walletAccountObject.setWalletAccountCurrencyObject(SubHelper.convertWalletAccountCurrencyEntityToObject(walletAccountEntity.getWalletAccountCurrencyEntity()));
             walletAccountObject.setAccountNumber(walletAccountEntity.getAccountNumber());
             walletAccountObject.setStatus(String.valueOf(walletAccountEntity.getStatus()));
-            walletAccountObject.setBalance(prettyBalance(walletAccountRepositoryService.getBalance(walletAccountEntity.getId()).getRealBalance()));
-            walletAccountObject.setAvailableBalance(String.valueOf(walletAccountRepositoryService.getBalance(walletAccountEntity.getId()).getAvailableBalance()));
+            walletAccountObject.setBalance(prettyBalance(walletAccountRepositoryService.getBalance(walletAccountEntity.getId()).getRealBalance().stripTrailingZeros()));
+            walletAccountObject.setAvailableBalance(String.valueOf(walletAccountRepositoryService.getBalance(walletAccountEntity.getId()).getAvailableBalance().stripTrailingZeros()));
             walletAccountObject.setStatus(walletAccountEntity.getStatus().getText());
             walletAccountObject.setStatusDescription(walletAccountEntity.getStatus().getPersianDescription());
             walletAccountObjectList.add(walletAccountObject);

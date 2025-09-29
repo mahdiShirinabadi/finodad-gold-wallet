@@ -8,7 +8,8 @@ package com.melli.wallet.domain.enumaration;
 public enum CollateralStatusEnum {
 
     CREATE("CREATE"),
-    RELEASE("RELEASE");
+    RELEASE("RELEASE"),
+    SEIZE("SEIZE");
 
     private final String text;
 

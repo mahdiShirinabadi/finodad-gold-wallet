@@ -31,6 +31,6 @@ public interface WalletOperationalService {
     BaseResponse<ObjectUtils.Null> deactivateWallet(ChannelEntity channel, String walletId, String ip) throws InternalServiceException;
     BaseResponse<ObjectUtils.Null> deleteWallet(ChannelEntity channel, String walletId, String ip) throws InternalServiceException;
     BaseResponse<ObjectUtils.Null> activateWallet(ChannelEntity channel, String walletId, String ip) throws InternalServiceException;
-    public WalletEntity findUserWallet(String nationalCode) throws InternalServiceException;
+    WalletEntity findUserWallet(String nationalCode) throws InternalServiceException;
 
 }

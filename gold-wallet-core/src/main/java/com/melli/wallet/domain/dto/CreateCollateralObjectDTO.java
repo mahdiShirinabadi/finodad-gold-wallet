@@ -25,4 +25,5 @@ public class CreateCollateralObjectDTO {
     private BigDecimal commission;
     private String commissionCurrency;
     private String ip;
+    private String collateralId;
 }

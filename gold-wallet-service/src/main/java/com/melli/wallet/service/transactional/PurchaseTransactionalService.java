@@ -1,4 +1,4 @@
-package com.melli.wallet.service.repository.impl;
+package com.melli.wallet.service.transactional;
 
 import com.melli.wallet.domain.dto.ChargeObjectDTO;
 import com.melli.wallet.domain.dto.PurchaseObjectDto;
@@ -21,7 +21,6 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.math.BigInteger;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;

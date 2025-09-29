@@ -15,6 +15,7 @@ public interface WalletTypeRepositoryService {
     public static String NORMAL_USER = "NORMAL_USER";
     public static String CHANNEL = "CHANNEL";
     public static String MERCHANT = "MERCHANT";
+    public static String COLLATERAL = "COLLATERAL";
 
     List<WalletTypeEntity> getAll();
     void clearCache();

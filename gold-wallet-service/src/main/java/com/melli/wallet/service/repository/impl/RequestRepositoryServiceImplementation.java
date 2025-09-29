@@ -43,6 +43,7 @@ public class RequestRepositoryServiceImplementation implements RequestRepository
     private final GiftCardPaymentRequestRepository giftCardPaymentRequestRepository;
     private final CreateCollateralRequestRepository createCollateralRequestRepository;
     private final ReleaseCollateralRequestRepository releaseCollateralRequestRepository;
+    private final IncreaseCollateralRequestRepository increaseCollateralRequestRepository;
 
 
     @Override
@@ -58,6 +59,7 @@ public class RequestRepositoryServiceImplementation implements RequestRepository
             case GiftCardPaymentRequestEntity giftCardPaymentRequestEntity -> giftCardPaymentRequestRepository.save(giftCardPaymentRequestEntity);
             case CreateCollateralRequestEntity createCollateralRequestEntity -> createCollateralRequestRepository.save(createCollateralRequestEntity);
             case ReleaseCollateralRequestEntity releaseCollateralRequestEntity -> releaseCollateralRequestRepository.save(releaseCollateralRequestEntity);
+            case IncreaseCollateralRequestEntity increaseCollateralRequestEntity -> increaseCollateralRequestRepository.save(increaseCollateralRequestEntity);
             case null, default -> {
                 log.error("requestEntity is not instanceof");
                 throw new InternalServiceException("error in save request, instance not define", StatusRepositoryService.GENERAL_ERROR, HttpStatus.OK);

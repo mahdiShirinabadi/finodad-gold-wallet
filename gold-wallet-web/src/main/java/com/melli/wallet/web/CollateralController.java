@@ -1,14 +1,12 @@
 package com.melli.wallet.web;
 
 import com.melli.wallet.annotation.LogExecutionTime;
-import com.melli.wallet.domain.dto.CreateCollateralObjectDTO;
-import com.melli.wallet.domain.dto.ReleaseCollateralObjectDTO;
+import com.melli.wallet.domain.dto.*;
 import com.melli.wallet.domain.enumaration.ResourceDefinition;
-import com.melli.wallet.domain.request.wallet.collateral.CreateCollateralRequestJson;
-import com.melli.wallet.domain.request.wallet.collateral.CreateUniqueIdentifierCollateralRequestJson;
-import com.melli.wallet.domain.request.wallet.collateral.ReleaseCollateralRequestJson;
+import com.melli.wallet.domain.request.wallet.collateral.*;
 import com.melli.wallet.domain.response.UuidResponse;
 import com.melli.wallet.domain.response.base.BaseResponse;
+import com.melli.wallet.domain.response.collateral.CollateralTrackResponse;
 import com.melli.wallet.domain.response.collateral.CreateCollateralResponse;
 import com.melli.wallet.exception.InternalServiceException;
 import com.melli.wallet.security.RequestContext;
@@ -26,10 +24,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 
@@ -79,16 +74,16 @@ public class CollateralController extends WebController {
         log.info("start call create in username ===> {}, account ===> {}, from ip ===> {}", username, requestJson.getAccountNumber(), channelIp);
         CreateCollateralResponse response = collateralOperationService.create(new CreateCollateralObjectDTO(requestContext.getChannelEntity(),
                 requestJson.getUniqueIdentifier(), new BigDecimal(requestJson.getQuantity()) ,requestJson.getAccountNumber(), requestJson.getDescription(),
-                new BigDecimal(requestJson.getCommissionObject().getAmount()), requestJson.getCommissionObject().getCurrency(), requestContext.getClientIp()));
+                new BigDecimal(requestJson.getCommissionObject().getAmount()), requestJson.getCommissionObject().getCurrency(), requestContext.getClientIp(), requestJson.getCollateralId()));
         return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse<>(true,response));
     }
 
     //create new collateral
     @Timed(description = "CollateralController.release")
     @PostMapping(path = "/release", produces = {MediaType.APPLICATION_JSON_VALUE})
-    @Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "ایجاد وثیقه")
+    @Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "آزادسازی کامل وثیقه")
     @PreAuthorize("hasAuthority('" + ResourceDefinition.COLLATERAL_AUTH + "')")
-    @LogExecutionTime("create collateral")
+    @LogExecutionTime("release collateral")
     public ResponseEntity<BaseResponse<ObjectUtils.Null>> release(@Valid @RequestBody ReleaseCollateralRequestJson requestJson) throws InternalServiceException {
         String channelIp = requestContext.getClientIp();
         String username = requestContext.getChannelEntity().getUsername();
@@ -102,61 +97,78 @@ public class CollateralController extends WebController {
         return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse<>(true));
     }
 
-    //increase collateral for current block dedicate
-   /* @Timed(description = "CollateralController.cashIn")
-    @PostMapping(path = "/increase", produces = {MediaType.APPLICATION_JSON_VALUE})
-    @Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "ایجاد وثیقه")
-    @PreAuthorize("hasAuthority('" + ResourceDefinition.CASH_IN_AUTH + "')")
-    @LogExecutionTime("Cash in charge")
-    public ResponseEntity<BaseResponse<CashInResponse>> increase(@Valid @RequestBody CashInWalletRequestJson requestJson) throws InternalServiceException {
+
+    @Timed(description = "CollateralController.inquiry")
+    @GetMapping(path = "/inquiry", produces = {MediaType.APPLICATION_JSON_VALUE})
+    @Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "استعلام وثیقه")
+    @PreAuthorize("hasAuthority('" + ResourceDefinition.COLLATERAL_AUTH + "')")
+    @LogExecutionTime("inquiry collateral")
+    public ResponseEntity<BaseResponse<CollateralTrackResponse>> inquiry(@Valid @RequestParam("uniqueIdentifier") String uniqueIdentifier) throws InternalServiceException {
         String channelIp = requestContext.getClientIp();
         String username = requestContext.getChannelEntity().getUsername();
-
-        securityOperationService.checkSign(requestContext.getChannelEntity(), requestJson.getSign(), requestJson.getDataString());
-
-        log.info("start call cashIn in username ===> {}, nationalCode ===> {}, from ip ===> {}", username, requestJson.getNationalCode(), channelIp);
-        CashInResponse cashInResponse = cashInOperationService.charge(new ChargeObjectDTO(requestContext.getChannelEntity(), requestJson.getNationalCode(),  requestJson.getUniqueIdentifier(),requestJson.getAmount(), requestJson.getReferenceNumber(),
-                requestJson.getAccountNumber(), requestJson.getAdditionalData(), requestContext.getClientIp(), requestJson.getCashInType()));
-        return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse<>(true,cashInResponse));
-    }*/
-
-
-
-    //stop collateral
-  /*  @Timed(description = "CollateralController.cashIn")
-    @PostMapping(path = "/increase", produces = {MediaType.APPLICATION_JSON_VALUE})
-    @Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "ایجاد وثیقه")
-    @PreAuthorize("hasAuthority('" + ResourceDefinition.CASH_IN_AUTH + "')")
-    @LogExecutionTime("Cash in charge")
-    public ResponseEntity<BaseResponse<CashInResponse>> release(@Valid @RequestBody CashInWalletRequestJson requestJson) throws InternalServiceException {
-        String channelIp = requestContext.getClientIp();
-        String username = requestContext.getChannelEntity().getUsername();
-
-        securityOperationService.checkSign(requestContext.getChannelEntity(), requestJson.getSign(), requestJson.getDataString());
-
-        log.info("start call cashIn in username ===> {}, nationalCode ===> {}, from ip ===> {}", username, requestJson.getNationalCode(), channelIp);
-        CashInResponse cashInResponse = cashInOperationService.charge(new ChargeObjectDTO(requestContext.getChannelEntity(), requestJson.getNationalCode(),  requestJson.getUniqueIdentifier(),requestJson.getAmount(), requestJson.getReferenceNumber(),
-                requestJson.getAccountNumber(), requestJson.getAdditionalData(), requestContext.getClientIp(), requestJson.getCashInType()));
-        return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse<>(true,cashInResponse));
+        log.info("start call track p2p in username ===> {}, nationalCode ===> {}, from ip ===> {}", username, uniqueIdentifier, channelIp);
+        CollateralTrackResponse response = collateralOperationService.inquiry(requestContext.getChannelEntity(), uniqueIdentifier, requestContext.getClientIp());
+        return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse<>(true,response));
     }
 
-    //list collateral for customer
-    @Timed(description = "CollateralController.cashIn")
-    @PostMapping(path = "/list", produces = {MediaType.APPLICATION_JSON_VALUE})
-    @Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "ایجاد وثیقه")
-    @PreAuthorize("hasAuthority('" + ResourceDefinition.CASH_IN_AUTH + "')")
-    @LogExecutionTime("Cash in charge")
-    public ResponseEntity<BaseResponse<CashInResponse>> release(@Valid @RequestBody CashInWalletRequestJson requestJson) throws InternalServiceException {
+
+    @Timed(description = "CollateralController.increase")
+    @PostMapping(path = "/increase", produces = {MediaType.APPLICATION_JSON_VALUE})
+    @Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "افزایش وثیقه")
+    @PreAuthorize("hasAuthority('" + ResourceDefinition.COLLATERAL_AUTH + "')")
+    @LogExecutionTime("increase collateral")
+    public ResponseEntity<BaseResponse<ObjectUtils.Null>> increase(@Valid @RequestBody IncreaseCollateralRequestJson requestJson) throws InternalServiceException {
         String channelIp = requestContext.getClientIp();
         String username = requestContext.getChannelEntity().getUsername();
 
         securityOperationService.checkSign(requestContext.getChannelEntity(), requestJson.getSign(), requestJson.getDataString());
 
-        log.info("start call cashIn in username ===> {}, nationalCode ===> {}, from ip ===> {}", username, requestJson.getNationalCode(), channelIp);
-        CashInResponse cashInResponse = cashInOperationService.charge(new ChargeObjectDTO(requestContext.getChannelEntity(), requestJson.getNationalCode(),  requestJson.getUniqueIdentifier(),requestJson.getAmount(), requestJson.getReferenceNumber(),
-                requestJson.getAccountNumber(), requestJson.getAdditionalData(), requestContext.getClientIp(), requestJson.getCashInType()));
-        return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse<>(true,cashInResponse));
-    }*/
+        log.info("start call increase in username ===> {}, nationalCode ===> {}, from ip ===> {}", username, requestJson.getNationalCode(), channelIp);
+        collateralOperationService.increase(new IncreaseCollateralObjectDTO(requestContext.getChannelEntity(),
+                requestJson.getCollateralCode(), new BigDecimal(requestJson.getQuantity()) ,requestJson.getNationalCode(), requestJson.getAdditionalData(),
+                new BigDecimal(requestJson.getCommissionObject().getAmount()), requestJson.getCommissionObject().getCurrency(), requestContext.getClientIp()));
+        return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse<>(true));
+    }
+
+
+    @Timed(description = "CollateralController.record")
+    @PostMapping(path = "/seize", produces = {MediaType.APPLICATION_JSON_VALUE})
+    @Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "ضبط وثیقه")
+    @PreAuthorize("hasAuthority('" + ResourceDefinition.COLLATERAL_AUTH + "')")
+    @LogExecutionTime("liquid collateral")
+    public ResponseEntity<BaseResponse<ObjectUtils.Null>> seize(@Valid @RequestBody SeizeCollateralRequestJson requestJson) throws InternalServiceException {
+        String channelIp = requestContext.getClientIp();
+        String username = requestContext.getChannelEntity().getUsername();
+
+
+        log.info("start call seize in username ===> {}, nationalCode ===> {}, from ip ===> {}", username, requestJson.getNationalCode(), channelIp);
+        collateralOperationService.seize(new SeizeCollateralObjectDTO(requestContext.getChannelEntity(),
+                requestJson.getCollateralCode(), requestJson.getNationalCode(), requestJson.getAdditionalData(),
+                requestContext.getClientIp()));
+        return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse<>(true));
+    }
+
+
+    @Timed(description = "CollateralController.liquid")
+    @PostMapping(path = "/sell", produces = {MediaType.APPLICATION_JSON_VALUE})
+    @Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "فروش وثیقه")
+    @PreAuthorize("hasAuthority('" + ResourceDefinition.COLLATERAL_AUTH + "')")
+    @LogExecutionTime("liquid collateral")
+    public ResponseEntity<BaseResponse<ObjectUtils.Null>> sell(@Valid @RequestBody SellCollateralRequestJson requestJson) throws InternalServiceException {
+        String channelIp = requestContext.getClientIp();
+        String username = requestContext.getChannelEntity().getUsername();
+
+        securityOperationService.checkSign(requestContext.getChannelEntity(), requestJson.getSign(), requestJson.getDataString());
+
+        log.info("start call sell in username ===> {}, nationalCode ===> {}, from ip ===> {}", username, requestJson.getNationalCode(), channelIp);
+        collateralOperationService.sell(new SellCollateralObjectDTO(requestContext.getChannelEntity(),
+                requestJson.getCollateralCode(), new BigDecimal(requestJson.getQuantity()), requestJson.getNationalCode(), requestJson.getAdditionalData(),
+                new BigDecimal(requestJson.getCommissionObject().getAmount()), requestJson.getCommissionObject().getCurrency() , requestContext.getClientIp(),
+                requestJson.getPrice()));
+        return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse<>(true));
+    }
+
+
 
 
 }

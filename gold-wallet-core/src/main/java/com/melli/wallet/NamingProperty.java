@@ -96,6 +96,12 @@ public class NamingProperty {
     public static final String GIFT_CARD_ACTIVE_CODE = "giftCardActiveCode";
     public static final String ACTIVE_CODE = "activeCode";
     public static final String COLLATERAL_CODE = "collateralCode";
+    public static final String COLLATERAL_ID = "collateralId";
+    public static final String COMMISSION = "commission";
+    public static final String CREATE_COLLATERAL = "createCollateral";
+    public static final String RELEASE_LIST = "releaseList";
+    public static final String INCREASE_LIST = "increaseList";
+    public static final String FINAL_QUANTITY_BLOCK = "finalQuantityBlock";
 
 
 

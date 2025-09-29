@@ -14,6 +14,7 @@ public class ConstantRedisName {
     public static final String WALLET_LEVEL_CACHE = "wallet_wallet_level";
     public static final String WALLET_TEMPLATE = "wallet_template";
     public static final String WALLET_MERCHANT = "wallet_merchant";
+    public static final String WALLET_COLLATERAL = "wallet_collateral";
     public static final String WALLET_REQUEST_TYPE = "wallet_request_type";
     public static final String WALLET_GENERAL_LIMITATION = "wallet_general_limitation";
     public static final String WALLET_BUY_MONTHLY_LIMITATION = "wallet_buy_monthly_limitation";

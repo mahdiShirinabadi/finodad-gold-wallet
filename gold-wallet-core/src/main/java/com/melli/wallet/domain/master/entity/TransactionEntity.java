@@ -32,8 +32,11 @@ public class TransactionEntity extends BaseEntityAudit implements Serializable {
 	@Column(name = "type", nullable = false)
 	private String type;
 
-	@Column(name = "balance", nullable = false)
-	private BigDecimal balance;
+	@Column(name = "real_balance", nullable = false)
+	private BigDecimal realBalance;
+
+	@Column(name = "available_balance", nullable = false)
+	private BigDecimal availableBalance;
 
 	@Column(name = "description")
 	private String description;

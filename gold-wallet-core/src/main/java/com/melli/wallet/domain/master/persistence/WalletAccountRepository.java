@@ -34,6 +34,9 @@ public interface WalletAccountRepository extends CrudRepository<WalletAccountEnt
     @Query(value = "select balance as realBalance, (balance - block_amount) as availableBalance from {h-schema}wallet_account where id = :id", nativeQuery = true)
     BalanceDTO getBalance(@Param("id") long id);
 
+    @Query(value = "select block_amount from {h-schema}wallet_account where id = :id", nativeQuery = true)
+    BigDecimal getBlock(@Param("id") long id);
+
     @Modifying
     @Query(value = "update {h-schema}wallet_account set balance= balance + :amount where id = :id", nativeQuery = true)
     int increaseBalance(@Param("id") long id, @Param("amount") BigDecimal amount);
@@ -49,6 +52,10 @@ public interface WalletAccountRepository extends CrudRepository<WalletAccountEnt
     @Modifying
     @Query(value = "update {h-schema}wallet_account  set block_amount= block_amount - :amount where id = :id and (block_amount - :amount) >=0", nativeQuery = true)
     int unblockAmount(@Param("id") long id, @Param("amount") BigDecimal amount);
+
+    @Modifying
+    @Query(value = "update {h-schema}wallet_account  set block_amount= block_amount - :amount, balance = balance - :amount where id = :id and (block_amount - :amount) >=0", nativeQuery = true)
+    int unblockAndDecreaseAmount(@Param("id") long id, @Param("amount") BigDecimal amount);
 
     List<WalletAccountEntity> findAllByStatus(WalletStatusEnum status);
 
