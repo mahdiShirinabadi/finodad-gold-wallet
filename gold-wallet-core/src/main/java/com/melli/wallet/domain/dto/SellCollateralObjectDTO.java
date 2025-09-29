@@ -26,4 +26,5 @@ public class SellCollateralObjectDTO {
     private String commissionCurrency;
     private String ip;
     private String price;
+    private String merchantId;
 }

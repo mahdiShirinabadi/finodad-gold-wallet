@@ -78,7 +78,7 @@ public class CollateralController extends WebController {
         return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse<>(true,response));
     }
 
-    //create new collateral
+    //release exist collateral
     @Timed(description = "CollateralController.release")
     @PostMapping(path = "/release", produces = {MediaType.APPLICATION_JSON_VALUE})
     @Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "آزادسازی کامل وثیقه")
@@ -98,6 +98,7 @@ public class CollateralController extends WebController {
     }
 
 
+    //inquiry collateral
     @Timed(description = "CollateralController.inquiry")
     @GetMapping(path = "/inquiry", produces = {MediaType.APPLICATION_JSON_VALUE})
     @Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "استعلام وثیقه")
@@ -112,6 +113,7 @@ public class CollateralController extends WebController {
     }
 
 
+    //increase collateral
     @Timed(description = "CollateralController.increase")
     @PostMapping(path = "/increase", produces = {MediaType.APPLICATION_JSON_VALUE})
     @Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "افزایش وثیقه")
@@ -131,6 +133,7 @@ public class CollateralController extends WebController {
     }
 
 
+    //seize collateral
     @Timed(description = "CollateralController.record")
     @PostMapping(path = "/seize", produces = {MediaType.APPLICATION_JSON_VALUE})
     @Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "ضبط وثیقه")
@@ -149,6 +152,7 @@ public class CollateralController extends WebController {
     }
 
 
+    //sell collateral
     @Timed(description = "CollateralController.liquid")
     @PostMapping(path = "/sell", produces = {MediaType.APPLICATION_JSON_VALUE})
     @Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "فروش وثیقه")

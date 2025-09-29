@@ -20,23 +20,19 @@ public class SellCollateralRequestEntity extends RequestEntity {
 
 	@ManyToOne(fetch = FetchType.EAGER)
 	@JoinColumn(name = "wallet_account_id", nullable = false)
-	private WalletAccountEntity walletAccountEntity;
+	private WalletAccountEntity collateralWalletAccountEntity;
 
 	@ManyToOne(fetch = FetchType.EAGER)
 	@JoinColumn(name = "rrn_id", nullable = false)
 	private RrnEntity rrnEntity;
 
 	@ManyToOne(fetch = FetchType.EAGER)
+	@JoinColumn(name = "merchant_id", nullable = false)
+	private MerchantEntity merchantEntity;
+
+	@ManyToOne(fetch = FetchType.EAGER)
 	@JoinColumn(name = "create_collateral_request_id", nullable = false)
 	private CreateCollateralRequestEntity createCollateralRequestEntity;
-
-	@ManyToOne(fetch = FetchType.EAGER)
-	@JoinColumn(name = "relase_collateral_request_id")
-	private ReleaseCollateralRequestEntity releaseCollateralRequestEntity;
-
-	@ManyToOne(fetch = FetchType.EAGER)
-	@JoinColumn(name = "purchase_request_id")
-	private PurchaseRequestEntity purchaseRequestEntity;
 
 	@ManyToOne(fetch = FetchType.EAGER)
 	@JoinColumn(name = "cash_out_request_id")

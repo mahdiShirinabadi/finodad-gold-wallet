@@ -120,6 +120,8 @@ public interface StatusRepositoryService {
     int COLLATERAL_QUANTITY_IS_BIGGER_THAN_BLOCK_QUANTITY = 100;
     int BLOCK_AMOUNT_NOT_ENOUGH = 101;
     int COLLATERAL_ACCOUNT_NOT_FOUND = 102;
+    int COLLATERAL_NOT_FOUND = 103;
+    int COLLATERAL_STEP_MUST_BE_SEIZE = 104;
 
     // General Error Codes
 

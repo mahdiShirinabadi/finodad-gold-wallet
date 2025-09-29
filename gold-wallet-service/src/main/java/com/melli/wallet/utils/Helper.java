@@ -319,6 +319,16 @@ public class Helper {
         return new MerchantObject(String.valueOf(merchantEntity.getId()), merchantEntity.getName(), merchantEntity.getLogo(), String.valueOf(merchantEntity.getStatus()));
     }
 
+    public CollateralResponse fillCollateralResponse(List<CollateralEntity> collateralEntityList){
+        CollateralResponse response = new CollateralResponse();
+        response.setCollateralObjectList(collateralEntityList.stream().map(this::convertCollateralEntityToCollateralObject).toList());
+        return response;
+    }
+
+    private CollateralObject convertCollateralEntityToCollateralObject(CollateralEntity collateralEntity) {
+        return new CollateralObject(String.valueOf(collateralEntity.getId()), collateralEntity.getName(), collateralEntity.getLogo(), String.valueOf(collateralEntity.getStatus()),  collateralEntity.getIban());
+    }
+
     public PurchaseTrackResponse fillPurchaseTrackResponse(ReportPurchaseRequestEntity purchaseRequestEntity, StatusRepositoryService statusRepositoryService) {
         StatusEntity statusEntity = statusRepositoryService.findByCode(String.valueOf(purchaseRequestEntity.getResult()));
         PurchaseTrackObject response = new PurchaseTrackObject();

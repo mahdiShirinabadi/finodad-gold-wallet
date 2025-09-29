@@ -3,6 +3,7 @@ package com.melli.wallet.service.repository.impl;
 import com.melli.wallet.ConstantRedisName;
 import com.melli.wallet.domain.master.entity.*;
 import com.melli.wallet.domain.master.persistence.CollateralRepository;
+import com.melli.wallet.domain.master.persistence.CollateralWalletAccountCurrencyRepository;
 import com.melli.wallet.domain.master.persistence.MerchantRepository;
 import com.melli.wallet.domain.master.persistence.MerchantWalletAccountCurrencyRepository;
 import com.melli.wallet.domain.response.collateral.CollateralResponse;
@@ -36,7 +37,7 @@ import java.util.List;
 public class CollateralRepositoryServiceImplementation implements CollateralRepositoryService {
 
     private final CollateralRepository collateralRepository;
-    private final MerchantWalletAccountCurrencyRepository merchantWalletAccountCurrencyRepository;
+    private final CollateralWalletAccountCurrencyRepository collateralWalletAccountCurrencyRepository;
     private final WalletAccountCurrencyRepositoryService walletAccountCurrencyRepositoryService;
     private final Helper helper;
     private final WalletAccountRepositoryService walletAccountRepositoryService;
@@ -46,24 +47,24 @@ public class CollateralRepositoryServiceImplementation implements CollateralRepo
     @Override
     public CollateralResponse get(ChannelEntity channelEntity, String currency) throws InternalServiceException {
        WalletAccountCurrencyEntity walletAccountCurrencyEntity = walletAccountCurrencyRepositoryService.findCurrency(currency);
-        List<MerchantWalletAccountCurrencyEntity> merchantWalletAccountCurrencyEntityList = merchantWalletAccountCurrencyRepository.findByWalletAccountCurrencyEntity(walletAccountCurrencyEntity);
+        List<CollateralWalletAccountCurrencyEntity> merchantWalletAccountCurrencyEntityList = collateralWalletAccountCurrencyRepository.findByWalletAccountCurrencyEntity(walletAccountCurrencyEntity);
         if(merchantWalletAccountCurrencyEntityList.isEmpty()){
-            return new MerchantResponse();
+            return new CollateralResponse();
         }
-        return helper.fillMerchantResponse(merchantWalletAccountCurrencyEntityList.stream().map(MerchantWalletAccountCurrencyEntity::getMerchantEntity).toList());
+        return helper.fillCollateralResponse(merchantWalletAccountCurrencyEntityList.stream().map(CollateralWalletAccountCurrencyEntity::getCollateralEntity).toList());
     }
 
 
 
     @Override
     @Cacheable(unless = "#result == null")
-    public MerchantEntity  findById(int id) {
-        return merchantRepository.findById(id);
+    public CollateralEntity  findById(int id) {
+        return collateralRepository.findById(id);
     }
 
     @Override
-    public void save(MerchantEntity merchant) {
-        merchantRepository.save(merchant);
+    public void save(CollateralEntity collateralEntity) {
+        collateralRepository.save(collateralEntity);
     }
 
     @Override
@@ -72,26 +73,26 @@ public class CollateralRepositoryServiceImplementation implements CollateralRepo
         log.info("start clear all merchant");
     }
 
-    public MerchantEntity findMerchant(String merchantId) throws InternalServiceException {
-        MerchantEntity merchant = findById(Integer.parseInt(merchantId));
-        if (merchant == null) {
-            log.error("Merchant ID {} doesn't exist", merchantId);
+    public CollateralEntity findCollateral(String collateralId) throws InternalServiceException {
+        CollateralEntity collateral = collateralRepository.findById(Integer.parseInt(collateralId));
+        if (collateral == null) {
+            log.error("Collateral ID {} doesn't exist", collateralId);
             throw new InternalServiceException(
-                    "Merchant doesn't exist",
-                    StatusRepositoryService.MERCHANT_IS_NOT_EXIST,
+                    "Collateral doesn't exist",
+                    StatusRepositoryService.COLLATERAL_NOT_FOUND,
                     HttpStatus.OK
             );
         }
-        return merchant;
+        return collateral;
     }
 
-    public WalletAccountEntity findMerchantWalletAccount(
-            MerchantEntity merchant, WalletAccountCurrencyEntity currencyEntity) throws InternalServiceException {
-        List<WalletAccountEntity> accounts = walletAccountRepositoryService.findByWallet(merchant.getWalletEntity());
+    public WalletAccountEntity findCollateralWalletAccount(
+            CollateralEntity collateralEntity, WalletAccountCurrencyEntity currencyEntity) throws InternalServiceException {
+        List<WalletAccountEntity> accounts = walletAccountRepositoryService.findByWallet(collateralEntity.getWalletEntity());
         if (CollectionUtils.isEmpty(accounts)) {
-            log.error("No wallet accounts found for merchant {}", merchant.getName());
+            log.error("No wallet accounts found for collateral {}", collateralEntity.getName());
             throw new InternalServiceException(
-                    "Merchant wallet account not found",
+                    "Collateral wallet account not found",
                     StatusRepositoryService.MERCHANT_WALLET_ACCOUNT_NOT_FOUND,
                     HttpStatus.OK
             );
@@ -100,7 +101,7 @@ public class CollateralRepositoryServiceImplementation implements CollateralRepo
                 .filter(x -> x.getWalletAccountCurrencyEntity().getId() == (currencyEntity.getId()))
                 .findFirst()
                 .orElseThrow(() -> {
-                    log.error("Wallet account with currency {} not found for merchant {}", currencyEntity.getName(), merchant.getName());
+                    log.error("Wallet account with currency {} not found for merchant {}", currencyEntity.getName(), collateralEntity.getName());
                     return new InternalServiceException(
                             "Wallet account not found for merchant",
                             StatusRepositoryService.MERCHANT_WALLET_ACCOUNT_NOT_FOUND,

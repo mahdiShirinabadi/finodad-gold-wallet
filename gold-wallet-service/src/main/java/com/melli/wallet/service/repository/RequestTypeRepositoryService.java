@@ -19,7 +19,8 @@ public interface RequestTypeRepositoryService {
 	String CREATE_COLLATERAL = "create_collateral";
 	String RELEASE_COLLATERAL = "release_collateral";
 	String INCREASE_COLLATERAL = "increase_collateral";
-	String LIQUID_COLLATERAL = "liquid_collateral";
+	String SEIZE_COLLATERAL = "seize_collateral";
+	String SELL_COLLATERAL = "sell_collateral";
 	RequestTypeEntity getRequestType(String name);
 	void clearCache (long id)throws InternalServiceException;
 	void clearCacheAllData();

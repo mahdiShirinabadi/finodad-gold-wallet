@@ -16,7 +16,7 @@ public interface CollateralRepositoryService {
     CollateralEntity findById(int id);
     void save(CollateralEntity merchant);
     void clearAllCache();
-    CollateralEntity findMerchant(String merchantId) throws InternalServiceException;
+    CollateralEntity findCollateral(String merchantId) throws InternalServiceException;
     WalletAccountEntity findCollateralWalletAccount(
             CollateralEntity collateralEntity, WalletAccountCurrencyEntity currencyEntity) throws InternalServiceException;
 }

@@ -22,6 +22,7 @@ import com.melli.wallet.service.operation.MessageResolverOperationService;
 import com.melli.wallet.service.operation.WalletCollateralLimitationOperationService;
 import com.melli.wallet.service.operation.WalletOperationalService;
 import com.melli.wallet.service.repository.*;
+import com.melli.wallet.service.transactional.CollateralTransactionalService;
 import com.melli.wallet.service.transactional.PurchaseTransactionalService;
 import com.melli.wallet.util.StringUtils;
 import com.melli.wallet.util.date.DateUtils;
@@ -77,6 +78,7 @@ public class CollateralOperationServiceImplementation implements CollateralOpera
     private final CollateralRepositoryService collateralRepositoryService;
     private final SettingGeneralRepositoryService settingGeneralRepositoryService;
     private final ReportTransactionRepository reportTransactionRepository;
+    private final CollateralTransactionalService collateralTransactionalService;
 
 
     @Override
@@ -405,16 +407,7 @@ public class CollateralOperationServiceImplementation implements CollateralOpera
     @Transactional
     public void seize(SeizeCollateralObjectDTO objectDTO) throws InternalServiceException {
 
-
-        //in this method we only save a liquid and suspend wallet and wallet account number and start below action in job it is a better solution
-
-        //suspend gold wallet account
-        //suspend rial account
-        //unblock quantity
-        //sell by quantity
-        //cashOut price
-
-        RequestTypeEntity requestTypeEntity = requestTypeRepositoryService.getRequestType(RequestTypeRepositoryService.LIQUID_COLLATERAL);
+        RequestTypeEntity requestTypeEntity = requestTypeRepositoryService.getRequestType(RequestTypeRepositoryService.SEIZE_COLLATERAL);
         String key = objectDTO.getCollateralCode();
         redisLockService.runAfterLock(key, this.getClass(), () -> {
 
@@ -448,7 +441,7 @@ public class CollateralOperationServiceImplementation implements CollateralOpera
 
 
             //get from unblockAnd
-
+            collateralTransactionalService.unblockAndTransfer(createCollateralRequestEntity);
 
             createCollateralRequestEntity.setCollateralStatusEnum(CollateralStatusEnum.SEIZE);
             requestEntity.setResult(StatusRepositoryService.SUCCESSFUL);
@@ -460,7 +453,53 @@ public class CollateralOperationServiceImplementation implements CollateralOpera
 
 
     @Override
-    public void sell(SellCollateralObjectDTO sellCollateralObjectDTO) throws InternalServiceException {
+    public void sell(SellCollateralObjectDTO objectDTO) throws InternalServiceException {
+
+        //validate input param in method we sell and remain balance move to owner collateral
+        RequestTypeEntity requestTypeEntity = requestTypeRepositoryService.getRequestType(RequestTypeRepositoryService.SELL_COLLATERAL);
+        String key = objectDTO.getCollateralCode();
+        redisLockService.runAfterLock(key, this.getClass(), ()->{
+
+            Optional<CreateCollateralRequestEntity> createCollateralRequestEntityOptional = createCollateralRequestRepository.findByCode(objectDTO.getCollateralCode());
+            if(createCollateralRequestEntityOptional.isEmpty()) {
+                log.error("createCollateralRequestEntityOptional not found with code ({}) in sell", objectDTO.getCollateralCode());
+                throw new InternalServiceException("createCollateralRequestEntityOptional not found", StatusRepositoryService.COLLATERAL_CODE_NOT_FOUND, HttpStatus.OK);
+            }
+            CreateCollateralRequestEntity createCollateralRequestEntity = createCollateralRequestEntityOptional.get();
+            ////1 check quantity request must be less than collateral quantity
+            checkSellCollateral(createCollateralRequestEntity, objectDTO);
+            //2 sell quantity and fill collateral RIAL with amount from merchant
+
+            SellCollateralRequestEntity requestEntity = new SellCollateralRequestEntity();
+            requestEntity.setMerchantEntity(merchantRepositoryService.findById(Integer.parseInt(objectDTO.getMerchantId())));
+            requestEntity.setChannel(objectDTO.getChannelEntity());
+            requestEntity.setCollateralWalletAccountEntity();
+            requestEntity.setPrice(Long.parseLong(objectDTO.getPrice()));
+            requestEntity.setCommission(new BigDecimal(objectDTO.getPrice()));
+            requestEntity.setRrnEntity(createCollateralRequestEntity.getRrnEntity());
+            requestEntity.setChannel(objectDTO.getChannelEntity());
+            requestEntity.setResult(StatusRepositoryService.CREATE);
+            requestEntity.setChannelIp(objectDTO.getIp());
+            requestEntity.setRequestTypeEntity(requestTypeEntity);
+            requestEntity.setCreatedBy(objectDTO.getChannelEntity().getUsername());
+            requestEntity.setCreatedAt(new Date());
+            requestEntity.setAdditionalData(objectDTO.getDescription());
+            requestEntity.setCreateCollateralRequestEntity(createCollateralRequestEntity);
+            try {
+                requestRepositoryService.save(requestEntity);
+            } catch (Exception ex) {
+                log.error("error in save LiquidCollateral with message ({})", ex.getMessage());
+                throw new InternalServiceException("error in save IncreaseCollateral", StatusRepositoryService.GENERAL_ERROR, HttpStatus.OK);
+            }
+
+            collateralTransactionalService.purchaseAndCharge();
+            return null;
+
+        }, key);
+
+        //3 move remain quantity to user
+        //4 class cashout for collateral
+
 
     }
 
@@ -749,6 +788,36 @@ public class CollateralOperationServiceImplementation implements CollateralOpera
         if(!createCollateralRequestEntity.getWalletAccountEntity().getWalletEntity().getNationalCode().equalsIgnoreCase(objectDTO.getNationalCode())){
             log.error("nationalCode collateral with code ({}) is ({}) and not same with collateral ({})", objectDTO.getCollateralCode(), objectDTO.getNationalCode(), createCollateralRequestEntity.getWalletAccountEntity().getWalletEntity().getNationalCode());
             throw new InternalServiceException("collateral nationalCode not same", StatusRepositoryService.COLLATERAL_NATIONAL_CODE_NOT_SAME, HttpStatus.OK);
+        }
+
+    }
+
+    private void checkSellCollateral(CreateCollateralRequestEntity createCollateralRequestEntity, SellCollateralObjectDTO objectDTO) throws InternalServiceException {
+
+
+        if(createCollateralRequestEntity.getChannel().getId() != objectDTO.getChannelEntity().getId()){
+            log.error("owner collateral for code ({}) is ({}) and not same with channel caller ({}) in sell", createCollateralRequestEntity.getChannel().getUsername(), objectDTO.getChannelEntity().getUsername(), objectDTO.getCollateralCode());
+            throw new InternalServiceException("collateral code not found", StatusRepositoryService.OWNER_COLLATERAL_CODE_SAME, HttpStatus.OK);
+        }
+
+        if(createCollateralRequestEntity.getCollateralStatusEnum().toString().equalsIgnoreCase(CollateralStatusEnum.RELEASE.toString())){
+            log.error("collateral with code ({}) release before in sell!!!", objectDTO.getCollateralCode());
+            throw new InternalServiceException("collateral channel not same", StatusRepositoryService.COLLATERAL_RELEASE_BEFORE, HttpStatus.OK);
+        }
+
+        if(!createCollateralRequestEntity.getCollateralStatusEnum().toString().equalsIgnoreCase(CollateralStatusEnum.SEIZE.toString())){
+            log.error("collateral with code ({}) must be SEIZE!!!", objectDTO.getCollateralCode());
+            throw new InternalServiceException("collateral step not valid", StatusRepositoryService.COLLATERAL_STEP_MUST_BE_SEIZE, HttpStatus.OK);
+        }
+
+        if(!createCollateralRequestEntity.getWalletAccountEntity().getWalletEntity().getNationalCode().equalsIgnoreCase(objectDTO.getNationalCode())){
+            log.error("nationalCode collateral with code ({}) is ({}) and not same with collateral sell ({})", objectDTO.getCollateralCode(), objectDTO.getNationalCode(), createCollateralRequestEntity.getWalletAccountEntity().getWalletEntity().getNationalCode());
+            throw new InternalServiceException("collateral nationalCode not same", StatusRepositoryService.COLLATERAL_NATIONAL_CODE_NOT_SAME, HttpStatus.OK);
+        }
+
+        if(objectDTO.getQuantity().compareTo(createCollateralRequestEntity.getQuantity()) > 0){
+            log.error("quantity for sell ({}) is bigger than first quantity in collateral ({})", objectDTO.getQuantity(), createCollateralRequestEntity.getQuantity());
+            throw new InternalServiceException("quantity is bigger than input quantity", StatusRepositoryService.COLLATERAL_QUANTITY_IS_BIGGER_THAN_BLOCK_QUANTITY, HttpStatus.OK);
         }
 
     }
