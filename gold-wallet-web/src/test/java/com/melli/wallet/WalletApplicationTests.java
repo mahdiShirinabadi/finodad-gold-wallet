@@ -9,6 +9,11 @@ import com.melli.wallet.domain.master.entity.WalletAccountEntity;
 import com.melli.wallet.domain.request.login.LoginRequestJson;
 import com.melli.wallet.domain.request.login.RefreshTokenRequestJson;
 import com.melli.wallet.domain.request.merchant.MerchantBalanceRequest;
+import com.melli.wallet.domain.request.setup.PanelCollateralCreateRequestJson;
+import com.melli.wallet.domain.request.PanelBaseSearchJson;
+import com.melli.wallet.domain.response.collateral.CollateralResponse;
+import com.melli.wallet.domain.response.collateral.CollateralListResponse;
+import com.melli.wallet.domain.response.transaction.ReportTransactionResponse;
 import com.melli.wallet.domain.request.wallet.*;
 import com.melli.wallet.domain.request.wallet.cash.CashGenerateUuidRequestJson;
 import com.melli.wallet.domain.request.wallet.cash.CashInWalletRequestJson;
@@ -136,6 +141,11 @@ public class WalletApplicationTests {
     private static final String COLLATERAL_GENERATE_UUID_PATH = "/api/v1/collateral/generate/uuid";
     private static final String COLLATERAL_CREATE_PATH = "/api/v1/collateral/create";
     private static final String COLLATERAL_RELEASE_PATH = "/api/v1/collateral/release";
+    private static final String PANEL_COLLATERAL_CREATE_PATH = "/api/v1/panel/collateral/create";
+    private static final String PANEL_COLLATERAL_LIST_PATH = "/api/v1/panel/collateral/list";
+    private static final String PANEL_COLLATERAL_CREATE_LIST_PATH = "/api/v1/panel/collateral/create/list";
+    private static final String PANEL_COLLATERAL_BALANCE_PATH = "/api/v1/panel/collateral/balance";
+    private static final String PANEL_COLLATERAL_REPORT_PATH = "/api/v1/panel/collateral/report";
 
     private static final String NATIONAL_CODE_CORRECT = "0077847660";
     private static final String NATIONAL_CODE_INCORRECT = "0077847661";
@@ -859,7 +869,7 @@ public class WalletApplicationTests {
         return objectMapper.readValue(response, typeReference);
     }
 
-    public BaseResponse<CreateCollateralResponse> createCollateral(MockMvc mockMvc, String token, String uniqueIdentifier, String quantity, String accountNumber, String description, String sign, CommissionObject commissionObject, HttpStatus httpStatus, int errorCode, boolean success) throws Exception {
+    public BaseResponse<CreateCollateralResponse> createCollateral(MockMvc mockMvc, String token, String uniqueIdentifier, String quantity, String accountNumber, String description, String sign, CommissionObject commissionObject, String collateralId, HttpStatus httpStatus, int errorCode, boolean success) throws Exception {
         CreateCollateralRequestJson requestJson = new CreateCollateralRequestJson();
         requestJson.setUniqueIdentifier(uniqueIdentifier);
         requestJson.setQuantity(quantity);
@@ -867,6 +877,7 @@ public class WalletApplicationTests {
         requestJson.setDescription(description);
         requestJson.setSign(sign);
         requestJson.setCommissionObject(commissionObject);
+        requestJson.setCollateralId(collateralId);
         
         MockHttpServletRequestBuilder postRequest = buildPostRequest(token, COLLATERAL_CREATE_PATH, mapToJson(requestJson));
         String response = performTest(mockMvc, postRequest, httpStatus, success, errorCode);
@@ -886,6 +897,43 @@ public class WalletApplicationTests {
         MockHttpServletRequestBuilder postRequest = buildPostRequest(token, COLLATERAL_RELEASE_PATH, mapToJson(requestJson));
         String response = performTest(mockMvc, postRequest, httpStatus, success, errorCode);
         TypeReference<BaseResponse<ObjectUtils.Null>> typeReference = new TypeReference<>() {};
+        return objectMapper.readValue(response, typeReference);
+    }
+
+    // ==================== PANEL COLLATERAL CONTROLLER HELPER METHODS ====================
+
+    public BaseResponse<String> createCollateralWallet(MockMvc mockMvc, String token, PanelCollateralCreateRequestJson request, HttpStatus httpStatus, int errorCode, boolean success) throws Exception {
+        MockHttpServletRequestBuilder postRequest = buildPostRequest(token, PANEL_COLLATERAL_CREATE_PATH, mapToJson(request));
+        String response = performTest(mockMvc, postRequest, httpStatus, success, errorCode);
+        TypeReference<BaseResponse<String>> typeReference = new TypeReference<BaseResponse<String>>() {};
+        return objectMapper.readValue(response, typeReference);
+    }
+
+    public BaseResponse<CollateralResponse> listCollaterals(MockMvc mockMvc, String token, String currency, HttpStatus httpStatus, int errorCode, boolean success) throws Exception {
+        MockHttpServletRequestBuilder getRequest = buildGetRequest(token, PANEL_COLLATERAL_LIST_PATH + "?currency=" + currency);
+        String response = performTest(mockMvc, getRequest, httpStatus, success, errorCode);
+        TypeReference<BaseResponse<CollateralResponse>> typeReference = new TypeReference<BaseResponse<CollateralResponse>>() {};
+        return objectMapper.readValue(response, typeReference);
+    }
+
+    public BaseResponse<CollateralListResponse> createListCollaterals(MockMvc mockMvc, String token, PanelBaseSearchJson request, HttpStatus httpStatus, int errorCode, boolean success) throws Exception {
+        MockHttpServletRequestBuilder postRequest = buildPostRequest(token, PANEL_COLLATERAL_CREATE_LIST_PATH, mapToJson(request));
+        String response = performTest(mockMvc, postRequest, httpStatus, success, errorCode);
+        TypeReference<BaseResponse<CollateralListResponse>> typeReference = new TypeReference<BaseResponse<CollateralListResponse>>() {};
+        return objectMapper.readValue(response, typeReference);
+    }
+
+    public BaseResponse<WalletBalanceResponse> getCollateralBalance(MockMvc mockMvc, String token, String collateralId, HttpStatus httpStatus, int errorCode, boolean success) throws Exception {
+        MockHttpServletRequestBuilder getRequest = buildGetRequest(token, PANEL_COLLATERAL_BALANCE_PATH + "?collateralId=" + collateralId);
+        String response = performTest(mockMvc, getRequest, httpStatus, success, errorCode);
+        TypeReference<BaseResponse<WalletBalanceResponse>> typeReference = new TypeReference<BaseResponse<WalletBalanceResponse>>() {};
+        return objectMapper.readValue(response, typeReference);
+    }
+
+    public BaseResponse<ReportTransactionResponse> generateCollateralReport(MockMvc mockMvc, String token, PanelBaseSearchJson request, HttpStatus httpStatus, int errorCode, boolean success) throws Exception {
+        MockHttpServletRequestBuilder postRequest = buildPostRequest(token, PANEL_COLLATERAL_REPORT_PATH, mapToJson(request));
+        String response = performTest(mockMvc, postRequest, httpStatus, success, errorCode);
+        TypeReference<BaseResponse<ReportTransactionResponse>> typeReference = new TypeReference<BaseResponse<ReportTransactionResponse>>() {};
         return objectMapper.readValue(response, typeReference);
     }
 

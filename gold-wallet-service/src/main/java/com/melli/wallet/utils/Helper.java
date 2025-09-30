@@ -480,7 +480,7 @@ public class Helper {
         statementObject.setUniqueIdentifier(reportTransactionEntity.getRrnEntity().getUuid());
         statementObject.setCurrency(reportTransactionEntity.getWalletAccountEntity().getWalletAccountCurrencyEntity().getName());
         statementObject.setQuantity(String.valueOf(reportTransactionEntity.getAmount()));
-        statementObject.setBalance(String.valueOf(reportTransactionEntity.getBalance()));
+        statementObject.setBalance(String.valueOf(reportTransactionEntity.getAvailableBalance()));
         statementObject.setCreateTime(DateUtils.getLocaleDate(DateUtils.FARSI_LOCALE, reportTransactionEntity.getCreatedAt(), FORMAT_DATE_RESPONSE, false));
         return statementObject;
     }
@@ -494,7 +494,7 @@ public class Helper {
         statementObject.setUniqueIdentifier(reportTransactionEntity.getRrnEntity().getUuid());
         statementObject.setCurrency(reportTransactionEntity.getWalletAccountEntity().getWalletAccountCurrencyEntity().getName());
         statementObject.setQuantity(String.valueOf(reportTransactionEntity.getAmount()));
-        statementObject.setBalance(String.valueOf(reportTransactionEntity.getBalance()));
+        statementObject.setBalance(String.valueOf(reportTransactionEntity.getAvailableBalance()));
         statementObject.setCreateTime(DateUtils.getLocaleDate(DateUtils.FARSI_LOCALE, reportTransactionEntity.getCreatedAt(), FORMAT_DATE_RESPONSE, false));
         return statementObject;
     }

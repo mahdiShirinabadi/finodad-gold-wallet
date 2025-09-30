@@ -155,6 +155,8 @@ insert into wallet_type(created_by, created_at, name)
 values ('System', now(), 'CHANNEL');
 insert into wallet_type(created_by, created_at, name)
 values ('System', now(), 'MERCHANT');
+insert into wallet_type(created_by, created_at, name)
+values ('System', now(), 'COLLATERAL');
 
 
 CREATE TABLE if not exists wallet_account_type
@@ -366,6 +368,25 @@ CREATE TABLE if not exists merchant
     end_time        TIMESTAMP WITHOUT TIME ZONE
 );
 
+CREATE TABLE if not exists collateral
+(
+    id              BIGSERIAL PRIMARY KEY,
+    created_by      VARCHAR(200)                NOT NULL,
+    updated_by      VARCHAR(200),
+    created_at      TIMESTAMP WITHOUT TIME ZONE NOT NULL,
+    updated_at      TIMESTAMP WITHOUT TIME ZONE,
+    name            VARCHAR(200)                NOT NULL UNIQUE,
+    description            TEXT,
+    mobile          VARCHAR(200)                NOT NULL,
+    economical_code VARCHAR(200)                NOT NULL,
+    wallet_id       BIGINT                      NOT NULL UNIQUE REFERENCES wallet,
+    logo            TEXT,
+    iban          VARCHAR(200),
+    pay_id          VARCHAR(200),
+    status          INTEGER,
+    end_time        TIMESTAMP WITHOUT TIME ZONE
+    );
+
 CREATE TABLE if not exists deactivate_wallet_account_request
 (
     id                BIGSERIAL PRIMARY KEY,
@@ -518,6 +539,17 @@ CREATE TABLE if not exists merchant_wallet_account_currency
     created_at TIMESTAMP WITHOUT TIME ZONE NOT NULL,
     updated_at TIMESTAMP WITHOUT TIME ZONE,
     merchant_id   BIGINT             NOT NULL REFERENCES merchant,
+    wallet_account_currency_id       BIGINT   NOT NULL REFERENCES wallet_account_currency
+);
+
+CREATE TABLE if not exists collateral_wallet_account_currency
+(
+    id         BIGSERIAL PRIMARY KEY,
+    created_by VARCHAR(200)                NOT NULL,
+    updated_by VARCHAR(200),
+    created_at TIMESTAMP WITHOUT TIME ZONE NOT NULL,
+    updated_at TIMESTAMP WITHOUT TIME ZONE,
+    collateral_id   BIGINT             NOT NULL REFERENCES collateral,
     wallet_account_currency_id       BIGINT   NOT NULL REFERENCES wallet_account_currency
 );
 

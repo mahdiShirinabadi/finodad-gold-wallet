@@ -168,11 +168,7 @@ public class CollateralController extends WebController {
         collateralOperationService.sell(new SellCollateralObjectDTO(requestContext.getChannelEntity(),
                 requestJson.getCollateralCode(), new BigDecimal(requestJson.getQuantity()), requestJson.getNationalCode(), requestJson.getAdditionalData(),
                 new BigDecimal(requestJson.getCommissionObject().getAmount()), requestJson.getCommissionObject().getCurrency() , requestContext.getClientIp(),
-                requestJson.getPrice()));
+                requestJson.getPrice(), requestJson.getMerchantId()));
         return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse<>(true));
     }
-
-
-
-
 }

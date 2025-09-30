@@ -43,6 +43,10 @@ public class SellCollateralRequestJson {
     @JsonProperty(NamingProperty.ADDITIONAL_DATA)
     private String additionalData;
 
+    @Schema(name = NamingProperty.MERCHANT_ID, description = "شناسه پذیرنده", example = "1000")
+    @JsonProperty(NamingProperty.MERCHANT_ID)
+    private String merchantId;
+
     @Schema(name = NamingProperty.SIGN, description = "quantity|collateralCode|nationalCode")
     @JsonProperty(NamingProperty.SIGN)
     private String sign;

@@ -173,11 +173,13 @@ CREATE TABLE if not exists create_collateral_request
     request_id             BIGINT NOT NULL REFERENCES request,
     wallet_account_id      BIGINT NOT NULL REFERENCES wallet_account,
     rrn_id                 BIGINT NOT NULL REFERENCES rrn,
+    collateral_id                 BIGINT NOT NULL REFERENCES collateral,
     code                   varchar(200),
     additional_data        varchar(500),
     status                 varchar(100),
     quantity               NUMERIC(15, 5),
-    commission           NUMERIC(15, 5)
+    final_block_quantity   NUMERIC(15, 5),
+    commission             NUMERIC(15, 5)
 );
 create unique index rrn_id_create_collateral_request_unique_idx on create_collateral_request (rrn_id);
 

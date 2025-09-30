@@ -12,10 +12,10 @@ import com.melli.wallet.domain.response.cash.PhysicalCashOutTrackResponse;
 import com.melli.wallet.domain.slave.entity.ReportCashOutRequestEntity;
 import com.melli.wallet.domain.slave.entity.ReportPhysicalCashOutRequestEntity;
 import com.melli.wallet.exception.InternalServiceException;
+import com.melli.wallet.service.operation.CashOutOperationService;
 import com.melli.wallet.service.operation.MessageResolverOperationService;
 import com.melli.wallet.service.operation.WalletCashLimitationOperationService;
 import com.melli.wallet.service.repository.*;
-import com.melli.wallet.service.operation.CashOutOperationService;
 import com.melli.wallet.util.Utility;
 import com.melli.wallet.utils.Helper;
 import com.melli.wallet.utils.RedisLockService;
@@ -29,7 +29,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -73,7 +72,8 @@ public class CashOutOperationServiceImplementation implements CashOutOperationSe
 
     @Override
     @Transactional(propagation = Propagation.REQUIRED, rollbackFor = Exception.class)
-    public CashOutResponse withdrawal(CashOutObjectDTO cashOutObjectDTO) throws InternalServiceException {
+    public CashOutResponse
+    withdrawal(CashOutObjectDTO cashOutObjectDTO) throws InternalServiceException {
 
         RequestTypeEntity requestTypeEntity = requestTypeRepositoryService.getRequestType(RequestTypeRepositoryService.CASH_OUT);
         RrnEntity rrnEntity = rrnRepositoryService.findByUid(cashOutObjectDTO.getUniqueIdentifier());

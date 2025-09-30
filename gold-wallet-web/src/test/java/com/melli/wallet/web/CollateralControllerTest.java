@@ -4,11 +4,10 @@ import com.melli.wallet.WalletApplicationTests;
 import com.melli.wallet.config.CacheClearService;
 import com.melli.wallet.domain.dto.BalanceDTO;
 import com.melli.wallet.domain.enumaration.WalletStatusEnum;
-import com.melli.wallet.service.repository.WalletAccountTypeRepositoryService;
-import com.melli.wallet.service.repository.StatusRepositoryService;
 import com.melli.wallet.domain.master.entity.ChannelEntity;
 import com.melli.wallet.domain.master.entity.WalletAccountEntity;
 import com.melli.wallet.domain.master.entity.WalletEntity;
+import com.melli.wallet.domain.request.setup.PanelCollateralCreateRequestJson;
 import com.melli.wallet.domain.request.wallet.CommissionObject;
 import com.melli.wallet.domain.response.UuidResponse;
 import com.melli.wallet.domain.response.base.BaseResponse;
@@ -66,6 +65,7 @@ class CollateralControllerTest extends WalletApplicationTests {
 
     private static MockMvc mockMvc;
     private static String accessToken;
+    private static String collateralId;
 
     @Autowired
     private WebApplicationContext webApplicationContext;
@@ -133,6 +133,24 @@ class CollateralControllerTest extends WalletApplicationTests {
         BaseResponse<LoginResponse> response = login(mockMvc, USERNAME_CORRECT, PASSWORD_CORRECT, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
         Assert.assertNotNull(response.getData());
         accessToken = response.getData().getAccessTokenObject().getToken();
+
+        // Define test data
+
+        // Step 1: Call Collateral List
+        String mobileNumber = "09123456789";
+        String economicCode = "1234567890";
+        String name = "Test Collateral Company";
+        String iban = "IR123456789012345678901234";
+
+        // Step 1: Create request
+        PanelCollateralCreateRequestJson request = new PanelCollateralCreateRequestJson();
+        request.setMobileNumber(mobileNumber);
+        request.setEconomicCode(economicCode);
+        request.setName(name);
+        request.setIban(iban);
+        // Step 2: Call API
+        BaseResponse<String> responseCreateCollateralWallet = createCollateralWallet(mockMvc, accessToken, request, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
+        collateralId = responseCreateCollateralWallet.getData();
     }
 
     @Test
@@ -184,7 +202,7 @@ class CollateralControllerTest extends WalletApplicationTests {
         //change permission
         String collateralSettingValue = getLimitationSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.ENABLE_COLLATERAL, sourceAccount.getAccountNumber());
         WalletAccountEntity walletAccountEntity = walletAccountRepositoryService.findByAccountNumber(sourceAccount.getAccountNumber());
-        if("false".equalsIgnoreCase(collateralSettingValue)){
+        if ("false".equalsIgnoreCase(collateralSettingValue)) {
             setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_COLLATERAL, walletAccountEntity, "true");
         }
 
@@ -266,7 +284,7 @@ class CollateralControllerTest extends WalletApplicationTests {
         //change permission
         String collateralSettingValue = getLimitationSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.ENABLE_COLLATERAL, sourceAccount.getAccountNumber());
         WalletAccountEntity walletAccountEntity = walletAccountRepositoryService.findByAccountNumber(sourceAccount.getAccountNumber());
-        if("false".equalsIgnoreCase(collateralSettingValue)){
+        if ("false".equalsIgnoreCase(collateralSettingValue)) {
             setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_COLLATERAL, walletAccountEntity, "true");
         }
 
@@ -281,7 +299,7 @@ class CollateralControllerTest extends WalletApplicationTests {
 
         // Step 4: Create collateral successfully
         CommissionObject commission = new CommissionObject(CURRENCY_GOLD, commissionAmount);
-        BaseResponse<CreateCollateralResponse> response = createCollateral(mockMvc, accessToken, uuidResponse.getData().getUniqueIdentifier(), collateralQuantity, sourceAccount.getAccountNumber(), description, generateValidSign(uuidResponse.getData().getUniqueIdentifier() + "|" + collateralQuantity + "|" + sourceAccount.getAccountNumber()), commission, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
+        BaseResponse<CreateCollateralResponse> response = createCollateral(mockMvc, accessToken, uuidResponse.getData().getUniqueIdentifier(), collateralQuantity, sourceAccount.getAccountNumber(), description, generateValidSign(uuidResponse.getData().getUniqueIdentifier() + "|" + collateralQuantity + "|" + sourceAccount.getAccountNumber()), commission, collateralId, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
 
         Assert.assertNotNull(response.getData());
         Assert.assertNotNull(response.getData().getCollateralCode());
@@ -314,7 +332,7 @@ class CollateralControllerTest extends WalletApplicationTests {
 
         // Step 1: Try to create collateral with invalid UUID
         CommissionObject commission = new CommissionObject(CURRENCY_GOLD, commissionAmount);
-        BaseResponse<CreateCollateralResponse> response = createCollateral(mockMvc, accessToken, invalidUUID, collateralQuantity, walletAccountNumber, description, generateValidSign(invalidUUID + "|" + collateralQuantity + "|" + walletAccountNumber), commission, HttpStatus.OK, StatusRepositoryService.UUID_NOT_FOUND, false);
+        BaseResponse<CreateCollateralResponse> response = createCollateral(mockMvc, accessToken, invalidUUID, collateralQuantity, walletAccountNumber, description, generateValidSign(invalidUUID + "|" + collateralQuantity + "|" + walletAccountNumber), commission, collateralId, HttpStatus.OK, StatusRepositoryService.UUID_NOT_FOUND, false);
 
         Assert.assertFalse(response.getSuccess());
     }
@@ -348,7 +366,7 @@ class CollateralControllerTest extends WalletApplicationTests {
     void generateCollateralUuidConcurrentGeneration() throws Exception {
         // Define amounts
         String collateralQuantity = "0.001";
-        String chargeAmount= "1";
+        String chargeAmount = "1";
         WalletAccountObject sourceAccount = getAccountNumber(mockMvc, accessToken, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, CURRENCY_GOLD);
         String walletAccountNumber = sourceAccount.getAccountNumber();
 
@@ -358,13 +376,13 @@ class CollateralControllerTest extends WalletApplicationTests {
         //change permission
         String collateralSettingValue = getLimitationSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.ENABLE_COLLATERAL, sourceAccount.getAccountNumber());
         WalletAccountEntity walletAccountEntity = walletAccountRepositoryService.findByAccountNumber(sourceAccount.getAccountNumber());
-        if("false".equalsIgnoreCase(collateralSettingValue)){
+        if ("false".equalsIgnoreCase(collateralSettingValue)) {
             setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_COLLATERAL, walletAccountEntity, "true");
         }
 
         // Step 1: Create concurrent generation requests using CompletableFuture
         List<CompletableFuture<BaseResponse<UuidResponse>>> futures = new ArrayList<>();
-        
+
         for (int i = 0; i < threadCount; i++) {
             CompletableFuture<BaseResponse<UuidResponse>> future = CompletableFuture.supplyAsync(() -> {
                 try {
@@ -429,7 +447,7 @@ class CollateralControllerTest extends WalletApplicationTests {
         //change permission
         String collateralSettingValue = getLimitationSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.ENABLE_COLLATERAL, sourceAccount.getAccountNumber());
         WalletAccountEntity walletAccountEntity = walletAccountRepositoryService.findByAccountNumber(sourceAccount.getAccountNumber());
-        if("false".equalsIgnoreCase(collateralSettingValue)){
+        if ("false".equalsIgnoreCase(collateralSettingValue)) {
             setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_COLLATERAL, walletAccountEntity, "true");
         }
 
@@ -454,7 +472,7 @@ class CollateralControllerTest extends WalletApplicationTests {
         // First concurrent request
         CompletableFuture<BaseResponse<CreateCollateralResponse>> future1 = CompletableFuture.supplyAsync(() -> {
             try {
-                BaseResponse<CreateCollateralResponse> response = createCollateral(mockMvc, accessToken, uniqueIdentifier, collateralQuantity, walletAccountNumber, description1, sign, commission, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
+                BaseResponse<CreateCollateralResponse> response = createCollateral(mockMvc, accessToken, uniqueIdentifier, collateralQuantity, walletAccountNumber, description1, sign, commission, collateralId, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
                 log.info("First concurrent create completed with success: {}", response.getSuccess());
                 return response;
             } catch (Exception e) {
@@ -469,7 +487,7 @@ class CollateralControllerTest extends WalletApplicationTests {
             try {
                 // Small delay to ensure second request starts after first
                 Thread.sleep(100);
-                BaseResponse<CreateCollateralResponse> response = createCollateral(mockMvc, accessToken, uniqueIdentifier, collateralQuantity, walletAccountNumber, description2, sign, commission, HttpStatus.OK, StatusRepositoryService.DUPLICATE_UUID, false);
+                BaseResponse<CreateCollateralResponse> response = createCollateral(mockMvc, accessToken, uniqueIdentifier, collateralQuantity, walletAccountNumber, description2, sign, commission, collateralId, HttpStatus.OK, StatusRepositoryService.DUPLICATE_UUID, false);
                 log.info("Second concurrent create completed with success: {}", response.getSuccess());
                 return response;
             } catch (Exception e) {
@@ -546,21 +564,21 @@ class CollateralControllerTest extends WalletApplicationTests {
         //change permission
         String collateralSettingValue = getLimitationSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.ENABLE_COLLATERAL, sourceAccount.getAccountNumber());
         WalletAccountEntity walletAccountEntity = walletAccountRepositoryService.findByAccountNumber(sourceAccount.getAccountNumber());
-        if("false".equalsIgnoreCase(collateralSettingValue)){
+        if ("false".equalsIgnoreCase(collateralSettingValue)) {
             setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_COLLATERAL, walletAccountEntity, "true");
         }
 
         chargeAccountForCollateral(sourceAccount.getAccountNumber(), chargeAmount);
-        
+
         // Step 2: Verify initial balance
         BigDecimal initialBalance = walletAccountRepositoryService.getBalance(walletAccountRepositoryService.findByAccountNumber(sourceAccount.getAccountNumber()).getId()).getAvailableBalance();
         Assert.assertEquals("Initial balance should be 1", new BigDecimal(chargeAmount), initialBalance.stripTrailingZeros());
-        
+
         // Step 3: Generate UUID and create collateral first
         BaseResponse<UuidResponse> uuidResponse = generateCollateralUuid(mockMvc, accessToken, NATIONAL_CODE_CORRECT, collateralQuantity, CURRENCY_GOLD, sourceAccount.getAccountNumber(), HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
 
         CommissionObject commission = new CommissionObject(CURRENCY_GOLD, commissionAmount);
-        BaseResponse<CreateCollateralResponse> createResponse = createCollateral(mockMvc, accessToken, uuidResponse.getData().getUniqueIdentifier(), collateralQuantity, sourceAccount.getAccountNumber(), "Test collateral creation", generateValidSign(uuidResponse.getData().getUniqueIdentifier() + "|" + collateralQuantity + "|" + sourceAccount.getAccountNumber()), commission, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
+        BaseResponse<CreateCollateralResponse> createResponse = createCollateral(mockMvc, accessToken, uuidResponse.getData().getUniqueIdentifier(), collateralQuantity, sourceAccount.getAccountNumber(), "Test collateral creation", generateValidSign(uuidResponse.getData().getUniqueIdentifier() + "|" + collateralQuantity + "|" + sourceAccount.getAccountNumber()), commission, "1", HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
 
         // Step 4: Verify balance after collateral creation
         BigDecimal balanceAfterCreation = walletAccountRepositoryService.getBalance(walletAccountRepositoryService.findByAccountNumber(sourceAccount.getAccountNumber()).getId()).getAvailableBalance();
@@ -647,7 +665,7 @@ class CollateralControllerTest extends WalletApplicationTests {
         //change permission
         String collateralSettingValue = getLimitationSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.ENABLE_COLLATERAL, sourceAccount.getAccountNumber());
         WalletAccountEntity walletAccountEntity = walletAccountRepositoryService.findByAccountNumber(sourceAccount.getAccountNumber());
-        if("false".equalsIgnoreCase(collateralSettingValue)){
+        if ("false".equalsIgnoreCase(collateralSettingValue)) {
             setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_COLLATERAL, walletAccountEntity, "true");
         }
 
@@ -656,12 +674,12 @@ class CollateralControllerTest extends WalletApplicationTests {
         // Step 2: Verify initial balance
         BigDecimal initialBalance = walletAccountRepositoryService.getBalance(walletAccountRepositoryService.findByAccountNumber(sourceAccount.getAccountNumber()).getId()).getAvailableBalance();
         Assert.assertEquals("Initial balance should be 1", new BigDecimal(chargeAmount), initialBalance.stripTrailingZeros());
-        
+
         // Step 2: Generate UUID and create collateral first
         BaseResponse<UuidResponse> uuidResponse = generateCollateralUuid(mockMvc, accessToken, NATIONAL_CODE_CORRECT, collateralQuantity, CURRENCY_GOLD, sourceAccount.getAccountNumber(), HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
 
         CommissionObject commission = new CommissionObject(CURRENCY_GOLD, commissionAmount);
-        BaseResponse<CreateCollateralResponse> createResponse = createCollateral(mockMvc, accessToken, uuidResponse.getData().getUniqueIdentifier(), collateralQuantity, sourceAccount.getAccountNumber(), "Test collateral creation", generateValidSign(uuidResponse.getData().getUniqueIdentifier() + "|" + collateralQuantity + "|" + sourceAccount.getAccountNumber()), commission, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
+        BaseResponse<CreateCollateralResponse> createResponse = createCollateral(mockMvc, accessToken, uuidResponse.getData().getUniqueIdentifier(), collateralQuantity, sourceAccount.getAccountNumber(), "Test collateral creation", generateValidSign(uuidResponse.getData().getUniqueIdentifier() + "|" + collateralQuantity + "|" + sourceAccount.getAccountNumber()), commission, collateralId, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
 
         String collateralCode = createResponse.getData().getCollateralCode();
 
@@ -690,7 +708,6 @@ class CollateralControllerTest extends WalletApplicationTests {
         CompletableFuture<BaseResponse<ObjectUtils.Null>> future2 = CompletableFuture.supplyAsync(() -> {
             try {
                 // Small delay to ensure second request starts after first
-                Thread.sleep(100);
                 log.info("Starting second concurrent release with SAME collateral code: {}", collateralCode);
                 BaseResponse<ObjectUtils.Null> response = releaseCollateral(mockMvc, accessToken, collateralCode, collateralQuantity, NATIONAL_CODE_CORRECT, additionalData2, generateValidSign(collateralQuantity + "|" + collateralCode + "|" + NATIONAL_CODE_CORRECT), releaseCommission, HttpStatus.OK, StatusRepositoryService.COLLATERAL_RELEASE_BEFORE, false);
                 log.info("Second release completed with success: {}", response.getSuccess());
@@ -779,7 +796,7 @@ class CollateralControllerTest extends WalletApplicationTests {
         WalletAccountEntity walletAccountEntity = walletAccountRepositoryService.findByAccountNumber(accountNumber);
         walletAccountRepositoryService.decreaseBalance(walletAccountEntity.getId(), walletAccountRepositoryService.getBalance(walletAccountEntity.getId()).getRealBalance());
         BalanceDTO balanceDTO = walletAccountRepositoryService.getBalance(walletAccountEntity.getId());
-        if(balanceDTO.getRealBalance().compareTo(balanceDTO.getAvailableBalance()) > 0){
+        if (balanceDTO.getRealBalance().compareTo(balanceDTO.getAvailableBalance()) > 0) {
             walletAccountRepositoryService.unblockAmount(walletAccountEntity.getId(), balanceDTO.getRealBalance().subtract(balanceDTO.getAvailableBalance()));
         }
     }

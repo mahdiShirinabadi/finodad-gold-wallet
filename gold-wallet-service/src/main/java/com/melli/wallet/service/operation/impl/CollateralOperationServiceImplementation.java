@@ -222,10 +222,11 @@ public class CollateralOperationServiceImplementation implements CollateralOpera
 
         RequestTypeEntity requestTypeEntity = requestTypeRepositoryService.getRequestType(RequestTypeRepositoryService.RELEASE_COLLATERAL);
 
-
         String key = objectDTO.getCollateralCode();
 
         redisLockService.runAfterLock(key, this.getClass(), () -> {
+
+            log.info("start release for collateralCode ({})", key);
 
             Optional<CreateCollateralRequestEntity> createCollateralRequestEntityOptional = createCollateralRequestRepository.findByCode(objectDTO.getCollateralCode());
 
@@ -235,6 +236,8 @@ public class CollateralOperationServiceImplementation implements CollateralOpera
             }
 
             CreateCollateralRequestEntity createCollateralRequestEntity = createCollateralRequestEntityOptional.get();
+
+            log.info("status for collateralCode ({}) is ({})", objectDTO.getCollateralCode(), createCollateralRequestEntity.getCollateralStatusEnum().toString());
 
             checkReleaseCollateral(createCollateralRequestEntity, objectDTO);
 
@@ -302,6 +305,7 @@ public class CollateralOperationServiceImplementation implements CollateralOpera
             requestRepositoryService.save(requestEntity);
             createCollateralRequestEntity.setCollateralStatusEnum(CollateralStatusEnum.RELEASE);
             requestRepositoryService.save(createCollateralRequestEntity);
+            log.info("finish release for collateralCode ({}) and status change to ({})", objectDTO.getCollateralCode(), createCollateralRequestEntity.getCollateralStatusEnum());
             return null;
         }, key);
     }
@@ -470,10 +474,13 @@ public class CollateralOperationServiceImplementation implements CollateralOpera
             checkSellCollateral(createCollateralRequestEntity, objectDTO);
             //2 sell quantity and fill collateral RIAL with amount from merchant
 
+            CollateralEntity collateralEntity = createCollateralRequestEntity.getCollateralEntity();
+
+
+
             SellCollateralRequestEntity requestEntity = new SellCollateralRequestEntity();
             requestEntity.setMerchantEntity(merchantRepositoryService.findById(Integer.parseInt(objectDTO.getMerchantId())));
-            requestEntity.setChannel(objectDTO.getChannelEntity());
-            requestEntity.setCollateralWalletAccountEntity();
+            requestEntity.setCollateralWalletAccountEntity(walletAccountRepositoryService.findUserWalletAccount(collateralEntity.getWalletEntity(), createCollateralRequestEntity.getWalletAccountEntity().getWalletAccountCurrencyEntity(), WalletAccountCurrencyRepositoryService.RIAL));
             requestEntity.setPrice(Long.parseLong(objectDTO.getPrice()));
             requestEntity.setCommission(new BigDecimal(objectDTO.getPrice()));
             requestEntity.setRrnEntity(createCollateralRequestEntity.getRrnEntity());
@@ -485,6 +492,10 @@ public class CollateralOperationServiceImplementation implements CollateralOpera
             requestEntity.setCreatedAt(new Date());
             requestEntity.setAdditionalData(objectDTO.getDescription());
             requestEntity.setCreateCollateralRequestEntity(createCollateralRequestEntity);
+            requestEntity.setCashOutRequestEntity(null);
+            requestEntity.setQuantity(objectDTO.getQuantity());
+            requestEntity.setIban(createCollateralRequestEntity.getCollateralEntity().getIban());
+
             try {
                 requestRepositoryService.save(requestEntity);
             } catch (Exception ex) {
@@ -492,15 +503,13 @@ public class CollateralOperationServiceImplementation implements CollateralOpera
                 throw new InternalServiceException("error in save IncreaseCollateral", StatusRepositoryService.GENERAL_ERROR, HttpStatus.OK);
             }
 
-            collateralTransactionalService.purchaseAndCharge();
+            collateralTransactionalService.purchaseAndCharge(requestEntity);
+            collateralTransactionalService.cashout(requestEntity);
+            createCollateralRequestEntity.setCollateralStatusEnum(CollateralStatusEnum.SELL);
+            requestRepositoryService.save(requestEntity);
+            requestRepositoryService.save(createCollateralRequestEntity);
             return null;
-
         }, key);
-
-        //3 move remain quantity to user
-        //4 class cashout for collateral
-
-
     }
 
     @Override

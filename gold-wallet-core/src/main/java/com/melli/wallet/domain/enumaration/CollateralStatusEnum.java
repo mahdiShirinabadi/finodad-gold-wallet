@@ -9,7 +9,8 @@ public enum CollateralStatusEnum {
 
     CREATE("CREATE"),
     RELEASE("RELEASE"),
-    SEIZE("SEIZE");
+    SEIZE("SEIZE"),
+    SELL("SELL");
 
     private final String text;
 

@@ -4,6 +4,7 @@ import com.melli.wallet.domain.master.entity.*;
 import com.melli.wallet.exception.InternalServiceException;
 import com.melli.wallet.service.operation.MessageResolverOperationService;
 import com.melli.wallet.service.repository.*;
+import com.melli.wallet.util.Utility;
 import com.melli.wallet.utils.RedisLockService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -13,6 +14,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -34,6 +36,8 @@ public class CollateralTransactionalService {
     private final TransactionRepositoryService transactionRepositoryService;
     private final MerchantRepositoryService merchantRepositoryService;
     private final WalletAccountCurrencyRepositoryService walletAccountCurrencyRepositoryService;
+    private final RequestTypeRepositoryService requestTypeRepositoryService;
+    private final RequestRepositoryService requestRepositoryService;
 
 
     @Transactional(propagation = Propagation.REQUIRED, rollbackFor = Exception.class)
@@ -184,6 +188,50 @@ public class CollateralTransactionalService {
                 sellCollateralRequestEntity, sellCollateralRequestEntity.getRrnEntity());
         transactionRepositoryService.insertDeposit(userCurrencyDepositTransaction);
 
+    }
+
+    @Transactional(propagation = Propagation.REQUIRED, rollbackFor = Exception.class)
+    public void cashout(SellCollateralRequestEntity sellCollateralRequestEntity) throws InternalServiceException{
+        RequestTypeEntity requestTypeEntity = requestTypeRepositoryService.getRequestType(RequestTypeRepositoryService.CASH_OUT);
+        WalletAccountCurrencyEntity rialCurrencyEntity = walletAccountCurrencyRepositoryService.findCurrency(WalletAccountCurrencyRepositoryService.RIAL);
+        WalletEntity walletEntity = sellCollateralRequestEntity.getCreateCollateralRequestEntity().getCollateralEntity().getWalletEntity();
+        WalletAccountEntity collateralRialAccount = walletAccountRepositoryService.findUserWalletAccount(walletEntity, rialCurrencyEntity, WalletAccountCurrencyRepositoryService.RIAL);
+        CashOutRequestEntity cashOutRequestEntity = new CashOutRequestEntity();
+        cashOutRequestEntity.setAmount(sellCollateralRequestEntity.getPrice());
+        cashOutRequestEntity.setIban(sellCollateralRequestEntity.getIban());
+        cashOutRequestEntity.setWalletAccountEntity(collateralRialAccount);
+        cashOutRequestEntity.setRrnEntity(sellCollateralRequestEntity.getRrnEntity());
+        cashOutRequestEntity.setAdditionalData(sellCollateralRequestEntity.getAdditionalData());
+        cashOutRequestEntity.setChannel(sellCollateralRequestEntity.getChannel());
+        cashOutRequestEntity.setResult(StatusRepositoryService.CREATE);
+        cashOutRequestEntity.setChannelIp(sellCollateralRequestEntity.getChannelIp());
+        cashOutRequestEntity.setRequestTypeEntity(requestTypeEntity);
+        cashOutRequestEntity.setCreatedBy(sellCollateralRequestEntity.getChannel().getUsername());
+        cashOutRequestEntity.setCreatedAt(new Date());
+        try {
+            requestRepositoryService.save(cashOutRequestEntity);
+        } catch (Exception ex) {
+            log.error("error in save cashOut with message ({})", ex.getMessage());
+            throw new InternalServiceException("error in save cashIn", StatusRepositoryService.GENERAL_ERROR, HttpStatus.OK);
+        }
+        cashOutRequestEntity.setResult(StatusRepositoryService.SUCCESSFUL);
+        cashOutRequestEntity.setAdditionalData(cashOutRequestEntity.getAdditionalData());
+
+        TransactionEntity transaction = new TransactionEntity();
+        transaction.setAmount(BigDecimal.valueOf(cashOutRequestEntity.getAmount()));
+        transaction.setWalletAccountEntity(collateralRialAccount);
+        transaction.setAdditionalData(cashOutRequestEntity.getAdditionalData());
+        transaction.setRequestTypeId(cashOutRequestEntity.getRequestTypeEntity().getId());
+
+        Map<String, Object> model = new HashMap<>();
+        model.put("amount", Utility.addComma(cashOutRequestEntity.getAmount()));
+        model.put("traceId", String.valueOf(cashOutRequestEntity.getRrnEntity().getId()));
+        model.put("additionalData", cashOutRequestEntity.getAdditionalData());
+        String templateMessage = templateRepositoryService.getTemplate(TemplateRepositoryService.CASH_OUT);
+        transaction.setDescription(messageResolverOperationService.resolve(templateMessage, model));
+        transactionRepositoryService.insertWithdraw(transaction);
+        log.info("balance for walletAccount ===> {} update successful", collateralRialAccount.getAccountNumber());
+        requestRepositoryService.save(cashOutRequestEntity);
     }
 
     private TransactionEntity createTransaction(WalletAccountEntity account, BigDecimal amount, String description,

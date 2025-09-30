@@ -65,15 +65,15 @@ public class PanelCollateralController extends WebController {
     @PostMapping(path = "/create", produces = {MediaType.APPLICATION_JSON_VALUE}, consumes = {MediaType.APPLICATION_JSON_VALUE})
     @Operation(security = {@SecurityRequirement(name = "bearer-key")}, summary = "Update general limitation (value and pattern only)")
     @PreAuthorize("hasAuthority('" + ResourceDefinition.COLLATERAL_AUTH + "')")
-    @LogExecutionTime("Create merchant wallet")
-    public ResponseEntity<BaseResponse<String>> createMerchantWallet(@Valid @RequestBody PanelCollateralCreateRequestJson requestJson) throws InternalServiceException {
+    @LogExecutionTime("Create collateral wallet")
+    public ResponseEntity<BaseResponse<String>> createCollateralWallet(@Valid @RequestBody PanelCollateralCreateRequestJson requestJson) throws InternalServiceException {
 
         CreateWalletResponse createWalletResponse = walletOperationalService.createWallet(requestContext.getChannelEntity(), requestJson.getMobileNumber(), requestJson.getEconomicCode(), WalletTypeRepositoryService.COLLATERAL,
                 List.of(WalletAccountCurrencyRepositoryService.GOLD, WalletAccountCurrencyRepositoryService.RIAL),
                 List.of(WalletAccountTypeRepositoryService.NORMAL));
         CollateralEntity collateralEntity = new CollateralEntity();
         collateralEntity.setName(requestJson.getName());
-        collateralEntity.setDescription("create merchant");
+        collateralEntity.setDescription("create collateral");
         collateralEntity.setMobile(requestJson.getMobileNumber());
         collateralEntity.setEconomicalCode(requestJson.getEconomicCode());
         collateralEntity.setLogo("");
@@ -98,7 +98,7 @@ public class PanelCollateralController extends WebController {
         rialEntity.setWalletAccountCurrencyEntity(walletAccountCurrencyRepositoryService.findCurrency(WalletAccountCurrencyRepositoryService.RIAL));
         collateralWalletAccountCurrencyRepository.save(rialEntity);
 
-        return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse<>(true));
+        return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse<>(true, String.valueOf(collateralEntity.getId())));
     }
 
 

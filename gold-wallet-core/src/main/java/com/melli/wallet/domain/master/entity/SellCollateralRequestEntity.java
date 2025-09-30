@@ -1,6 +1,5 @@
 package com.melli.wallet.domain.master.entity;
 
-import com.melli.wallet.domain.enumaration.LiquidCollateralStepEnum;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -46,10 +45,6 @@ public class SellCollateralRequestEntity extends RequestEntity {
 
 	@Column(name = "commission")
 	private BigDecimal commission;
-
-	@Enumerated(EnumType.STRING)
-	@Column(name = "step")
-	private LiquidCollateralStepEnum collateralStepEnum;
 
 	@Column(name = "iban")
 	private String iban;
