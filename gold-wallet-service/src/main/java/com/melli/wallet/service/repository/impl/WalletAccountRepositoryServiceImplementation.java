@@ -179,7 +179,7 @@ public class WalletAccountRepositoryServiceImplementation implements WalletAccou
         if (balanceBefore.getAvailableBalance().compareTo(amount) < 0) {
             log.error("Insufficient available balance for blocking - available: {}, required: {}, accountId: {}", 
                 balanceBefore.getAvailableBalance(), amount, walletAccountId);
-            throw new InternalServiceException("Insufficient available balance for blocking", StatusRepositoryService.INSUFFICIENT_BALANCE, HttpStatus.OK);
+            throw new InternalServiceException("Insufficient available balance for blocking", StatusRepositoryService.BALANCE_IS_NOT_ENOUGH, HttpStatus.OK);
         }
         
         int rowEffected = walletAccountRepository.blockAmount(walletAccountId, amount);
