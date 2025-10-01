@@ -249,7 +249,7 @@ public class MerchantOperationServiceImplementation implements MerchantOperation
             BigDecimal requestedAmount = new BigDecimal(amount);
             if (currentBalance.getAvailableBalance().compareTo(requestedAmount) < 0) {
                 log.error("Insufficient balance for merchant {}. Current: {}, Requested: {}", merchantId, currentBalance, requestedAmount);
-                throw new InternalServiceException("Insufficient balance", StatusRepositoryService.INSUFFICIENT_BALANCE, HttpStatus.OK);
+                throw new InternalServiceException("Insufficient balance", StatusRepositoryService.BALANCE_IS_NOT_ENOUGH, HttpStatus.OK);
             }
 
             // Generate RRN for transaction

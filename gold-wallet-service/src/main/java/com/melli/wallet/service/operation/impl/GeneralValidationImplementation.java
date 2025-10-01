@@ -33,7 +33,7 @@ public class GeneralValidationImplementation implements GeneralValidation {
     public void checkBalance(BalanceDTO balanceDTO, BigDecimal amount, String walletAccountNumber) throws InternalServiceException {
         if (balanceDTO.getAvailableBalance().compareTo(amount) <= 0) {
             log.error("balance for account ({}) is ({}) and not enough for quantity ({})", walletAccountNumber, balanceDTO.getAvailableBalance(), amount);
-            throw new InternalServiceException("balance not enough", StatusRepositoryService.INSUFFICIENT_BALANCE, HttpStatus.OK);
+            throw new InternalServiceException("balance not enough", StatusRepositoryService.BALANCE_IS_NOT_ENOUGH, HttpStatus.OK);
         }
     }
 }

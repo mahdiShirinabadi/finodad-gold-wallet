@@ -361,8 +361,8 @@ class SellControllerTest extends WalletApplicationTests {
         String uniqueIdentifier = uuidResponse.getData().getUniqueIdentifier();
 
         // Test with insufficient balance
-        BaseResponse<PurchaseResponse> response = sell(mockMvc, accessToken, uniqueIdentifier, quantity, price, CURRENCY_GOLD, "0.003", NATIONAL_CODE_CORRECT, CURRENCY_GOLD, "1", walletAccountObjectOptional.getAccountNumber(), "", "test insufficient balance", HttpStatus.OK, "IR123456789012345678901234", StatusRepositoryService.INSUFFICIENT_BALANCE, false);
-        Assert.assertSame(StatusRepositoryService.INSUFFICIENT_BALANCE, response.getErrorDetail().getCode());
+        BaseResponse<PurchaseResponse> response = sell(mockMvc, accessToken, uniqueIdentifier, quantity, price, CURRENCY_GOLD, "0.003", NATIONAL_CODE_CORRECT, CURRENCY_GOLD, "1", walletAccountObjectOptional.getAccountNumber(), "", "test insufficient balance", HttpStatus.OK, "IR123456789012345678901234", StatusRepositoryService.BALANCE_IS_NOT_ENOUGH, false);
+        Assert.assertSame(StatusRepositoryService.BALANCE_IS_NOT_ENOUGH, response.getErrorDetail().getCode());
     }
 
     /**
@@ -1201,7 +1201,7 @@ class SellControllerTest extends WalletApplicationTests {
                 failedResult.threadId, failedResult.errorCode, 
                 failedResult.exception != null ? failedResult.exception.getMessage() : "none");
             Assert.assertTrue("Scenario 2: Failed operation should have error code indicating UUID reuse",
-                    failedResult.errorCode == StatusRepositoryService.INSUFFICIENT_BALANCE && failedResult.errorCode > 0);
+                    failedResult.errorCode == StatusRepositoryService.BALANCE_IS_NOT_ENOUGH && failedResult.errorCode > 0);
         }
     }
 

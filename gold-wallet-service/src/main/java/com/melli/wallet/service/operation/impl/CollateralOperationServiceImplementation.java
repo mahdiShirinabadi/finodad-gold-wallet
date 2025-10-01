@@ -85,7 +85,7 @@ public class CollateralOperationServiceImplementation implements CollateralOpera
             BalanceDTO balanceDTO = walletAccountRepositoryService.getBalance(walletAccountEntity.getId());
             if (balanceDTO.getAvailableBalance().compareTo(new BigDecimal(quantity)) <= 0) {
                 log.error("balance for account ({}) is ({}) and not enough for block quantity ({})", accountNumber, balanceDTO.getAvailableBalance(), quantity);
-                throw new InternalServiceException("balance not enough", StatusRepositoryService.INSUFFICIENT_BALANCE, HttpStatus.OK);
+                throw new InternalServiceException("balance not enough", StatusRepositoryService.BALANCE_IS_NOT_ENOUGH, HttpStatus.OK);
             }
             log.info("finish traceId ===> {}, username ({}), nationalCode ({})", rrnEntity.getUuid(), channelEntity.getUsername(), nationalCode);
             return new UuidResponse(rrnEntity.getUuid());
@@ -106,7 +106,7 @@ public class CollateralOperationServiceImplementation implements CollateralOpera
             BalanceDTO balanceDTO = walletAccountRepositoryService.getBalance(walletAccountEntity.getId());
             if (balanceDTO.getAvailableBalance().compareTo(new BigDecimal(quantity)) <= 0) {
                 log.error("balance for account ({}) is ({}) and not enough for block quantity ({})", accountNumber, balanceDTO.getAvailableBalance(), quantity);
-                throw new InternalServiceException("balance not enough", StatusRepositoryService.INSUFFICIENT_BALANCE, HttpStatus.OK);
+                throw new InternalServiceException("balance not enough", StatusRepositoryService.BALANCE_IS_NOT_ENOUGH, HttpStatus.OK);
             }
             log.info("finish traceId ===> {}, username ({}), nationalCode ({})", rrnEntity.getUuid(), channelEntity.getUsername(), nationalCode);
             return new UuidResponse(rrnEntity.getUuid());
@@ -376,7 +376,7 @@ public class CollateralOperationServiceImplementation implements CollateralOpera
             BalanceDTO balanceDTO = walletAccountRepositoryService.getBalance(walletAccountEntity.getId());
             if (balanceDTO.getAvailableBalance().compareTo(objectDTO.getQuantity().add(objectDTO.getCommission())) <= 0) {
                 log.error("balance for account ({}) is ({}) and not enough for increase quantity ({})", walletAccountEntity.getAccountNumber(), balanceDTO.getAvailableBalance(), objectDTO.getQuantity());
-                throw new InternalServiceException("balance not enough", StatusRepositoryService.INSUFFICIENT_BALANCE, HttpStatus.OK);
+                throw new InternalServiceException("balance not enough", StatusRepositoryService.BALANCE_IS_NOT_ENOUGH, HttpStatus.OK);
             }
 
             String depositTemplate = templateRepositoryService.getTemplate(TemplateRepositoryService.COLLATERAL_INCREASE_DEPOSIT);

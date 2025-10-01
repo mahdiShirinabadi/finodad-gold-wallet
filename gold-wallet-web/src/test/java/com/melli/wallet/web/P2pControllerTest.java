@@ -300,10 +300,10 @@ class P2pControllerTest extends WalletApplicationTests {
         
         // Step 3: Try to process without sufficient balance
         CommissionObject commission = new CommissionObject("RIAL", "0.001");
-        BaseResponse<Void> response = processP2p(mockMvc, accessToken, uuidResponse.getData().getUniqueIdentifier(), NATIONAL_CODE_CORRECT, "0.05", sourceAccount.getAccountNumber(), destAccount.getAccountNumber(), "test data", commission, CURRENCY_GOLD, HttpStatus.OK, StatusRepositoryService.INSUFFICIENT_BALANCE, false);
+        BaseResponse<Void> response = processP2p(mockMvc, accessToken, uuidResponse.getData().getUniqueIdentifier(), NATIONAL_CODE_CORRECT, "0.05", sourceAccount.getAccountNumber(), destAccount.getAccountNumber(), "test data", commission, CURRENCY_GOLD, HttpStatus.OK, StatusRepositoryService.BALANCE_IS_NOT_ENOUGH, false);
         
         Assert.assertFalse(response.getSuccess());
-        Assert.assertSame(StatusRepositoryService.INSUFFICIENT_BALANCE, response.getErrorDetail().getCode());
+        Assert.assertSame(StatusRepositoryService.BALANCE_IS_NOT_ENOUGH, response.getErrorDetail().getCode());
     }
 
     @Test
