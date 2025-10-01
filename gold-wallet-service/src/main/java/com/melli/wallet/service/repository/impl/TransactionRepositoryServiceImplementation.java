@@ -173,7 +173,7 @@ public class TransactionRepositoryServiceImplementation implements TransactionRe
         // Check for sufficient balance
         if (walletBalance.getAvailableBalance().subtract(transaction.getAmount()).compareTo(BigDecimal.ZERO) < 0) {
             log.error("Balance of wallet({}) now is ({}), is less than withdraw amount({}) !!!", transaction.getWalletAccountEntity().getId(), walletBalance.getAvailableBalance(), transaction.getAmount());
-            throw new InternalServiceException("Balance of walletAccountId( " + transaction.getWalletAccountEntity().getId() + "), is less than withdraw amount(" + transaction.getAmount() + ") !!!", StatusRepositoryService.BALANCE_IS_NOT_ENOUGH, HttpStatus.OK);
+            throw new InternalServiceException("Balance of walletAccountId( " + transaction.getWalletAccountEntity().getId() + "), is less than withdraw amount(" + transaction.getAmount() + ") !!!", StatusRepositoryService.INSUFFICIENT_BALANCE, HttpStatus.OK);
         }
 
         transaction.setRealBalance(walletBalance.getRealBalance());
@@ -184,7 +184,7 @@ public class TransactionRepositoryServiceImplementation implements TransactionRe
         int result = walletAccountRepositoryService.decreaseBalance(walletAccountRepositoryService.findById(transaction.getWalletAccountEntity().getId()).getId(), transaction.getAmount());
         if (result <= 0) {
             log.error("Balance of wallet({}) now is ({}), is less than withdraw amount({}) !!!", transaction.getWalletAccountEntity().getId(), walletBalance, transaction.getAmount());
-            throw new InternalServiceException("Balance of walletAccountId( " + transaction.getWalletAccountEntity().getId() + "), is less than withdraw amount(" + transaction.getAmount() + ") !!!", StatusRepositoryService.BALANCE_IS_NOT_ENOUGH, HttpStatus.OK);
+            throw new InternalServiceException("Balance of walletAccountId( " + transaction.getWalletAccountEntity().getId() + "), is less than withdraw amount(" + transaction.getAmount() + ") !!!", StatusRepositoryService.INSUFFICIENT_BALANCE, HttpStatus.OK);
         }
         transaction.setWalletAccountEntity(walletAccountRepositoryService.findById(transaction.getWalletAccountEntity().getId()));
         transactionRepository.save(transaction);
@@ -215,7 +215,7 @@ public class TransactionRepositoryServiceImplementation implements TransactionRe
         int result = walletAccountRepositoryService.unblockAndDecreaseAmount(walletAccountRepositoryService.findById(transaction.getWalletAccountEntity().getId()).getId(), transaction.getAmount());
         if (result <= 0) {
             log.error("Balance of wallet({}) now is ({}), is less than withdraw amount({}) !!!", transaction.getWalletAccountEntity().getId(), balanceDTO.getAvailableBalance(), transaction.getAmount());
-            throw new InternalServiceException("Balance of walletAccountId( " + transaction.getWalletAccountEntity().getId() + "), is less than withdraw amount(" + transaction.getAmount() + ") !!!", StatusRepositoryService.BALANCE_IS_NOT_ENOUGH, HttpStatus.OK);
+            throw new InternalServiceException("Balance of walletAccountId( " + transaction.getWalletAccountEntity().getId() + "), is less than withdraw amount(" + transaction.getAmount() + ") !!!", StatusRepositoryService.INSUFFICIENT_BALANCE, HttpStatus.OK);
         }
         transaction.setWalletAccountEntity(walletAccountRepositoryService.findById(transaction.getWalletAccountEntity().getId()));
         transactionRepository.save(transaction);

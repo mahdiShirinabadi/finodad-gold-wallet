@@ -429,8 +429,8 @@ class PhysicalCashOutControllerTest extends WalletApplicationTests {
         walletAccountRepositoryService.decreaseBalance(walletAccountEntity.getId(), new BigDecimal(quantity));
 
         // Attempt physical cash out with insufficient balance - should fail
-        BaseResponse<PhysicalCashOutResponse> response = physicalCashOut(mockMvc, accessToken, uniqueIdentifier, quantity, NATIONAL_CODE_CORRECT, accountNumber, "", VALID_SIGN, ADDITIONAL_DATA, CURRENCY_GOLD, "0.01","GOLD", HttpStatus.OK, StatusRepositoryService.BALANCE_IS_NOT_ENOUGH, false);
-        Assert.assertSame(StatusRepositoryService.BALANCE_IS_NOT_ENOUGH, response.getErrorDetail().getCode());
+        BaseResponse<PhysicalCashOutResponse> response = physicalCashOut(mockMvc, accessToken, uniqueIdentifier, quantity, NATIONAL_CODE_CORRECT, accountNumber, "", VALID_SIGN, ADDITIONAL_DATA, CURRENCY_GOLD, "0.01","GOLD", HttpStatus.OK, StatusRepositoryService.INSUFFICIENT_BALANCE, false);
+        Assert.assertSame(StatusRepositoryService.INSUFFICIENT_BALANCE, response.getErrorDetail().getCode());
         
         // Restore original MAX_QUANTITY_PHYSICAL_CASH_OUT limit
         setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MAX_QUANTITY_PHYSICAL_CASH_OUT, walletAccountEntity, valueMaxDailyPrice);
@@ -904,7 +904,7 @@ class PhysicalCashOutControllerTest extends WalletApplicationTests {
             log.debug("Scenario 2 - Thread {}: error code = {}, exception = {}, uuid = {}",
                     failedResult.threadId, failedResult.errorCode,
                     failedResult.exception != null ? failedResult.exception.getMessage() : "none", failedResult.uuid);
-            Assert.assertEquals("Scenario 2: Failed operation should have error code indicating UUID reuse", StatusRepositoryService.BALANCE_IS_NOT_ENOUGH, failedResult.errorCode);
+            Assert.assertEquals("Scenario 2: Failed operation should have error code indicating UUID reuse", StatusRepositoryService.INSUFFICIENT_BALANCE, failedResult.errorCode);
         }
 
         log.info("=== Concurrent Physical Cash Out UUID Generation Test Completed ===");

@@ -513,7 +513,7 @@ class MerchantControllerTest extends WalletApplicationTests {
                 }
             }
         }
-        decreaseMerchantBalance(mockMvc, ACCESS_TOKEN, validWalletAccountNumber, String.valueOf(Long.parseLong(VALID_AMOUNT) + 1), validMerchantId, HttpStatus.OK, StatusRepositoryService.BALANCE_IS_NOT_ENOUGH, false);
+        decreaseMerchantBalance(mockMvc, ACCESS_TOKEN, validWalletAccountNumber, String.valueOf(Long.parseLong(VALID_AMOUNT) + 1), validMerchantId, HttpStatus.OK, StatusRepositoryService.INSUFFICIENT_BALANCE, false);
     }
 
     /**

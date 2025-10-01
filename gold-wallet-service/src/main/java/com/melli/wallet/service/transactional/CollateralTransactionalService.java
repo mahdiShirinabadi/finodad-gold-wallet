@@ -43,41 +43,76 @@ public class CollateralTransactionalService {
     @Transactional(propagation = Propagation.REQUIRED, rollbackFor = Exception.class)
     public void unblockAndTransfer(CreateCollateralRequestEntity requestEntity) throws InternalServiceException{
 
+        log.info("=== COLLATERAL UNBLOCK AND TRANSFER PROCESS START ===");
+        log.info("Input parameters - uniqueIdentifier: {}, quantity: {}, collateralName: {}, userAccountNumber: {}", 
+            requestEntity.getRrnEntity().getUuid(), requestEntity.getQuantity(), 
+            requestEntity.getCollateralEntity().getName(), requestEntity.getWalletAccountEntity().getAccountNumber());
+
         WalletAccountEntity userWalletAccountNumber = requestEntity.getWalletAccountEntity();
+        log.debug("User wallet account found - accountId: {}, accountNumber: {}, currency: {}", 
+            userWalletAccountNumber.getId(), userWalletAccountNumber.getAccountNumber(), 
+            userWalletAccountNumber.getWalletAccountCurrencyEntity().getName());
+
+        log.debug("Searching for collateral wallet account with currency: {}", 
+            userWalletAccountNumber.getWalletAccountCurrencyEntity().getName());
         Optional<WalletAccountEntity> collateralWalletAccountNumber = walletAccountRepositoryService.findByWallet(requestEntity.getCollateralEntity().getWalletEntity()).stream().filter(x->x.getWalletAccountCurrencyEntity().getId() == userWalletAccountNumber.getWalletAccountCurrencyEntity().getId()).findFirst();
+        
         if(collateralWalletAccountNumber.isEmpty()){
-            log.error("walletAccount for currency ({}) not found for collateral company ({})", userWalletAccountNumber.getWalletAccountCurrencyEntity().getName(), requestEntity.getCollateralEntity().getName());
+            log.error("Collateral wallet account not found - currency: {}, collateralCompany: {}", 
+                userWalletAccountNumber.getWalletAccountCurrencyEntity().getName(), requestEntity.getCollateralEntity().getName());
             throw new InternalServiceException("walletAccount not found", StatusRepositoryService.COLLATERAL_ACCOUNT_NOT_FOUND, HttpStatus.OK);
         }
+        log.info("Collateral wallet account found - accountId: {}, accountNumber: {}", 
+            collateralWalletAccountNumber.get().getId(), collateralWalletAccountNumber.get().getAccountNumber());
 
         String key = userWalletAccountNumber.getAccountNumber();
         String uniqueIdentifier = requestEntity.getRrnEntity().getUuid();
+        log.info("Starting Redis lock acquisition for account: {}", key);
+        
         redisLockService.runAfterLock(key, this.getClass(), () -> {
-
-            log.info("start unblockAndTransferProcessTransactions for uniqueIdentifier ({})", requestEntity.getRrnEntity().getUuid());
+            log.info("=== LOCK ACQUIRED - STARTING UNBLOCK AND TRANSFER CRITICAL SECTION ===");
+            log.info("Processing unblock and transfer transactions for uniqueIdentifier: {}", requestEntity.getRrnEntity().getUuid());
+            
+            log.debug("Retrieving transaction templates");
             String depositTemplate = templateRepositoryService.getTemplate(TemplateRepositoryService.COLLATERAL_SEIZE_DEPOSIT);
             String withdrawalTemplate = templateRepositoryService.getTemplate(TemplateRepositoryService.COLLATERAL_SEIZE_WITHDRAWAL);
+            log.debug("Templates retrieved - deposit: {}, withdrawal: {}", depositTemplate, withdrawalTemplate);
 
+            log.debug("Preparing transaction model");
             Map<String, Object> model = new HashMap<>();
             model.put("traceId", String.valueOf(requestEntity.getRrnEntity().getId()));
             model.put("srcAccountNumber", userWalletAccountNumber.getAccountNumber());
             model.put("dstCompany", requestEntity.getCollateralEntity().getName());
             model.put("amount", requestEntity.getQuantity());
+            log.debug("Transaction model prepared - traceId: {}, srcAccount: {}, dstCompany: {}, amount: {}", 
+                model.get("traceId"), model.get("srcAccountNumber"), model.get("dstCompany"), model.get("amount"));
 
-            // user first withdrawal (currency)
-            log.info("start seize transaction for uniqueIdentifier ({}), quantity ({}) for withdrawal walletAccountId ({})", requestEntity.getRrnEntity().getUuid(), requestEntity.getQuantity(), userWalletAccountNumber.getId());
+            log.info("=== CREATING USER WITHDRAWAL TRANSACTION ===");
+            log.info("Creating user withdrawal transaction - uniqueIdentifier: {}, quantity: {}, walletAccountId: {}", 
+                requestEntity.getRrnEntity().getUuid(), requestEntity.getQuantity(), userWalletAccountNumber.getId());
 
             TransactionEntity userFirstWithdrawal = createTransaction(
                     userWalletAccountNumber, requestEntity.getQuantity(),
                     messageResolverOperationService.resolve(depositTemplate, model), requestEntity.getAdditionalData(), requestEntity, requestEntity.getRrnEntity());
+            log.info("User withdrawal transaction created - transactionId: {}, amount: {}", 
+                userFirstWithdrawal.getId(), userFirstWithdrawal.getAmount());
 
-
-            log.info("start transaction for uniqueIdentifier ({}), price ({}) for user deposit currency user walletAccountId({})", requestEntity.getRrnEntity().getUuid(), requestEntity.getQuantity(), collateralWalletAccountNumber.get().getId());
+            log.info("=== CREATING COLLATERAL DEPOSIT TRANSACTION ===");
+            log.info("Creating collateral deposit transaction - uniqueIdentifier: {}, quantity: {}, walletAccountId: {}", 
+                requestEntity.getRrnEntity().getUuid(), requestEntity.getQuantity(), collateralWalletAccountNumber.get().getId());
 
             TransactionEntity userSecondDeposit = createTransaction(collateralWalletAccountNumber.get(),requestEntity.getQuantity(),
                     messageResolverOperationService.resolve(withdrawalTemplate, model), requestEntity.getAdditionalData(), requestEntity, requestEntity.getRrnEntity());
+            log.info("Collateral deposit transaction created - transactionId: {}, amount: {}", 
+                userSecondDeposit.getId(), userSecondDeposit.getAmount());
 
+            log.info("=== EXECUTING TRANSFER OPERATION ===");
+            log.debug("Executing transferBlockWithdrawAndTransfer - userWithdrawalId: {}, collateralDepositId: {}", 
+                userFirstWithdrawal.getId(), userSecondDeposit.getId());
             transactionRepositoryService.transferBlockWithdrawAndTransfer(userFirstWithdrawal, userSecondDeposit);
+            log.info("Transfer operation completed successfully");
+            
+            log.info("=== COLLATERAL UNBLOCK AND TRANSFER PROCESS COMPLETED SUCCESSFULLY ===");
             return null;
         }, uniqueIdentifier);
     }
@@ -85,63 +120,99 @@ public class CollateralTransactionalService {
     @Transactional(propagation = Propagation.REQUIRED, rollbackFor = Exception.class)
     public void purchaseAndCharge(SellCollateralRequestEntity sellCollateralRequestEntity) throws InternalServiceException{
 
+        log.info("=== COLLATERAL PURCHASE AND CHARGE PROCESS START ===");
+        log.info("Input parameters - uniqueIdentifier: {}, quantity: {}, price: {}, commission: {}, merchantId: {}", 
+            sellCollateralRequestEntity.getRrnEntity().getUuid(), sellCollateralRequestEntity.getQuantity(), 
+            sellCollateralRequestEntity.getPrice(), sellCollateralRequestEntity.getCommission(), 
+            sellCollateralRequestEntity.getMerchantEntity().getId());
 
-        log.info("start sellCollateralRequestEntity for uniqueIdentifier ({})", sellCollateralRequestEntity.getRrnEntity().getUuid());
+        log.debug("Retrieving transaction templates");
         String depositUserTemplate = templateRepositoryService.getTemplate(TemplateRepositoryService.COLLATERAL_RETURN_AFTER_SELL_DEPOSIT);
         String depositTemplate = templateRepositoryService.getTemplate(TemplateRepositoryService.COLLATERAL_SELL_DEPOSIT);
         String withdrawalTemplate = templateRepositoryService.getTemplate(TemplateRepositoryService.COLLATERAL_SELL_WITHDRAWAL);
+        log.debug("Templates retrieved - depositUser: {}, deposit: {}, withdrawal: {}", 
+            depositUserTemplate, depositTemplate, withdrawalTemplate);
 
+        log.debug("Preparing transaction model");
         Map<String, Object> model = new HashMap<>();
         model.put("traceId", String.valueOf(sellCollateralRequestEntity.getRrnEntity().getId()));
         model.put("additionalData", sellCollateralRequestEntity.getAdditionalData());
         model.put("amount", sellCollateralRequestEntity.getQuantity());
         model.put("price", sellCollateralRequestEntity.getPrice());
         model.put("merchant", sellCollateralRequestEntity.getMerchantEntity().getName());
+        log.debug("Transaction model prepared - traceId: {}, amount: {}, price: {}, merchant: {}", 
+            model.get("traceId"), model.get("amount"), model.get("price"), model.get("merchant"));
 
+        log.info("=== MERCHANT VALIDATION ===");
         if(sellCollateralRequestEntity.getMerchantEntity().getStatus() == MerchantRepositoryService.DISABLED){
-            log.error("merchant is disable and system can not buy any things");
+            log.error("Merchant status validation failed - merchant is disabled - merchantId: {}, status: {}", 
+                sellCollateralRequestEntity.getMerchantEntity().getId(), sellCollateralRequestEntity.getMerchantEntity().getStatus());
             throw new InternalServiceException("merchant is disable", StatusRepositoryService.MERCHANT_IS_DISABLE, HttpStatus.OK);
         }
+        log.info("Merchant status validation passed - merchant is active");
 
         MerchantEntity merchant = sellCollateralRequestEntity.getMerchantEntity();
+        log.debug("Merchant entity retrieved - id: {}, name: {}, status: {}", 
+            merchant.getId(), merchant.getName(), merchant.getStatus());
 
+        log.info("=== CURRENCY VALIDATION ===");
         WalletAccountCurrencyEntity currencyEntity = sellCollateralRequestEntity.getCreateCollateralRequestEntity().getWalletAccountEntity().getWalletAccountCurrencyEntity();
         WalletAccountCurrencyEntity rialCurrencyEntity = walletAccountCurrencyRepositoryService.findCurrency(WalletAccountCurrencyRepositoryService.RIAL);
+        log.info("Currency entities found - currency: {}, rial: {}", 
+            currencyEntity.getName(), rialCurrencyEntity.getName());
 
+        log.info("=== MERCHANT ACCOUNT VALIDATION ===");
         WalletAccountEntity merchantCurrencyAccount = merchantRepositoryService.findMerchantWalletAccount(merchant, currencyEntity);
         WalletAccountEntity merchantRialAccount = merchantRepositoryService.findMerchantWalletAccount(merchant, rialCurrencyEntity);
+        log.info("Merchant accounts found - currencyAccount: {}, rialAccount: {}", 
+            merchantCurrencyAccount.getId(), merchantRialAccount.getId());
 
-        // Validate user and wallet accounts
+        log.info("=== COLLATERAL ACCOUNT VALIDATION ===");
         WalletEntity collateralWallet = sellCollateralRequestEntity.getCreateCollateralRequestEntity().getCollateralEntity().getWalletEntity();
         WalletAccountEntity collateralRialAccount = walletAccountRepositoryService.findUserWalletAccount(collateralWallet, rialCurrencyEntity, WalletAccountCurrencyRepositoryService.RIAL);
         WalletAccountEntity collateralCurrencyAccount = sellCollateralRequestEntity.getCollateralWalletAccountEntity();
+        log.info("Collateral accounts found - rialAccount: {}, currencyAccount: {}", 
+            collateralRialAccount.getId(), collateralCurrencyAccount.getId());
 
-        // Validate channel commission account
+        log.info("=== CHANNEL COMMISSION VALIDATION ===");
         WalletAccountEntity channelCommissionAccount = walletAccountRepositoryService.findChannelCommissionAccount(sellCollateralRequestEntity.getChannel(),
                 collateralCurrencyAccount.getWalletAccountCurrencyEntity().getName());
+        log.info("Channel commission account found - accountId: {}, accountNumber: {}, currency: {}", 
+            channelCommissionAccount.getId(), channelCommissionAccount.getAccountNumber(), 
+            collateralCurrencyAccount.getWalletAccountCurrencyEntity().getName());
 
 
-        // user withdrawal (currency) (quantity) from collateral
-        log.info("start purchase transaction for uniqueIdentifier ({}), quantity ({}) for user withdrawal user walletId({})", sellCollateralRequestEntity.getRrnEntity().getUuid(), sellCollateralRequestEntity.getQuantity(), collateralCurrencyAccount.getId());
+        log.info("=== PROCESSING COLLATERAL CURRENCY WITHDRAWAL ===");
+        BigDecimal totalWithdrawalAmount = sellCollateralRequestEntity.getQuantity().add(sellCollateralRequestEntity.getCommission());
+        log.info("Creating collateral currency withdrawal - uniqueIdentifier: {}, quantity: {}, commission: {}, totalAmount: {}, walletAccountId: {}", 
+            sellCollateralRequestEntity.getRrnEntity().getUuid(), sellCollateralRequestEntity.getQuantity(), 
+            sellCollateralRequestEntity.getCommission(), totalWithdrawalAmount, collateralCurrencyAccount.getId());
+        
         TransactionEntity collateralCurrencyWithdrawal = createTransaction(collateralCurrencyAccount,
-                (sellCollateralRequestEntity.getQuantity().add(sellCollateralRequestEntity.getCommission())),
+                totalWithdrawalAmount,
                 messageResolverOperationService.resolve(withdrawalTemplate, model), sellCollateralRequestEntity.getAdditionalData(),
                 sellCollateralRequestEntity, sellCollateralRequestEntity.getRrnEntity());
+        
+        log.debug("Executing collateral currency withdrawal transaction - transactionId: {}, amount: {}", 
+            collateralCurrencyWithdrawal.getId(), collateralCurrencyWithdrawal.getAmount());
         transactionRepositoryService.insertWithdraw(collateralCurrencyWithdrawal);
-        log.info("start sell transaction for uniqueIdentifier ({}), quantity ({}) for user withdrawal user walletAccountId({})", sellCollateralRequestEntity.getRrnEntity().getUuid(), sellCollateralRequestEntity.getQuantity(), merchantCurrencyAccount.getId());
+        log.info("Collateral currency withdrawal completed successfully - transactionId: {}", collateralCurrencyWithdrawal.getId());
 
-
-        // merchant withdrawal (rial)
-        log.info("start sell transaction for uniqueIdentifier ({}), price ({}) for merchant withdrawal from id ({}), walletAccountId ({})", sellCollateralRequestEntity.getRrnEntity().getUuid(), sellCollateralRequestEntity.getPrice(),
-                sellCollateralRequestEntity.getMerchantEntity().getId(), collateralRialAccount.getId());
+        log.info("=== PROCESSING MERCHANT RIAL WITHDRAWAL ===");
+        log.info("Creating merchant rial withdrawal - uniqueIdentifier: {}, price: {}, merchantId: {}, walletAccountId: {}", 
+            sellCollateralRequestEntity.getRrnEntity().getUuid(), sellCollateralRequestEntity.getPrice(),
+            sellCollateralRequestEntity.getMerchantEntity().getId(), merchantRialAccount.getId());
 
         TransactionEntity merchantRialWithdrawal = createTransaction(
                 merchantRialAccount, BigDecimal.valueOf(sellCollateralRequestEntity.getPrice()),
                 messageResolverOperationService.resolve(withdrawalTemplate, model), sellCollateralRequestEntity.getAdditionalData(), sellCollateralRequestEntity, sellCollateralRequestEntity.getRrnEntity());
+        
+        log.debug("Executing merchant rial withdrawal transaction - transactionId: {}, amount: {}", 
+            merchantRialWithdrawal.getId(), merchantRialWithdrawal.getAmount());
         transactionRepositoryService.insertWithdraw(merchantRialWithdrawal);
-        log.info("finish sell transaction for uniqueIdentifier ({}), price ({}) for merchant withdrawal from id ({}), walletAccountId ({}), transactionId ({})", sellCollateralRequestEntity.getRrnEntity().getUuid(),
-                sellCollateralRequestEntity.getPrice(), sellCollateralRequestEntity.getMerchantEntity().getId(), collateralRialAccount.getId(),
-                merchantRialWithdrawal.getId());
+        log.info("Merchant rial withdrawal completed successfully - transactionId: {}, price: {}, merchantId: {}, walletAccountId: {}", 
+            merchantRialWithdrawal.getId(), sellCollateralRequestEntity.getPrice(), 
+            sellCollateralRequestEntity.getMerchantEntity().getId(), merchantRialAccount.getId());
 
         // Channel commission deposit (if applicable)
         //commission type must be currency

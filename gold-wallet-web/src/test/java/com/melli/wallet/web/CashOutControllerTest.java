@@ -283,7 +283,7 @@ class CashOutControllerTest extends WalletApplicationTests {
         String uniqueIdentifier = uuidResponse.getData().getUniqueIdentifier();
         
         // Step 8: Attempt cash out - should fail due to insufficient balance
-        cashOut(mockMvc, ACCESS_TOKEN, uniqueIdentifier, cashOutAmount, NATIONAL_CODE_CORRECT, accountNumber, VALID_IBAN, VALID_SIGN, ADDITIONAL_DATA, HttpStatus.OK, StatusRepositoryService.BALANCE_IS_NOT_ENOUGH, false);
+        cashOut(mockMvc, ACCESS_TOKEN, uniqueIdentifier, cashOutAmount, NATIONAL_CODE_CORRECT, accountNumber, VALID_IBAN, VALID_SIGN, ADDITIONAL_DATA, HttpStatus.OK, StatusRepositoryService.INSUFFICIENT_BALANCE, false);
     }
 
     /**

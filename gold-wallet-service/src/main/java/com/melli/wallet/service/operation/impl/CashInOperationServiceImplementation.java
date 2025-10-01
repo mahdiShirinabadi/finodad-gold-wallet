@@ -79,50 +79,86 @@ public class CashInOperationServiceImplementation implements CashInOperationServ
     @Transactional(propagation = Propagation.REQUIRED, rollbackFor = Exception.class)
     public CashInResponse charge(ChargeObjectDTO chargeObjectDTO) throws InternalServiceException {
 
-        RequestTypeEntity requestTypeEntity = requestTypeRepositoryService.getRequestType(RequestTypeRepositoryService.CASH_IN);
-        RrnEntity rrnEntity = rrnRepositoryService.findByUid(chargeObjectDTO.getUniqueIdentifier());
+        log.info("=== CASH IN CHARGE OPERATION START ===");
+        log.info("Input parameters - uniqueIdentifier: {}, accountNumber: {}, amount: {}, refNumber: {}, nationalCode: {}", 
+            chargeObjectDTO.getUniqueIdentifier(), chargeObjectDTO.getAccountNumber(), 
+            chargeObjectDTO.getAmount(), chargeObjectDTO.getRefNumber(), chargeObjectDTO.getNationalCode());
 
+        RequestTypeEntity requestTypeEntity = requestTypeRepositoryService.getRequestType(RequestTypeRepositoryService.CASH_IN);
+        log.debug("Request type retrieved - type: {}", requestTypeEntity.getName());
+        
+        RrnEntity rrnEntity = rrnRepositoryService.findByUid(chargeObjectDTO.getUniqueIdentifier());
+        log.debug("RRN entity found - rrnId: {}, uuid: {}", rrnEntity.getId(), rrnEntity.getUuid());
+
+        log.info("Starting Redis lock acquisition for account: {}", chargeObjectDTO.getAccountNumber());
         return redisLockService.runAfterLock(chargeObjectDTO.getAccountNumber(), this.getClass(), () -> {
+            log.info("=== LOCK ACQUIRED - STARTING CASH IN CRITICAL SECTION ===");
             log.info("start checking existence of traceId({}) ...", chargeObjectDTO.getUniqueIdentifier());
             rrnRepositoryService.checkRrn(chargeObjectDTO.getUniqueIdentifier(), chargeObjectDTO.getChannel(), requestTypeEntity, String.valueOf(chargeObjectDTO.getAmount()), chargeObjectDTO.getAccountNumber());
             log.info("finish checking existence of traceId({})", chargeObjectDTO.getUniqueIdentifier());
 
+            log.debug("Checking for duplicate cash in requests with rrnId: {}", rrnEntity.getId());
             requestRepositoryService.findCashInDuplicateWithRrnId(rrnEntity.getId());
+            log.debug("No duplicate cash in requests found");
 
+            log.info("=== REF NUMBER VALIDATION START ===");
+            log.debug("Acquiring lock for ref number validation - refNumber: {}", chargeObjectDTO.getRefNumber());
             Lock refNumberLock = redisLockRegistry.obtain(chargeObjectDTO.getRefNumber());
             boolean lockSuccess = false;
             try {
+                log.debug("Attempting to acquire ref number lock with timeout: 5 seconds");
                 lockSuccess = refNumberLock.tryLock(5, TimeUnit.SECONDS);
                 if (!lockSuccess) {
-                    log.error("Failed to acquire lock for ref_number: {}", chargeObjectDTO.getRefNumber());
+                    log.error("Failed to acquire lock for ref_number: {} - timeout reached", chargeObjectDTO.getRefNumber());
                     throw new InternalServiceException("Unable to acquire lock for ref_number", StatusRepositoryService.GENERAL_ERROR, HttpStatus.OK);
                 }
+                log.info("Ref number lock acquired successfully - refNumber: {}", chargeObjectDTO.getRefNumber());
 
+                log.debug("Checking ref number uniqueness - refNumber: {}", chargeObjectDTO.getRefNumber());
                 Optional<RefNumberRedis> refnumberCheck = refnumberRepository.findById(chargeObjectDTO.getRefNumber());
                 if (refnumberCheck.isPresent()) {
-                    log.error("ref number ({}) is duplicated", chargeObjectDTO.getRefNumber());
+                    log.error("Ref number already exists - refNumber: {}", chargeObjectDTO.getRefNumber());
                     throw new InternalServiceException("rer number is duplicate", StatusRepositoryService.REF_NUMBER_USED_BEFORE, HttpStatus.OK);
                 } else {
-                    log.info("start save refNumber ({})", chargeObjectDTO.getRefNumber());
+                    log.info("Ref number is unique - saving to Redis - refNumber: {}", chargeObjectDTO.getRefNumber());
                     RefNumberRedis refNumberRedis = new RefNumberRedis();
                     refNumberRedis.setId(chargeObjectDTO.getRefNumber());
                     refnumberRepository.save(refNumberRedis);
-                    log.info("finish save refNumber ({})", chargeObjectDTO.getRefNumber());
+                    log.info("Ref number saved successfully to Redis - refNumber: {}", chargeObjectDTO.getRefNumber());
                 }
             } catch (Exception ex) {
-                log.error("ref number ({}) is duplicated or system can not be lock", chargeObjectDTO.getRefNumber());
+                log.error("Ref number validation failed - refNumber: {}, error: {}", chargeObjectDTO.getRefNumber(), ex.getMessage());
                 throw new InternalServiceException("ref number is duplicate", StatusRepositoryService.REF_NUMBER_USED_BEFORE, HttpStatus.OK);
             } finally {
                 if (lockSuccess) {
+                    log.debug("Releasing ref number lock - refNumber: {}", chargeObjectDTO.getRefNumber());
                     refNumberLock.unlock();
+                    log.info("Ref number lock released successfully");
                 }
             }
+            log.info("=== REF NUMBER VALIDATION COMPLETED ===");
 
+            log.debug("Checking for successful cash in by ref number - refNumber: {}", chargeObjectDTO.getRefNumber());
             requestRepositoryService.findSuccessCashInByRefNumber(chargeObjectDTO.getRefNumber());
+            log.debug("No successful cash in found with this ref number");
 
+            log.debug("Validating wallet and account for nationalCode: {}, accountNumber: {}", 
+                rrnEntity.getNationalCode(), chargeObjectDTO.getAccountNumber());
             WalletAccountEntity walletAccountEntity = helper.checkWalletAndWalletAccountForNormalUser(walletRepositoryService, rrnEntity.getNationalCode(), walletAccountRepositoryService, chargeObjectDTO.getAccountNumber());
-            walletCashLimitationOperationService.checkCashInLimitation(chargeObjectDTO.getChannel(), walletAccountEntity.getWalletEntity(), BigDecimal.valueOf(Long.parseLong(chargeObjectDTO.getAmount())), walletAccountEntity);
+            log.info("Wallet account validated - accountId: {}, accountNumber: {}", 
+                walletAccountEntity.getId(), walletAccountEntity.getAccountNumber());
 
+            log.debug("Retrieving current balance for accountId: {}", walletAccountEntity.getId());
+            BalanceDTO balanceBefore = walletAccountRepositoryService.getBalance(walletAccountEntity.getId());
+            log.info("Current balance - real: {}, available: {}", 
+                balanceBefore.getRealBalance(), balanceBefore.getAvailableBalance());
+
+            BigDecimal chargeAmount = BigDecimal.valueOf(Long.parseLong(chargeObjectDTO.getAmount()));
+            log.debug("Checking cash in limitations - amount: {}, accountId: {}", chargeAmount, walletAccountEntity.getId());
+            walletCashLimitationOperationService.checkCashInLimitation(chargeObjectDTO.getChannel(), walletAccountEntity.getWalletEntity(), chargeAmount, walletAccountEntity);
+            log.info("Cash in limitation check passed - amount: {}", chargeAmount);
+
+            log.debug("Creating cash in request entity");
             CashInRequestEntity cashInRequestEntity = new CashInRequestEntity();
             cashInRequestEntity.setAmount(Long.parseLong(chargeObjectDTO.getAmount()));
             cashInRequestEntity.setRefNumber(chargeObjectDTO.getRefNumber());
@@ -137,41 +173,79 @@ public class CashInOperationServiceImplementation implements CashInOperationServ
             cashInRequestEntity.setCreatedAt(new Date());
             cashInRequestEntity.setRefNumber(chargeObjectDTO.getRefNumber());
             cashInRequestEntity.setCashInPaymentTypeEnum(CashInPaymentTypeEnum.valueOf(chargeObjectDTO.getCashInPaymentType()));
+            log.info("Cash in request entity created - amount: {}, refNumber: {}, paymentType: {}, channel: {}", 
+                cashInRequestEntity.getAmount(), cashInRequestEntity.getRefNumber(), 
+                cashInRequestEntity.getCashInPaymentTypeEnum(), cashInRequestEntity.getChannel().getUsername());
+            log.info("=== SAVING CASH IN REQUEST ===");
             try {
+                log.debug("Saving cash in request entity to database - amount: {}, refNumber: {}", 
+                    cashInRequestEntity.getAmount(), cashInRequestEntity.getRefNumber());
                 requestRepositoryService.save(cashInRequestEntity);
+                log.info("Cash in request entity saved successfully - requestId: {}", cashInRequestEntity.getId());
             } catch (Exception ex) {
+                log.error("Failed to save cash in request - cleaning up ref number - refNumber: {}, error: {}", 
+                    chargeObjectDTO.getRefNumber(), ex.getMessage());
                 refnumberRepository.deleteById(chargeObjectDTO.getRefNumber());
                 log.error("error in save cashIn with message ({})", ex.getMessage());
                 throw new InternalServiceException("error in save cashIn", StatusRepositoryService.GENERAL_ERROR, HttpStatus.OK);
             }
+            
             cashInRequestEntity.setResult(StatusRepositoryService.SUCCESSFUL);
             cashInRequestEntity.setAdditionalData(chargeObjectDTO.getAdditionalData());
+            log.info("Cash in request status set to SUCCESSFUL");
 
+            log.info("=== CREATING TRANSACTION ===");
             TransactionEntity transaction = new TransactionEntity();
             transaction.setRrnEntity(rrnEntity);
             transaction.setAmount(BigDecimal.valueOf(Long.parseLong(chargeObjectDTO.getAmount())));
             transaction.setWalletAccountEntity(walletAccountEntity);
             transaction.setAdditionalData(chargeObjectDTO.getAdditionalData());
             transaction.setRequestTypeId(cashInRequestEntity.getRequestTypeEntity().getId());
+            log.debug("Transaction entity created - amount: {}, accountId: {}", 
+                transaction.getAmount(), transaction.getWalletAccountEntity().getId());
 
+            log.debug("Preparing transaction template model");
             Map<String, Object> model = new HashMap<>();
             model.put("amount", Utility.addComma(Long.parseLong(chargeObjectDTO.getAmount())));
             model.put("traceId", String.valueOf(rrnEntity.getId()));
             model.put("additionalData", chargeObjectDTO.getAdditionalData());
+            log.debug("Template model prepared - amount: {}, traceId: {}", 
+                model.get("amount"), model.get("traceId"));
+
             String templateMessage = templateRepositoryService.getTemplate(TemplateRepositoryService.CASH_IN);
             transaction.setDescription(messageResolverOperationService.resolve(templateMessage, model));
+            log.debug("Transaction description resolved - template: {}", templateMessage);
+
+            log.debug("Executing deposit transaction - amount: {}", transaction.getAmount());
             transactionRepositoryService.insertDeposit(transaction);
+            log.info("Deposit transaction executed successfully - transactionId: {}, amount: {}", 
+                transaction.getId(), transaction.getAmount());
             log.info("balance for walletAccount ===> {} update successful", walletAccountEntity.getAccountNumber());
 
+            log.debug("Saving final cash in request with updated status");
             requestRepositoryService.save(cashInRequestEntity);
+            log.info("Final cash in request saved successfully");
 
+            log.info("=== UPDATING CASH IN LIMITATIONS ===");
             log.info("Start updating CashInLimitation for walletAccount ({})", walletAccountEntity.getAccountNumber());
             walletCashLimitationOperationService.updateCashInLimitation(walletAccountEntity, BigDecimal.valueOf(Long.parseLong(chargeObjectDTO.getAmount())));
             log.info("updating CashInLimitation for walletAccount ({}) is finished.", walletAccountEntity.getAccountNumber());
 
+            log.info("=== RETRIEVING FINAL BALANCE ===");
             BalanceDTO walletAccountServiceBalance = walletAccountRepositoryService.getBalance(walletAccountEntity.getId());
+            log.info("Final balance after charge - real: {}, available: {}", 
+                walletAccountServiceBalance.getRealBalance(), walletAccountServiceBalance.getAvailableBalance());
 
-            return helper.fillCashInResponse(chargeObjectDTO.getNationalCode(), rrnEntity.getUuid(), String.valueOf(walletAccountServiceBalance.getAvailableBalance()), walletAccountEntity.getAccountNumber());
+            BigDecimal actualCharge = walletAccountServiceBalance.getRealBalance().subtract(balanceBefore.getRealBalance());
+            log.info("Actual charge amount: {} (expected: {})", actualCharge, chargeAmount);
+
+            log.info("=== CREATING RESPONSE ===");
+            CashInResponse response = helper.fillCashInResponse(chargeObjectDTO.getNationalCode(), rrnEntity.getUuid(), String.valueOf(walletAccountServiceBalance.getAvailableBalance()), walletAccountEntity.getAccountNumber(), String.valueOf(walletAccountServiceBalance.getRealBalance()));
+            log.info("Response created - nationalCode: {}, uuid: {}, availableBalance: {}, accountNumber: {}", 
+                response.getNationalCode(), response.getUniqueIdentifier(), response.getBalance(), response.getWalletAccountNumber());
+
+            log.info("=== CASH IN CHARGE OPERATION COMPLETED SUCCESSFULLY ===");
+            return response;
         }, chargeObjectDTO.getUniqueIdentifier());
     }
 

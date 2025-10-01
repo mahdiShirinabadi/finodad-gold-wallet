@@ -82,40 +82,67 @@ public class GiftCardOperationServiceImplementation implements GiftCardOperation
     @Transactional(propagation = Propagation.REQUIRED, rollbackFor = Exception.class)
     public void payment(GiftCardPaymentObjectDTO giftCardPaymentObjectDTO) throws InternalServiceException {
 
-        log.info("start payment giftCard for nationalCode ({})", giftCardPaymentObjectDTO.getNationalCode());
+        log.info("=== GIFT CARD PAYMENT OPERATION START ===");
+        log.info("Input parameters - nationalCode: {}, giftCardCode: {}, quantity: {}, accountNumber: {}", 
+            giftCardPaymentObjectDTO.getNationalCode(), giftCardPaymentObjectDTO.getGiftCardUniqueCode(), 
+            giftCardPaymentObjectDTO.getQuantity(), giftCardPaymentObjectDTO.getAccountNumber());
 
         RequestTypeEntity requestTypeEntity = requestTypeRepositoryService.getRequestType(RequestTypeRepositoryService.GIFT_CARD);
-
+        log.debug("Request type retrieved - type: {}", requestTypeEntity.getName());
 
         String key = giftCardPaymentObjectDTO.getGiftCardUniqueCode();
+        log.info("Starting Redis lock acquisition for giftCardCode: {}", key);
+        
         redisLockService.runAfterLock(key, this.getClass(), () -> {
+            log.info("=== LOCK ACQUIRED - STARTING GIFT CARD PAYMENT CRITICAL SECTION ===");
             log.info("start checking existence of giftCardCode({}) ...", giftCardPaymentObjectDTO.getGiftCardUniqueCode());
 
+            log.debug("Validating wallet and account for nationalCode: {}, accountNumber: {}", 
+                giftCardPaymentObjectDTO.getNationalCode(), giftCardPaymentObjectDTO.getAccountNumber());
             WalletAccountEntity walletAccountEntity = helper.checkWalletAndWalletAccountForNormalUser(walletRepositoryService, giftCardPaymentObjectDTO.getNationalCode(), walletAccountRepositoryService, giftCardPaymentObjectDTO.getAccountNumber());
+            log.info("Wallet account validated - accountId: {}, accountNumber: {}", 
+                walletAccountEntity.getId(), walletAccountEntity.getAccountNumber());
 
+            log.debug("Searching for gift card - code: {}, quantity: {}, status: {}", 
+                giftCardPaymentObjectDTO.getGiftCardUniqueCode(), giftCardPaymentObjectDTO.getQuantity(), GiftCardStepStatus.INITIAL);
             Optional<GiftCardEntity> giftCardEntityOptional = giftCardRepositoryService.findByUniqueCodeAndQuantityAndStatus(giftCardPaymentObjectDTO.getGiftCardUniqueCode(), new BigDecimal(giftCardPaymentObjectDTO.getQuantity()), GiftCardStepStatus.INITIAL);
+            
             if (giftCardEntityOptional.isEmpty()) {
-                log.error("giftCard with uniqueCode ({}) and quantity ({}) and status ({}) not found", giftCardPaymentObjectDTO.getGiftCardUniqueCode(), new BigDecimal(giftCardPaymentObjectDTO.getQuantity()), GiftCardStepStatus.INITIAL);
+                log.error("Gift card not found - uniqueCode: {}, quantity: {}, status: {}", 
+                    giftCardPaymentObjectDTO.getGiftCardUniqueCode(), giftCardPaymentObjectDTO.getQuantity(), GiftCardStepStatus.INITIAL);
                 throw new InternalServiceException("giftCard not found", StatusRepositoryService.GIFT_CARD_NOT_FOUND, HttpStatus.OK);
             }
 
-            if (giftCardEntityOptional.get().getExpireAt().before(new Date())) {
-                log.error("giftCard with uniqueCode ({}) is expire at ({})", giftCardPaymentObjectDTO.getGiftCardUniqueCode(), new Date());
+            GiftCardEntity giftCardEntity = giftCardEntityOptional.get();
+            log.info("Gift card found - id: {}, activeCode: {}, quantity: {}, status: {}", 
+                giftCardEntity.getId(), giftCardEntity.getActiveCode(), giftCardEntity.getQuantity(), giftCardEntity.getStatus());
+
+            log.debug("Checking gift card expiration - expireAt: {}, currentTime: {}", 
+                giftCardEntity.getExpireAt(), new Date());
+            if (giftCardEntity.getExpireAt().before(new Date())) {
+                log.error("Gift card expired - uniqueCode: {}, expireAt: {}, currentTime: {}", 
+                    giftCardPaymentObjectDTO.getGiftCardUniqueCode(), giftCardEntity.getExpireAt(), new Date());
                 throw new InternalServiceException("giftCard is expire", StatusRepositoryService.GIFT_CARD_IS_EXPIRE, HttpStatus.OK);
             }
+            log.info("Gift card expiration check passed");
 
-            if (StringUtils.hasText(giftCardEntityOptional.get().getNationalCodeBy()) && !giftCardEntityOptional.get().getNationalCodeBy().equalsIgnoreCase(giftCardPaymentObjectDTO.getNationalCode())) {
-                log.error("giftCard set for activeUser ({}) not same current nationalCode ({})", giftCardEntityOptional.get().getNationalCodeBy(), giftCardPaymentObjectDTO.getNationalCode());
+            log.debug("Checking gift card ownership - assignedTo: {}, currentUser: {}", 
+                giftCardEntity.getNationalCodeBy(), giftCardPaymentObjectDTO.getNationalCode());
+            if (StringUtils.hasText(giftCardEntity.getNationalCodeBy()) && !giftCardEntity.getNationalCodeBy().equalsIgnoreCase(giftCardPaymentObjectDTO.getNationalCode())) {
+                log.error("Gift card ownership mismatch - assignedTo: {}, currentUser: {}", 
+                    giftCardEntity.getNationalCodeBy(), giftCardPaymentObjectDTO.getNationalCode());
                 throw new InternalServiceException("for security reason nationalCode not permission for active", StatusRepositoryService.NATIONAL_CODE_NOT_PERMISSION_FOR_PAYMENT_GIFT_CARD, HttpStatus.OK);
             }
+            log.info("Gift card ownership check passed");
 
             log.info("giftCard found uniqueCode ({}) and quantity ({}) and status ({}) and id is ({})", giftCardPaymentObjectDTO.getGiftCardUniqueCode(), new BigDecimal(giftCardPaymentObjectDTO.getQuantity()), GiftCardStepStatus.INITIAL, giftCardEntityOptional.get().getId());
 
+            log.debug("Checking daily payment limitations for gift card");
             walletGiftCardLimitationOperationService.checkDailyPaymentLimitation(giftCardPaymentObjectDTO.getChannelEntity(), walletAccountEntity.getWalletEntity(),
                     new BigDecimal(giftCardPaymentObjectDTO.getQuantity()), walletAccountEntity, giftCardEntityOptional.get().getRrnEntity().getUuid());
+            log.info("Daily payment limitation check passed");
 
 
-            GiftCardEntity giftCardEntity = giftCardEntityOptional.get();
             giftCardEntity.setDestinationWalletAccountEntity(walletAccountEntity);
             giftCardEntity.setStatus(GiftCardStepStatus.USED);
             giftCardEntity.setActivatedAt(new Date());

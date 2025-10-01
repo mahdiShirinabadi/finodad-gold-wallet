@@ -40,11 +40,8 @@ public class PurchaseOperationServiceImplementation implements PurchaseOperation
     private final RequestRepositoryService requestRepositoryService;
     private final MerchantRepositoryService merchantRepositoryService;
     private final Helper helper;
-    private final WalletRepositoryService walletRepositoryService;
     private final WalletAccountRepositoryService walletAccountRepositoryService;
-    private final WalletTypeRepositoryService walletTypeRepositoryService;
     private final StatusRepositoryService statusRepositoryService;
-    private final WalletAccountTypeRepositoryService walletAccountTypeRepositoryService;
     private final WalletAccountCurrencyRepositoryService walletAccountCurrencyRepositoryService;
     private final RequestTypeRepositoryService requestTypeRepositoryService;
     private final WalletBuyLimitationOperationService walletBuyLimitationOperationService;
@@ -109,40 +106,85 @@ public class PurchaseOperationServiceImplementation implements PurchaseOperation
     @Override
     public PurchaseResponse sell(SellRequestDTO sellRequestDTO) throws InternalServiceException {
 
+        log.info("=== PURCHASE SELL OPERATION START ===");
+        log.info("Input parameters - uniqueIdentifier: {}, nationalCode: {}, currency: {}, amount: {}, price: {}, commission: {}, merchantId: {}, walletAccountNumber: {}", 
+            sellRequestDTO.getUniqueIdentifier(), sellRequestDTO.getNationalCode(), sellRequestDTO.getCurrency(), 
+            sellRequestDTO.getAmount(), sellRequestDTO.getPrice(), sellRequestDTO.getCommission(), 
+            sellRequestDTO.getMerchantId(), sellRequestDTO.getWalletAccountNumber());
+
+        log.info("=== CURRENCY VALIDATION ===");
         if (!sellRequestDTO.getCurrency().equalsIgnoreCase(sellRequestDTO.getCommissionCurrency())) {
-            log.error("commission and currency not be same!!!");
+            log.error("Commission currency validation failed - currency: {}, commissionCurrency: {}", 
+                sellRequestDTO.getCurrency(), sellRequestDTO.getCommissionCurrency());
             throw new InternalServiceException("commission and currency not be same", StatusRepositoryService.COMMISSION_CURRENCY_NOT_VALID, HttpStatus.OK);
         }
+        log.info("Commission currency validation passed - currency: {}", sellRequestDTO.getCurrency());
 
-        // Validate and retrieve currencies
+        log.debug("Validating and retrieving currencies - currency: {}, commissionCurrency: {}", 
+            sellRequestDTO.getCurrency(), sellRequestDTO.getCommissionCurrency());
+        
         WalletAccountCurrencyEntity currencyEntity = walletAccountCurrencyRepositoryService.findCurrency(sellRequestDTO.getCurrency());
-        WalletAccountCurrencyEntity rialCurrencyEntity = walletAccountCurrencyRepositoryService.findCurrency(WalletAccountCurrencyRepositoryService.RIAL);
+        log.info("Currency entity found - currency: {}, id: {}", currencyEntity.getName(), currencyEntity.getId());
 
-        if((sellRequestDTO.getAmount().subtract(sellRequestDTO.getCommission())).compareTo(new BigDecimal("0")) <= 0){
-            log.error("commission ({}) is bigger than quantity ({})", sellRequestDTO.getCommission(), sellRequestDTO.getAmount());
+        WalletAccountCurrencyEntity rialCurrencyEntity = walletAccountCurrencyRepositoryService.findCurrency(WalletAccountCurrencyRepositoryService.RIAL);
+        log.info("Rial currency entity found - currency: {}, id: {}", rialCurrencyEntity.getName(), rialCurrencyEntity.getId());
+
+        log.info("=== COMMISSION VALIDATION ===");
+        BigDecimal netAmount = sellRequestDTO.getAmount().subtract(sellRequestDTO.getCommission());
+        log.debug("Calculating net amount - amount: {}, commission: {}, netAmount: {}", 
+            sellRequestDTO.getAmount(), sellRequestDTO.getCommission(), netAmount);
+        
+        if(netAmount.compareTo(new BigDecimal("0")) <= 0){
+            log.error("Commission validation failed - commission: {} is bigger than or equal to amount: {}", 
+                sellRequestDTO.getCommission(), sellRequestDTO.getAmount());
             throw new InternalServiceException("commission is bigger than quantity", StatusRepositoryService.COMMISSION_BIGGER_THAN_QUANTITY, HttpStatus.OK);
         }
+        log.info("Commission validation passed - netAmount: {}", netAmount);
 
-        // Validate merchant and wallet accounts
+        log.info("=== MERCHANT VALIDATION ===");
+        log.debug("Validating merchant - merchantId: {}", sellRequestDTO.getMerchantId());
         MerchantEntity merchant = merchantRepositoryService.findMerchant(sellRequestDTO.getMerchantId());
+        log.info("Merchant found - id: {}, name: {}, status: {}", 
+            merchant.getId(), merchant.getName(), merchant.getStatus());
 
         if(merchant.getStatus() == MerchantRepositoryService.DISABLED){
-            log.error("merchant is disable and system can not buy any things");
+            log.error("Merchant status validation failed - merchant is disabled - merchantId: {}, status: {}", 
+                merchant.getId(), merchant.getStatus());
             throw new InternalServiceException("merchant is disable", StatusRepositoryService.MERCHANT_IS_DISABLE, HttpStatus.OK);
         }
-
+        log.info("Merchant status validation passed - merchant is active");
+        
+        log.debug("Retrieving merchant wallet accounts");
         WalletAccountEntity merchantCurrencyAccount = merchantRepositoryService.findMerchantWalletAccount(merchant, currencyEntity);
         WalletAccountEntity merchantRialAccount = merchantRepositoryService.findMerchantWalletAccount(merchant, rialCurrencyEntity);
+        log.info("Merchant accounts found - currencyAccount: {}, rialAccount: {}", 
+            merchantCurrencyAccount.getId(), merchantRialAccount.getId());
 
-        // Validate user and wallet accounts
+        log.info("=== USER VALIDATION ===");
+        log.debug("Validating user wallet - nationalCode: {}", sellRequestDTO.getNationalCode());
         WalletEntity userWallet = walletOperationalService.findUserWallet(sellRequestDTO.getNationalCode());
+        log.info("User wallet found - walletId: {}, nationalCode: {}", 
+            userWallet.getId(), userWallet.getNationalCode());
+        
+        log.debug("Retrieving user wallet accounts");
         WalletAccountEntity userRialAccount = walletAccountRepositoryService.findUserWalletAccount(userWallet, rialCurrencyEntity, sellRequestDTO.getCurrency());
         WalletAccountEntity userCurrencyAccount = walletAccountRepositoryService.checkUserAccount(userWallet, currencyEntity, sellRequestDTO.getWalletAccountNumber(), sellRequestDTO.getNationalCode());
+        log.info("User accounts found - rialAccount: {}, currencyAccount: {}", 
+            userRialAccount.getId(), userCurrencyAccount.getId());
 
-        // Validate channel commission account
+        log.info("=== CHANNEL COMMISSION VALIDATION ===");
         WalletAccountEntity channelCommissionAccount = walletAccountRepositoryService.findChannelCommissionAccount(sellRequestDTO.getChannel(), sellRequestDTO.getCommissionCurrency());
+        log.info("Channel commission account found - accountId: {}, accountNumber: {}, currency: {}", 
+            channelCommissionAccount.getId(), channelCommissionAccount.getAccountNumber(), sellRequestDTO.getCommissionCurrency());
 
-        return redisLockService.runAfterLock(sellRequestDTO.getWalletAccountNumber(), this.getClass(), () -> purchaseTransactionalService.processSell(new PurchaseObjectDto(
+        log.info("=== STARTING TRANSACTIONAL SELL PROCESS ===");
+        log.info("Starting Redis lock acquisition for walletAccount: {}", sellRequestDTO.getWalletAccountNumber());
+        
+        return redisLockService.runAfterLock(sellRequestDTO.getWalletAccountNumber(), this.getClass(), () -> {
+            log.info("=== LOCK ACQUIRED - STARTING SELL TRANSACTIONAL PROCESS ===");
+            log.info("Creating PurchaseObjectDto for sell transaction");
+            
+            PurchaseObjectDto purchaseObject = new PurchaseObjectDto(
                 sellRequestDTO.getChannel(),
                 sellRequestDTO.getUniqueIdentifier(),
                 sellRequestDTO.getAmount(),
@@ -156,8 +198,20 @@ public class PurchaseOperationServiceImplementation implements PurchaseOperation
                 merchant,
                 merchantRialAccount,
                 merchantCurrencyAccount,
-                channelCommissionAccount)
-        ), sellRequestDTO.getNationalCode());
+                channelCommissionAccount
+            );
+            
+            log.info("PurchaseObjectDto created - amount: {}, price: {}, commission: {}", 
+                purchaseObject.getQuantity(), purchaseObject.getPrice(), purchaseObject.getCommission());
+            
+            log.info("Calling purchaseTransactionalService.processSell");
+            PurchaseResponse response = purchaseTransactionalService.processSell(purchaseObject);
+            
+            log.info("Sell transaction completed successfully - response: {}", response);
+            log.info("=== SELL TRANSACTIONAL PROCESS COMPLETED ===");
+            
+            return response;
+        }, sellRequestDTO.getNationalCode());
     }
 
     @Override
@@ -170,35 +224,75 @@ public class PurchaseOperationServiceImplementation implements PurchaseOperation
     @Override
     public PurchaseResponse buy(BuyRequestDTO buyRequestDTO) throws InternalServiceException {
 
-        // Validate and retrieve currencies
-        WalletAccountCurrencyEntity currencyEntity = walletAccountCurrencyRepositoryService.findCurrency(buyRequestDTO.getCurrency());
+        log.info("=== PURCHASE BUY OPERATION START ===");
+        log.info("Input parameters - uniqueIdentifier: {}, nationalCode: {}, currency: {}, quantity: {}, price: {}, merchantId: {}, walletAccountNumber: {}", 
+            buyRequestDTO.getUniqueIdentifier(), buyRequestDTO.getNationalCode(), buyRequestDTO.getCurrency(), 
+            buyRequestDTO.getQuantity(), buyRequestDTO.getPrice(), buyRequestDTO.getMerchantId(), buyRequestDTO.getWalletAccountNumber());
 
+        log.info("=== CURRENCY VALIDATION ===");
+        log.debug("Validating and retrieving currencies - currency: {}, commissionType: {}", 
+            buyRequestDTO.getCurrency(), buyRequestDTO.getCommissionType());
+        
+        WalletAccountCurrencyEntity currencyEntity = walletAccountCurrencyRepositoryService.findCurrency(buyRequestDTO.getCurrency());
+        log.info("Currency entity found - currency: {}, id: {}", currencyEntity.getName(), currencyEntity.getId());
 
         WalletAccountCurrencyEntity rialCurrencyEntity = walletAccountCurrencyRepositoryService.findCurrency(WalletAccountCurrencyRepositoryService.RIAL);
+        log.info("Rial currency entity found - currency: {}, id: {}", rialCurrencyEntity.getName(), rialCurrencyEntity.getId());
 
-
-        // Validate merchant and wallet accounts
+        log.info("=== MERCHANT VALIDATION ===");
+        log.debug("Validating merchant - merchantId: {}", buyRequestDTO.getMerchantId());
         MerchantEntity merchant = merchantRepositoryService.findMerchant(buyRequestDTO.getMerchantId());
+        log.info("Merchant found - id: {}, name: {}, status: {}", 
+            merchant.getId(), merchant.getName(), merchant.getStatus());
+        
+        log.debug("Retrieving merchant wallet accounts");
         WalletAccountEntity merchantCurrencyAccount = merchantRepositoryService.findMerchantWalletAccount(merchant, currencyEntity);
         WalletAccountEntity merchantRialAccount = merchantRepositoryService.findMerchantWalletAccount(merchant, rialCurrencyEntity);
+        log.info("Merchant accounts found - currencyAccount: {}, rialAccount: {}", 
+            merchantCurrencyAccount.getId(), merchantRialAccount.getId());
 
-        // Validate user and wallet accounts
+        log.info("=== USER VALIDATION ===");
+        log.debug("Validating user wallet - nationalCode: {}", buyRequestDTO.getNationalCode());
         WalletEntity userWallet = walletOperationalService.findUserWallet(buyRequestDTO.getNationalCode());
+        log.info("User wallet found - walletId: {}, nationalCode: {}", 
+            userWallet.getId(), userWallet.getNationalCode());
+        
+        log.debug("Retrieving user wallet accounts");
         WalletAccountEntity userCurrencyAccount = walletAccountRepositoryService.findUserWalletAccount(userWallet, currencyEntity, buyRequestDTO.getCurrency());
         WalletAccountEntity userRialAccount = walletAccountRepositoryService.findUserAccount(userWallet, rialCurrencyEntity, buyRequestDTO.getNationalCode());
+        log.info("User accounts found - currencyAccount: {}, rialAccount: {}", 
+            userCurrencyAccount.getId(), userRialAccount.getId());
 
-        // Validate channel commission account
+        log.info("=== COMMISSION VALIDATION ===");
         if (!WalletAccountCurrencyRepositoryService.RIAL.equalsIgnoreCase(buyRequestDTO.getCommissionType())) {
-            log.error("commission type in buy must it rial!!!");
+            log.error("Commission type validation failed - expected: RIAL, actual: {}", buyRequestDTO.getCommissionType());
             throw new InternalServiceException("commission type must be rial", StatusRepositoryService.COMMISSION_CURRENCY_NOT_VALID, HttpStatus.OK);
         }
+        log.info("Commission type validation passed - type: RIAL");
+        
         WalletAccountEntity channelCommissionAccount = walletAccountRepositoryService.findChannelCommissionAccount(buyRequestDTO.getChannel(), WalletAccountCurrencyRepositoryService.RIAL);
+        log.info("Channel commission account found - accountId: {}, accountNumber: {}", 
+            channelCommissionAccount.getId(), channelCommissionAccount.getAccountNumber());
 
+        log.info("=== LIMITATION CHECKS ===");
+        log.debug("Checking buy limitations - quantity: {}, currency: {}", buyRequestDTO.getQuantity(), buyRequestDTO.getCurrency());
         walletBuyLimitationOperationService.checkGeneral(buyRequestDTO.getChannel(), userCurrencyAccount.getWalletEntity(), buyRequestDTO.getQuantity(), userCurrencyAccount, buyRequestDTO.getUniqueIdentifier(), currencyEntity);
+        log.info("General buy limitation check passed");
+        
         walletBuyLimitationOperationService.checkDailyLimitation(buyRequestDTO.getChannel(), userCurrencyAccount.getWalletEntity(), buyRequestDTO.getQuantity(), userCurrencyAccount, buyRequestDTO.getUniqueIdentifier(), currencyEntity);
+        log.info("Daily buy limitation check passed");
+        
         walletBuyLimitationOperationService.checkMonthlyLimitation(buyRequestDTO.getChannel(), userCurrencyAccount.getWalletEntity(), buyRequestDTO.getQuantity(), userCurrencyAccount, buyRequestDTO.getUniqueIdentifier(), currencyEntity);
+        log.info("Monthly buy limitation check passed");
 
-        return redisLockService.runAfterLock(buyRequestDTO.getWalletAccountNumber(), this.getClass(), () -> purchaseTransactionalService.processBuy(new PurchaseObjectDto(
+        log.info("=== STARTING TRANSACTIONAL BUY PROCESS ===");
+        log.info("Starting Redis lock acquisition for walletAccount: {}", buyRequestDTO.getWalletAccountNumber());
+        
+        return redisLockService.runAfterLock(buyRequestDTO.getWalletAccountNumber(), this.getClass(), () -> {
+            log.info("=== LOCK ACQUIRED - STARTING BUY TRANSACTIONAL PROCESS ===");
+            log.info("Creating PurchaseObjectDto for buy transaction");
+            
+            PurchaseObjectDto purchaseObject = new PurchaseObjectDto(
                 buyRequestDTO.getChannel(),
                 buyRequestDTO.getUniqueIdentifier(),
                 buyRequestDTO.getQuantity(),
@@ -212,8 +306,20 @@ public class PurchaseOperationServiceImplementation implements PurchaseOperation
                 merchant,
                 merchantRialAccount,
                 merchantCurrencyAccount,
-                channelCommissionAccount), null, null, false
-        ), buyRequestDTO.getUniqueIdentifier());
+                channelCommissionAccount
+            );
+            
+            log.info("PurchaseObjectDto created - quantity: {}, price: {}, commission: {}", 
+                purchaseObject.getQuantity(), purchaseObject.getPrice(), purchaseObject.getCommission());
+            
+            log.info("Calling purchaseTransactionalService.processBuy");
+            PurchaseResponse response = purchaseTransactionalService.processBuy(purchaseObject, null, null, false);
+            
+            log.info("Buy transaction completed successfully - response: {}", response);
+            log.info("=== BUY TRANSACTIONAL PROCESS COMPLETED ===");
+            
+            return response;
+        }, buyRequestDTO.getUniqueIdentifier());
     }
 
 

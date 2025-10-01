@@ -16,6 +16,10 @@ public class CashInResponse {
     @JsonProperty(NamingProperty.NATIONAL_CODE)
     private String nationalCode;
 
+    @Schema(name = NamingProperty.AVAILABLE_BALANCE)
+    @JsonProperty(NamingProperty.AVAILABLE_BALANCE)
+    private String availableBalance;
+
     @Schema(name = NamingProperty.BALANCE)
     @JsonProperty(NamingProperty.BALANCE)
     private String balance;

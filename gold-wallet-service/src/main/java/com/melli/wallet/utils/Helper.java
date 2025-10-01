@@ -444,8 +444,8 @@ public class Helper {
         return object;
     }
 
-    public CashInResponse fillCashInResponse(String nationalCode,  String uuid, String balance, String accountNumber) {
-       return new CashInResponse(nationalCode, balance, uuid, accountNumber);
+    public CashInResponse fillCashInResponse(String nationalCode,  String uuid, String availableBalance, String accountNumber, String balance) {
+       return new CashInResponse(nationalCode, availableBalance, balance, uuid, accountNumber);
     }
 
     public StatementResponse fillStatementResponse(String nationalCode, List<ReportTransactionEntity> reportTransactionEntityList) {
@@ -502,8 +502,8 @@ public class Helper {
         return statementObject;
     }
 
-    public CashOutResponse fillCashOutResponse(String nationalCode, String uuid, String balance, String accountNumber) {
-        return new CashOutResponse(nationalCode, balance, uuid, accountNumber);
+    public CashOutResponse fillCashOutResponse(String nationalCode, String uuid, String balance, String accountNumber, String availableBalance) {
+        return new CashOutResponse(nationalCode, availableBalance, balance, uuid, accountNumber);
     }
 
     public PhysicalCashOutResponse fillPhysicalCashOutResponse(String nationalCode, String uuid, String balance, String accountNumber) {

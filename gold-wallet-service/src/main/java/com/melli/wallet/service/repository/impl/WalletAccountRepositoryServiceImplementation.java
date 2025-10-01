@@ -85,7 +85,16 @@ public class WalletAccountRepositoryServiceImplementation implements WalletAccou
 
     @Override
     public BalanceDTO getBalance(long walletAccountId) {
-        return walletAccountRepository.getBalance(walletAccountId);
+        log.debug("=== BALANCE RETRIEVAL START ===");
+        log.debug("Retrieving balance for walletAccountId: {}", walletAccountId);
+        
+        BalanceDTO balance = walletAccountRepository.getBalance(walletAccountId);
+        
+        log.info("Balance retrieved successfully - accountId: {}, real: {}, available: {}", 
+            walletAccountId, balance.getRealBalance(), balance.getAvailableBalance());
+        log.debug("=== BALANCE RETRIEVAL COMPLETED ===");
+        
+        return balance;
     }
 
     @Override
@@ -96,13 +105,57 @@ public class WalletAccountRepositoryServiceImplementation implements WalletAccou
     @Transactional
     @Override
     public void increaseBalance(long walletAccountId, BigDecimal amount) {
+        log.info("=== BALANCE INCREASE OPERATION START ===");
+        log.info("Increasing balance - accountId: {}, amount: {}", walletAccountId, amount);
+        
+        // Get balance before increase
+        BalanceDTO balanceBefore = walletAccountRepository.getBalance(walletAccountId);
+        log.debug("Balance before increase - real: {}, available: {}", 
+            balanceBefore.getRealBalance(), balanceBefore.getAvailableBalance());
+        
         walletAccountRepository.increaseBalance(walletAccountId, amount);
+        log.info("Balance increase executed successfully - accountId: {}, amount: {}", walletAccountId, amount);
+        
+        // Get balance after increase
+        BalanceDTO balanceAfter = walletAccountRepository.getBalance(walletAccountId);
+        log.info("Balance after increase - real: {}, available: {}", 
+            balanceAfter.getRealBalance(), balanceAfter.getAvailableBalance());
+        
+        BigDecimal actualIncrease = balanceAfter.getRealBalance().subtract(balanceBefore.getRealBalance());
+        log.info("Actual balance increase: {} (expected: {})", actualIncrease, amount);
+        
+        log.info("=== BALANCE INCREASE OPERATION COMPLETED ===");
     }
 
     @Transactional
     @Override
     public int decreaseBalance(long walletAccountId, BigDecimal amount) {
-        return walletAccountRepository.decreaseBalance(walletAccountId, amount);
+        log.info("=== BALANCE DECREASE OPERATION START ===");
+        log.info("Decreasing balance - accountId: {}, amount: {}", walletAccountId, amount);
+        
+        // Get balance before decrease
+        BalanceDTO balanceBefore = walletAccountRepository.getBalance(walletAccountId);
+        log.debug("Balance before decrease - real: {}, available: {}", 
+            balanceBefore.getRealBalance(), balanceBefore.getAvailableBalance());
+        
+        int rowsAffected = walletAccountRepository.decreaseBalance(walletAccountId, amount);
+        log.info("Balance decrease executed - accountId: {}, amount: {}, rowsAffected: {}", 
+            walletAccountId, amount, rowsAffected);
+        
+        if (rowsAffected > 0) {
+            // Get balance after decrease
+            BalanceDTO balanceAfter = walletAccountRepository.getBalance(walletAccountId);
+            log.info("Balance after decrease - real: {}, available: {}", 
+                balanceAfter.getRealBalance(), balanceAfter.getAvailableBalance());
+            
+            BigDecimal actualDecrease = balanceBefore.getRealBalance().subtract(balanceAfter.getRealBalance());
+            log.info("Actual balance decrease: {} (expected: {})", actualDecrease, amount);
+        } else {
+            log.warn("No rows affected during balance decrease - insufficient funds or account not found");
+        }
+        
+        log.info("=== BALANCE DECREASE OPERATION COMPLETED ===");
+        return rowsAffected;
     }
 
     @Transactional
@@ -114,18 +167,72 @@ public class WalletAccountRepositoryServiceImplementation implements WalletAccou
     @Transactional
     @Override
     public int blockAmount(long walletAccountId, BigDecimal amount) throws InternalServiceException {
-       int rowEffected = walletAccountRepository.blockAmount(walletAccountId, amount);
+        log.info("=== BALANCE BLOCK OPERATION START ===");
+        log.info("Blocking amount - accountId: {}, amount: {}", walletAccountId, amount);
+        
+        // Get balance before blocking
+        BalanceDTO balanceBefore = walletAccountRepository.getBalance(walletAccountId);
+        log.debug("Balance before blocking - real: {}, available: {}", 
+            balanceBefore.getRealBalance(), balanceBefore.getAvailableBalance());
+        
+        // Validate sufficient available balance
+        if (balanceBefore.getAvailableBalance().compareTo(amount) < 0) {
+            log.error("Insufficient available balance for blocking - available: {}, required: {}, accountId: {}", 
+                balanceBefore.getAvailableBalance(), amount, walletAccountId);
+            throw new InternalServiceException("Insufficient available balance for blocking", StatusRepositoryService.INSUFFICIENT_BALANCE, HttpStatus.OK);
+        }
+        
+        int rowEffected = walletAccountRepository.blockAmount(walletAccountId, amount);
+        log.info("Block amount executed - accountId: {}, amount: {}, rowsAffected: {}", 
+            walletAccountId, amount, rowEffected);
+        
         if (rowEffected != 1) {
-            log.error("some error in update walletAccountId({}) and row update count is ({}) and sot same with 1", walletAccountId, rowEffected);
+            log.error("Block amount operation failed - expected 1 row affected, got: {}, accountId: {}, amount: {}", 
+                rowEffected, walletAccountId, amount);
             throw new InternalServiceException("some error in update block amount CreateCollateralRequest", StatusRepositoryService.GENERAL_ERROR, HttpStatus.OK);
         }
+        
+        // Get balance after blocking
+        BalanceDTO balanceAfter = walletAccountRepository.getBalance(walletAccountId);
+        log.info("Balance after blocking - real: {}, available: {}", 
+            balanceAfter.getRealBalance(), balanceAfter.getAvailableBalance());
+        
+        BigDecimal actualBlocked = balanceBefore.getAvailableBalance().subtract(balanceAfter.getAvailableBalance());
+        log.info("Actual amount blocked: {} (expected: {})", actualBlocked, amount);
+        
+        log.info("=== BALANCE BLOCK OPERATION COMPLETED ===");
         return rowEffected;
     }
 
     @Transactional
     @Override
     public int unblockAmount(long walletAccountId, BigDecimal amount) {
-       return walletAccountRepository.unblockAmount(walletAccountId, amount);
+        log.info("=== BALANCE UNBLOCK OPERATION START ===");
+        log.info("Unblocking amount - accountId: {}, amount: {}", walletAccountId, amount);
+        
+        // Get balance before unblocking
+        BalanceDTO balanceBefore = walletAccountRepository.getBalance(walletAccountId);
+        log.debug("Balance before unblocking - real: {}, available: {}", 
+            balanceBefore.getRealBalance(), balanceBefore.getAvailableBalance());
+        
+        int rowsAffected = walletAccountRepository.unblockAmount(walletAccountId, amount);
+        log.info("Unblock amount executed - accountId: {}, amount: {}, rowsAffected: {}", 
+            walletAccountId, amount, rowsAffected);
+        
+        if (rowsAffected > 0) {
+            // Get balance after unblocking
+            BalanceDTO balanceAfter = walletAccountRepository.getBalance(walletAccountId);
+            log.info("Balance after unblocking - real: {}, available: {}", 
+                balanceAfter.getRealBalance(), balanceAfter.getAvailableBalance());
+            
+            BigDecimal actualUnblocked = balanceAfter.getAvailableBalance().subtract(balanceBefore.getAvailableBalance());
+            log.info("Actual amount unblocked: {} (expected: {})", actualUnblocked, amount);
+        } else {
+            log.warn("No rows affected during unblock operation - no blocked amount found or account not found");
+        }
+        
+        log.info("=== BALANCE UNBLOCK OPERATION COMPLETED ===");
+        return rowsAffected;
     }
 
     @Transactional

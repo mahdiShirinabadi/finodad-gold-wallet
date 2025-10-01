@@ -31,29 +31,65 @@ public class RedisLockService {
 
 
     public <T, S> T runAfterLock(String lockKey, Class<S> tClass, CustomSupplier<T> action, String traceNumber) throws InternalServiceException {
-        log.info("start lock with key ({})", lockKey);
+        log.info("=== REDIS LOCK ACQUISITION START ===");
+        log.info("Lock parameters - key: {}, class: {}, traceId: {}", lockKey, tClass.getSimpleName(), traceNumber);
+        
         Lock lock = redisLockRegistry.obtain(lockKey);
+        log.debug("Lock object obtained from registry for key: {}", lockKey);
+        
         boolean lockSuccess = false;
+        long lockStartTime = System.currentTimeMillis();
+        
         try {
             log.info("{}  acquisition status Lock lockKey: {}, traceId ({}), class ({})", tClass.getSimpleName(), lockKey, traceNumber, tClass.getSimpleName());
+            log.debug("Attempting to acquire lock with timeout: 40 seconds");
+            
             lockSuccess = lock.tryLock(40L, TimeUnit.SECONDS);
+            long lockAcquisitionTime = System.currentTimeMillis() - lockStartTime;
+            
             if (lockSuccess) {
-                log.info("lockSuccess acquisition status: true for lockKey:({}), traceId ({}), class ({})", lockKey, traceNumber, tClass.getSimpleName());
-                return action.get();
+                log.info("lockSuccess acquisition status: true for lockKey:({}), traceId ({}), class ({}), acquisitionTime: {}ms", 
+                    lockKey, traceNumber, tClass.getSimpleName(), lockAcquisitionTime);
+                
+                log.debug("Executing action within lock - class: {}", tClass.getSimpleName());
+                long actionStartTime = System.currentTimeMillis();
+                T result = action.get();
+                long actionExecutionTime = System.currentTimeMillis() - actionStartTime;
+                
+                log.info("Action executed successfully - class: {}, executionTime: {}ms", tClass.getSimpleName(), actionExecutionTime);
+                return result;
             } else {
-                log.error("system can not luck lockKey {}, traceId ({}), class ({})", lockKey, traceNumber, tClass.getSimpleName());
+                log.error("Lock acquisition failed - timeout reached for lockKey: {}, traceId: {}, class: {}, acquisitionTime: {}ms", 
+                    lockKey, traceNumber, tClass.getSimpleName(), lockAcquisitionTime);
                 throw new InternalServiceException("general error", StatusRepositoryService.ERROR_IN_LOCK, HttpStatus.OK);
             }
         } catch (InterruptedException e) {
-            log.error("interrupt exception for try lock lockKey {} and error is {} , traceId ({}), class ({})", lockKey, e.getMessage(), traceNumber, tClass.getSimpleName());
+            long totalTime = System.currentTimeMillis() - lockStartTime;
+            log.error("Lock acquisition interrupted - lockKey: {}, traceId: {}, class: {}, error: {}, totalTime: {}ms", 
+                lockKey, traceNumber, tClass.getSimpleName(), e.getMessage(), totalTime);
+            Thread.currentThread().interrupt(); // Restore interrupted status
             throw new InternalServiceException("general error for try lock with lockKey " + lockKey, StatusRepositoryService.ERROR_IN_LOCK, HttpStatus.OK);
+        } catch (Exception e) {
+            long totalTime = System.currentTimeMillis() - lockStartTime;
+            log.error("Unexpected error during lock operation - lockKey: {}, traceId: {}, class: {}, error: {}, totalTime: {}ms", 
+                lockKey, traceNumber, tClass.getSimpleName(), e.getMessage(), totalTime);
+            throw e;
         } finally {
             if (lockSuccess) {
                 log.info("start unlock lockKey {} in class {}, traceNumber ({}) ", lockKey, tClass.getSimpleName(), traceNumber);
+                long unlockStartTime = System.currentTimeMillis();
                 lock.unlock();
-                log.info("finish unlock lockKey {} in class {}, traceNumber ({})", lockKey, tClass.getSimpleName(), traceNumber);
+                long unlockTime = System.currentTimeMillis() - unlockStartTime;
+                log.info("finish unlock lockKey {} in class {}, traceNumber ({}), unlockTime: {}ms", 
+                    lockKey, tClass.getSimpleName(), traceNumber, unlockTime);
+            } else {
+                log.warn("No unlock required - lock was not acquired for key: {}, traceId: {}", lockKey, traceNumber);
             }
-            log.info("finish lock with key ({}), traceNumber ({}), class ({})", lockKey, traceNumber, tClass.getSimpleName());
+            
+            long totalOperationTime = System.currentTimeMillis() - lockStartTime;
+            log.info("finish lock with key ({}), traceNumber ({}), class ({}), totalOperationTime: {}ms", 
+                lockKey, traceNumber, tClass.getSimpleName(), totalOperationTime);
+            log.info("=== REDIS LOCK OPERATION COMPLETED ===");
         }
     }
 
