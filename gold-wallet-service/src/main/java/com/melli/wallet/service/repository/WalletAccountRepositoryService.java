@@ -43,7 +43,7 @@ public interface WalletAccountRepositoryService {
 
     int unblockAndDecreaseAmount(long walletAccountId, BigDecimal amount);
 
-    int blockAmount(long walletAccountId, BigDecimal amount);
+    int blockAmount(long walletAccountId, BigDecimal amount) throws InternalServiceException;
 
     int unblockAmount(long walletAccountId, BigDecimal amount);
 

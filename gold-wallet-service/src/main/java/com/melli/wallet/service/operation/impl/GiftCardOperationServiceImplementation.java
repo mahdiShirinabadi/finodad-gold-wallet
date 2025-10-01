@@ -9,7 +9,10 @@ import com.melli.wallet.domain.response.giftcard.GiftCardTrackResponse;
 import com.melli.wallet.domain.response.giftcard.GiftCardUuidResponse;
 import com.melli.wallet.domain.response.wallet.CreateWalletResponse;
 import com.melli.wallet.exception.InternalServiceException;
-import com.melli.wallet.service.operation.*;
+import com.melli.wallet.service.operation.GiftCardOperationService;
+import com.melli.wallet.service.operation.MessageResolverOperationService;
+import com.melli.wallet.service.operation.WalletGiftCardLimitationOperationService;
+import com.melli.wallet.service.operation.WalletOperationalService;
 import com.melli.wallet.service.repository.*;
 import com.melli.wallet.util.StringUtils;
 import com.melli.wallet.util.date.DateUtils;
@@ -24,6 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * Class Name: GiftCardOperationServiceImplementation
@@ -50,7 +54,7 @@ public class GiftCardOperationServiceImplementation implements GiftCardOperation
     private final GiftCardRepositoryService giftCardRepositoryService;
     private final WalletOperationalService walletOperationalService;
     private final WalletAccountCurrencyRepositoryService walletAccountCurrencyRepositoryService;
-    private static final Random random = new Random();
+    private static final ThreadLocalRandom random = ThreadLocalRandom.current();
 
     @Override
     public GiftCardUuidResponse generateUuid(ChannelEntity channelEntity, String nationalCode, String amount, String accountNumber, String currency) throws InternalServiceException {

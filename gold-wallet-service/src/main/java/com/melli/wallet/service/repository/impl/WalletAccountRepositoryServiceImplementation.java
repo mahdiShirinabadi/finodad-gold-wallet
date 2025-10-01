@@ -113,8 +113,13 @@ public class WalletAccountRepositoryServiceImplementation implements WalletAccou
 
     @Transactional
     @Override
-    public int blockAmount(long walletAccountId, BigDecimal amount) {
-       return walletAccountRepository.blockAmount(walletAccountId, amount);
+    public int blockAmount(long walletAccountId, BigDecimal amount) throws InternalServiceException {
+       int rowEffected = walletAccountRepository.blockAmount(walletAccountId, amount);
+        if (rowEffected != 1) {
+            log.error("some error in update walletAccountId({}) and row update count is ({}) and sot same with 1", walletAccountId, rowEffected);
+            throw new InternalServiceException("some error in update block amount CreateCollateralRequest", StatusRepositoryService.GENERAL_ERROR, HttpStatus.OK);
+        }
+        return rowEffected;
     }
 
     @Transactional

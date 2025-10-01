@@ -18,8 +18,6 @@ import com.melli.wallet.exception.InternalServiceException;
 import com.melli.wallet.service.operation.*;
 import com.melli.wallet.service.repository.*;
 import com.melli.wallet.service.transactional.CollateralTransactionalService;
-import com.melli.wallet.util.StringUtils;
-import com.melli.wallet.util.date.DateUtils;
 import com.melli.wallet.utils.Helper;
 import com.melli.wallet.utils.RedisLockService;
 import jakarta.persistence.criteria.CriteriaBuilder;
@@ -59,7 +57,6 @@ public class CollateralOperationServiceImplementation implements CollateralOpera
     private final RequestRepositoryService requestRepositoryService;
     private final Helper helper;
     private final WalletRepositoryService walletRepositoryService;
-    private static final Random random = new Random();
     private final CreateCollateralRequestRepository createCollateralRequestRepository;
     private final MessageResolverOperationService messageResolverOperationService;
     private final TemplateRepositoryService templateRepositoryService;
@@ -72,7 +69,8 @@ public class CollateralOperationServiceImplementation implements CollateralOpera
     private final SettingGeneralRepositoryService settingGeneralRepositoryService;
     private final ReportTransactionRepository reportTransactionRepository;
     private final CollateralTransactionalService collateralTransactionalService;
-    private final CollateralValidationService collateralValidationService;
+    private final CollateralHelperService collateralHelperService;
+    private final GeneralValidation generalValidation;
 
 
     @Override
@@ -122,84 +120,81 @@ public class CollateralOperationServiceImplementation implements CollateralOpera
     @Transactional(propagation = Propagation.REQUIRED, rollbackFor = Exception.class)
     public CreateCollateralResponse create(CreateCollateralObjectDTO objectDTO) throws InternalServiceException {
 
-        if ((objectDTO.getQuantity().subtract(objectDTO.getCommission())).compareTo(new BigDecimal("0")) <= 0) {
-            log.error("commission ({}) is bigger than quantity ({})", objectDTO.getCommission(), objectDTO.getQuantity());
-            throw new InternalServiceException("commission is bigger than quantity", StatusRepositoryService.COMMISSION_BIGGER_THAN_QUANTITY, HttpStatus.OK);
-        }
+        log.info("=== COLLATERAL CREATE OPERATION START ===");
+        log.info("Input parameters - uniqueIdentifier: {}, accountNumber: {}, quantity: {}, commission: {}, collateralId: {}", 
+            objectDTO.getUniqueIdentifier(), objectDTO.getAccountNumber(), objectDTO.getQuantity(), objectDTO.getCommission(), objectDTO.getCollateralId());
+
+        generalValidation.checkCommissionLessThanQuantity(objectDTO.getCommission(), objectDTO.getQuantity());
+        log.debug("Commission validation passed - commission: {}, quantity: {}", objectDTO.getCommission(), objectDTO.getQuantity());
 
         RequestTypeEntity requestTypeEntity = requestTypeRepositoryService.getRequestType(RequestTypeRepositoryService.CREATE_COLLATERAL);
+        log.debug("Request type retrieved - type: {}", requestTypeEntity.getName());
+        
         RrnEntity rrnEntity = rrnRepositoryService.findByUid(objectDTO.getUniqueIdentifier());
-
+        log.debug("RRN entity found - rrnId: {}, uuid: {}", rrnEntity.getId(), rrnEntity.getUuid());
+        
         String key = objectDTO.getAccountNumber();
-
+        log.info("Starting Redis lock acquisition for account: {}", key);
+        
         return redisLockService.runWithLockUntilCommit(key, this.getClass(), () -> {
 
+            log.info("=== LOCK ACQUIRED - STARTING CRITICAL SECTION ===");
             log.info("start checking existence of traceId({}) ...", objectDTO.getUniqueIdentifier());
             rrnRepositoryService.checkRrn(objectDTO.getUniqueIdentifier(), objectDTO.getChannelEntity(), requestTypeEntity, String.valueOf(objectDTO.getQuantity()), objectDTO.getAccountNumber());
             log.info("finish checking existence of traceId({})", objectDTO.getUniqueIdentifier());
-
+            
+            log.debug("Checking for duplicate collateral requests with rrnId: {}", rrnEntity.getId());
             requestRepositoryService.findCreateCollateralDuplicateWithRrnId(rrnEntity.getId());
-
-
+            log.debug("No duplicate requests found");
+            
+            log.debug("Validating wallet and account for nationalCode: {}, accountNumber: {}", rrnEntity.getNationalCode(), objectDTO.getAccountNumber());
             WalletAccountEntity walletAccountEntity = helper.checkWalletAndWalletAccountForNormalUser(walletRepositoryService, rrnEntity.getNationalCode(), walletAccountRepositoryService, objectDTO.getAccountNumber());
-
+            log.info("Wallet account validated - accountId: {}, accountNumber: {}", walletAccountEntity.getId(), walletAccountEntity.getAccountNumber());
+            
+            log.debug("Retrieving current balance for accountId: {}", walletAccountEntity.getId());
             BalanceDTO balanceDTO = walletAccountRepositoryService.getBalance(walletAccountEntity.getId());
-            if (balanceDTO.getAvailableBalance().compareTo(objectDTO.getQuantity().add(objectDTO.getCommission())) <= 0) {
-                log.error("balance for account ({}) is ({}) and not enough for block quantity ({})", walletAccountEntity.getAccountNumber(), balanceDTO.getAvailableBalance(), objectDTO.getQuantity());
-                throw new InternalServiceException("balance not enough", StatusRepositoryService.BALANCE_IS_NOT_ENOUGH, HttpStatus.OK);
-            }
-
+            log.info("Current balance retrieved - available: {}, blocked: {}, total: {}", balanceDTO.getAvailable(), balanceDTO.getBlocked(), balanceDTO.getTotal());
+            
+            BigDecimal requiredAmount = objectDTO.getQuantity().add(objectDTO.getCommission());
+            log.debug("Validating balance - required amount: {}, available balance: {}", requiredAmount, balanceDTO.getAvailable());
+            generalValidation.checkBalance(balanceDTO, requiredAmount, walletAccountEntity.getAccountNumber());
+            log.info("Balance validation passed - sufficient funds available");
+            
+            log.debug("Retrieving collateral entity with id: {}", objectDTO.getCollateralId());
             CollateralEntity collateralEntity = collateralRepositoryService.findById(Integer.parseInt(objectDTO.getCollateralId()));
-
-
-            CreateCollateralRequestEntity requestEntity = new CreateCollateralRequestEntity();
-            requestEntity.setCommission(objectDTO.getCommission());
-            requestEntity.setQuantity(objectDTO.getQuantity());
-            requestEntity.setFinalBlockQuantity(objectDTO.getQuantity());
-            requestEntity.setWalletAccountEntity(walletAccountEntity);
-            requestEntity.setRrnEntity(rrnEntity);
-            requestEntity.setChannel(objectDTO.getChannelEntity());
-            requestEntity.setResult(StatusRepositoryService.CREATE);
-            requestEntity.setChannelIp(objectDTO.getIp());
-            requestEntity.setRequestTypeEntity(requestTypeEntity);
-            requestEntity.setCreatedBy(objectDTO.getChannelEntity().getUsername());
-            requestEntity.setCreatedAt(new Date());
-            requestEntity.setCollateralStatusEnum(CollateralStatusEnum.CREATE);
-            requestEntity.setCode(generateCode());
-            requestEntity.setAdditionalData(objectDTO.getDescription());
-            requestEntity.setCollateralEntity(collateralEntity);
-
+            log.info("Collateral entity retrieved - id: {}, name: {}, type: {}", collateralEntity.getId(), collateralEntity.getName(), collateralEntity.getType());
+            
+            log.debug("Creating collateral request entity");
+            CreateCollateralRequestEntity requestEntity = collateralHelperService.createCreateCollateralRequestEntity(objectDTO, walletAccountEntity, rrnEntity, requestTypeEntity, collateralEntity);
+            log.info("Collateral request entity created - requestId: {}, code: {}", requestEntity.getId(), requestEntity.getCode());
+            
+            log.debug("Retrieving transaction templates");
             String depositTemplate = templateRepositoryService.getTemplate(TemplateRepositoryService.COLLATERAL_CREATE_DEPOSIT);
             String withdrawalTemplate = templateRepositoryService.getTemplate(TemplateRepositoryService.COLLATERAL_CREATE_WITHDRAWAL);
-
+            log.debug("Templates retrieved - deposit: {}, withdrawal: {}", depositTemplate, withdrawalTemplate);
+            
             Map<String, Object> model = new HashMap<>();
             model.put("traceId", String.valueOf(rrnEntity.getId()));
             model.put("accountNumber", walletAccountEntity.getAccountNumber());
             model.put("amount", objectDTO.getCommission());
             model.put("collateralName", collateralEntity.getName());
-
+            log.debug("Transaction model prepared - traceId: {}, accountNumber: {}, amount: {}, collateralName: {}", 
+                model.get("traceId"), model.get("accountNumber"), model.get("amount"), model.get("collateralName"));
+            
             log.info("finish CreateCollateralResponse transaction for uniqueIdentifier ({}), quantity ({}) for withdrawal walletAccountId ({})", requestEntity.getRrnEntity().getUuid(), requestEntity.getQuantity(), walletAccountEntity.getId());
 
             if (requestEntity.getCommission().compareTo(BigDecimal.valueOf(0L)) > 0) {
-
-
-                TransactionEntity commissionWithdrawal = createTransaction(walletAccountEntity, requestEntity.getCommission(),
+                TransactionEntity commissionWithdrawal = collateralHelperService.createTransaction(walletAccountEntity, requestEntity.getCommission(),
                         messageResolverOperationService.resolve(withdrawalTemplate, model), requestEntity.getAdditionalData(), requestEntity.getRequestTypeEntity(), requestEntity.getRrnEntity());
                 transactionRepositoryService.insertWithdraw(commissionWithdrawal);
-
-
                 WalletAccountEntity channelCommissionAccount = walletAccountRepositoryService.findChannelCommissionAccount(objectDTO.getChannelEntity(), WalletAccountCurrencyRepositoryService.GOLD);
                 log.info("start sell transaction for uniqueIdentifier ({}), commission ({}) for deposit commission from nationalCode ({}), walletAccountId ({})", requestEntity.getRrnEntity().getUuid(), requestEntity.getCommission(),
                         requestEntity.getWalletAccountEntity().getWalletEntity().getNationalCode(), channelCommissionAccount.getId());
-                TransactionEntity commissionDeposit = createTransaction(channelCommissionAccount, requestEntity.getCommission(),
+                TransactionEntity commissionDeposit = collateralHelperService.createTransaction(channelCommissionAccount, requestEntity.getCommission(),
                         messageResolverOperationService.resolve(depositTemplate, model), requestEntity.getAdditionalData(), requestEntity.getRequestTypeEntity(), requestEntity.getRrnEntity());
                 transactionRepositoryService.insertDeposit(commissionDeposit);
-
-
                 log.info("finish sell transaction for uniqueIdentifier ({}), commission ({}) for deposit commission from nationalCode ({}) with transactionId ({})", requestEntity.getRrnEntity().getId(), requestEntity.getCommission(), requestEntity.getWalletAccountEntity().getWalletEntity().getNationalCode(), commissionDeposit.getId());
             }
-
-
             try {
                 requestRepositoryService.save(requestEntity);
             } catch (InternalServiceException ex) {
@@ -210,19 +205,10 @@ public class CollateralOperationServiceImplementation implements CollateralOpera
                 throw new InternalServiceException("error in save CreateCollateralRequestEntity", StatusRepositoryService.GENERAL_ERROR, HttpStatus.OK);
             }
             requestEntity.setResult(StatusRepositoryService.SUCCESSFUL);
-
             log.info("start CreateCollateralResponse transaction for uniqueIdentifier ({}), quantity ({}) for withdrawal walletAccountId ({})", requestEntity.getRrnEntity().getUuid(), requestEntity.getQuantity(), walletAccountEntity.getId());
-
-            int rowEffected = walletAccountRepositoryService.blockAmount(walletAccountEntity.getId(), objectDTO.getQuantity());
-
-            if (rowEffected != 1) {
-                log.error("some error in update CreateCollateral for id ({}) and row update count is ({}) and sot same with 1", requestEntity.getId(), rowEffected);
-                throw new InternalServiceException("some error in update block amount CreateCollateralRequest", StatusRepositoryService.GENERAL_ERROR, HttpStatus.OK);
-            }
-
+            walletAccountRepositoryService.blockAmount(walletAccountEntity.getId(), objectDTO.getQuantity());
             // user second deposit (currency)
             requestRepositoryService.save(requestEntity);
-
             return helper.fillCreateCollateralResponse(requestEntity.getCode(), requestEntity.getWalletAccountEntity().getWalletEntity().getNationalCode(), requestEntity.getQuantity());
         }, objectDTO.getUniqueIdentifier());
 
@@ -232,10 +218,7 @@ public class CollateralOperationServiceImplementation implements CollateralOpera
     @Transactional(propagation = Propagation.REQUIRED, rollbackFor = Exception.class)
     public void release(ReleaseCollateralObjectDTO objectDTO) throws InternalServiceException {
 
-        if ((objectDTO.getQuantity().subtract(objectDTO.getCommission())).compareTo(new BigDecimal("0")) <= 0) {
-            log.error("commission release ({}) is bigger than quantity ({})", objectDTO.getCommission(), objectDTO.getQuantity());
-            throw new InternalServiceException("commission is bigger than quantity", StatusRepositoryService.COMMISSION_BIGGER_THAN_QUANTITY, HttpStatus.OK);
-        }
+        generalValidation.checkCommissionLessThanQuantity(objectDTO.getCommission(), objectDTO.getQuantity());
 
         RequestTypeEntity requestTypeEntity = requestTypeRepositoryService.getRequestType(RequestTypeRepositoryService.RELEASE_COLLATERAL);
 
@@ -256,26 +239,15 @@ public class CollateralOperationServiceImplementation implements CollateralOpera
 
             log.info("status for collateralCode ({}) is ({})", objectDTO.getCollateralCode(), createCollateralRequestEntity.getCollateralStatusEnum().toString());
 
-            collateralValidationService.checkReleaseCollateral(createCollateralRequestEntity, objectDTO);
+            collateralHelperService.checkReleaseCollateral(createCollateralRequestEntity, objectDTO);
 
             WalletAccountEntity walletAccountEntity = helper.checkWalletAndWalletAccountForNormalUser(walletRepositoryService, objectDTO.getNationalCode(), walletAccountRepositoryService, createCollateralRequestEntity.getWalletAccountEntity().getAccountNumber());
 
             String depositTemplate = templateRepositoryService.getTemplate(TemplateRepositoryService.COLLATERAL_RELEASE_DEPOSIT);
             String withdrawalTemplate = templateRepositoryService.getTemplate(TemplateRepositoryService.COLLATERAL_RELEASE_WITHDRAWAL);
 
-            ReleaseCollateralRequestEntity requestEntity = new ReleaseCollateralRequestEntity();
-            requestEntity.setCommission(objectDTO.getCommission());
-            requestEntity.setQuantity(objectDTO.getQuantity());
-            requestEntity.setWalletAccountEntity(walletAccountEntity);
-            requestEntity.setRrnEntity(createCollateralRequestEntity.getRrnEntity());
-            requestEntity.setChannel(objectDTO.getChannelEntity());
-            requestEntity.setResult(StatusRepositoryService.CREATE);
-            requestEntity.setChannelIp(objectDTO.getIp());
-            requestEntity.setRequestTypeEntity(requestTypeEntity);
-            requestEntity.setCreatedBy(objectDTO.getChannelEntity().getUsername());
-            requestEntity.setCreatedAt(new Date());
-            requestEntity.setAdditionalData(objectDTO.getDescription());
-            requestEntity.setCreateCollateralRequestEntity(createCollateralRequestEntity);
+            ReleaseCollateralRequestEntity requestEntity = collateralHelperService.createReleaseCollateralRequestEntity(objectDTO, requestTypeEntity, createCollateralRequestEntity, walletAccountEntity);
+
             try {
                 requestRepositoryService.save(requestEntity);
             } catch (Exception ex) {
@@ -304,14 +276,14 @@ public class CollateralOperationServiceImplementation implements CollateralOpera
             if (requestEntity.getCommission().compareTo(BigDecimal.valueOf(0L)) > 0) {
 
 
-                TransactionEntity commissionWithdrawal = createTransaction(walletAccountEntity, requestEntity.getCommission(),
+                TransactionEntity commissionWithdrawal = collateralHelperService.createTransaction(walletAccountEntity, requestEntity.getCommission(),
                         messageResolverOperationService.resolve(withdrawalTemplate, model), requestEntity.getAdditionalData(), requestEntity.getRequestTypeEntity(), requestEntity.getRrnEntity());
                 transactionRepositoryService.insertWithdraw(commissionWithdrawal);
 
                 WalletAccountEntity channelCommissionAccount = walletAccountRepositoryService.findChannelCommissionAccount(objectDTO.getChannelEntity(), WalletAccountCurrencyRepositoryService.GOLD);
                 log.info("start collateral transaction for uniqueIdentifier ({}), commission ({}) for deposit commission from nationalCode ({}), walletAccountId ({})", requestEntity.getRrnEntity().getUuid(), requestEntity.getCommission(),
                         requestEntity.getWalletAccountEntity().getWalletEntity().getNationalCode(), channelCommissionAccount.getId());
-                TransactionEntity commissionDeposit = createTransaction(channelCommissionAccount, requestEntity.getCommission(),
+                TransactionEntity commissionDeposit = collateralHelperService.createTransaction(channelCommissionAccount, requestEntity.getCommission(),
                         messageResolverOperationService.resolve(depositTemplate, model), requestEntity.getAdditionalData(), requestEntity.getRequestTypeEntity(), requestEntity.getRrnEntity());
                 transactionRepositoryService.insertDeposit(commissionDeposit);
 
@@ -332,10 +304,7 @@ public class CollateralOperationServiceImplementation implements CollateralOpera
     @Transactional(propagation = Propagation.REQUIRED, rollbackFor = Exception.class)
     public void increase(IncreaseCollateralObjectDTO objectDTO) throws InternalServiceException {
 
-        if ((objectDTO.getQuantity().subtract(objectDTO.getCommission())).compareTo(new BigDecimal("0")) <= 0) {
-            log.error("commission increase ({}) is bigger than quantity ({})", objectDTO.getCommission(), objectDTO.getQuantity());
-            throw new InternalServiceException("commission is bigger than quantity", StatusRepositoryService.COMMISSION_BIGGER_THAN_QUANTITY, HttpStatus.OK);
-        }
+        generalValidation.checkCommissionLessThanQuantity(objectDTO.getCommission(), objectDTO.getQuantity());
 
         RequestTypeEntity requestTypeEntity = requestTypeRepositoryService.getRequestType(RequestTypeRepositoryService.INCREASE_COLLATERAL);
         RrnEntity rrnEntity = rrnRepositoryService.findByUid(objectDTO.getUniqueIdentifier());
@@ -351,7 +320,7 @@ public class CollateralOperationServiceImplementation implements CollateralOpera
             requestRepositoryService.findIncreaseCollateralDuplicateWithRrnId(rrnEntity.getId());
 
             CreateCollateralRequestEntity createCollateralRequestEntity = createCollateralRequestEntityOptional.get();
-            collateralValidationService.checkIncreaseCollateral(createCollateralRequestEntity, objectDTO);
+            collateralHelperService.checkIncreaseCollateral(createCollateralRequestEntity, objectDTO);
             WalletAccountEntity walletAccountEntity = helper.checkWalletAndWalletAccountForNormalUser(walletRepositoryService, objectDTO.getNationalCode(), walletAccountRepositoryService, createCollateralRequestEntity.getWalletAccountEntity().getAccountNumber());
 
             BalanceDTO balanceDTO = walletAccountRepositoryService.getBalance(walletAccountEntity.getId());
@@ -363,19 +332,7 @@ public class CollateralOperationServiceImplementation implements CollateralOpera
             String depositTemplate = templateRepositoryService.getTemplate(TemplateRepositoryService.COLLATERAL_INCREASE_DEPOSIT);
             String withdrawalTemplate = templateRepositoryService.getTemplate(TemplateRepositoryService.COLLATERAL_INCREASE_WITHDRAWAL);
 
-            IncreaseCollateralRequestEntity requestEntity = new IncreaseCollateralRequestEntity();
-            requestEntity.setCommission(objectDTO.getCommission());
-            requestEntity.setQuantity(objectDTO.getQuantity());
-            requestEntity.setWalletAccountEntity(walletAccountEntity);
-            requestEntity.setRrnEntity(rrnEntity);
-            requestEntity.setChannel(objectDTO.getChannelEntity());
-            requestEntity.setResult(StatusRepositoryService.CREATE);
-            requestEntity.setChannelIp(objectDTO.getIp());
-            requestEntity.setRequestTypeEntity(requestTypeEntity);
-            requestEntity.setCreatedBy(objectDTO.getChannelEntity().getUsername());
-            requestEntity.setCreatedAt(new Date());
-            requestEntity.setAdditionalData(objectDTO.getDescription());
-            requestEntity.setCreateCollateralRequestEntity(createCollateralRequestEntity);
+            IncreaseCollateralRequestEntity requestEntity = collateralHelperService.createIncreaseCollateralRequestEntity(objectDTO, walletAccountEntity, createCollateralRequestEntity, rrnEntity, requestTypeEntity);
             try {
                 requestRepositoryService.save(requestEntity);
             } catch (Exception ex) {
@@ -406,14 +363,14 @@ public class CollateralOperationServiceImplementation implements CollateralOpera
             if (requestEntity.getCommission().compareTo(BigDecimal.valueOf(0L)) > 0) {
 
 
-                TransactionEntity commissionWithdrawal = createTransaction(walletAccountEntity, requestEntity.getCommission(),
+                TransactionEntity commissionWithdrawal = collateralHelperService.createTransaction(walletAccountEntity, requestEntity.getCommission(),
                         messageResolverOperationService.resolve(withdrawalTemplate, model), requestEntity.getAdditionalData(), requestEntity.getRequestTypeEntity(), requestEntity.getRrnEntity());
                 transactionRepositoryService.insertWithdraw(commissionWithdrawal);
 
                 WalletAccountEntity channelCommissionAccount = walletAccountRepositoryService.findChannelCommissionAccount(objectDTO.getChannelEntity(), WalletAccountCurrencyRepositoryService.GOLD);
                 log.info("start increase collateral transaction for uniqueIdentifier ({}), commission ({}) for deposit commission from nationalCode ({}), walletAccountId ({})", requestEntity.getRrnEntity().getUuid(), requestEntity.getCommission(),
                         requestEntity.getWalletAccountEntity().getWalletEntity().getNationalCode(), channelCommissionAccount.getId());
-                TransactionEntity commissionDeposit = createTransaction(channelCommissionAccount, requestEntity.getCommission(),
+                TransactionEntity commissionDeposit = collateralHelperService.createTransaction(channelCommissionAccount, requestEntity.getCommission(),
                         messageResolverOperationService.resolve(depositTemplate, model), requestEntity.getAdditionalData(), requestEntity.getRequestTypeEntity(), requestEntity.getRrnEntity());
                 transactionRepositoryService.insertDeposit(commissionDeposit);
 
@@ -442,29 +399,17 @@ public class CollateralOperationServiceImplementation implements CollateralOpera
                 throw new InternalServiceException("createCollateralRequestEntityOptional not found", StatusRepositoryService.COLLATERAL_CODE_NOT_FOUND, HttpStatus.OK);
             }
             CreateCollateralRequestEntity createCollateralRequestEntity = createCollateralRequestEntityOptional.get();
-            collateralValidationService.checkSeizeCollateral(createCollateralRequestEntity, objectDTO);
+            collateralHelperService.checkSeizeCollateral(createCollateralRequestEntity, objectDTO);
 
             WalletAccountEntity walletAccountEntity = createCollateralRequestEntity.getWalletAccountEntity();
 
-            SeizeCollateralRequestEntity requestEntity = new SeizeCollateralRequestEntity();
-            requestEntity.setWalletAccountEntity(walletAccountEntity);
-            requestEntity.setRrnEntity(createCollateralRequestEntity.getRrnEntity());
-            requestEntity.setChannel(objectDTO.getChannelEntity());
-            requestEntity.setResult(StatusRepositoryService.CREATE);
-            requestEntity.setChannelIp(objectDTO.getIp());
-            requestEntity.setRequestTypeEntity(requestTypeEntity);
-            requestEntity.setCreatedBy(objectDTO.getChannelEntity().getUsername());
-            requestEntity.setCreatedAt(new Date());
-            requestEntity.setAdditionalData(objectDTO.getDescription());
-            requestEntity.setCreateCollateralRequestEntity(createCollateralRequestEntity);
+            SeizeCollateralRequestEntity requestEntity = collateralHelperService.createSeizeCollateralRequestEntity(objectDTO, walletAccountEntity, createCollateralRequestEntity, requestTypeEntity);
             try {
                 requestRepositoryService.save(requestEntity);
             } catch (Exception ex) {
                 log.error("error in save LiquidCollateral with message ({})", ex.getMessage());
                 throw new InternalServiceException("error in save IncreaseCollateral", StatusRepositoryService.GENERAL_ERROR, HttpStatus.OK);
             }
-
-
             //get from unblockAnd
             collateralTransactionalService.unblockAndTransfer(createCollateralRequestEntity);
 
@@ -493,33 +438,19 @@ public class CollateralOperationServiceImplementation implements CollateralOpera
             }
             CreateCollateralRequestEntity createCollateralRequestEntity = createCollateralRequestEntityOptional.get();
             ////1 check quantity request must be less than collateral quantity
-            collateralValidationService.checkSellCollateral(createCollateralRequestEntity, objectDTO);
+            collateralHelperService.checkSellCollateral(createCollateralRequestEntity, objectDTO);
 
             //2 sell quantity and fill collateral RIAL with amount from collateral
             CollateralEntity collateralEntity = createCollateralRequestEntity.getCollateralEntity();
 
-            SellCollateralRequestEntity requestEntity = new SellCollateralRequestEntity();
-            requestEntity.setMerchantEntity(merchantRepositoryService.findById(Integer.parseInt(objectDTO.getMerchantId())));
-            requestEntity.setCollateralWalletAccountEntity(walletAccountRepositoryService.findUserWalletAccount(collateralEntity.getWalletEntity(), createCollateralRequestEntity.getWalletAccountEntity().getWalletAccountCurrencyEntity(), WalletAccountCurrencyRepositoryService.RIAL));
-            requestEntity.setPrice(Long.parseLong(objectDTO.getPrice()));
-            requestEntity.setCommission(objectDTO.getCommission());
-            requestEntity.setRrnEntity(createCollateralRequestEntity.getRrnEntity());
-            requestEntity.setChannel(objectDTO.getChannelEntity());
-            requestEntity.setResult(StatusRepositoryService.CREATE);
-            requestEntity.setChannelIp(objectDTO.getIp());
-            requestEntity.setRequestTypeEntity(requestTypeEntity);
-            requestEntity.setCreatedBy(objectDTO.getChannelEntity().getUsername());
-            requestEntity.setCreatedAt(new Date());
-            requestEntity.setAdditionalData(objectDTO.getDescription());
-            requestEntity.setCreateCollateralRequestEntity(createCollateralRequestEntity);
-            requestEntity.setCashOutRequestEntity(null);
-            requestEntity.setQuantity(objectDTO.getQuantity());
-            requestEntity.setIban(createCollateralRequestEntity.getCollateralEntity().getIban());
+            WalletAccountEntity collateralWalletAccountRial = walletAccountRepositoryService.findUserWalletAccount(collateralEntity.getWalletEntity(), createCollateralRequestEntity.getWalletAccountEntity().getWalletAccountCurrencyEntity(), WalletAccountCurrencyRepositoryService.RIAL);
+            SellCollateralRequestEntity requestEntity = collateralHelperService.createSellCollateralRequestEntity(objectDTO, merchantRepositoryService,
+                    requestTypeEntity, createCollateralRequestEntity, collateralWalletAccountRial);
 
             try {
                 requestRepositoryService.save(requestEntity);
             } catch (Exception ex) {
-                log.error("error in save LiquidCollateral with message ({})", ex.getMessage());
+                log.error("error in save SellCollateralRequestEntity with message ({})", ex.getMessage());
                 throw new InternalServiceException("error in save IncreaseCollateral", StatusRepositoryService.GENERAL_ERROR, HttpStatus.OK);
             }
 
@@ -586,10 +517,9 @@ public class CollateralOperationServiceImplementation implements CollateralOpera
         return helper.fillCollateralResponse(reportTransactionEntityPage, statusRepositoryService);
     }
 
-
     private Specification<ReportTransactionEntity> getReportTransactionEntityPredicate(Map<String, String> searchCriteria) {
         return (root, query, criteriaBuilder) -> {
-            List<Predicate> predicates = buildReportTransactionPredicatesFromCriteria(searchCriteria, root, criteriaBuilder);
+            List<Predicate> predicates = collateralHelperService.buildReportTransactionPredicatesFromCriteria(searchCriteria, root, criteriaBuilder);
             String orderBy = Optional.ofNullable(searchCriteria.get("orderBy")).orElse("id");
             String sortDirection = Optional.ofNullable(searchCriteria.get("sort")).orElse("asc");
 
@@ -599,59 +529,9 @@ public class CollateralOperationServiceImplementation implements CollateralOpera
         };
     }
 
-    private List<Predicate> buildReportTransactionPredicatesFromCriteria(Map<String, String> searchCriteria, Root<ReportTransactionEntity> root,
-                                                                         CriteriaBuilder criteriaBuilder) {
-        List<Predicate> predicates = new ArrayList<>();
-
-        String fromTime = searchCriteria.get("fromTime");
-        String toTime = searchCriteria.get("toTime");
-        String nationalCode = searchCriteria.get("nationalCode");
-        String walletAccountNumber = searchCriteria.get("walletAccountNumber");
-        String uniqueIdentifier = searchCriteria.get("uniqueIdentifier");
-
-        if (StringUtils.hasText(searchCriteria.get("id"))) {
-            predicates.add(criteriaBuilder.equal(root.get("id"), Long.parseLong(searchCriteria.get("id"))));
-        }
-
-        if (StringUtils.hasText(nationalCode)) {
-            predicates.add(criteriaBuilder.equal(root.get("walletAccountEntity").get("walletEntity").get("nationalCode"), nationalCode));
-        }
-
-        if (StringUtils.hasText(walletAccountNumber)) {
-            List<String> stringList = Arrays.stream(walletAccountNumber.split(",")).toList();
-            predicates.add(criteriaBuilder.in(root.get("walletAccountEntity").get("accountNumber")).value(stringList));
-        }
-
-        if (StringUtils.hasText(uniqueIdentifier)) {
-            predicates.add(criteriaBuilder.equal(root.get("rrnEntity").get("uuid"), uniqueIdentifier));
-        }
-
-        if ((StringUtils.hasText(fromTime))) {
-            Date sDate;
-            if (Integer.parseInt(fromTime.substring(0, 4)) < 1900) {
-                sDate = DateUtils.parse(fromTime, DateUtils.PERSIAN_DATE_FORMAT, true, DateUtils.FARSI_LOCALE);
-            } else {
-                sDate = DateUtils.parse(fromTime, DateUtils.PERSIAN_DATE_FORMAT, true, DateUtils.ENGLISH_LOCALE);
-            }
-            predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("createdAt"), sDate));
-        }
-
-        if (StringUtils.hasText(toTime)) {
-            Date tDate;
-            if (Integer.parseInt(toTime.substring(0, 4)) < 1900) {
-                tDate = DateUtils.parse(toTime, DateUtils.PERSIAN_DATE_FORMAT, true, DateUtils.FARSI_LOCALE);
-            } else {
-                tDate = DateUtils.parse(toTime, DateUtils.PERSIAN_DATE_FORMAT, true, DateUtils.ENGLISH_LOCALE);
-            }
-            predicates.add(criteriaBuilder.lessThanOrEqualTo(root.get("createdAt"), tDate));
-        }
-
-        return predicates;
-    }
-
     private Specification<CreateCollateralRequestEntity> getCreateCollateralRequestEntityPredicate(Map<String, String> searchCriteria) {
         return (root, query, criteriaBuilder) -> {
-            List<Predicate> predicates = buildCreateCollateralPredicatesFromCriteria(searchCriteria, root, criteriaBuilder);
+            List<Predicate> predicates = collateralHelperService.buildCreateCollateralPredicatesFromCriteria(searchCriteria, root, criteriaBuilder);
             String orderBy = Optional.ofNullable(searchCriteria.get("orderBy")).orElse("id");
             String sortDirection = Optional.ofNullable(searchCriteria.get("sort")).orElse("asc");
 
@@ -659,51 +539,6 @@ public class CollateralOperationServiceImplementation implements CollateralOpera
 
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
         };
-    }
-
-    private List<Predicate> buildCreateCollateralPredicatesFromCriteria(Map<String, String> searchCriteria, Root<CreateCollateralRequestEntity> root,
-                                                                        CriteriaBuilder criteriaBuilder) {
-        List<Predicate> predicates = new ArrayList<>();
-
-        String fromTime = searchCriteria.get("fromTime");
-        String toTime = searchCriteria.get("toTime");
-        String nationalCode = searchCriteria.get("nationalCode");
-        String collateralId = searchCriteria.get("collateralId");
-
-        if (StringUtils.hasText(searchCriteria.get("id"))) {
-            predicates.add(criteriaBuilder.equal(root.get("id"), Long.parseLong(searchCriteria.get("id"))));
-        }
-
-        if (StringUtils.hasText(nationalCode)) {
-            predicates.add(criteriaBuilder.equal(root.get("walletAccountEntity").get("walletEntity").get("nationalCode"), nationalCode));
-        }
-
-
-        if (StringUtils.hasText(collateralId)) {
-            predicates.add(criteriaBuilder.equal(root.get("collateralEntity").get("id"), collateralId));
-        }
-
-        if ((StringUtils.hasText(fromTime))) {
-            Date sDate;
-            if (Integer.parseInt(fromTime.substring(0, 4)) < 1900) {
-                sDate = DateUtils.parse(fromTime, DateUtils.PERSIAN_DATE_FORMAT, true, DateUtils.FARSI_LOCALE);
-            } else {
-                sDate = DateUtils.parse(fromTime, DateUtils.PERSIAN_DATE_FORMAT, true, DateUtils.ENGLISH_LOCALE);
-            }
-            predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("createdAt"), sDate));
-        }
-
-        if (StringUtils.hasText(toTime)) {
-            Date tDate;
-            if (Integer.parseInt(toTime.substring(0, 4)) < 1900) {
-                tDate = DateUtils.parse(toTime, DateUtils.PERSIAN_DATE_FORMAT, true, DateUtils.FARSI_LOCALE);
-            } else {
-                tDate = DateUtils.parse(toTime, DateUtils.PERSIAN_DATE_FORMAT, true, DateUtils.ENGLISH_LOCALE);
-            }
-            predicates.add(criteriaBuilder.lessThanOrEqualTo(root.get("createdAt"), tDate));
-        }
-
-        return predicates;
     }
 
     private void setOrder(CriteriaQuery<?> query, String orderBy, String sortDirection, CriteriaBuilder criteriaBuilder,
@@ -724,37 +559,6 @@ public class CollateralOperationServiceImplementation implements CollateralOpera
         }
     }
 
-    private String generateCode() {
-        while (true) {
-            String scratchCode = generateRandomString();
-            Long countRecord = createCollateralRequestRepository.countByCode(scratchCode);
-            if (countRecord == 0) {
-                return scratchCode;
-            }
-        }
-    }
 
-    private String generateRandomString() {
-        String saltChars = "ABCDEFGHJKMNLPQRSTUVWXYZ23456789$#@";
-        StringBuilder salt = new StringBuilder();
-        while (salt.length() < 15) { // length of the random string.
-            int index = random.nextInt(saltChars.length());
-            salt.append(saltChars.charAt(index));
-        }
-        return salt.toString();
-    }
-
-    private TransactionEntity createTransaction(WalletAccountEntity account, BigDecimal amount, String description,
-                                                String additionalData, RequestTypeEntity requestTypeEntity,
-                                                RrnEntity rrn) {
-        TransactionEntity transaction = new TransactionEntity();
-        transaction.setAmount(amount);
-        transaction.setWalletAccountEntity(account);
-        transaction.setDescription(description);
-        transaction.setAdditionalData(additionalData);
-        transaction.setRequestTypeId(requestTypeEntity.getId());
-        transaction.setRrnEntity(rrn);
-        return transaction;
-    }
 
 }

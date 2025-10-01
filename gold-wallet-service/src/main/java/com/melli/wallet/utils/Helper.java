@@ -69,7 +69,7 @@ public class Helper {
     private static String SALT_UPDATE_PASSWORD = "108bc591f8d9e09327133e02fd64d23f67f8f52439374bb6c56510b8ad453f7d9c87860126b5811879d9a9628650a6a5";
     public static int WALLET_ACCOUNT_LENGTH = 8;
 
-    public static final BigDecimal MINIMUM_BALANCE_THRESHOLD = BigDecimal.ZERO;
+
 
     public Helper(WalletTypeRepositoryService walletTypeRepositoryService) {
         this.walletTypeRepositoryService = walletTypeRepositoryService;

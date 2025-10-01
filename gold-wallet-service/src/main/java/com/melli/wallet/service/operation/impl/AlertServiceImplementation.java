@@ -53,7 +53,7 @@ public class AlertServiceImplementation implements AlertService {
             }
 
             if (!Boolean.TRUE.equals(Boolean.parseBoolean(settingSendSmsOptional.get().getValue()))) {
-                log.error("The setting named SMS_SEND_ALERT is configured to ({}), and the system does not send any notifications with errorCode ({}).", settingSendSmsOptional.get().getValue(), errorCode);
+                log.info("The setting named SMS_SEND_ALERT is configured to ({}), and the system does not send any notifications with errorCode ({}).", settingSendSmsOptional.get().getValue(), errorCode);
                 return;
             }
 
