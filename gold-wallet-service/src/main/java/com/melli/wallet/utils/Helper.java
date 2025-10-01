@@ -43,6 +43,7 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.springframework.context.annotation.Profile;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -67,6 +68,8 @@ public class Helper {
 
     private static String SALT_UPDATE_PASSWORD = "108bc591f8d9e09327133e02fd64d23f67f8f52439374bb6c56510b8ad453f7d9c87860126b5811879d9a9628650a6a5";
     public static int WALLET_ACCOUNT_LENGTH = 8;
+
+    public static final BigDecimal MINIMUM_BALANCE_THRESHOLD = BigDecimal.ZERO;
 
     public Helper(WalletTypeRepositoryService walletTypeRepositoryService) {
         this.walletTypeRepositoryService = walletTypeRepositoryService;
@@ -648,7 +651,7 @@ public class Helper {
                 WalletAccountCurrencyEntity walletAccountCurrencyEntity= walletAccountCurrencyRepositoryService.getById(Long.parseLong(aggregationStockByCurrencyDTO.getCurrency()));
                 stockCurrencyObjectList.add(new StockCurrencyObject(aggregationStockByCurrencyDTO.getBalance(), walletAccountCurrencyEntity.getName()));
             }catch (InternalServiceException ex){
-                log.error("currency with Id ({}) not found", aggregationStockByCurrencyDTO.getCurrency());
+                log.error("currency with Id ({}) not found", aggregationStockByCurrencyDTO.getCurrency(), ex);
             }
         }
         response.setStockCurrencyObjectList(stockCurrencyObjectList);
@@ -744,8 +747,9 @@ public class Helper {
         return ((1 + r.nextInt(2)) * 10000 + r.nextInt(10000));
     }
 
+    @Profile("dev")
     public static void main(String[] args) {
         PasswordEncoder bCryptPasswordEncoder = new BCryptPasswordEncoder();
-        System.out.println(bCryptPasswordEncoder.encode("admin" + "M@hd!" + "admin"));
+//        System.out.println(bCryptPasswordEncoder.encode("admin" + "M@hd!" + "admin"));
     }
 }

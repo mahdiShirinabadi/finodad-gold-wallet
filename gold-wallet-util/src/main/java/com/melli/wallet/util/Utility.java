@@ -7,6 +7,7 @@ import com.melli.wallet.util.date.DateUtils;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.context.annotation.Profile;
 
 import javax.xml.bind.DatatypeConverter;
 import java.io.BufferedReader;
@@ -146,6 +147,7 @@ public class Utility {
         return kf.generatePublic(spec);
     }
 
+    @Profile("dev")
     public static void main(String[] args) {
         String input = "10000|0079993141|1|98a3f433-ac26-42ad-9b0d-227a121250df";
 
@@ -180,15 +182,15 @@ public class Utility {
                     "uhuq9Y6R4Otj3H3nj03+rot3";
 
 
-            System.out.println(publicKey.hashCode());
+            log.debug("Public key hash code: {}", publicKey.hashCode());
 
 
             String signValue = signValue(input, privateKey);
-            System.out.println("SignValue: " + signValue);
+            log.debug("SignValue: {}", signValue);
             boolean resultVerify = verifySignature(input.getBytes(), signValue.getBytes(), publicKey);
-            System.out.println("ResultVerify: " + resultVerify);
+            log.debug("ResultVerify: {}", resultVerify);
         } catch (Exception e) {
-            e.printStackTrace();
+           log.error(e);
         }
     }
 
@@ -200,7 +202,8 @@ public class Utility {
             sign = sign(privateKey, input);
             return org.apache.commons.codec.binary.Base64.encodeBase64String(sign);
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("error is sign ({})", e.getMessage());
+            log.error(e);
             return null;
         }
     }

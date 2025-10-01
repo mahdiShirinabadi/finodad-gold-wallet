@@ -127,7 +127,7 @@ public class LimitationGeneralCustomRepositoryServiceImplementation implements L
         }
     }
 
-     //TODO test a lot
+
     @Override
     public void create(ChannelEntity channelEntity, Long settingGeneralId, WalletLevelEntity walletLevelEntity, WalletAccountTypeEntity walletAccountTypeEntity, WalletAccountCurrencyEntity walletAccountCurrencyEntity, WalletTypeEntity walletTypeEntity, String value, String additionalData) throws InternalServiceException {
 

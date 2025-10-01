@@ -3,6 +3,7 @@ package com.melli.wallet.util.date;
 import com.melli.wallet.util.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.context.annotation.Profile;
 
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -17,12 +18,9 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.Locale;
 
-
 public class DateUtils {
-    /**
-     *
-     */
-    public static final Logger log = LogManager.getLogger(DateUtils.class);
+    
+    private static final Logger log = LogManager.getLogger(DateUtils.class);
 
     /**
      *
@@ -792,36 +790,10 @@ public class DateUtils {
         return gDate;
     }
 
+    @Profile("dev")
     public static void main(String[] args) {
-
-        /*String currentDate = DateUtils.getLocaleDate(DateUtils.FARSI_LOCALE, new Date(), "yyyyMMdd", false);
-        String lastDateOfpreviousMonth = DateUtils.getlastDateOfpreviousMonth();
-        String firstDateOfpreviousMonth = DateUtils.getFirstDateOfpreviousMonth();
-
-        System.out.println(lastDateOfpreviousMonth);
-        System.out.println(firstDateOfpreviousMonth);
-
-        DateFormat formatter = new SimpleDateFormat("F", DateUtils.FARSI_LOCALE);
-        System.out.printf(formatter.format(new Date()).toString());
-        LocalDate today = LocalDate.now();
-
-        DayOfWeek dayOfWeek = today.getDayOfWeek();
-        System.out.printf("" + dayOfWeek.getValue());*/
-
-
         Date date = new Date();
         long value = LocalDate.ofEpochDay(date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate().toEpochDay() - date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate().getDayOfMonth() + 1).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli();
-        System.out.println(new Date(value));
-
-
-        // System.out.println(DateUtils.getFirstDateOfMonth("139712"));
-        // System.out.println(DateUtils.getLastDateOfMonth("139712"));
-        //
-        // System.out.println(DateUtils.getFirstDateOfMonth("139710"));
-        // System.out.println(DateUtils.getLastDateOfMonth("139710"));
-        //
-        // System.out.println(DateUtils.getPreviousMonth("139710"));
-        // System.out.println(DateUtils.getPreviousMonth("139701"));
-
+        log.debug("Calculated date: {}", new Date(value));
     }
 }

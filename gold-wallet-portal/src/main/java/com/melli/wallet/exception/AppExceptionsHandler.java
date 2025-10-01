@@ -13,6 +13,7 @@ import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.text.StringSubstitutor;
 import org.apache.http.auth.AuthenticationException;
+import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -141,6 +142,7 @@ public class AppExceptionsHandler extends ResponseEntityExceptionHandler {
         return new ResponseEntity<>(new BaseResponse(false, errorDetail), HttpStatus.OK);
     }
 
+    @Profile("dev")
     public static void main(String[] args) {
 
 
@@ -153,7 +155,7 @@ public class AppExceptionsHandler extends ResponseEntityExceptionHandler {
         params.put("3", "42");
         params.put("4", "42");
         String result = StringSubstitutor.replace(TEMPLATE, params, "${", "}");
-        System.out.printf(result);
+        log.debug("Template result: {}", result);
     }
 
 

@@ -609,6 +609,7 @@ public class TestSadadChannelInterfaceImpl implements SadadChannelInterface {
                 "}";
     }
 
+    @Profile("dev")
     public static void main(String[] args) throws URISyntaxException, ChannelException {
 
 
@@ -643,6 +644,6 @@ public class TestSadadChannelInterfaceImpl implements SadadChannelInterface {
 
         String response = sendRequest(Utility.getCallerClassAndMethodName(), HttpMethod.POST, builder, Integer.parseInt("30000"), headers, params, body, new int[]{HttpStatus.OK.value()});
         log.info("({}), Finished for, with response({})", Utility.getCallerMethodName(), response);
-        System.out.println(response);
+        log.debug("Response details: {}", response);
     }
 }

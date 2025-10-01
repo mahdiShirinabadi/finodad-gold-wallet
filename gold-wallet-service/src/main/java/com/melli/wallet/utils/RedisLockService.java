@@ -77,17 +77,28 @@ public class RedisLockService {
             if (txActive) {
                 final Lock heldLock = lock;
                 TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+
+                    @Override
+                    public void afterCommit() {
+                        // Release lock ONLY after successful commit
+                        try {
+                            log.info("afterCommit unlock lockKey {} in class {}, traceNumber ({})", lockKey, tClass.getSimpleName(), traceNumber);
+                            heldLock.unlock();
+                        } catch (Exception e) {
+                            log.error("error in afterCommit unlock for lockKey {}: {}", lockKey, e.getMessage());
+                        }
+                    }
+
                     @Override
                     public void afterCompletion(int status) {
-                        // Release lock after transaction completes (commit or rollback)
-                        try {
-                            log.info("afterCompletion unlock lockKey {} in class {}, traceNumber ({})", lockKey, tClass.getSimpleName(), traceNumber);
-                            heldLock.unlock();
-                        } catch (IllegalMonitorStateException ex) {
-                            // Lock already released or not held by this thread; ignore
-                            log.warn("lock not held at afterCompletion for lockKey {}: {}", lockKey, ex.getMessage());
-                        } catch (Exception e) {
-                            log.error("error in afterCompletion unlock for lockKey {}: {}", lockKey, e.getMessage());
+                        // Handle rollback case
+                        if (status == STATUS_ROLLED_BACK) {
+                            try {
+                                log.info("afterRollback unlock lockKey {} in class {}, traceNumber ({})", lockKey, tClass.getSimpleName(), traceNumber);
+                                heldLock.unlock();
+                            } catch (Exception e) {
+                                log.error("error in afterRollback unlock for lockKey {}: {}", lockKey, e.getMessage());
+                            }
                         }
                     }
                 });

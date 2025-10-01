@@ -4,6 +4,7 @@ import com.melli.wallet.util.date.DateUtils;
 import org.apache.http.util.TextUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.context.annotation.Profile;
 import org.springframework.util.StringUtils;
 
 import java.math.BigInteger;
@@ -539,13 +540,14 @@ public class Validator {
     }
 
 
+    @Profile("dev")
     public static void main(String[] args) {
-//		System.out.println("args = " + normalMobile("09126146558"));
-//		System.out.println("args = " + normalMobile("9126146558"));
-        System.out.println(isValidBirthDate("13650130"));
-        System.out.println(isValidBirthDate("1365126"));
-        System.out.println(isValidBirthDate("13651132"));
-        System.out.println(isValidBirthDate("13651330"));
+//		log.debug("args = " + normalMobile("09126146558"));
+//		log.debug("args = " + normalMobile("9126146558"));
+        log.debug("Birth date validation result: {}", isValidBirthDate("13650130"));
+        log.debug("Birth date validation result: {}", isValidBirthDate("1365126"));
+        log.debug("Birth date validation result: {}", isValidBirthDate("13651132"));
+        log.debug("Birth date validation result: {}", isValidBirthDate("13651330"));
     }
 
 }
