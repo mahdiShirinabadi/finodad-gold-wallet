@@ -88,6 +88,22 @@ insert into request_type(created_by, created_at, name, fa_name, display)
 VALUES ('System', now(), 'gift_card', 'کارت هدیه', 1)
 on conflict do nothing;
 
+insert into request_type(created_by, created_at, name, fa_name, display)
+VALUES ('System', now(), 'gift_card', 'کارت هدیه', 1)
+on conflict do nothing;
+
+insert into request_type(created_by, created_at, name, fa_name, display)
+VALUES ('System', now(), 'gift_card', 'کارت هدیه', 1)
+on conflict do nothing;
+
+insert into request_type(created_by, created_at, name, fa_name, display)
+VALUES ('System', now(), 'gift_card', 'کارت هدیه', 1)
+on conflict do nothing;
+
+insert into request_type(created_by, created_at, name, fa_name, display)
+VALUES ('System', now(), 'gift_card', 'کارت هدیه', 1)
+on conflict do nothing;
+
 -- Add only new wallet account types (GIFT_CARD is new)
 ALTER TABLE wallet_account_type
     ADD COLUMN display BOOLEAN DEFAULT true NOT NULL;
@@ -206,4 +222,16 @@ on conflict do nothing;
 
 insert into request_type(created_by, created_at, name, fa_name, display)
 VALUES ('System', now(), 'release_collateral', 'آزادسازی وثیقه', 1)
+on conflict do nothing;
+
+insert into request_type(created_by, created_at, name, fa_name, display)
+VALUES ('System', now(), 'increase_collateral', 'آزادسازی وثیقه', 1)
+on conflict do nothing;
+
+insert into request_type(created_by, created_at, name, fa_name, display)
+VALUES ('System', now(), 'seize_collateral', 'آزادسازی وثیقه', 1)
+on conflict do nothing;
+
+insert into request_type(created_by, created_at, name, fa_name, display)
+VALUES ('System', now(), 'sell_collateral', 'آزادسازی وثیقه', 1)
 on conflict do nothing;

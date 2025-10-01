@@ -121,10 +121,9 @@ public class CollateralTransactionalService {
                 collateralCurrencyAccount.getWalletAccountCurrencyEntity().getName());
 
 
-        //get MerchantId
-        // user withdrawal (currency) (quantity)
-        log.info("start purchase transaction for uniqueIdentifier ({}), quantity ({}) for user withdrawal user walletAccountId({})", sellCollateralRequestEntity.getRrnEntity().getUuid(), sellCollateralRequestEntity.getQuantity(), sellCollateralRequestEntity.getMerchantEntity().getWalletEntity().getId());
-        TransactionEntity collateralCurrencyWithdrawal = createTransaction(sellCollateralRequestEntity.getCollateralWalletAccountEntity(),
+        // user withdrawal (currency) (quantity) from collateral
+        log.info("start purchase transaction for uniqueIdentifier ({}), quantity ({}) for user withdrawal user walletId({})", sellCollateralRequestEntity.getRrnEntity().getUuid(), sellCollateralRequestEntity.getQuantity(), collateralCurrencyAccount.getId());
+        TransactionEntity collateralCurrencyWithdrawal = createTransaction(collateralCurrencyAccount,
                 (sellCollateralRequestEntity.getQuantity().add(sellCollateralRequestEntity.getCommission())),
                 messageResolverOperationService.resolve(withdrawalTemplate, model), sellCollateralRequestEntity.getAdditionalData(),
                 sellCollateralRequestEntity, sellCollateralRequestEntity.getRrnEntity());

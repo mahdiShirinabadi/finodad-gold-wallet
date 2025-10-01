@@ -44,6 +44,8 @@ public class RequestRepositoryServiceImplementation implements RequestRepository
     private final CreateCollateralRequestRepository createCollateralRequestRepository;
     private final ReleaseCollateralRequestRepository releaseCollateralRequestRepository;
     private final IncreaseCollateralRequestRepository increaseCollateralRequestRepository;
+    private final SeizeCollateralRequestRepository seizeCollateralRequestRepository;
+    private final SellCollateralRequestRepository sellCollateralRequestRepository;
 
 
     @Override
@@ -59,7 +61,9 @@ public class RequestRepositoryServiceImplementation implements RequestRepository
             case GiftCardPaymentRequestEntity giftCardPaymentRequestEntity -> giftCardPaymentRequestRepository.save(giftCardPaymentRequestEntity);
             case CreateCollateralRequestEntity createCollateralRequestEntity -> createCollateralRequestRepository.save(createCollateralRequestEntity);
             case ReleaseCollateralRequestEntity releaseCollateralRequestEntity -> releaseCollateralRequestRepository.save(releaseCollateralRequestEntity);
+            case SeizeCollateralRequestEntity seizeCollateralRequestEntity -> seizeCollateralRequestRepository.save(seizeCollateralRequestEntity);
             case IncreaseCollateralRequestEntity increaseCollateralRequestEntity -> increaseCollateralRequestRepository.save(increaseCollateralRequestEntity);
+            case SellCollateralRequestEntity sellCollateralRequestEntity -> sellCollateralRequestRepository.save(sellCollateralRequestEntity);
             case null, default -> {
                 log.error("requestEntity is not instanceof");
                 throw new InternalServiceException("error in save request, instance not define", StatusRepositoryService.GENERAL_ERROR, HttpStatus.OK);
@@ -195,6 +199,15 @@ public class RequestRepositoryServiceImplementation implements RequestRepository
         if(createCollateralRequestEntityOptional.isPresent()) {
             log.error("createCollateralRequestEntityOptional WithRrnId ({}) found", rrnId);
             throw new InternalServiceException("createCollateralRequestEntityOptional", StatusRepositoryService.DUPLICATE_UUID, HttpStatus.OK);
+        }
+    }
+
+    @Override
+    public void findIncreaseCollateralDuplicateWithRrnId(long rrnId) throws InternalServiceException {
+        Optional<IncreaseCollateralRequestEntity> requestEntityOptional = increaseCollateralRequestRepository.findOptionalByRrnEntityId(rrnId);
+        if(requestEntityOptional.isPresent()) {
+            log.error("increaseCollateralRequestEntityOptional WithRrnId ({}) found", rrnId);
+            throw new InternalServiceException("increaseCollateralRequestEntityOptional", StatusRepositoryService.DUPLICATE_UUID, HttpStatus.OK);
         }
     }
 

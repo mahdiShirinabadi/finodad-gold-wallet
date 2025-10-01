@@ -172,7 +172,7 @@ public class TransactionRepositoryServiceImplementation implements TransactionRe
 
         // Check for sufficient balance
         if (walletBalance.getAvailableBalance().subtract(transaction.getAmount()).compareTo(BigDecimal.ZERO) < 0) {
-            log.error("Balance of wallet({}) now is ({}), is less than withdraw amount({}) !!!", transaction.getWalletAccountEntity().getId(), walletBalance, transaction.getAmount());
+            log.error("Balance of wallet({}) now is ({}), is less than withdraw amount({}) !!!", transaction.getWalletAccountEntity().getId(), walletBalance.getAvailableBalance(), transaction.getAmount());
             throw new InternalServiceException("Balance of walletAccountId( " + transaction.getWalletAccountEntity().getId() + "), is less than withdraw amount(" + transaction.getAmount() + ") !!!", StatusRepositoryService.BALANCE_IS_NOT_ENOUGH, HttpStatus.OK);
         }
 

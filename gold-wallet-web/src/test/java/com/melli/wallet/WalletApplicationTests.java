@@ -13,6 +13,7 @@ import com.melli.wallet.domain.request.setup.PanelCollateralCreateRequestJson;
 import com.melli.wallet.domain.request.PanelBaseSearchJson;
 import com.melli.wallet.domain.response.collateral.CollateralResponse;
 import com.melli.wallet.domain.response.collateral.CollateralListResponse;
+import com.melli.wallet.domain.response.collateral.CollateralTrackResponse;
 import com.melli.wallet.domain.response.transaction.ReportTransactionResponse;
 import com.melli.wallet.domain.request.wallet.*;
 import com.melli.wallet.domain.request.wallet.cash.CashGenerateUuidRequestJson;
@@ -21,9 +22,12 @@ import com.melli.wallet.domain.request.wallet.cash.CashOutWalletRequestJson;
 import com.melli.wallet.domain.request.wallet.giftcard.GiftCardGenerateUuidRequestJson;
 import com.melli.wallet.domain.request.wallet.giftcard.GiftCardProcessRequestJson;
 import com.melli.wallet.domain.request.wallet.giftcard.PaymentGiftCardRequestJson;
-import com.melli.wallet.domain.request.wallet.collateral.CreateUniqueIdentifierCollateralRequestJson;
+import com.melli.wallet.domain.request.wallet.collateral.UniqueIdentifierCollateralRequestJson;
 import com.melli.wallet.domain.request.wallet.collateral.CreateCollateralRequestJson;
 import com.melli.wallet.domain.request.wallet.collateral.ReleaseCollateralRequestJson;
+import com.melli.wallet.domain.request.wallet.collateral.IncreaseCollateralRequestJson;
+import com.melli.wallet.domain.request.wallet.collateral.SeizeCollateralRequestJson;
+import com.melli.wallet.domain.request.wallet.collateral.SellCollateralRequestJson;
 import com.melli.wallet.domain.request.wallet.p2p.P2pGenerateUuidRequestJson;
 import com.melli.wallet.domain.request.wallet.p2p.P2pRequestJson;
 import com.melli.wallet.domain.request.wallet.physical.PhysicalCashGenerateUuidRequestJson;
@@ -138,9 +142,14 @@ public class WalletApplicationTests {
     private static final String GIFT_CARD_INQUIRY_PATH = "/api/v1/giftCard/inquiry";
     private static final String GIFT_CARD_PAYMENT_PATH = "/api/v1/giftCard/payment";
 
-    private static final String COLLATERAL_GENERATE_UUID_PATH = "/api/v1/collateral/generate/uuid";
+    private static final String COLLATERAL_GENERATE_UUID_PATH = "/api/v1/collateral/create/generate/uuid";
+    private static final String COLLATERAL_GENERATE_INCREASE_UUID_PATH = "/api/v1/collateral/increase/generate/uuid";
     private static final String COLLATERAL_CREATE_PATH = "/api/v1/collateral/create";
     private static final String COLLATERAL_RELEASE_PATH = "/api/v1/collateral/release";
+    private static final String COLLATERAL_INCREASE_PATH = "/api/v1/collateral/increase";
+    private static final String COLLATERAL_SEIZE_PATH = "/api/v1/collateral/seize";
+    private static final String COLLATERAL_SELL_PATH = "/api/v1/collateral/sell";
+    private static final String COLLATERAL_INQUIRY_PATH = "/api/v1/collateral/inquiry";
     private static final String PANEL_COLLATERAL_CREATE_PATH = "/api/v1/panel/collateral/create";
     private static final String PANEL_COLLATERAL_LIST_PATH = "/api/v1/panel/collateral/list";
     private static final String PANEL_COLLATERAL_CREATE_LIST_PATH = "/api/v1/panel/collateral/create/list";
@@ -857,13 +866,26 @@ public class WalletApplicationTests {
     // ==================== COLLATERAL METHODS ====================
 
     public BaseResponse<UuidResponse> generateCollateralUuid(MockMvc mockMvc, String token, String nationalCode, String quantity, String currency, String walletAccountNumber, HttpStatus httpStatus, int errorCode, boolean success) throws Exception {
-        CreateUniqueIdentifierCollateralRequestJson requestJson = new CreateUniqueIdentifierCollateralRequestJson();
+        UniqueIdentifierCollateralRequestJson requestJson = new UniqueIdentifierCollateralRequestJson();
         requestJson.setNationalCode(nationalCode);
         requestJson.setQuantity(quantity);
         requestJson.setCurrency(currency);
         requestJson.setWalletAccountNumber(walletAccountNumber);
         
         MockHttpServletRequestBuilder postRequest = buildPostRequest(token, COLLATERAL_GENERATE_UUID_PATH, mapToJson(requestJson));
+        String response = performTest(mockMvc, postRequest, httpStatus, success, errorCode);
+        TypeReference<BaseResponse<UuidResponse>> typeReference = new TypeReference<>() {};
+        return objectMapper.readValue(response, typeReference);
+    }
+
+    public BaseResponse<UuidResponse> generateIncreaseCollateralUuid(MockMvc mockMvc, String token, String nationalCode, String quantity, String currency, String walletAccountNumber, HttpStatus httpStatus, int errorCode, boolean success) throws Exception {
+        UniqueIdentifierCollateralRequestJson requestJson = new UniqueIdentifierCollateralRequestJson();
+        requestJson.setNationalCode(nationalCode);
+        requestJson.setQuantity(quantity);
+        requestJson.setCurrency(currency);
+        requestJson.setWalletAccountNumber(walletAccountNumber);
+
+        MockHttpServletRequestBuilder postRequest = buildPostRequest(token, COLLATERAL_GENERATE_INCREASE_UUID_PATH, mapToJson(requestJson));
         String response = performTest(mockMvc, postRequest, httpStatus, success, errorCode);
         TypeReference<BaseResponse<UuidResponse>> typeReference = new TypeReference<>() {};
         return objectMapper.readValue(response, typeReference);
@@ -897,6 +919,58 @@ public class WalletApplicationTests {
         MockHttpServletRequestBuilder postRequest = buildPostRequest(token, COLLATERAL_RELEASE_PATH, mapToJson(requestJson));
         String response = performTest(mockMvc, postRequest, httpStatus, success, errorCode);
         TypeReference<BaseResponse<ObjectUtils.Null>> typeReference = new TypeReference<>() {};
+        return objectMapper.readValue(response, typeReference);
+    }
+
+    public BaseResponse<ObjectUtils.Null> increaseCollateral(MockMvc mockMvc, String token, String collateralCode, String quantity, String nationalCode, String additionalData, String sign, CommissionObject commissionObject, String uniqueIdentifier, HttpStatus httpStatus, int errorCode, boolean success) throws Exception {
+        IncreaseCollateralRequestJson requestJson = new IncreaseCollateralRequestJson();
+        requestJson.setCollateralCode(collateralCode);
+        requestJson.setQuantity(quantity);
+        requestJson.setNationalCode(nationalCode);
+        requestJson.setAdditionalData(additionalData);
+        requestJson.setSign(sign);
+        requestJson.setCommissionObject(commissionObject);
+        requestJson.setUniqueIdentifier(uniqueIdentifier);
+        
+        MockHttpServletRequestBuilder postRequest = buildPostRequest(token, COLLATERAL_INCREASE_PATH, mapToJson(requestJson));
+        String response = performTest(mockMvc, postRequest, httpStatus, success, errorCode);
+        TypeReference<BaseResponse<ObjectUtils.Null>> typeReference = new TypeReference<>() {};
+        return objectMapper.readValue(response, typeReference);
+    }
+
+    public BaseResponse<ObjectUtils.Null> seizeCollateral(MockMvc mockMvc, String token, String collateralCode, String nationalCode, String additionalData, HttpStatus httpStatus, int errorCode, boolean success) throws Exception {
+        SeizeCollateralRequestJson requestJson = new SeizeCollateralRequestJson();
+        requestJson.setCollateralCode(collateralCode);
+        requestJson.setNationalCode(nationalCode);
+        requestJson.setAdditionalData(additionalData);
+        
+        MockHttpServletRequestBuilder postRequest = buildPostRequest(token, COLLATERAL_SEIZE_PATH, mapToJson(requestJson));
+        String response = performTest(mockMvc, postRequest, httpStatus, success, errorCode);
+        TypeReference<BaseResponse<ObjectUtils.Null>> typeReference = new TypeReference<>() {};
+        return objectMapper.readValue(response, typeReference);
+    }
+
+    public BaseResponse<ObjectUtils.Null> sellCollateral(MockMvc mockMvc, String token, String collateralCode, String quantity, String price, String nationalCode, String additionalData, String merchantId, String sign, CommissionObject commissionObject, HttpStatus httpStatus, int errorCode, boolean success) throws Exception {
+        SellCollateralRequestJson requestJson = new SellCollateralRequestJson();
+        requestJson.setCollateralCode(collateralCode);
+        requestJson.setQuantity(quantity);
+        requestJson.setPrice(price);
+        requestJson.setNationalCode(nationalCode);
+        requestJson.setAdditionalData(additionalData);
+        requestJson.setMerchantId(merchantId);
+        requestJson.setSign(sign);
+        requestJson.setCommissionObject(commissionObject);
+        
+        MockHttpServletRequestBuilder postRequest = buildPostRequest(token, COLLATERAL_SELL_PATH, mapToJson(requestJson));
+        String response = performTest(mockMvc, postRequest, httpStatus, success, errorCode);
+        TypeReference<BaseResponse<ObjectUtils.Null>> typeReference = new TypeReference<>() {};
+        return objectMapper.readValue(response, typeReference);
+    }
+
+    public BaseResponse<CollateralTrackResponse> inquiryCollateral(MockMvc mockMvc, String token, String uniqueIdentifier, HttpStatus httpStatus, int errorCode, boolean success) throws Exception {
+        MockHttpServletRequestBuilder getRequest = buildGetRequest(token, COLLATERAL_INQUIRY_PATH + "?uniqueIdentifier=" + uniqueIdentifier);
+        String response = performTest(mockMvc, getRequest, httpStatus, success, errorCode);
+        TypeReference<BaseResponse<CollateralTrackResponse>> typeReference = new TypeReference<>() {};
         return objectMapper.readValue(response, typeReference);
     }
 

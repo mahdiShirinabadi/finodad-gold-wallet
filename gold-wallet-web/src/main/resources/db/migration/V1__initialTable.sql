@@ -441,8 +441,46 @@ CREATE TABLE if not exists p_2_p_request
     dest_wallet_account_id BIGINT NOT NULL REFERENCES wallet_account,
     additional_data varchar(500),
     commission        NUMERIC(15, 5)
-    );
+);
 create unique index rrn_id_p_2_p_request_unique_idx on p_2_p_request (rrn_id);
+
+CREATE TABLE if not exists increase_collateral_request
+(
+    request_id             BIGINT NOT NULL REFERENCES request,
+    wallet_account_id      BIGINT NOT NULL REFERENCES wallet_account,
+    rrn_id                 BIGINT NOT NULL REFERENCES rrn,
+    create_collateral_request_id                 BIGINT NOT NULL REFERENCES request,
+    quantity                 NUMERIC(15, 5),
+    additional_data varchar(500),
+    commission        NUMERIC(15, 5)
+    );
+create unique index rrn_id_increase_collateral_request_unique_idx on increase_collateral_request (rrn_id);
+
+CREATE TABLE if not exists seize_collateral_request
+(
+    request_id             BIGINT NOT NULL REFERENCES request,
+    wallet_account_id      BIGINT NOT NULL REFERENCES wallet_account,
+    rrn_id                 BIGINT NOT NULL REFERENCES rrn,
+    create_collateral_request_id                 BIGINT NOT NULL REFERENCES request,
+    additional_data varchar(500)
+);
+create unique index rrn_id_seize_collateral_request_unique_idx on seize_collateral_request (rrn_id);
+
+CREATE TABLE if not exists sell_collateral_request
+(
+    request_id             BIGINT NOT NULL REFERENCES request,
+    wallet_account_id      BIGINT NOT NULL REFERENCES wallet_account,
+    rrn_id                 BIGINT NOT NULL REFERENCES rrn,
+    merchant_id                 BIGINT NOT NULL REFERENCES merchant,
+    create_collateral_request_id                 BIGINT NOT NULL REFERENCES request,
+    cash_out_request_id                 BIGINT REFERENCES request,
+    additional_data varchar(500),
+    quantity                 NUMERIC(15, 5),
+    commission        NUMERIC(15, 5),
+    iban varchar(100),
+    price       BIGINT
+    );
+create unique index rrn_id_sell_collateral_request_unique_idx on sell_collateral_request (rrn_id);
 
 CREATE TABLE if not exists cash_in_request
 (

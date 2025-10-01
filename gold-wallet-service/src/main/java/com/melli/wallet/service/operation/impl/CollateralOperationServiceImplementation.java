@@ -104,6 +104,27 @@ public class CollateralOperationServiceImplementation implements CollateralOpera
     }
 
     @Override
+    public UuidResponse generateIncreaseUniqueIdentifier(ChannelEntity channelEntity, String nationalCode, String quantity, String currency, String accountNumber) throws InternalServiceException {
+        try {
+            log.info("start generate traceId, username ===> ({}), nationalCode ({})", channelEntity.getUsername(), nationalCode);
+            WalletEntity walletEntity = walletOperationalService.findUserWallet(nationalCode);
+            WalletAccountCurrencyEntity currencyEntity = walletAccountCurrencyRepositoryService.findCurrency(currency);
+            WalletAccountEntity walletAccountEntity = walletAccountRepositoryService.checkUserAccount(walletEntity, currencyEntity, accountNumber, nationalCode);
+            RrnEntity rrnEntity = rrnRepositoryService.generateTraceId(nationalCode, channelEntity, requestTypeRepositoryService.getRequestType(RequestTypeRepositoryService.INCREASE_COLLATERAL), walletAccountEntity.getAccountNumber(), quantity);
+            BalanceDTO balanceDTO = walletAccountRepositoryService.getBalance(walletAccountEntity.getId());
+            if(balanceDTO.getAvailableBalance().compareTo(new BigDecimal(quantity)) <= 0){
+                log.error("balance for account ({}) is ({}) and not enough for block quantity ({})", accountNumber, balanceDTO.getAvailableBalance(), quantity);
+                throw new InternalServiceException("balance not enough", StatusRepositoryService.BALANCE_IS_NOT_ENOUGH, HttpStatus.OK);
+            }
+            log.info("finish traceId ===> {}, username ({}), nationalCode ({})", rrnEntity.getUuid(), channelEntity.getUsername(), nationalCode);
+            return new UuidResponse(rrnEntity.getUuid());
+        } catch (InternalServiceException e) {
+            log.error("error in generate traceId with info ===> username ({}), nationalCode ({}) error ===> ({})", channelEntity.getUsername(), nationalCode, e.getMessage());
+            throw e;
+        }
+    }
+
+    @Override
     @Transactional(propagation = Propagation.REQUIRED, rollbackFor = Exception.class)
     public CreateCollateralResponse create(CreateCollateralObjectDTO objectDTO) throws InternalServiceException {
 
@@ -117,7 +138,7 @@ public class CollateralOperationServiceImplementation implements CollateralOpera
 
         String key = objectDTO.getAccountNumber();
 
-        return redisLockService.runAfterLock(key, this.getClass(), () -> {
+        return redisLockService.runWithLockUntilCommit(key, this.getClass(), () -> {
 
             log.info("start checking existence of traceId({}) ...", objectDTO.getUniqueIdentifier());
             rrnRepositoryService.checkRrn(objectDTO.getUniqueIdentifier(), objectDTO.getChannelEntity(), requestTypeEntity, String.valueOf(objectDTO.getQuantity()), objectDTO.getAccountNumber());
@@ -224,7 +245,7 @@ public class CollateralOperationServiceImplementation implements CollateralOpera
 
         String key = objectDTO.getCollateralCode();
 
-        redisLockService.runAfterLock(key, this.getClass(), () -> {
+        redisLockService.runWithLockUntilCommit(key, this.getClass(), () -> {
 
             log.info("start release for collateralCode ({})", key);
 
@@ -321,14 +342,18 @@ public class CollateralOperationServiceImplementation implements CollateralOpera
         }
 
         RequestTypeEntity requestTypeEntity = requestTypeRepositoryService.getRequestType(RequestTypeRepositoryService.INCREASE_COLLATERAL);
+        RrnEntity rrnEntity = rrnRepositoryService.findByUid(objectDTO.getUniqueIdentifier());
         String key = objectDTO.getCollateralCode();
-        redisLockService.runAfterLock(key, this.getClass(), () -> {
+        redisLockService.runWithLockUntilCommit(key, this.getClass(), () -> {
 
             Optional<CreateCollateralRequestEntity> createCollateralRequestEntityOptional = createCollateralRequestRepository.findByCode(objectDTO.getCollateralCode());
             if(createCollateralRequestEntityOptional.isEmpty()) {
                 log.error("createCollateralRequestEntityOptional not found with code ({}) in increase", objectDTO.getCollateralCode());
                 throw new InternalServiceException("createCollateralRequestEntityOptional not found", StatusRepositoryService.COLLATERAL_CODE_NOT_FOUND, HttpStatus.OK);
             }
+
+            requestRepositoryService.findIncreaseCollateralDuplicateWithRrnId(rrnEntity.getId());
+
             CreateCollateralRequestEntity createCollateralRequestEntity = createCollateralRequestEntityOptional.get();
             checkIncreaseCollateral(createCollateralRequestEntity, objectDTO);
             WalletAccountEntity walletAccountEntity = helper.checkWalletAndWalletAccountForNormalUser(walletRepositoryService, objectDTO.getNationalCode(), walletAccountRepositoryService, createCollateralRequestEntity.getWalletAccountEntity().getAccountNumber());
@@ -346,7 +371,7 @@ public class CollateralOperationServiceImplementation implements CollateralOpera
             requestEntity.setCommission(objectDTO.getCommission());
             requestEntity.setQuantity(objectDTO.getQuantity());
             requestEntity.setWalletAccountEntity(walletAccountEntity);
-            requestEntity.setRrnEntity(createCollateralRequestEntity.getRrnEntity());
+            requestEntity.setRrnEntity(rrnEntity);
             requestEntity.setChannel(objectDTO.getChannelEntity());
             requestEntity.setResult(StatusRepositoryService.CREATE);
             requestEntity.setChannelIp(objectDTO.getIp());
@@ -413,11 +438,11 @@ public class CollateralOperationServiceImplementation implements CollateralOpera
 
         RequestTypeEntity requestTypeEntity = requestTypeRepositoryService.getRequestType(RequestTypeRepositoryService.SEIZE_COLLATERAL);
         String key = objectDTO.getCollateralCode();
-        redisLockService.runAfterLock(key, this.getClass(), () -> {
+        redisLockService.runWithLockUntilCommit(key, this.getClass(), () -> {
 
             Optional<CreateCollateralRequestEntity> createCollateralRequestEntityOptional = createCollateralRequestRepository.findByCode(objectDTO.getCollateralCode());
             if(createCollateralRequestEntityOptional.isEmpty()) {
-                log.error("createCollateralRequestEntityOptional not found with code ({}) in liquid", objectDTO.getCollateralCode());
+                log.error("createCollateralRequestEntityOptional not found with code ({}) in seize", objectDTO.getCollateralCode());
                 throw new InternalServiceException("createCollateralRequestEntityOptional not found", StatusRepositoryService.COLLATERAL_CODE_NOT_FOUND, HttpStatus.OK);
             }
             CreateCollateralRequestEntity createCollateralRequestEntity = createCollateralRequestEntityOptional.get();
@@ -456,13 +481,14 @@ public class CollateralOperationServiceImplementation implements CollateralOpera
     }
 
 
+    @Transactional
     @Override
     public void sell(SellCollateralObjectDTO objectDTO) throws InternalServiceException {
 
         //validate input param in method we sell and remain balance move to owner collateral
         RequestTypeEntity requestTypeEntity = requestTypeRepositoryService.getRequestType(RequestTypeRepositoryService.SELL_COLLATERAL);
         String key = objectDTO.getCollateralCode();
-        redisLockService.runAfterLock(key, this.getClass(), ()->{
+        redisLockService.runWithLockUntilCommit(key, this.getClass(), ()->{
 
             Optional<CreateCollateralRequestEntity> createCollateralRequestEntityOptional = createCollateralRequestRepository.findByCode(objectDTO.getCollateralCode());
             if(createCollateralRequestEntityOptional.isEmpty()) {
@@ -472,17 +498,15 @@ public class CollateralOperationServiceImplementation implements CollateralOpera
             CreateCollateralRequestEntity createCollateralRequestEntity = createCollateralRequestEntityOptional.get();
             ////1 check quantity request must be less than collateral quantity
             checkSellCollateral(createCollateralRequestEntity, objectDTO);
-            //2 sell quantity and fill collateral RIAL with amount from merchant
 
+            //2 sell quantity and fill collateral RIAL with amount from collateral
             CollateralEntity collateralEntity = createCollateralRequestEntity.getCollateralEntity();
-
-
 
             SellCollateralRequestEntity requestEntity = new SellCollateralRequestEntity();
             requestEntity.setMerchantEntity(merchantRepositoryService.findById(Integer.parseInt(objectDTO.getMerchantId())));
             requestEntity.setCollateralWalletAccountEntity(walletAccountRepositoryService.findUserWalletAccount(collateralEntity.getWalletEntity(), createCollateralRequestEntity.getWalletAccountEntity().getWalletAccountCurrencyEntity(), WalletAccountCurrencyRepositoryService.RIAL));
             requestEntity.setPrice(Long.parseLong(objectDTO.getPrice()));
-            requestEntity.setCommission(new BigDecimal(objectDTO.getPrice()));
+            requestEntity.setCommission(objectDTO.getCommission());
             requestEntity.setRrnEntity(createCollateralRequestEntity.getRrnEntity());
             requestEntity.setChannel(objectDTO.getChannelEntity());
             requestEntity.setResult(StatusRepositoryService.CREATE);
@@ -748,7 +772,7 @@ public class CollateralOperationServiceImplementation implements CollateralOpera
 
         if(createCollateralRequestEntity.getCollateralStatusEnum().toString().equalsIgnoreCase(CollateralStatusEnum.RELEASE.toString())){
             log.error("collateral with code ({}) release before!!!", objectDTO.getCollateralCode());
-            throw new InternalServiceException("collateral channel not same", StatusRepositoryService.COLLATERAL_RELEASE_BEFORE, HttpStatus.OK);
+            throw new InternalServiceException("collateral  release before", StatusRepositoryService.COLLATERAL_RELEASE_BEFORE, HttpStatus.OK);
         }
 
         if(createCollateralRequestEntity.getFinalBlockQuantity().compareTo(objectDTO.getQuantity()) != 0){
@@ -772,7 +796,7 @@ public class CollateralOperationServiceImplementation implements CollateralOpera
 
         if(createCollateralRequestEntity.getCollateralStatusEnum().toString().equalsIgnoreCase(CollateralStatusEnum.RELEASE.toString())){
             log.error("collateral with code ({}) release before!!!", objectDTO.getCollateralCode());
-            throw new InternalServiceException("collateral channel not same", StatusRepositoryService.COLLATERAL_RELEASE_BEFORE, HttpStatus.OK);
+            throw new InternalServiceException("collateral  release before", StatusRepositoryService.COLLATERAL_RELEASE_BEFORE, HttpStatus.OK);
         }
 
         if(!createCollateralRequestEntity.getWalletAccountEntity().getWalletEntity().getNationalCode().equalsIgnoreCase(objectDTO.getNationalCode())){
@@ -785,13 +809,18 @@ public class CollateralOperationServiceImplementation implements CollateralOpera
 
 
         if(createCollateralRequestEntity.getChannel().getId() != objectDTO.getChannelEntity().getId()){
-            log.error("owner collateral for code ({}) is ({}) and not same with channel caller ({}) in liquid", createCollateralRequestEntity.getChannel().getUsername(), objectDTO.getChannelEntity().getUsername(), objectDTO.getCollateralCode());
+            log.error("owner collateral for code ({}) is ({}) and not same with channel caller ({}) in seize", createCollateralRequestEntity.getChannel().getUsername(), objectDTO.getChannelEntity().getUsername(), objectDTO.getCollateralCode());
             throw new InternalServiceException("collateral code not found", StatusRepositoryService.OWNER_COLLATERAL_CODE_SAME, HttpStatus.OK);
         }
 
         if(createCollateralRequestEntity.getCollateralStatusEnum().toString().equalsIgnoreCase(CollateralStatusEnum.RELEASE.toString())){
-            log.error("collateral with code ({}) release before in liquid!!!", objectDTO.getCollateralCode());
-            throw new InternalServiceException("collateral channel not same", StatusRepositoryService.COLLATERAL_RELEASE_BEFORE, HttpStatus.OK);
+            log.error("collateral with code ({}) release before in seize!!!", objectDTO.getCollateralCode());
+            throw new InternalServiceException("collateral release before", StatusRepositoryService.COLLATERAL_RELEASE_BEFORE, HttpStatus.OK);
+        }
+
+        if(createCollateralRequestEntity.getCollateralStatusEnum().toString().equalsIgnoreCase(CollateralStatusEnum.SEIZE.toString())){
+            log.error("collateral with code ({}) release before in seize!!!", objectDTO.getCollateralCode());
+            throw new InternalServiceException("collateral seize before", StatusRepositoryService.COLLATERAL_SEIZE_BEFORE, HttpStatus.OK);
         }
 
         if(!createCollateralRequestEntity.getWalletAccountEntity().getWalletEntity().getNationalCode().equalsIgnoreCase(objectDTO.getNationalCode())){

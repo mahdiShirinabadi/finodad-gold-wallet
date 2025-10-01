@@ -45,12 +45,12 @@ public class CollateralController extends WebController {
     private final SecurityOperationService securityOperationService;
 
     //collateral generate uniqueIdentifier
-    @Timed(description = "CollateralController.uuid")
-    @PostMapping(path = "/generate/uuid", produces = {MediaType.APPLICATION_JSON_VALUE})
+    @Timed(description = "CollateralController.create.uuid")
+    @PostMapping(path = "/create/generate/uuid", produces = {MediaType.APPLICATION_JSON_VALUE})
     @Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "کد پیگیری ایجاد وثیقه")
     @PreAuthorize("hasAuthority('" + ResourceDefinition.COLLATERAL_AUTH + "')")
     @LogExecutionTime("create uuid collateral")
-    public ResponseEntity<BaseResponse<UuidResponse>> generateUuid(@Valid @RequestBody CreateUniqueIdentifierCollateralRequestJson requestJson) throws InternalServiceException {
+    public ResponseEntity<BaseResponse<UuidResponse>> generateUuid(@Valid @RequestBody UniqueIdentifierCollateralRequestJson requestJson) throws InternalServiceException {
 
         String channelIp = requestContext.getClientIp();
         String username = requestContext.getChannelEntity().getUsername();
@@ -113,6 +113,21 @@ public class CollateralController extends WebController {
     }
 
 
+    //collateral generate uniqueIdentifier
+    @Timed(description = "CollateralController.create.uuid")
+    @PostMapping(path = "/increase/generate/uuid", produces = {MediaType.APPLICATION_JSON_VALUE})
+    @Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "کد پیگیری ایجاد وثیقه")
+    @PreAuthorize("hasAuthority('" + ResourceDefinition.COLLATERAL_AUTH + "')")
+    @LogExecutionTime("create uuid collateral")
+    public ResponseEntity<BaseResponse<UuidResponse>> increaseGenerateUuid(@Valid @RequestBody UniqueIdentifierCollateralRequestJson requestJson) throws InternalServiceException {
+
+        String channelIp = requestContext.getClientIp();
+        String username = requestContext.getChannelEntity().getUsername();
+        log.info("start call increase uuid in username ===> {}, nationalCode ===> {}, from ip ===> {}", username, requestJson.getNationalCode(), channelIp);
+        UuidResponse response = collateralOperationService.generateIncreaseUniqueIdentifier(requestContext.getChannelEntity(), requestJson.getNationalCode(),  requestJson.getQuantity(),requestJson.getCurrency(), requestJson.getWalletAccountNumber());
+        return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse<>(true,response));
+    }
+
     //increase collateral
     @Timed(description = "CollateralController.increase")
     @PostMapping(path = "/increase", produces = {MediaType.APPLICATION_JSON_VALUE})
@@ -128,7 +143,7 @@ public class CollateralController extends WebController {
         log.info("start call increase in username ===> {}, nationalCode ===> {}, from ip ===> {}", username, requestJson.getNationalCode(), channelIp);
         collateralOperationService.increase(new IncreaseCollateralObjectDTO(requestContext.getChannelEntity(),
                 requestJson.getCollateralCode(), new BigDecimal(requestJson.getQuantity()) ,requestJson.getNationalCode(), requestJson.getAdditionalData(),
-                new BigDecimal(requestJson.getCommissionObject().getAmount()), requestJson.getCommissionObject().getCurrency(), requestContext.getClientIp()));
+                new BigDecimal(requestJson.getCommissionObject().getAmount()), requestJson.getCommissionObject().getCurrency(), requestContext.getClientIp(), requestJson.getUniqueIdentifier()));
         return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse<>(true));
     }
 
@@ -138,7 +153,7 @@ public class CollateralController extends WebController {
     @PostMapping(path = "/seize", produces = {MediaType.APPLICATION_JSON_VALUE})
     @Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "ضبط وثیقه")
     @PreAuthorize("hasAuthority('" + ResourceDefinition.COLLATERAL_AUTH + "')")
-    @LogExecutionTime("liquid collateral")
+    @LogExecutionTime("seize collateral")
     public ResponseEntity<BaseResponse<ObjectUtils.Null>> seize(@Valid @RequestBody SeizeCollateralRequestJson requestJson) throws InternalServiceException {
         String channelIp = requestContext.getClientIp();
         String username = requestContext.getChannelEntity().getUsername();
@@ -153,11 +168,11 @@ public class CollateralController extends WebController {
 
 
     //sell collateral
-    @Timed(description = "CollateralController.liquid")
+    @Timed(description = "CollateralController.sell")
     @PostMapping(path = "/sell", produces = {MediaType.APPLICATION_JSON_VALUE})
     @Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "فروش وثیقه")
     @PreAuthorize("hasAuthority('" + ResourceDefinition.COLLATERAL_AUTH + "')")
-    @LogExecutionTime("liquid collateral")
+    @LogExecutionTime("sell collateral")
     public ResponseEntity<BaseResponse<ObjectUtils.Null>> sell(@Valid @RequestBody SellCollateralRequestJson requestJson) throws InternalServiceException {
         String channelIp = requestContext.getClientIp();
         String username = requestContext.getChannelEntity().getUsername();

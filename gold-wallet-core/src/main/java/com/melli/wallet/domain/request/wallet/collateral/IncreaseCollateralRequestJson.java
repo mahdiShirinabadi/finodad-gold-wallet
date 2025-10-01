@@ -20,6 +20,11 @@ import lombok.Setter;
 public class IncreaseCollateralRequestJson {
 
     @StringValidation
+    @Schema(name = NamingProperty.UNIQUE_IDENTIFIER, description = "شناسه یکتا")
+    @JsonProperty(NamingProperty.UNIQUE_IDENTIFIER)
+    private String uniqueIdentifier;
+
+    @StringValidation
     @Schema(name = NamingProperty.COLLATERAL_CODE, description = "کد مسدودی")
     @JsonProperty(NamingProperty.COLLATERAL_CODE)
     private String collateralCode;

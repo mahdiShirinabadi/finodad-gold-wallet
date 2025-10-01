@@ -25,4 +25,5 @@ public class IncreaseCollateralObjectDTO {
     private BigDecimal commission;
     private String commissionCurrency;
     private String ip;
+    private String uniqueIdentifier;
 }

@@ -16,7 +16,7 @@ import lombok.Setter;
  */
 @Setter
 @Getter
-public class CreateUniqueIdentifierCollateralRequestJson {
+public class UniqueIdentifierCollateralRequestJson {
 
     @NationalCodeValidation(label =  NamingProperty.NATIONAL_CODE)
     @Schema(name = NamingProperty.NATIONAL_CODE, description = "کد ملی")

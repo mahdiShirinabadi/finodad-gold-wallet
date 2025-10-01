@@ -20,6 +20,7 @@ import java.util.Map;
 public interface CollateralOperationService {
 
     UuidResponse generateUniqueIdentifier(ChannelEntity channelEntity, String nationalCode, String quantity, String currency, String accountNumber) throws InternalServiceException;
+    UuidResponse generateIncreaseUniqueIdentifier(ChannelEntity channelEntity, String nationalCode, String quantity, String currency, String accountNumber) throws InternalServiceException;
     CreateCollateralResponse create(CreateCollateralObjectDTO createCollateralObjectDTO) throws InternalServiceException;
     void release(ReleaseCollateralObjectDTO releaseCollateralObjectDTO) throws InternalServiceException;
     void increase(IncreaseCollateralObjectDTO increaseCollateralObjectDTO) throws InternalServiceException;

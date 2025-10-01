@@ -122,6 +122,7 @@ public interface StatusRepositoryService {
     int COLLATERAL_ACCOUNT_NOT_FOUND = 102;
     int COLLATERAL_NOT_FOUND = 103;
     int COLLATERAL_STEP_MUST_BE_SEIZE = 104;
+    int COLLATERAL_SEIZE_BEFORE = 105;
 
     // General Error Codes
 

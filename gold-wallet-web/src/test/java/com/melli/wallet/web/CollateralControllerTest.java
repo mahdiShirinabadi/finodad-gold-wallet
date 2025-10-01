@@ -15,6 +15,7 @@ import com.melli.wallet.domain.response.collateral.CreateCollateralResponse;
 import com.melli.wallet.domain.response.login.LoginResponse;
 import com.melli.wallet.domain.response.wallet.CreateWalletResponse;
 import com.melli.wallet.domain.response.wallet.WalletAccountObject;
+import com.melli.wallet.exception.InternalServiceException;
 import com.melli.wallet.service.repository.*;
 import com.melli.wallet.sync.ResourceSyncService;
 import lombok.extern.log4j.Log4j2;
@@ -30,11 +31,11 @@ import org.springframework.web.context.WebApplicationContext;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 
@@ -87,6 +88,8 @@ class CollateralControllerTest extends WalletApplicationTests {
     private WalletLevelRepositoryService walletLevelRepositoryService;
     @Autowired
     private WalletRepositoryService walletRepositoryService;
+    @Autowired
+    private WalletAccountCurrencyRepositoryService walletAccountCurrencyRepositoryService;
 
     @Test
     @Order(1)
@@ -380,43 +383,30 @@ class CollateralControllerTest extends WalletApplicationTests {
             setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_COLLATERAL, walletAccountEntity, "true");
         }
 
-        // Step 1: Create concurrent generation requests using CompletableFuture
-        List<CompletableFuture<BaseResponse<UuidResponse>>> futures = new ArrayList<>();
+        // Step 1: Create concurrent generation requests using CountDownLatch
+        CountDownLatch latch = new CountDownLatch(threadCount);
+        List<BaseResponse<UuidResponse>> results = Collections.synchronizedList(new ArrayList<>());
 
         for (int i = 0; i < threadCount; i++) {
-            CompletableFuture<BaseResponse<UuidResponse>> future = CompletableFuture.supplyAsync(() -> {
+            final int threadIndex = i;
+            Thread thread = new Thread(() -> {
                 try {
                     BaseResponse<UuidResponse> response = generateCollateralUuid(mockMvc, accessToken, NATIONAL_CODE_CORRECT, collateralQuantity, CURRENCY_GOLD, walletAccountNumber, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
-                    log.info("Concurrent generation completed with success: {}", response.getSuccess());
-                    return response;
+                    results.add(response);
+                    log.info("Concurrent generation {} completed with success: {}", threadIndex, response.getSuccess());
                 } catch (Exception e) {
-                    log.error("Error in concurrent generation", e);
-                    return null;
+                    log.error("Error in concurrent generation {}", threadIndex, e);
+                    results.add(null);
+                } finally {
+                    latch.countDown();
                 }
             });
-            futures.add(future);
+            thread.start();
         }
 
-        // Step 2: Wait for all generations to complete with timeout
-        CompletableFuture<Void> allFutures = CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
-        try {
-            allFutures.get(15, TimeUnit.SECONDS); // Increased timeout
-        } catch (TimeoutException e) {
-            Assert.fail("Concurrent generations should complete within 15 seconds");
-        }
-
-        // Step 3: Collect results and verify
-        List<BaseResponse<UuidResponse>> results = new ArrayList<>();
-        for (CompletableFuture<BaseResponse<UuidResponse>> future : futures) {
-            try {
-                BaseResponse<UuidResponse> response = future.get();
-                if (response != null) {
-                    results.add(response);
-                }
-            } catch (Exception e) {
-                log.error("Error getting future result", e);
-            }
-        }
+        // Wait for all threads to complete
+        boolean completed = latch.await(15, TimeUnit.SECONDS);
+        Assert.assertTrue("Concurrent generations should complete within 15 seconds", completed);
 
         // Step 4: Verify all generations succeeded
         Assert.assertEquals("All concurrent generations should complete", threadCount, results.size());
@@ -466,58 +456,49 @@ class CollateralControllerTest extends WalletApplicationTests {
         CommissionObject commission = new CommissionObject(CURRENCY_GOLD, commissionAmount);
         String sign = generateValidSign(uniqueIdentifier + "|" + collateralQuantity + "|" + walletAccountNumber);
 
-        // Create concurrent requests using CompletableFuture
-        List<CompletableFuture<BaseResponse<CreateCollateralResponse>>> futures = new ArrayList<>();
+        // Create concurrent requests using CountDownLatch
+        CountDownLatch latch = new CountDownLatch(2);
+        List<BaseResponse<CreateCollateralResponse>> results = Collections.synchronizedList(new ArrayList<>());
 
-        // First concurrent request
-        CompletableFuture<BaseResponse<CreateCollateralResponse>> future1 = CompletableFuture.supplyAsync(() -> {
+        // First thread
+        Thread thread1 = new Thread(() -> {
             try {
                 BaseResponse<CreateCollateralResponse> response = createCollateral(mockMvc, accessToken, uniqueIdentifier, collateralQuantity, walletAccountNumber, description1, sign, commission, collateralId, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
+                results.add(response);
                 log.info("First concurrent create completed with success: {}", response.getSuccess());
-                return response;
             } catch (Exception e) {
                 log.error("Error in concurrent create 1", e);
-                return null;
+                results.add(null);
+            } finally {
+                latch.countDown();
             }
         });
-        futures.add(future1);
 
-        // Second concurrent request with same UUID (should fail) - add small delay
-        CompletableFuture<BaseResponse<CreateCollateralResponse>> future2 = CompletableFuture.supplyAsync(() -> {
+        // Second thread
+        Thread thread2 = new Thread(() -> {
             try {
-                // Small delay to ensure second request starts after first
-                Thread.sleep(100);
                 BaseResponse<CreateCollateralResponse> response = createCollateral(mockMvc, accessToken, uniqueIdentifier, collateralQuantity, walletAccountNumber, description2, sign, commission, collateralId, HttpStatus.OK, StatusRepositoryService.DUPLICATE_UUID, false);
+                results.add(response);
                 log.info("Second concurrent create completed with success: {}", response.getSuccess());
-                return response;
             } catch (Exception e) {
                 log.error("Error in concurrent create 2", e);
-                return null;
+                results.add(null);
+            } finally {
+                latch.countDown();
             }
         });
-        futures.add(future2);
 
-        // Step 3: Wait for both requests to complete
-        CompletableFuture<Void> allFutures = CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
-        try {
-            allFutures.get(15, TimeUnit.SECONDS);
-        } catch (TimeoutException e) {
-            Assert.fail("Concurrent create requests should complete within 15 seconds");
-        }
+        // Start both threads with timing
+        thread1.start();
+        Thread.sleep(1000);
+        thread2.start();
 
-        // Step 4: Collect results and verify - one success, one failure
-        List<BaseResponse<CreateCollateralResponse>> results = new ArrayList<>();
-        for (CompletableFuture<BaseResponse<CreateCollateralResponse>> future : futures) {
-            try {
-                BaseResponse<CreateCollateralResponse> response = future.get();
-                if (response != null) {
-                    results.add(response);
-                }
-            } catch (Exception e) {
-                log.error("Error getting future result", e);
-            }
-        }
+        // Wait for both threads to complete
+        boolean completed = latch.await(15, TimeUnit.SECONDS);
+        Assert.assertTrue("Concurrent create requests should complete within 15 seconds", completed);
 
+
+        log.info("Both concurrent requests should complete ({})", results.size());
         Assert.assertEquals("Both concurrent requests should complete", threadCount, results.size());
 
         boolean hasSuccess = false;
@@ -632,7 +613,7 @@ class CollateralControllerTest extends WalletApplicationTests {
 
         // Step 1: Generate UUID and create collateral first
         WalletAccountObject sourceAccount = getAccountNumber(mockMvc, accessToken, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, CURRENCY_GOLD);
-        
+
         BaseResponse<UuidResponse> uuidResponse = generateCollateralUuid(mockMvc, accessToken, NATIONAL_CODE_CORRECT, collateralQuantity, CURRENCY_GOLD, sourceAccount.getAccountNumber(), HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
 
         CommissionObject commission = new CommissionObject(CURRENCY_GOLD, commissionAmount);
@@ -687,59 +668,52 @@ class CollateralControllerTest extends WalletApplicationTests {
         // Only the first request should succeed, the second should fail
         CommissionObject releaseCommission = new CommissionObject(CURRENCY_GOLD, commissionAmount);
 
-        // Create concurrent release requests using CompletableFuture
-        List<CompletableFuture<BaseResponse<ObjectUtils.Null>>> futures = new ArrayList<>();
+        // Create concurrent release requests using CountDownLatch
+        CountDownLatch latch = new CountDownLatch(2);
+        List<BaseResponse<ObjectUtils.Null>> results = Collections.synchronizedList(new ArrayList<>());
 
-        // First concurrent release request
-        CompletableFuture<BaseResponse<ObjectUtils.Null>> future1 = CompletableFuture.supplyAsync(() -> {
+        // First thread
+        Thread thread1 = new Thread(() -> {
             try {
                 log.info("Starting first concurrent release with collateral code: {}", collateralCode);
                 BaseResponse<ObjectUtils.Null> response = releaseCollateral(mockMvc, accessToken, collateralCode, collateralQuantity, NATIONAL_CODE_CORRECT, additionalData1, generateValidSign(collateralQuantity + "|" + collateralCode + "|" + NATIONAL_CODE_CORRECT), releaseCommission, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
+                log.info("start add to list");
+                results.add(response);
+                log.info("success add to list and size is ({})", results.size());
                 log.info("First release completed with success: {}", response.getSuccess());
-                return response;
             } catch (Exception e) {
                 log.error("Error in first concurrent release", e);
-                return null;
+                results.add(null);
+            } finally {
+                latch.countDown();
             }
         });
-        futures.add(future1);
 
-        // Second concurrent release request with SAME collateral code (should fail) - add small delay
-        CompletableFuture<BaseResponse<ObjectUtils.Null>> future2 = CompletableFuture.supplyAsync(() -> {
+        // Second thread
+        Thread thread2 = new Thread(() -> {
             try {
-                // Small delay to ensure second request starts after first
                 log.info("Starting second concurrent release with SAME collateral code: {}", collateralCode);
                 BaseResponse<ObjectUtils.Null> response = releaseCollateral(mockMvc, accessToken, collateralCode, collateralQuantity, NATIONAL_CODE_CORRECT, additionalData2, generateValidSign(collateralQuantity + "|" + collateralCode + "|" + NATIONAL_CODE_CORRECT), releaseCommission, HttpStatus.OK, StatusRepositoryService.COLLATERAL_RELEASE_BEFORE, false);
+                results.add(response);
                 log.info("Second release completed with success: {}", response.getSuccess());
-                return response;
             } catch (Exception e) {
                 log.error("Error in second concurrent release", e);
-                return null;
+                results.add(null);
+            } finally {
+                latch.countDown();
             }
         });
-        futures.add(future2);
 
-        // Step 3: Wait for both release requests to complete
-        CompletableFuture<Void> allFutures = CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
-        try {
-            allFutures.get(15, TimeUnit.SECONDS);
-        } catch (TimeoutException e) {
-            Assert.fail("Concurrent release requests should complete within 15 seconds");
-        }
+        // Start both threads with timing
+        thread1.start();
+        Thread.sleep(100);
+        thread2.start();
 
-        // Step 4: Collect results and verify - exactly one success, one failure
-        List<BaseResponse<ObjectUtils.Null>> results = new ArrayList<>();
-        for (CompletableFuture<BaseResponse<ObjectUtils.Null>> future : futures) {
-            try {
-                BaseResponse<ObjectUtils.Null> response = future.get();
-                if (response != null) {
-                    results.add(response);
-                }
-            } catch (Exception e) {
-                log.error("Error getting future result", e);
-            }
-        }
+        // Wait for both threads to complete
+        boolean completed = latch.await(15, TimeUnit.SECONDS);
+        Assert.assertTrue("Concurrent release requests should complete within 15 seconds", completed);
 
+        log.info("Both concurrent release requests should complete is ({})", results.size());
         Assert.assertEquals("Both concurrent release requests should complete", threadCount, results.size());
 
         boolean hasSuccess = false;
@@ -779,6 +753,576 @@ class CollateralControllerTest extends WalletApplicationTests {
         setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_COLLATERAL, walletAccountEntity, collateralSettingValue);
     }
 
+    // ==================== INCREASE COLLATERAL TESTS ====================
+
+    @Test
+    @Order(60)
+    @DisplayName("increaseCollateral-Success")
+    void increaseCollateralSuccess() throws Exception {
+        String collateralQuantity = "0.001";
+        String increaseQuantity = "0.002";
+        String chargeAmount = "10";
+        String commissionAmount = "0.0001";
+        String commissionCurrency = "GOLD";
+
+        WalletAccountObject sourceAccount = getAccountNumber(mockMvc, accessToken, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, CURRENCY_GOLD);
+        chargeAccountForCollateral(sourceAccount.getAccountNumber(), chargeAmount);
+
+        //change permission
+        String collateralSettingValue = getLimitationSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.ENABLE_COLLATERAL, sourceAccount.getAccountNumber());
+        WalletAccountEntity walletAccountEntity = walletAccountRepositoryService.findByAccountNumber(sourceAccount.getAccountNumber());
+        if("false".equalsIgnoreCase(collateralSettingValue)){
+            setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_COLLATERAL, walletAccountEntity, "true");
+        }
+
+        // Step 1: Generate UUID for collateral
+        BaseResponse<UuidResponse> uuidResponse = generateCollateralUuid(mockMvc, accessToken, NATIONAL_CODE_CORRECT, collateralQuantity, CURRENCY_GOLD, sourceAccount.getAccountNumber(), HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
+        String uniqueIdentifier = uuidResponse.getData().getUniqueIdentifier();
+
+        // Step 2: Create collateral
+        CommissionObject createCommission = new CommissionObject(commissionCurrency, commissionAmount);
+        BaseResponse<CreateCollateralResponse> createResponse = createCollateral(mockMvc, accessToken, uniqueIdentifier, collateralQuantity, sourceAccount.getAccountNumber(), "Test collateral creation", generateValidSign(uniqueIdentifier + "|" + collateralQuantity + "|" + sourceAccount.getAccountNumber()), createCommission, "1", HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
+        String collateralCode = createResponse.getData().getCollateralCode();
+
+        // Step 3: Generate uniqueIdentifier for increase
+        BaseResponse<UuidResponse> increaseUuidResponse = generateCollateralUuid(mockMvc, accessToken, NATIONAL_CODE_CORRECT, collateralQuantity, CURRENCY_GOLD, sourceAccount.getAccountNumber(), HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
+        String increaseUniqueIdentifier = increaseUuidResponse.getData().getUniqueIdentifier();
+
+        // Step 4: Increase collateral
+        CommissionObject increaseCommission = new CommissionObject(commissionCurrency, commissionAmount);
+        BaseResponse<ObjectUtils.Null> increaseResponse = increaseCollateral(mockMvc, accessToken, collateralCode, increaseQuantity, NATIONAL_CODE_CORRECT, "Increase collateral", generateValidSign(increaseQuantity + "|" + collateralCode + "|" + NATIONAL_CODE_CORRECT), increaseCommission, increaseUniqueIdentifier, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
+
+        // Step 6: Verify response
+        Assert.assertTrue(increaseResponse.getSuccess());
+
+        // Step 6: Clean up - decrease balance to zero
+        chargeAccountForCollateralToZero(sourceAccount.getAccountNumber());
+
+        // set default
+        setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_COLLATERAL, walletAccountEntity, collateralSettingValue);
+    }
+
+    @Test
+    @Order(61)
+    @DisplayName("increaseCollateral-FailInvalidCollateralCode")
+    void increaseCollateralFailInvalidCollateralCode() throws Exception {
+        String increaseQuantity = "0.002";
+        String commissionAmount = "0.0001";
+        String commissionCurrency = "GOLD";
+        String invalidCollateralCode = "INVALID_CODE";
+        String chargeAmount = "10";
+
+        WalletAccountObject sourceAccount = getAccountNumber(mockMvc, accessToken, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, CURRENCY_GOLD);
+        chargeAccountForCollateral(sourceAccount.getAccountNumber(), chargeAmount);
+
+        BaseResponse<UuidResponse> increaseUuidResponse = generateIncreaseCollateralUuid(mockMvc, accessToken, NATIONAL_CODE_CORRECT, increaseQuantity, CURRENCY_GOLD, sourceAccount.getAccountNumber(), HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
+        String increaseUniqueIdentifier = increaseUuidResponse.getData().getUniqueIdentifier();
+
+        CommissionObject increaseCommission = new CommissionObject(commissionCurrency, commissionAmount);
+        BaseResponse<ObjectUtils.Null> increaseResponse = increaseCollateral(mockMvc, accessToken, invalidCollateralCode, increaseQuantity, NATIONAL_CODE_CORRECT, "Increase collateral", generateValidSign(increaseQuantity + "|" + invalidCollateralCode + "|" + NATIONAL_CODE_CORRECT), increaseCommission, increaseUniqueIdentifier, HttpStatus.OK, StatusRepositoryService.COLLATERAL_CODE_NOT_FOUND, false);
+
+        Assert.assertFalse(increaseResponse.getSuccess());
+        Assert.assertEquals(StatusRepositoryService.COLLATERAL_CODE_NOT_FOUND, (int) increaseResponse.getErrorDetail().getCode());
+        chargeAccountForCollateralToZero(sourceAccount.getAccountNumber());
+    }
+
+    // ==================== SEIZE COLLATERAL TESTS ====================
+
+    @Test
+    @Order(70)
+    @DisplayName("seizeCollateral-Success")
+    void seizeCollateralSuccess() throws Exception {
+        String collateralQuantity = "0.001";
+        String chargeAmount = "10";
+        String commissionAmount = "0.0001";
+        String commissionCurrency = "GOLD";
+
+        WalletAccountObject sourceAccount = getAccountNumber(mockMvc, accessToken, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, CURRENCY_GOLD);
+        chargeAccountForCollateral(sourceAccount.getAccountNumber(), chargeAmount);
+
+        //change permission
+        String collateralSettingValue = getLimitationSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.ENABLE_COLLATERAL, sourceAccount.getAccountNumber());
+        WalletAccountEntity walletAccountEntity = walletAccountRepositoryService.findByAccountNumber(sourceAccount.getAccountNumber());
+        if("false".equalsIgnoreCase(collateralSettingValue)){
+            setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_COLLATERAL, walletAccountEntity, "true");
+        }
+
+        // Step 1: Generate UUID for collateral
+        BaseResponse<UuidResponse> uuidResponse = generateCollateralUuid(mockMvc, accessToken, NATIONAL_CODE_CORRECT, collateralQuantity, CURRENCY_GOLD, sourceAccount.getAccountNumber(), HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
+        String uniqueIdentifier = uuidResponse.getData().getUniqueIdentifier();
+
+        // Step 2: Create collateral
+        CommissionObject createCommission = new CommissionObject(commissionCurrency, commissionAmount);
+        BaseResponse<CreateCollateralResponse> createResponse = createCollateral(mockMvc, accessToken, uniqueIdentifier, collateralQuantity, sourceAccount.getAccountNumber(), "Test collateral creation", generateValidSign(uniqueIdentifier + "|" + collateralQuantity + "|" + sourceAccount.getAccountNumber()), createCommission, "1", HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
+        String collateralCode = createResponse.getData().getCollateralCode();
+
+        // Step 3: Seize collateral
+        BaseResponse<ObjectUtils.Null> seizeResponse = seizeCollateral(mockMvc, accessToken, collateralCode, NATIONAL_CODE_CORRECT, "Seize collateral", HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
+
+        // Step 4: Verify response
+        Assert.assertTrue(seizeResponse.getSuccess());
+
+        // Step 5: Clean up - decrease balance to zero
+        chargeAccountForCollateralToZero(sourceAccount.getAccountNumber());
+
+        // set default
+        setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_COLLATERAL, walletAccountEntity, collateralSettingValue);
+    }
+
+    @Test
+    @Order(71)
+    @DisplayName("seizeCollateral-FailInvalidCollateralCode")
+    void seizeCollateralFailInvalidCollateralCode() throws Exception {
+        String invalidCollateralCode = "INVALID_CODE";
+
+        BaseResponse<ObjectUtils.Null> seizeResponse = seizeCollateral(mockMvc, accessToken, invalidCollateralCode, NATIONAL_CODE_CORRECT, "Seize collateral", HttpStatus.OK, StatusRepositoryService.COLLATERAL_CODE_NOT_FOUND, false);
+
+        Assert.assertFalse(seizeResponse.getSuccess());
+        Assert.assertEquals(StatusRepositoryService.COLLATERAL_CODE_NOT_FOUND, (int) seizeResponse.getErrorDetail().getCode());
+    }
+
+    // ==================== SELL COLLATERAL TESTS ====================
+
+    @Test
+    @Order(80)
+    @DisplayName("sellCollateral-Success")
+    void sellCollateralSuccess() throws Exception {
+        String collateralQuantity = "0.001";
+        String sellQuantity = "0.0005";
+        String chargeAmount = "10";
+        String commissionAmount = "0.0001";
+        String commissionCurrency = "GOLD";
+        String price = "1000000";
+        String merchantId = "1";
+
+        increaseMerchantBalance("10000000", WalletAccountCurrencyRepositoryService.RIAL,"1111111111");
+
+        WalletAccountObject sourceAccount = getAccountNumber(mockMvc, accessToken, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, CURRENCY_GOLD);
+        chargeAccountForCollateral(sourceAccount.getAccountNumber(), chargeAmount);
+
+        //change permission
+        String collateralSettingValue = getLimitationSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.ENABLE_COLLATERAL, sourceAccount.getAccountNumber());
+        WalletAccountEntity walletAccountEntity = walletAccountRepositoryService.findByAccountNumber(sourceAccount.getAccountNumber());
+        if("false".equalsIgnoreCase(collateralSettingValue)){
+            setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_COLLATERAL, walletAccountEntity, "true");
+        }
+
+        // Step 1: Generate UUID for collateral
+        BaseResponse<UuidResponse> uuidResponse = generateCollateralUuid(mockMvc, accessToken, NATIONAL_CODE_CORRECT, collateralQuantity, CURRENCY_GOLD, sourceAccount.getAccountNumber(), HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
+        String uniqueIdentifier = uuidResponse.getData().getUniqueIdentifier();
+
+        // Step 2: Create collateral
+        CommissionObject createCommission = new CommissionObject(commissionCurrency, commissionAmount);
+        BaseResponse<CreateCollateralResponse> createResponse = createCollateral(mockMvc, accessToken, uniqueIdentifier, collateralQuantity, sourceAccount.getAccountNumber(), "Test collateral creation", generateValidSign(uniqueIdentifier + "|" + collateralQuantity + "|" + sourceAccount.getAccountNumber()), createCommission, "1", HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
+        String collateralCode = createResponse.getData().getCollateralCode();
+
+        seizeCollateral(mockMvc, accessToken, collateralCode, NATIONAL_CODE_CORRECT, "Seize collateral", HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
+
+        // Step 3: Sell collateral
+        CommissionObject sellCommission = new CommissionObject(commissionCurrency, commissionAmount);
+        BaseResponse<ObjectUtils.Null> sellResponse = sellCollateral(mockMvc, accessToken, collateralCode, sellQuantity, price, NATIONAL_CODE_CORRECT, "Sell collateral", merchantId, generateValidSign(sellQuantity + "|" + collateralCode + "|" + NATIONAL_CODE_CORRECT), sellCommission, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
+
+        // Step 4: Verify response
+        Assert.assertTrue(sellResponse.getSuccess());
+
+        // Step 5: Clean up - decrease balance to zero
+        chargeAccountForCollateralToZero(sourceAccount.getAccountNumber());
+
+        // set default
+        setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_COLLATERAL, walletAccountEntity, collateralSettingValue);
+    }
+
+    @Test
+    @Order(81)
+    @DisplayName("sellCollateral-FailInvalidCollateralCode")
+    void sellCollateralFailInvalidCollateralCode() throws Exception {
+        String sellQuantity = "0.0005";
+        String commissionAmount = "0.0001";
+        String commissionCurrency = "GOLD";
+        String price = "1000000";
+        String merchantId = "1";
+        String invalidCollateralCode = "INVALID_CODE";
+
+        CommissionObject sellCommission = new CommissionObject(commissionCurrency, commissionAmount);
+        BaseResponse<ObjectUtils.Null> sellResponse = sellCollateral(mockMvc, accessToken, invalidCollateralCode, sellQuantity, price, NATIONAL_CODE_CORRECT, "Sell collateral", merchantId, generateValidSign(sellQuantity + "|" + invalidCollateralCode + "|" + NATIONAL_CODE_CORRECT), sellCommission, HttpStatus.OK, StatusRepositoryService.COLLATERAL_CODE_NOT_FOUND, false);
+
+        Assert.assertFalse(sellResponse.getSuccess());
+        Assert.assertEquals(StatusRepositoryService.COLLATERAL_CODE_NOT_FOUND, (int) sellResponse.getErrorDetail().getCode());
+    }
+
+    // ==================== INQUIRY COLLATERAL TESTS ====================
+
+    @Test
+    @Order(90)
+    @DisplayName("inquiryCollateral-Success")
+    void inquiryCollateralSuccess() throws Exception {
+        String collateralQuantity = "0.001";
+        String chargeAmount = "10";
+        String commissionAmount = "0.0001";
+        String commissionCurrency = "GOLD";
+
+        WalletAccountObject sourceAccount = getAccountNumber(mockMvc, accessToken, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, CURRENCY_GOLD);
+        chargeAccountForCollateral(sourceAccount.getAccountNumber(), chargeAmount);
+
+        //change permission
+        String collateralSettingValue = getLimitationSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.ENABLE_COLLATERAL, sourceAccount.getAccountNumber());
+        WalletAccountEntity walletAccountEntity = walletAccountRepositoryService.findByAccountNumber(sourceAccount.getAccountNumber());
+        if("false".equalsIgnoreCase(collateralSettingValue)){
+            setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_COLLATERAL, walletAccountEntity, "true");
+        }
+
+        // Step 1: Generate UUID for collateral
+        BaseResponse<UuidResponse> uuidResponse = generateCollateralUuid(mockMvc, accessToken, NATIONAL_CODE_CORRECT, collateralQuantity, CURRENCY_GOLD, sourceAccount.getAccountNumber(), HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
+        String uniqueIdentifier = uuidResponse.getData().getUniqueIdentifier();
+
+        // Step 2: Create collateral
+        CommissionObject createCommission = new CommissionObject(commissionCurrency, commissionAmount);
+        createCollateral(mockMvc, accessToken, uniqueIdentifier, collateralQuantity, sourceAccount.getAccountNumber(), "Test collateral creation", generateValidSign(uniqueIdentifier + "|" + collateralQuantity + "|" + sourceAccount.getAccountNumber()), createCommission, "1", HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
+
+        // Step 3: Inquiry collateral
+        BaseResponse<com.melli.wallet.domain.response.collateral.CollateralTrackResponse> inquiryResponse = inquiryCollateral(mockMvc, accessToken, uniqueIdentifier, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
+
+        // Step 4: Verify response
+        Assert.assertTrue(inquiryResponse.getSuccess());
+        Assert.assertNotNull(inquiryResponse.getData());
+
+        // Step 5: Clean up - decrease balance to zero
+        chargeAccountForCollateralToZero(sourceAccount.getAccountNumber());
+
+        // set default
+        setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_COLLATERAL, walletAccountEntity, collateralSettingValue);
+    }
+
+    @Test
+    @Order(91)
+    @DisplayName("inquiryCollateral-FailInvalidUniqueIdentifier")
+    void inquiryCollateralFailInvalidUniqueIdentifier() throws Exception {
+        String invalidUniqueIdentifier = "INVALID_UUID";
+
+        BaseResponse<com.melli.wallet.domain.response.collateral.CollateralTrackResponse> inquiryResponse = inquiryCollateral(mockMvc, accessToken, invalidUniqueIdentifier, HttpStatus.OK, StatusRepositoryService.UUID_NOT_FOUND, false);
+
+        Assert.assertFalse(inquiryResponse.getSuccess());
+        Assert.assertEquals(StatusRepositoryService.UUID_NOT_FOUND, (int) inquiryResponse.getErrorDetail().getCode());
+    }
+
+    // ==================== CONCURRENCY TESTS ====================
+
+    @Test
+    @Order(100)
+    @DisplayName("increaseCollateralConcurrentSameCollateralCode")
+    void increaseCollateralConcurrentSameCollateralCode() throws Exception {
+        String collateralQuantity = "0.001";
+        String increaseQuantity = "0.002";
+        String chargeAmount = "10";
+        String commissionAmount = "0.0001";
+        String commissionCurrency = "GOLD";
+        int threadCount = 2;
+
+        WalletAccountObject sourceAccount = getAccountNumber(mockMvc, accessToken, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, CURRENCY_GOLD);
+        chargeAccountForCollateral(sourceAccount.getAccountNumber(), chargeAmount);
+
+        //change permission
+        String collateralSettingValue = getLimitationSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.ENABLE_COLLATERAL, sourceAccount.getAccountNumber());
+        WalletAccountEntity walletAccountEntity = walletAccountRepositoryService.findByAccountNumber(sourceAccount.getAccountNumber());
+        if("false".equalsIgnoreCase(collateralSettingValue)){
+            setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_COLLATERAL, walletAccountEntity, "true");
+        }
+
+        // Step 1: Generate UUID for collateral
+        BaseResponse<UuidResponse> uuidResponse = generateCollateralUuid(mockMvc, accessToken, NATIONAL_CODE_CORRECT, collateralQuantity, CURRENCY_GOLD, sourceAccount.getAccountNumber(), HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
+        String uniqueIdentifier = uuidResponse.getData().getUniqueIdentifier();
+
+        // Step 2: Create collateral
+        CommissionObject createCommission = new CommissionObject(commissionCurrency, commissionAmount);
+        BaseResponse<CreateCollateralResponse> createResponse = createCollateral(mockMvc, accessToken, uniqueIdentifier, collateralQuantity, sourceAccount.getAccountNumber(), "Test collateral creation", generateValidSign(uniqueIdentifier + "|" + collateralQuantity + "|" + sourceAccount.getAccountNumber()), createCommission, "1", HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
+        String collateralCode = createResponse.getData().getCollateralCode();
+
+
+        // Step 3: Create concurrent increase requests using CountDownLatch
+        CountDownLatch latch = new CountDownLatch(2);
+        List<BaseResponse<ObjectUtils.Null>> results = Collections.synchronizedList(new ArrayList<>());
+        CommissionObject increaseCommission = new CommissionObject(commissionCurrency, commissionAmount);
+
+        // First thread
+        Thread thread1 = new Thread(() -> {
+            try {
+                BaseResponse<UuidResponse> increaseUuidResponse = generateCollateralUuid(mockMvc, accessToken, NATIONAL_CODE_CORRECT, increaseQuantity, CURRENCY_GOLD, sourceAccount.getAccountNumber(), HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
+                String increaseUniqueIdentifier = increaseUuidResponse.getData().getUniqueIdentifier();
+                log.info("Starting first concurrent increase with collateral code: {}", collateralCode);
+                BaseResponse<ObjectUtils.Null> response = increaseCollateral(mockMvc, accessToken, collateralCode, increaseQuantity, NATIONAL_CODE_CORRECT, "Increase collateral 1", generateValidSign(increaseQuantity + "|" + collateralCode + "|" + NATIONAL_CODE_CORRECT), increaseCommission, increaseUniqueIdentifier, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
+                results.add(response);
+                log.info("First increase completed with success: {}", response.getSuccess());
+            } catch (Exception e) {
+                log.error("Error in first concurrent increase", e);
+                results.add(null);
+            } finally {
+                latch.countDown();
+            }
+        });
+
+        // Second thread
+        Thread thread2 = new Thread(() -> {
+            try {
+                log.info("Starting second concurrent increase with SAME collateral code: {}", collateralCode);
+                BaseResponse<UuidResponse> increaseUuidResponse = generateCollateralUuid(mockMvc, accessToken, NATIONAL_CODE_CORRECT, increaseQuantity, CURRENCY_GOLD, sourceAccount.getAccountNumber(), HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
+                String increaseUniqueIdentifier = increaseUuidResponse.getData().getUniqueIdentifier();
+                BaseResponse<ObjectUtils.Null> response = increaseCollateral(mockMvc, accessToken, collateralCode, increaseQuantity, NATIONAL_CODE_CORRECT, "Increase collateral 2", generateValidSign(increaseQuantity + "|" + collateralCode + "|" + NATIONAL_CODE_CORRECT), increaseCommission, increaseUniqueIdentifier, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
+                results.add(response);
+                log.info("Second increase completed with success: {}", response.getSuccess());
+            } catch (Exception e) {
+                log.error("Error in second concurrent increase", e);
+                results.add(null);
+            } finally {
+                latch.countDown();
+            }
+        });
+
+        // Start both threads with timing
+        thread1.start();
+        Thread.sleep(500);
+        thread2.start();
+
+        // Wait for both threads to complete
+        boolean completed = latch.await(15, TimeUnit.SECONDS);
+        Assert.assertTrue("Concurrent increase requests should complete within 15 seconds", completed);
+
+        log.info("both concurrent increase requests should complete ({})", results.size());
+        Assert.assertEquals("Both concurrent increase requests should complete", threadCount, results.size());
+
+        int successCount = 0;
+        for (BaseResponse<ObjectUtils.Null> response : results) {
+            if (response.getSuccess()) {
+                successCount++;
+                log.info("Increase succeeded");
+            } else {
+                log.info("Increase failed with error code: {}", response.getErrorDetail().getCode());
+            }
+        }
+
+        // Both increases should succeed as they are additive operations
+        Assert.assertEquals("Both increase operations should succeed", threadCount, successCount);
+
+        // Step 6: Clean up - decrease balance to zero
+        chargeAccountForCollateralToZero(sourceAccount.getAccountNumber());
+
+        // set default
+        setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_COLLATERAL, walletAccountEntity, collateralSettingValue);
+    }
+
+    @Test
+    @Order(101)
+    @DisplayName("seizeCollateralConcurrentSameCollateralCode")
+    void seizeCollateralConcurrentSameCollateralCode() throws Exception {
+        String collateralQuantity = "0.001";
+        String chargeAmount = "10";
+        String commissionAmount = "0.0001";
+        String commissionCurrency = "GOLD";
+        int threadCount = 2;
+
+        WalletAccountObject sourceAccount = getAccountNumber(mockMvc, accessToken, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, CURRENCY_GOLD);
+        chargeAccountForCollateral(sourceAccount.getAccountNumber(), chargeAmount);
+
+        //change permission
+        String collateralSettingValue = getLimitationSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.ENABLE_COLLATERAL, sourceAccount.getAccountNumber());
+        WalletAccountEntity walletAccountEntity = walletAccountRepositoryService.findByAccountNumber(sourceAccount.getAccountNumber());
+        if("false".equalsIgnoreCase(collateralSettingValue)){
+            setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_COLLATERAL, walletAccountEntity, "true");
+        }
+
+        // Step 1: Generate UUID for collateral
+        BaseResponse<UuidResponse> uuidResponse = generateCollateralUuid(mockMvc, accessToken, NATIONAL_CODE_CORRECT, collateralQuantity, CURRENCY_GOLD, sourceAccount.getAccountNumber(), HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
+        String uniqueIdentifier = uuidResponse.getData().getUniqueIdentifier();
+
+        // Step 2: Create collateral
+        CommissionObject createCommission = new CommissionObject(commissionCurrency, commissionAmount);
+        BaseResponse<CreateCollateralResponse> createResponse = createCollateral(mockMvc, accessToken, uniqueIdentifier, collateralQuantity, sourceAccount.getAccountNumber(), "Test collateral creation", generateValidSign(uniqueIdentifier + "|" + collateralQuantity + "|" + sourceAccount.getAccountNumber()), createCommission, "1", HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
+        String collateralCode = createResponse.getData().getCollateralCode();
+
+        // Step 3: Create concurrent seize requests using CountDownLatch
+        CountDownLatch latch = new CountDownLatch(2);
+        List<BaseResponse<ObjectUtils.Null>> results = Collections.synchronizedList(new ArrayList<>());
+
+        // First thread
+        Thread thread1 = new Thread(() -> {
+            try {
+                log.info("Starting first concurrent seize with collateral code: {}", collateralCode);
+                BaseResponse<ObjectUtils.Null> response = seizeCollateral(mockMvc, accessToken, collateralCode, NATIONAL_CODE_CORRECT, "Seize collateral 1", HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
+                results.add(response);
+                log.info("First seize completed with success: {}", response.getSuccess());
+            } catch (Exception e) {
+                log.error("Error in first concurrent seize", e);
+                results.add(null);
+            } finally {
+                latch.countDown();
+            }
+        });
+
+        // Second thread
+        Thread thread2 = new Thread(() -> {
+            try {
+                log.info("Starting second concurrent seize with SAME collateral code: {}", collateralCode);
+                BaseResponse<ObjectUtils.Null> response = seizeCollateral(mockMvc, accessToken, collateralCode, NATIONAL_CODE_CORRECT, "Seize collateral 2", HttpStatus.OK, StatusRepositoryService.COLLATERAL_SEIZE_BEFORE, false);
+                results.add(response);
+                log.info("Second seize completed with success: {}", response.getSuccess());
+            } catch (Exception e) {
+                log.error("Error in second concurrent seize", e);
+                results.add(null);
+            } finally {
+                latch.countDown();
+            }
+        });
+
+        // Start both threads with timing
+        thread1.start();
+        Thread.sleep(500);
+        thread2.start();
+
+        // Wait for both threads to complete
+        boolean completed = latch.await(15, TimeUnit.SECONDS);
+        Assert.assertTrue("Concurrent seize requests should complete within 15 seconds", completed);
+
+        Assert.assertEquals("Both concurrent seize requests should complete", threadCount, results.size());
+
+        boolean hasSuccess = false;
+        boolean hasFailure = false;
+        int successCount = 0;
+        int failureCount = 0;
+
+        for (BaseResponse<ObjectUtils.Null> response : results) {
+            if (response.getSuccess()) {
+                hasSuccess = true;
+                successCount++;
+                log.info("Seize succeeded");
+            } else {
+                hasFailure = true;
+                failureCount++;
+                log.info("Seize failed with error code: {}", response.getErrorDetail().getCode());
+            }
+        }
+
+        // Verify exactly one success and one failure
+        Assert.assertEquals("Exactly one seize should succeed", 1, successCount);
+        Assert.assertEquals("Exactly one seize should fail", 1, failureCount);
+        Assert.assertTrue("First seize should succeed", hasSuccess);
+        Assert.assertTrue("Second seize should fail due to collateral already seized", hasFailure);
+
+        // Step 6: Clean up - decrease balance to zero
+        chargeAccountForCollateralToZero(sourceAccount.getAccountNumber());
+
+        // set default
+        setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_COLLATERAL, walletAccountEntity, collateralSettingValue);
+    }
+
+    @Test
+    @Order(102)
+    @DisplayName("sellCollateralConcurrentSameCollateralCode")
+    void sellCollateralConcurrentSameCollateralCode() throws Exception {
+        String collateralQuantity = "0.001";
+        String sellQuantity = "0.0005";
+        String chargeAmount = "10";
+        String commissionAmount = "0.0001";
+        String commissionCurrency = "GOLD";
+        String price = "1000000";
+        String merchantId = "1";
+        int threadCount = 2;
+
+        WalletAccountObject sourceAccount = getAccountNumber(mockMvc, accessToken, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, CURRENCY_GOLD);
+        chargeAccountForCollateral(sourceAccount.getAccountNumber(), chargeAmount);
+
+        //change permission
+        String collateralSettingValue = getLimitationSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.ENABLE_COLLATERAL, sourceAccount.getAccountNumber());
+        WalletAccountEntity walletAccountEntity = walletAccountRepositoryService.findByAccountNumber(sourceAccount.getAccountNumber());
+        if("false".equalsIgnoreCase(collateralSettingValue)){
+            setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_COLLATERAL, walletAccountEntity, "true");
+        }
+
+        // Step 1: Generate UUID for collateral
+        BaseResponse<UuidResponse> uuidResponse = generateCollateralUuid(mockMvc, accessToken, NATIONAL_CODE_CORRECT, collateralQuantity, CURRENCY_GOLD, sourceAccount.getAccountNumber(), HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
+        String uniqueIdentifier = uuidResponse.getData().getUniqueIdentifier();
+
+        // Step 2: Create collateral
+        CommissionObject createCommission = new CommissionObject(commissionCurrency, commissionAmount);
+        BaseResponse<CreateCollateralResponse> createResponse = createCollateral(mockMvc, accessToken, uniqueIdentifier, collateralQuantity, sourceAccount.getAccountNumber(), "Test collateral creation", generateValidSign(uniqueIdentifier + "|" + collateralQuantity + "|" + sourceAccount.getAccountNumber()), createCommission, "1", HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
+        String collateralCode = createResponse.getData().getCollateralCode();
+
+        seizeCollateral(mockMvc, accessToken, collateralCode, NATIONAL_CODE_CORRECT, "Seize collateral 1", HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
+
+        // Step 3: Create concurrent sell requests using CountDownLatch
+        CountDownLatch latch = new CountDownLatch(2);
+        List<BaseResponse<ObjectUtils.Null>> results = Collections.synchronizedList(new ArrayList<>());
+        CommissionObject sellCommission = new CommissionObject(commissionCurrency, commissionAmount);
+
+        // First thread
+        Thread thread1 = new Thread(() -> {
+            try {
+                log.info("Starting first concurrent sell with collateral code: {}", collateralCode);
+                BaseResponse<ObjectUtils.Null> response = sellCollateral(mockMvc, accessToken, collateralCode, sellQuantity, price, NATIONAL_CODE_CORRECT, "Sell collateral 1", merchantId, generateValidSign(sellQuantity + "|" + collateralCode + "|" + NATIONAL_CODE_CORRECT), sellCommission, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
+                results.add(response);
+                log.info("First sell completed with success: {}", response.getSuccess());
+            } catch (Exception e) {
+                log.error("Error in first concurrent sell", e);
+                results.add(null);
+            } finally {
+                latch.countDown();
+            }
+        });
+
+        // Second thread
+        Thread thread2 = new Thread(() -> {
+            try {
+                log.info("Starting second concurrent sell with SAME collateral code: {}", collateralCode);
+                BaseResponse<ObjectUtils.Null> response = sellCollateral(mockMvc, accessToken, collateralCode, sellQuantity, price, NATIONAL_CODE_CORRECT, "Sell collateral 2", merchantId, generateValidSign(sellQuantity + "|" + collateralCode + "|" + NATIONAL_CODE_CORRECT), sellCommission, HttpStatus.OK, StatusRepositoryService.COLLATERAL_STEP_MUST_BE_SEIZE, false);
+                results.add(response);
+                log.info("Second sell completed with success: {}", response.getSuccess());
+            } catch (Exception e) {
+                log.error("Error in second concurrent sell", e);
+                results.add(null);
+            } finally {
+                latch.countDown();
+            }
+        });
+
+        // Start both threads with timing
+        thread1.start();
+        Thread.sleep(100);
+        thread2.start();
+
+        // Wait for both threads to complete
+        boolean completed = latch.await(15, TimeUnit.SECONDS);
+        Assert.assertTrue("Concurrent sell requests should complete within 15 seconds", completed);
+
+        Assert.assertEquals("Both concurrent sell requests should complete", threadCount, results.size());
+
+        boolean hasSuccess = false;
+        boolean hasFailure = false;
+        int successCount = 0;
+        int failureCount = 0;
+
+        for (BaseResponse<ObjectUtils.Null> response : results) {
+            if (response.getSuccess()) {
+                hasSuccess = true;
+                successCount++;
+                log.info("Sell succeeded");
+            } else {
+                hasFailure = true;
+                failureCount++;
+                log.info("Sell failed with error code: {}", response.getErrorDetail().getCode());
+            }
+        }
+
+        // Verify exactly one success and one failure
+        Assert.assertEquals("Exactly one sell should succeed", 1, successCount);
+        Assert.assertEquals("Exactly one sell should fail", 1, failureCount);
+        Assert.assertTrue("First sell should succeed", hasSuccess);
+        Assert.assertTrue("Second sell should fail due to collateral already sold", hasFailure);
+
+        // Step 6: Clean up - decrease balance to zero
+        chargeAccountForCollateralToZero(sourceAccount.getAccountNumber());
+
+        // set default
+        setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_COLLATERAL, walletAccountEntity, collateralSettingValue);
+    }
+
     // ==================== HELPER METHODS ====================
 
     /**
@@ -809,5 +1353,23 @@ class CollateralControllerTest extends WalletApplicationTests {
         // In a real implementation, this would use proper cryptographic signing
         // For testing purposes, we'll return a mock signature
         return "MOCK_SIGNATURE_" + dataString.hashCode();
+    }
+
+    private void increaseMerchantBalance(String val, String currency, String merchantNationalCode) throws Exception {
+        // Step 1: Find merchant wallet entity
+        WalletEntity walletMerchantEntity = walletRepositoryService.findByNationalCodeAndWalletTypeId(merchantNationalCode, walletTypeRepositoryService.getByName(WalletTypeRepositoryService.MERCHANT).getId());
+        List<WalletAccountEntity> walletAccountEntityList = walletAccountRepositoryService.findByWallet(walletMerchantEntity);
+        // Step 2: Find currency wallet account
+        long id = 0;
+        try {
+            id = walletAccountCurrencyRepositoryService.findCurrency(currency).getId();
+        } catch (InternalServiceException ex) {
+            log.error("walletAccountCurrencyEntity({}) not found", currency, ex);
+        }
+        // Step 3: Find the specific currency account and increase balance
+        long finalId = id;
+        WalletAccountEntity walletAccountEntity = walletAccountEntityList.stream().filter(
+                x -> x.getWalletAccountCurrencyEntity().getId() == finalId).findFirst().orElse(null);
+        walletAccountRepositoryService.increaseBalance(walletAccountEntity.getId(), new BigDecimal(val));
     }
 }
