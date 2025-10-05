@@ -1,0 +1,39 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "com.melli.wallet.grpc";
+option java_outer_classname = "PhysicalCashOutProto";
+
+package wallet;
+
+import "base.proto";
+
+// Physical Cash Out Service
+service PhysicalCashOutService {
+  rpc GenerateUuid(PhysicalCashGenerateUuidRequestGrpc) returns (BaseResponseGrpc) {}
+  rpc Withdrawal(PhysicalCashOutWalletRequestGrpc) returns (BaseResponseGrpc) {}
+  rpc Inquiry(InquiryPhysicalCashOutRequestGrpc) returns (BaseResponseGrpc) {}
+}
+
+// Request Messages
+message PhysicalCashGenerateUuidRequestGrpc {
+  string national_code = 1;
+  string quantity = 2;
+  string account_number = 3;
+  string currency = 4;
+}
+
+message PhysicalCashOutWalletRequestGrpc {
+  string unique_identifier = 1;
+  string quantity = 2;
+  string national_code = 3;
+  string additional_data = 4;
+  string account_number = 5;
+  string sign = 6;
+  CommissionObjectGrpc commission_object = 7;
+  string currency = 8;
+}
+
+message InquiryPhysicalCashOutRequestGrpc {
+  string unique_identifier = 1;
+}

@@ -1,32 +1,23 @@
 syntax = "proto3";
 
-package wallet;
-
-option java_package = "com.melli.wallet.grpc";
 option java_multiple_files = true;
+option java_package = "com.melli.wallet.grpc";
 option java_outer_classname = "WalletProto";
 
-// import "auth_options.proto"; // Commented out due to compilation issues
+package wallet;
+
 import "base.proto";
 
+// Wallet Service
 service WalletService {
-  rpc CreateWallet(CreateWalletRequestGrpc) returns (BaseResponseGrpc) {
-    // option (required_resource) = "WALLET_CREATE"; // Commented out due to compilation issues
-  }
-  rpc DeactivateWallet(DeactivateWalletRequestGrpc) returns (BaseResponseGrpc) {
-    // option (required_resource) = "WALLET_DEACTIVATE"; // Commented out due to compilation issues
-  }
-  rpc DeleteWallet(DeleteWalletRequestGrpc) returns (BaseResponseGrpc) {
-    // option (required_resource) = "WALLET_DELETE"; // Commented out due to compilation issues
-  }
-  rpc GetWallet(GetWalletRequestGrpc) returns (BaseResponseGrpc) {
-    // option (required_resource) = "WALLET_INFO"; // Commented out due to compilation issues
-  }
-  rpc ActivateWallet(ActivateWalletRequestGrpc) returns (BaseResponseGrpc) {
-    // option (required_resource) = "WALLET_ACTIVE"; // Commented out due to compilation issues
-  }
+  rpc CreateWallet(CreateWalletRequestGrpc) returns (BaseResponseGrpc) {}
+  rpc DeactivateWallet(DeactivateWalletRequestGrpc) returns (BaseResponseGrpc) {}
+  rpc DeleteWallet(DeleteWalletRequestGrpc) returns (BaseResponseGrpc) {}
+  rpc GetWallet(GetWalletRequestGrpc) returns (BaseResponseGrpc) {}
+  rpc ActivateWallet(ActivateWalletRequestGrpc) returns (BaseResponseGrpc) {}
 }
 
+// Request Messages
 message CreateWalletRequestGrpc {
   string mobile = 1;
   string national_code = 2;
@@ -47,5 +38,3 @@ message GetWalletRequestGrpc {
 message ActivateWalletRequestGrpc {
   string id = 1;
 }
-
-

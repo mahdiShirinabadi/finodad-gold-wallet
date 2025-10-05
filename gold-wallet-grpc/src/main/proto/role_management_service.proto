@@ -1,0 +1,46 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "com.melli.wallet.grpc";
+option java_outer_classname = "RoleManagementProto";
+
+package wallet;
+
+import "base.proto";
+
+// Role Management Service
+service RoleManagementService {
+  rpc CreateRole(RoleCreateRequestGrpc) returns (BaseResponseGrpc) {}
+  rpc ListRoles(ListRolesRequestGrpc) returns (BaseResponseGrpc) {}
+  rpc CreateResource(ResourceCreateRequestGrpc) returns (BaseResponseGrpc) {}
+  rpc ListResources(Empty) returns (BaseResponseGrpc) {}
+  rpc AssignRoleToChannel(ChannelRoleRequestGrpc) returns (BaseResponseGrpc) {}
+  rpc AssignResourceToRole(RoleResourceRequestGrpc) returns (BaseResponseGrpc) {}
+}
+
+// Request Messages
+message RoleCreateRequestGrpc {
+  string name = 1;
+  string description = 2;
+}
+
+message ListRolesRequestGrpc {
+  int32 page = 1;
+  int32 size = 2;
+  string sort = 3;
+}
+
+message ResourceCreateRequestGrpc {
+  string name = 1;
+  string description = 2;
+}
+
+message ChannelRoleRequestGrpc {
+  string channel_username = 1;
+  string role_name = 2;
+}
+
+message RoleResourceRequestGrpc {
+  string role_name = 1;
+  repeated string resource_names = 2;
+}

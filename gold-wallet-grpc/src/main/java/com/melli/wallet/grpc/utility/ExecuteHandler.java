@@ -13,7 +13,6 @@ import org.springframework.stereotype.Service;
  */
 @Log4j2
 @Service
-
 public class ExecuteHandler {
 
     private static GrpcErrorHandler exceptionHandler;
@@ -30,7 +29,7 @@ public class ExecuteHandler {
             action.run();
         } catch (Exception ex) {
             // Cast is safe here because we know this service always uses BaseResponseGrpc
-            exceptionHandler.handleException(ex, (StreamObserver<BaseResponseGrpc>) responseObserver, methodName);
+            exceptionHandler.handleException(ex, responseObserver, methodName);
         }
     }
 }

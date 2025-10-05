@@ -8,7 +8,7 @@ ARG BUILD_DATE=null
 
 VOLUME /var/log
 
-LABEL maintainer="Finodad"
+LABEL maintainer="Wallet"
 LABEL project="Hub and Portal"
 LABEL git_branch=$GIT_BRANCH
 LABEL git_commit=$GIT_COMMIT
@@ -39,8 +39,8 @@ USER $APP_USER
 WORKDIR /app
 
 # Copy application files
-COPY ./hub-web/target/hub-web.jar .
-COPY ./hub-portal/target/hub-portal.jar .
+COPY ./gold-web-hub/target/wallet-gold-web.jar .
+COPY ./gold-wallet-grpc/target/wallet-gold-grpc.jar .
 
 ENTRYPOINT ["sh", "-c", "java ${JAVA_OPTS:-} ${JAVA_MEMORY:-} ${JAVA_EXTRAS:-} -jar hub-web.jar"]
 

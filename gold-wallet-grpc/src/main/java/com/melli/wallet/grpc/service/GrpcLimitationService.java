@@ -1,111 +1,129 @@
 package com.melli.wallet.grpc.service;
 
+import com.melli.wallet.grpc.*;
+import com.melli.wallet.grpc.config.RequestContext;
+import com.melli.wallet.service.operation.LimitationOperationService;
+import com.melli.wallet.domain.response.limitation.LimitationCustomResponse;
 import com.melli.wallet.domain.response.limitation.LimitationListResponse;
 import com.melli.wallet.domain.response.limitation.LimitationObject;
 import com.melli.wallet.exception.InternalServiceException;
-import com.melli.wallet.grpc.*;
-import com.melli.wallet.grpc.config.RequestContext;
-import com.melli.wallet.grpc.exception.GrpcErrorHandler;
-import com.melli.wallet.service.operation.LimitationOperationService;
-import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import net.devh.boot.grpc.server.service.GrpcService;
+import org.springframework.stereotype.Service;
 
 /**
  * Class Name: GrpcLimitationService
- * Author: Mahdi Shirinabadi
- * Date: 6/7/2025
+ * Description: GRPC service implementation for limitation operations
  */
+@Service
 @GrpcService
 @RequiredArgsConstructor
 @Log4j2
 public class GrpcLimitationService extends LimitationServiceGrpc.LimitationServiceImplBase {
 
     private final LimitationOperationService limitationOperationService;
-    private final GrpcErrorHandler exceptionHandler;
 
     @Override
-    public void getLimitationValue(GetLimitationValueRequestGrpc request, StreamObserver<BaseResponseGrpc> responseObserver) {
+    public void getValue(GetValueLimitationRequestGrpc request, StreamObserver<BaseResponseGrpc> responseObserver) {
         try {
-            String channelIp = RequestContext.getClientIp();
-            String username = RequestContext.getUsername();
-            log.info("start get setting value in username ===> {}, limitationName ===> {}, accountNumber ===> {}, from ip ===> {}",
-                    username, request.getLimitationName(), request.getAccountNumber(), channelIp);
-
-            // Validate parameters (placeholder for @Valid)
-            if (!isValidInput(request.getLimitationName(), request.getAccountNumber(), request.getNationalCode())) {
-                responseObserver.onError(Status.INVALID_ARGUMENT.withDescription("Invalid input parameters").asRuntimeException());
-                return;
-            }
-
+            log.info("GRPC: GetValue called with limitationName: {}, accountNumber: {}, nationalCode: {}", 
+                request.getLimitationName(), request.getAccountNumber(), request.getNationalCode());
+            
             String value = limitationOperationService.getValue(
-                    RequestContext.getChannelEntity(),
-                    request.getLimitationName(),
-                    request.getAccountNumber(),
-                    request.getNationalCode(),
-                    channelIp
+                RequestContext.getChannelEntity(),
+                request.getLimitationName(),
+                request.getAccountNumber(),
+                request.getNationalCode(),
+                RequestContext.getClientIp()
             );
-
-            BaseResponseGrpc grpcResponse = BaseResponseGrpc.newBuilder()
-                    .setSuccess(true)
-                    .setLimitationCustomResponseGrpc(LimitationCustomResponseGrpc.newBuilder().setValue(value != null ? value : "").build())
-                    .build();
-
-            responseObserver.onNext(grpcResponse);
+            
+            // Convert to GRPC response
+            LimitationCustomResponseGrpc limitationCustomResponseGrpc = LimitationCustomResponseGrpc.newBuilder()
+                .setValue(value != null ? value : "")
+                .build();
+            
+            BaseResponseGrpc response = BaseResponseGrpc.newBuilder()
+                .setSuccess(true)
+                .setLimitationCustomResponse(limitationCustomResponseGrpc)
+                .build();
+            
+            responseObserver.onNext(response);
             responseObserver.onCompleted();
+            
+            log.info("GRPC: GetValue completed successfully with value: {}", value);
+            
         } catch (InternalServiceException e) {
-            exceptionHandler.handleException(e, responseObserver, "LimitationGrpcService/GetLimitationValue");
+            log.error("GRPC: GetValue failed: {}", e.getMessage(), e);
+            handleError(responseObserver, e);
+        } catch (Exception e) {
+            log.error("GRPC: GetValue unexpected error: {}", e.getMessage(), e);
+            handleUnexpectedError(responseObserver, e);
         }
     }
 
     @Override
-    public void getLimitationList(GetLimitationListRequestGrpc request, StreamObserver<BaseResponseGrpc> responseObserver) {
+    public void getList(Empty request, StreamObserver<BaseResponseGrpc> responseObserver) {
         try {
-            String channelIp = RequestContext.getClientIp();
-            String username = RequestContext.getUsername();
-            log.info("start call cashIn in username ===> {}, from ip ===> {}", username, channelIp);
-
-            LimitationListResponse response = limitationOperationService.getAll();
-
-            BaseResponseGrpc grpcResponse = BaseResponseGrpc.newBuilder()
-                    .setSuccess(true)
-                    .setLimitationListResponseGrpc(convertToGrpcLimitationListResponse(response))
-                    .build();
-
-            responseObserver.onNext(grpcResponse);
+            log.info("GRPC: GetList called");
+            
+            LimitationListResponse limitationListResponse = limitationOperationService.getAll();
+            
+            // Convert to GRPC response
+            LimitationListResponseGrpc.Builder limitationListResponseBuilder = LimitationListResponseGrpc.newBuilder();
+            if (limitationListResponse != null && limitationListResponse.getLimitationObjectList() != null) {
+                for (var limitationObject : limitationListResponse.getLimitationObjectList()) {
+                    LimitationObjectGrpc limitationObjectGrpc = LimitationObjectGrpc.newBuilder()
+                        .setName(limitationObject.getName() != null ? limitationObject.getName() : "")
+                        .setDescription(limitationObject.getDescription() != null ? limitationObject.getDescription() : "")
+                        .build();
+                    limitationListResponseBuilder.addLimitationObjectList(limitationObjectGrpc);
+                }
+            }
+            
+            BaseResponseGrpc response = BaseResponseGrpc.newBuilder()
+                .setSuccess(true)
+                .setLimitationListResponse(limitationListResponseBuilder.build())
+                .build();
+            
+            responseObserver.onNext(response);
             responseObserver.onCompleted();
+            
+            log.info("GRPC: GetList completed successfully");
+            
         } catch (InternalServiceException e) {
-            exceptionHandler.handleException(e, responseObserver, "LimitationGrpcService/GetLimitationList");
+            log.error("GRPC: GetList failed: {}", e.getMessage(), e);
+            handleError(responseObserver, e);
+        } catch (Exception e) {
+            log.error("GRPC: GetList unexpected error: {}", e.getMessage(), e);
+            handleUnexpectedError(responseObserver, e);
         }
     }
 
-    private LimitationListResponseGrpc convertToGrpcLimitationListResponse(LimitationListResponse response) {
-        LimitationListResponseGrpc.Builder builder = LimitationListResponseGrpc.newBuilder();
-        if (response.getLimitationObjectList() != null) {
-            builder.addAllLimitationObjectList(
-                    response.getLimitationObjectList().stream()
-                            .map(this::convertToGrpcLimitationObject)
-                            .toList()
-            );
-        }
-        return builder.build();
+    private void handleError(StreamObserver<BaseResponseGrpc> responseObserver, InternalServiceException e) {
+        BaseResponseGrpc errorResponse = BaseResponseGrpc.newBuilder()
+                .setSuccess(false)
+                .setErrorDetail(ErrorDetailGrpc.newBuilder()
+                        .setCode(String.valueOf(e.getStatus()))
+                        .setMessage(e.getMessage() != null ? e.getMessage() : "Unknown error")
+                        .build())
+                .build();
+
+        responseObserver.onNext(errorResponse);
+        responseObserver.onCompleted();
     }
 
-    private LimitationObjectGrpc convertToGrpcLimitationObject(LimitationObject limitationObject) {
-        LimitationObjectGrpc.Builder builder = LimitationObjectGrpc.newBuilder()
-                .setName(limitationObject.getName() != null ? limitationObject.getName() : "")
-                .setDescription(limitationObject.getDescription() != null ? limitationObject.getDescription() : "");
-        return builder.build();
+    private void handleUnexpectedError(StreamObserver<BaseResponseGrpc> responseObserver, Exception e) {
+        BaseResponseGrpc errorResponse = BaseResponseGrpc.newBuilder()
+            .setSuccess(false)
+            .setErrorDetail(ErrorDetailGrpc.newBuilder()
+                .setCode("UNEXPECTED_ERROR")
+                .setMessage("An unexpected error occurred: " + e.getMessage())
+                .build())
+            .build();
+        
+        responseObserver.onNext(errorResponse);
+        responseObserver.onCompleted();
     }
-
-    // Placeholder for input validation
-    private boolean isValidInput(String limitationName, String accountNumber, String nationalCode) {
-        // Replace with actual validation logic for @Valid
-        return limitationName != null && !limitationName.trim().isEmpty() &&
-                accountNumber != null && !accountNumber.trim().isEmpty() &&
-                nationalCode != null && !nationalCode.trim().isEmpty();
-    }
-
 }

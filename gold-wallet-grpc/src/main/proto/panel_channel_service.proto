@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "com.melli.wallet.grpc";
+option java_outer_classname = "PanelChannelProto";
+
+package wallet;
+
+import "base.proto";
+
+// Panel Channel Service
+service PanelChannelService {
+  rpc CreateChannelWallet(ChannelCreateRequestGrpc) returns (BaseResponseGrpc) {}
+  rpc CreateMerchantWallet(MerchantCreateRequestGrpc) returns (BaseResponseGrpc) {}
+}
+
+// Request Messages
+message ChannelCreateRequestGrpc {
+  string username = 1;
+  string national_code = 2;
+}
+
+message MerchantCreateRequestGrpc {
+  string name = 1;
+  string mobile_number = 2;
+  string economic_code = 3;
+}

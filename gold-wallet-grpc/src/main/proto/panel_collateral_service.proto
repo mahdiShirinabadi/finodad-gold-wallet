@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "com.melli.wallet.grpc";
+option java_outer_classname = "PanelCollateralProto";
+
+package wallet;
+
+import "base.proto";
+
+// Panel Collateral Service
+service PanelCollateralService {
+  rpc CreateCollateralWallet(PanelCollateralCreateRequestGrpc) returns (BaseResponseGrpc) {}
+}
+
+// Request Messages
+message PanelCollateralCreateRequestGrpc {
+  string name = 1;
+  string mobile_number = 2;
+  string economic_code = 3;
+  string iban = 4;
+}

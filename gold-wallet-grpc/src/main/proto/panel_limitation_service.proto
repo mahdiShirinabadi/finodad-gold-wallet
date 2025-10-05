@@ -1,0 +1,43 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "com.melli.wallet.grpc";
+option java_outer_classname = "PanelLimitationProto";
+
+package wallet;
+
+import "base.proto";
+
+// Panel Limitation Service
+service PanelLimitationService {
+  rpc UpdateLimitationGeneral(UpdateLimitationGeneralRequestGrpc) returns (BaseResponseGrpc) {}
+  rpc InsertLimitationGeneralCustom(CreateLimitationGeneralCustomRequestGrpc) returns (BaseResponseGrpc) {}
+  rpc GetGeneralLimitationsList(GetGeneralLimitationsListRequestGrpc) returns (BaseResponseGrpc) {}
+  rpc GetGeneralCustomLimitationsList(GetGeneralCustomLimitationsListRequestGrpc) returns (BaseResponseGrpc) {}
+}
+
+// Request Messages
+message UpdateLimitationGeneralRequestGrpc {
+  string id = 1;
+  string value = 2;
+  string pattern = 3;
+}
+
+message CreateLimitationGeneralCustomRequestGrpc {
+  string limitation_general_id = 1;
+  string value = 2;
+  string additional_data = 3;
+  string wallet_level_id = 4;
+  string wallet_account_type_id = 5;
+  string wallet_account_currency_id = 6;
+  string wallet_type_id = 7;
+  string channel_id = 8;
+}
+
+message GetGeneralLimitationsListRequestGrpc {
+  map<string, string> search_map = 1;
+}
+
+message GetGeneralCustomLimitationsListRequestGrpc {
+  map<string, string> search_map = 1;
+}

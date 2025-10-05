@@ -1,0 +1,49 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "com.melli.wallet.grpc";
+option java_outer_classname = "GiftCardProto";
+
+package wallet;
+
+import "base.proto";
+
+// Gift Card Service
+service GiftCardService {
+  rpc GenerateUuid(GiftCardGenerateUuidRequestGrpc) returns (BaseResponseGrpc) {}
+  rpc Process(GiftCardProcessRequestGrpc) returns (BaseResponseGrpc) {}
+  rpc Inquiry(InquiryGiftCardRequestGrpc) returns (BaseResponseGrpc) {}
+  rpc Payment(PaymentGiftCardRequestGrpc) returns (BaseResponseGrpc) {}
+}
+
+// Request Messages
+message GiftCardGenerateUuidRequestGrpc {
+  string national_code = 1;
+  string quantity = 2;
+  string account_number = 3;
+  string currency = 4;
+}
+
+message GiftCardProcessRequestGrpc {
+  string unique_identifier = 1;
+  string quantity = 2;
+  string national_code = 3;
+  string account_number = 4;
+  string destination_national_code = 5;
+  string additional_data = 6;
+  string sign = 7;
+  CommissionObjectGrpc commission_object = 8;
+}
+
+message PaymentGiftCardRequestGrpc {
+  string gift_card_unique_code = 1;
+  string quantity = 2;
+  string currency = 3;
+  string national_code = 4;
+  string account_number = 5;
+  string additional_data = 6;
+}
+
+message InquiryGiftCardRequestGrpc {
+  string unique_identifier = 1;
+}

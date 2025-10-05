@@ -98,7 +98,7 @@ public class GrpcPurchaseServiceImplementation extends PurchaseServiceGrpc.Purch
 
     @PreAuthorize("hasAuthority('" + ResourceDefinition.BUY_AUTH + "')")
     @Override
-    public void inquiry(PurchaseTrackRequestGrpc request, StreamObserver<BaseResponseGrpc> responseObserver) {
+    public void inquiry(InquiryPurchaseRequestGrpc request, StreamObserver<BaseResponseGrpc> responseObserver) {
         try {
             String channelIp = RequestContext.getClientIp();
             String username = RequestContext.getUsername();
@@ -136,7 +136,7 @@ public class GrpcPurchaseServiceImplementation extends PurchaseServiceGrpc.Purch
             securityOperationService.checkSign(
                     RequestContext.getChannelEntity(),
                     request.getSign(),
-                    request.getUniqueIdentifier() + "|" + request.getMerchantId() + "|" + request.getTotalPrice() + "|" + request.getNationalCode()
+                    request.getUniqueIdentifier() + "|" + request.getMerchantId() + "|" + request.getPrice() + "|" + request.getNationalCode()
             );
 
             PurchaseResponse response = purchaseOperationService.buy(
@@ -144,7 +144,7 @@ public class GrpcPurchaseServiceImplementation extends PurchaseServiceGrpc.Purch
                             RequestContext.getChannelEntity(),
                             request.getUniqueIdentifier(),
                             new BigDecimal(request.getQuantity()),
-                            Long.parseLong(request.getTotalPrice()),
+                            Long.parseLong(request.getPrice()),
                             request.getWalletAccountNumber(),
                             request.getAdditionalData(),
                             request.getMerchantId(),
@@ -180,7 +180,7 @@ public class GrpcPurchaseServiceImplementation extends PurchaseServiceGrpc.Purch
             securityOperationService.checkSign(
                     RequestContext.getChannelEntity(),
                     request.getSign(),
-                    request.getUniqueIdentifier() + "|" + request.getMerchantId() + "|" + request.getTotalPrice() + "|" + request.getNationalCode()
+                    request.getUniqueIdentifier() + "|" + request.getMerchantId() + "|" + request.getPrice() + "|" + request.getNationalCode()
             );
 
             PurchaseResponse response = purchaseOperationService.buyDirect(
@@ -188,7 +188,7 @@ public class GrpcPurchaseServiceImplementation extends PurchaseServiceGrpc.Purch
                             RequestContext.getChannelEntity(),
                             request.getUniqueIdentifier(),
                             new BigDecimal(request.getQuantity()),
-                            Long.parseLong(request.getTotalPrice()),
+                            Long.parseLong(request.getPrice()),
                             request.getWalletAccountNumber(),
                             request.getAdditionalData(),
                             request.getMerchantId(),

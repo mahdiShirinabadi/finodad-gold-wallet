@@ -21,7 +21,7 @@ import net.devh.boot.grpc.server.service.GrpcService;
 @GrpcService
 @RequiredArgsConstructor
 @Log4j2
-public class GrpcAuthService extends AuthServiceGrpc.AuthServiceImplBase {
+public class GrpcAuthService extends AuthenticationServiceGrpc.AuthenticationServiceImplBase {
 
     private final AuthRepositoryService authRepositoryService;
     private final GrpcErrorHandler exceptionHandler;

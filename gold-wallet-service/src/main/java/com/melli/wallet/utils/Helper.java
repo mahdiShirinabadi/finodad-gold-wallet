@@ -191,9 +191,9 @@ public class Helper {
         CollateralCreateTrackObject response = new CollateralCreateTrackObject();
         response.setUniqueIdentifier(createCollateralRequestEntity.getRrnEntity().getUuid());
         response.setCollateralCode(createCollateralRequestEntity.getCode());
-        response.setQuantity(String.valueOf(createCollateralRequestEntity.getQuantity().stripTrailingZeros()));
-        response.setFinalQuantityBlock(String.valueOf(createCollateralRequestEntity.getFinalBlockQuantity().stripTrailingZeros()));
-        response.setCommission(String.valueOf(createCollateralRequestEntity.getCommission().stripTrailingZeros()));
+        response.setQuantity((createCollateralRequestEntity.getQuantity().stripTrailingZeros().toPlainString()));
+        response.setFinalQuantityBlock((createCollateralRequestEntity.getFinalBlockQuantity().stripTrailingZeros().toPlainString()));
+        response.setCommission((createCollateralRequestEntity.getCommission().stripTrailingZeros().toPlainString()));
         response.setNationalCode(createCollateralRequestEntity.getWalletAccountEntity().getWalletEntity().getNationalCode());
         response.setStatus(createCollateralRequestEntity.getCollateralStatusEnum().toString());
         response.setStatusDescription(createCollateralRequestEntity.getCollateralStatusEnum().toString());
@@ -214,9 +214,9 @@ public class Helper {
         trackObject.setChannelName(releaseCollateralRequestEntity.getChannel().getUsername());
         trackObject.setCreateTime(DateUtils.getLocaleDate(DateUtils.FARSI_LOCALE, releaseCollateralRequestEntity.getCreatedAt(), FORMAT_DATE_RESPONSE, false));
         trackObject.setCreateTimeTimestamp(releaseCollateralRequestEntity.getCreatedAt().getTime());
-        trackObject.setQuantity(String.valueOf(releaseCollateralRequestEntity.getQuantity().stripTrailingZeros()));
+        trackObject.setQuantity((releaseCollateralRequestEntity.getQuantity().stripTrailingZeros().toPlainString()));
         trackObject.setResult(String.valueOf(releaseCollateralRequestEntity.getResult()));
-        trackObject.setCommission(String.valueOf(releaseCollateralRequestEntity.getCommission().stripTrailingZeros()));
+        trackObject.setCommission((releaseCollateralRequestEntity.getCommission().stripTrailingZeros().toPlainString()));
         trackObject.setDescription(statusEntity != null ? statusEntity.getPersianDescription() : "");
         return trackObject;
     }
@@ -228,9 +228,9 @@ public class Helper {
         trackObject.setChannelName(increaseCollateralRequestEntity.getChannel().getUsername());
         trackObject.setCreateTime(DateUtils.getLocaleDate(DateUtils.FARSI_LOCALE, increaseCollateralRequestEntity.getCreatedAt(), FORMAT_DATE_RESPONSE, false));
         trackObject.setCreateTimeTimestamp(increaseCollateralRequestEntity.getCreatedAt().getTime());
-        trackObject.setQuantity(String.valueOf(increaseCollateralRequestEntity.getQuantity().stripTrailingZeros()));
+        trackObject.setQuantity((increaseCollateralRequestEntity.getQuantity().stripTrailingZeros().toPlainString()));
         trackObject.setResult(String.valueOf(increaseCollateralRequestEntity.getResult()));
-        trackObject.setCommission(String.valueOf(increaseCollateralRequestEntity.getCommission().stripTrailingZeros()));
+        trackObject.setCommission((increaseCollateralRequestEntity.getCommission().stripTrailingZeros().toPlainString()));
         trackObject.setDescription(statusEntity != null ? statusEntity.getPersianDescription() : "");
         return trackObject;
     }
@@ -482,8 +482,8 @@ public class Helper {
         statementObject.setType(reportTransactionEntity.getType());
         statementObject.setUniqueIdentifier(reportTransactionEntity.getRrnEntity().getUuid());
         statementObject.setCurrency(reportTransactionEntity.getWalletAccountEntity().getWalletAccountCurrencyEntity().getName());
-        statementObject.setQuantity(String.valueOf(reportTransactionEntity.getAmount()));
-        statementObject.setBalance(String.valueOf(reportTransactionEntity.getAvailableBalance()));
+        statementObject.setQuantity((reportTransactionEntity.getAmount().stripTrailingZeros().toPlainString()));
+        statementObject.setBalance((reportTransactionEntity.getAvailableBalance().stripTrailingZeros().toPlainString()));
         statementObject.setCreateTime(DateUtils.getLocaleDate(DateUtils.FARSI_LOCALE, reportTransactionEntity.getCreatedAt(), FORMAT_DATE_RESPONSE, false));
         return statementObject;
     }
@@ -496,8 +496,8 @@ public class Helper {
         statementObject.setType(reportTransactionEntity.getType());
         statementObject.setUniqueIdentifier(reportTransactionEntity.getRrnEntity().getUuid());
         statementObject.setCurrency(reportTransactionEntity.getWalletAccountEntity().getWalletAccountCurrencyEntity().getName());
-        statementObject.setQuantity(String.valueOf(reportTransactionEntity.getAmount()));
-        statementObject.setBalance(String.valueOf(reportTransactionEntity.getAvailableBalance()));
+        statementObject.setQuantity(reportTransactionEntity.getAmount().stripTrailingZeros().toPlainString());
+        statementObject.setBalance(reportTransactionEntity.getAvailableBalance().stripTrailingZeros().toPlainString());
         statementObject.setCreateTime(DateUtils.getLocaleDate(DateUtils.FARSI_LOCALE, reportTransactionEntity.getCreatedAt(), FORMAT_DATE_RESPONSE, false));
         return statementObject;
     }
@@ -524,8 +524,8 @@ public class Helper {
             walletAccountObject.setWalletAccountCurrencyObject(SubHelper.convertWalletAccountCurrencyEntityToObject(walletAccountEntity.getWalletAccountCurrencyEntity()));
             walletAccountObject.setAccountNumber(walletAccountEntity.getAccountNumber());
             walletAccountObject.setStatus(String.valueOf(walletAccountEntity.getStatus()));
-            walletAccountObject.setBalance(String.valueOf(walletAccountRepositoryService.getBalance(walletAccountEntity.getId()).getRealBalance().stripTrailingZeros()));
-            walletAccountObject.setAvailableBalance(String.valueOf(walletAccountRepositoryService.getBalance(walletAccountEntity.getId()).getAvailableBalance().stripTrailingZeros()));
+            walletAccountObject.setBalance((walletAccountRepositoryService.getBalance(walletAccountEntity.getId()).getRealBalance().stripTrailingZeros().toPlainString()));
+            walletAccountObject.setAvailableBalance((walletAccountRepositoryService.getBalance(walletAccountEntity.getId()).getAvailableBalance().stripTrailingZeros().toPlainString()));
             walletAccountObject.setStatus(walletAccountEntity.getStatus().getText());
             walletAccountObject.setStatusDescription(walletAccountEntity.getStatus().getPersianDescription());
             walletAccountObjectList.add(walletAccountObject);
@@ -544,8 +544,8 @@ public class Helper {
             walletAccountObject.setWalletAccountCurrencyObject(SubHelper.convertWalletAccountCurrencyEntityToObject(walletAccountEntity.getWalletAccountCurrencyEntity()));
             walletAccountObject.setAccountNumber(walletAccountEntity.getAccountNumber());
             walletAccountObject.setStatus(String.valueOf(walletAccountEntity.getStatus()));
-            walletAccountObject.setBalance(prettyBalance(walletAccountRepositoryService.getBalance(walletAccountEntity.getId()).getRealBalance().stripTrailingZeros()));
-            walletAccountObject.setAvailableBalance(String.valueOf(walletAccountRepositoryService.getBalance(walletAccountEntity.getId()).getAvailableBalance().stripTrailingZeros()));
+            walletAccountObject.setBalance(walletAccountRepositoryService.getBalance(walletAccountEntity.getId()).getRealBalance().stripTrailingZeros().toPlainString());
+            walletAccountObject.setAvailableBalance(walletAccountRepositoryService.getBalance(walletAccountEntity.getId()).getAvailableBalance().stripTrailingZeros().toPlainString());
             walletAccountObject.setStatus(walletAccountEntity.getStatus().getText());
             walletAccountObject.setStatusDescription(walletAccountEntity.getStatus().getPersianDescription());
             walletAccountObjectList.add(walletAccountObject);

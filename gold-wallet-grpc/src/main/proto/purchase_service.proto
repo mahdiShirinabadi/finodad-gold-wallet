@@ -5,36 +5,26 @@ option java_package = "com.melli.wallet.grpc";
 option java_outer_classname = "PurchaseProto";
 
 package wallet;
-// import "auth_options.proto"; // Commented out due to compilation issues
+
 import "base.proto";
+
 // Purchase Service
 service PurchaseService {
-  rpc GenerateBuyUuid(BuyGenerateUuidRequestGrpc) returns (BaseResponseGrpc) {
-    // option (required_resource) = "GENERATE_PURCHASE_UNIQUE_IDENTIFIER"; // Commented out due to compilation issues
-  }
-  rpc GenerateSellUuid(SellGenerateUuidRequestGrpc) returns (BaseResponseGrpc) {
-    // option (required_resource) = "GENERATE_PURCHASE_UNIQUE_IDENTIFIER"; // Commented out due to compilation issues
-  }
-  rpc Inquiry(PurchaseTrackRequestGrpc) returns (BaseResponseGrpc) {
-    // option (required_resource) = "GENERATE_PURCHASE_UNIQUE_IDENTIFIER"; // Commented out due to compilation issues
-  }
-  rpc Buy(BuyWalletRequestGrpc) returns (BaseResponseGrpc) {
-    // option (required_resource) = "BUY"; // Commented out due to compilation issues
-  }
-  rpc BuyDirect(BuyDirectWalletRequestGrpc) returns (BaseResponseGrpc) {
-    // option (required_resource) = "BUY_DIRECT"; // Commented out due to compilation issues
-  }
-  rpc Sell(SellWalletRequestGrpc) returns (BaseResponseGrpc) {
-    // option (required_resource) = "SELL"; // Commented out due to compilation issues
-  }
+  rpc GenerateBuyUuid(BuyGenerateUuidRequestGrpc) returns (BaseResponseGrpc) {}
+  rpc GenerateSellUuid(SellGenerateUuidRequestGrpc) returns (BaseResponseGrpc) {}
+  rpc Inquiry(InquiryPurchaseRequestGrpc) returns (BaseResponseGrpc) {}
+  rpc Buy(BuyWalletRequestGrpc) returns (BaseResponseGrpc) {}
+  rpc BuyDirect(BuyDirectWalletRequestGrpc) returns (BaseResponseGrpc) {}
+  rpc Sell(SellWalletRequestGrpc) returns (BaseResponseGrpc) {}
 }
 
+// Request Messages
 message BuyGenerateUuidRequestGrpc {
   string national_code = 1;
-  string price = 2;
-  string account_number = 3;
-  string merchant_id = 4;
-  string quantity = 5;
+  string quantity = 2;
+  string price = 3;
+  string account_number = 4;
+  string merchant_id = 5;
   string currency = 6;
 }
 
@@ -45,52 +35,47 @@ message SellGenerateUuidRequestGrpc {
   string currency = 4;
 }
 
-message PurchaseTrackRequestGrpc {
-  string unique_identifier = 1;
-  string type = 2;
-}
-
 message BuyWalletRequestGrpc {
   string unique_identifier = 1;
   string quantity = 2;
-  string total_price = 3;
-  CommissionObjectGrpc commission_object = 4;
-  string national_code = 5;
-  string currency = 6;
-  string merchant_id = 7;
-  string wallet_account_number = 8;
-  string additional_data = 9;
-  string sign = 10;
+  string price = 3;
+  string wallet_account_number = 4;
+  string additional_data = 5;
+  string merchant_id = 6;
+  string national_code = 7;
+  string currency = 8;
+  string sign = 9;
+  CommissionObjectGrpc commission_object = 10;
 }
 
 message BuyDirectWalletRequestGrpc {
   string unique_identifier = 1;
   string quantity = 2;
-  string total_price = 3;
-  CommissionObjectGrpc commission_object = 4;
-  string national_code = 5;
-  string currency = 6;
-  string merchant_id = 7;
-  string wallet_account_number = 8;
-  string additional_data = 9;
+  string price = 3;
+  string wallet_account_number = 4;
+  string additional_data = 5;
+  string merchant_id = 6;
+  string national_code = 7;
+  string currency = 8;
+  string sign = 9;
   string ref_number = 10;
-  string sign = 11;
+  CommissionObjectGrpc commission_object = 11;
 }
 
 message SellWalletRequestGrpc {
   string unique_identifier = 1;
   string quantity = 2;
   string price = 3;
-  CommissionObjectGrpc commission_object = 4;
-  string national_code = 5;
-  string currency = 6;
-  string merchant_id = 7;
-  string wallet_account_number = 8;
-  string additional_data = 9;
-  string sign = 10;
+  string wallet_account_number = 4;
+  string additional_data = 5;
+  string merchant_id = 6;
+  string national_code = 7;
+  string currency = 8;
+  string sign = 9;
+  CommissionObjectGrpc commission_object = 10;
 }
 
-message CommissionObjectGrpc {
-  string amount = 1;
-  string currency = 2; // Adjust based on actual structure
+message InquiryPurchaseRequestGrpc {
+  string unique_identifier = 1;
+  string type = 2;
 }

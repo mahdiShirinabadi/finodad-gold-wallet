@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "com.melli.wallet.grpc";
+option java_outer_classname = "PanelWalletProto";
+
+package wallet;
+
+import "base.proto";
+
+// Panel Wallet Service
+service PanelWalletService {
+  rpc GetWalletAccountCurrencyList(Empty) returns (BaseResponseGrpc) {}
+  rpc GetWalletLevelList(Empty) returns (BaseResponseGrpc) {}
+  rpc GetWalletTypeList(Empty) returns (BaseResponseGrpc) {}
+  rpc GetWalletAccountTypeList(Empty) returns (BaseResponseGrpc) {}
+  rpc GetCustomerList(GetCustomerListRequestGrpc) returns (BaseResponseGrpc) {}
+}
+
+// Request Messages
+message GetCustomerListRequestGrpc {
+  map<string, string> search_map = 1;
+}

@@ -1,0 +1,60 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "com.melli.wallet.grpc";
+option java_outer_classname = "CollateralProto";
+
+package wallet;
+
+import "base.proto";
+
+// Collateral Service
+service CollateralService {
+  rpc GenerateUuid(UniqueIdentifierCollateralRequestGrpc) returns (BaseResponseGrpc) {}
+  rpc Create(CreateCollateralRequestGrpc) returns (BaseResponseGrpc) {}
+  rpc Release(ReleaseCollateralRequestGrpc) returns (BaseResponseGrpc) {}
+  rpc Inquiry(InquiryCollateralRequestGrpc) returns (BaseResponseGrpc) {}
+  rpc IncreaseGenerateUuid(UniqueIdentifierCollateralRequestGrpc) returns (BaseResponseGrpc) {}
+  rpc Increase(IncreaseCollateralRequestGrpc) returns (BaseResponseGrpc) {}
+}
+
+// Request Messages
+message UniqueIdentifierCollateralRequestGrpc {
+  string national_code = 1;
+  string quantity = 2;
+  string currency = 3;
+  string wallet_account_number = 4;
+}
+
+message CreateCollateralRequestGrpc {
+  string unique_identifier = 1;
+  string collateral_id = 2;
+  string quantity = 3;
+  string account_number = 4;
+  string description = 5;
+  string sign = 6;
+  CommissionObjectGrpc commission_object = 7;
+}
+
+message ReleaseCollateralRequestGrpc {
+  string collateral_code = 1;
+  string quantity = 2;
+  string national_code = 3;
+  string additional_data = 4;
+  string sign = 5;
+  CommissionObjectGrpc commission_object = 6;
+}
+
+message IncreaseCollateralRequestGrpc {
+  string collateral_code = 1;
+  string quantity = 2;
+  string national_code = 3;
+  string additional_data = 4;
+  string sign = 5;
+  CommissionObjectGrpc commission_object = 6;
+  string unique_identifier = 7;
+}
+
+message InquiryCollateralRequestGrpc {
+  string unique_identifier = 1;
+}

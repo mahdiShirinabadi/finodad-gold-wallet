@@ -1,19 +1,49 @@
 syntax = "proto3";
 
-package wallet;
-// import "auth_options.proto"; // Commented out due to compilation issues
-import "base.proto";
-
-option java_package = "com.melli.wallet.grpc";
 option java_multiple_files = true;
+option java_package = "com.melli.wallet.grpc";
 option java_outer_classname = "MerchantProto";
 
+package wallet;
+
+import "base.proto";
+
+// Merchant Service
 service MerchantService {
-  rpc GetMerchant(GetMerchantRequestGrpc) returns (BaseResponseGrpc) {
-    // option (required_resource) = "MERCHANT_LIST"; // Commented out due to compilation issues
-  }
+  rpc MerchantList(MerchantListRequestGrpc) returns (BaseResponseGrpc) {}
+  rpc BalanceMerchant(MerchantBalanceRequestGrpc) returns (BaseResponseGrpc) {}
+  rpc UpdateStatus(MerchantUpdateRequestGrpc) returns (BaseResponseGrpc) {}
+  rpc IncreaseBalance(IncreaseMerchantBalanceRequestGrpc) returns (BaseResponseGrpc) {}
+  rpc DecreaseBalance(DecreaseMerchantBalanceRequestGrpc) returns (BaseResponseGrpc) {}
+  rpc ReportTransaction(ReportTransactionRequestGrpc) returns (BaseResponseGrpc) {}
 }
 
-message GetMerchantRequestGrpc {
+// Request Messages
+message MerchantListRequestGrpc {
   string currency = 1;
+}
+
+message MerchantBalanceRequestGrpc {
+  string merchant_id = 1;
+}
+
+message MerchantUpdateRequestGrpc {
+  string merchant_id = 1;
+  int32 status = 2;
+}
+
+message IncreaseMerchantBalanceRequestGrpc {
+  string wallet_account_number = 1;
+  string amount = 2;
+  string merchant_id = 3;
+}
+
+message DecreaseMerchantBalanceRequestGrpc {
+  string wallet_account_number = 1;
+  string amount = 2;
+  string merchant_id = 3;
+}
+
+message ReportTransactionRequestGrpc {
+  map<string, string> search_map = 1;
 }

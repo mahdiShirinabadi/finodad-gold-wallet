@@ -1,0 +1,40 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "com.melli.wallet.grpc";
+option java_outer_classname = "P2pProto";
+
+package wallet;
+
+import "base.proto";
+
+// P2P Service
+service P2pService {
+  rpc GenerateUuid(P2pGenerateUuidRequestGrpc) returns (BaseResponseGrpc) {}
+  rpc Process(P2pRequestGrpc) returns (BaseResponseGrpc) {}
+  rpc Inquiry(InquiryP2pRequestGrpc) returns (BaseResponseGrpc) {}
+}
+
+// Request Messages
+message P2pGenerateUuidRequestGrpc {
+  string national_code = 1;
+  string quantity = 2;
+  string account_number = 3;
+  string dest_account_number = 4;
+}
+
+message P2pRequestGrpc {
+  string quantity = 1;
+  string national_code = 2;
+  string account_number = 3;
+  string dest_account_number = 4;
+  string additional_data = 5;
+  string unique_identifier = 6;
+  string sign = 7;
+  CommissionObjectGrpc commission_object = 8;
+  string currency = 9;
+}
+
+message InquiryP2pRequestGrpc {
+  string unique_identifier = 1;
+}

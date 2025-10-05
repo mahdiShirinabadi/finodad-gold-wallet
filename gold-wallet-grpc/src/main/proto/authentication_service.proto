@@ -2,18 +2,20 @@ syntax = "proto3";
 
 option java_multiple_files = true;
 option java_package = "com.melli.wallet.grpc";
-option java_outer_classname = "AuthProto";
+option java_outer_classname = "AuthenticationProto";
 
 package wallet;
-// import "auth_options.proto"; // Commented out due to compilation issues
+
 import "base.proto";
+
 // Authentication Service
-service AuthService {
+service AuthenticationService {
   rpc Login(LoginRequestGrpc) returns (BaseResponseGrpc) {}
   rpc RefreshToken(RefreshTokenRequestGrpc) returns (BaseResponseGrpc) {}
   rpc Logout(LogoutRequestGrpc) returns (BaseResponseGrpc) {}
 }
 
+// Request Messages
 message LoginRequestGrpc {
   string username = 1;
   string password = 2;
@@ -24,4 +26,6 @@ message RefreshTokenRequestGrpc {
   string refresh_token = 2;
 }
 
-message LogoutRequestGrpc {}
+message LogoutRequestGrpc {
+  // Empty message for logout
+}
