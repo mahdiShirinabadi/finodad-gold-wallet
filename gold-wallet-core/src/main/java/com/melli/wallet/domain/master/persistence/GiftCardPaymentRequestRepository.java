@@ -16,8 +16,6 @@ import java.util.Optional;
 @Repository
 public interface GiftCardPaymentRequestRepository extends CrudRepository<GiftCardPaymentRequestEntity, Long> {
 
-    GiftCardPaymentRequestEntity findByRrnEntityId(long traceId);
-    Optional<GiftCardPaymentRequestEntity> findOptionalByRrnEntityId(long traceId);
     GiftCardPaymentRequestEntity findById(long requestId);
 
     @Query(value = "select COALESCE(SUM(p.quantity), 0) as sumQuantity, count(*) as countRecord from {h-schema}gift_card_payment_request p inner join {h-schema}request r on p.request_id = r.id  where p.wallet_account_id in :walletAccountId" +

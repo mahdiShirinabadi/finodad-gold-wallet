@@ -681,7 +681,7 @@ VALUES ('System', now(), 'MAX_MONTHLY_COUNT_BUY', '10', 'حداکثر تعداد
 on conflict do nothing;
 
 INSERT INTO limitation_general(created_by, created_at, name, value, additional_data)
-VALUES ('System', now(), 'MAX_DAILY_QUANTITY_SELL', '200', 'حداکثر مقدار فروش در روز')
+VALUES ('System', now(), 'MAX_DAILY_QUANTITY_SELL', '10', 'حداکثر مقدار فروش در روز')
 on conflict do nothing;
 
 INSERT INTO limitation_general(created_by, created_at, name, value, additional_data)
@@ -701,7 +701,7 @@ VALUES ('System', now(), 'MIN_QUANTITY_SELL', '0.001', 'حداقل مقدار ف
 on conflict do nothing;
 
 INSERT INTO limitation_general(created_by, created_at, name, value, additional_data)
-VALUES ('System', now(), 'MAX_QUANTITY_SELL', '100', 'حداکثر مقدار فروش در هر درخواست')
+VALUES ('System', now(), 'MAX_QUANTITY_SELL', '10', 'حداکثر مقدار فروش در هر درخواست')
 on conflict do nothing;
 
 INSERT INTO limitation_general(created_by, created_at, name, value, additional_data)

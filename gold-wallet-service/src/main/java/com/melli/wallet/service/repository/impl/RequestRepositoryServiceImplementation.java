@@ -88,8 +88,6 @@ public class RequestRepositoryServiceImplementation implements RequestRepository
             resultRequest = physicalCashOutRequestRepository.findByRrnEntityId(traceId);
         }else if (requestEntity instanceof Person2PersonRequestEntity) {
             resultRequest = p2PRequestRepository.findByRrnEntityId(traceId);
-        }else if (requestEntity instanceof GiftCardPaymentRequestEntity) {
-            resultRequest = giftCardPaymentRequestRepository.findByRrnEntityId(traceId);
         }else if (requestEntity instanceof CreateCollateralRequestEntity) {
             resultRequest = createCollateralRequestRepository.findByRrnEntityId(traceId);
         }
