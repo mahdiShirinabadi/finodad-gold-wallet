@@ -86,7 +86,8 @@ public class PanelChannelController extends WebController {
     @LogExecutionTime("Create merchant wallet")
     public ResponseEntity<BaseResponse<String>> createMerchantWallet(@Valid @RequestBody MerchantCreateRequestJson requestJson) throws InternalServiceException {
 
-        CreateWalletResponse createWalletResponse = walletOperationalService.createWallet(requestContext.getChannelEntity(), requestJson.getMobileNumber(), requestJson.getEconomicCode(), WalletTypeRepositoryService.MERCHANT, List.of(WalletAccountCurrencyRepositoryService.GOLD, WalletAccountCurrencyRepositoryService.RIAL),
+        String nationalCode = (requestJson.getEconomicCode().length() > 10) ? requestJson.getEconomicCode().substring(0, 10) : requestJson.getEconomicCode();
+        CreateWalletResponse createWalletResponse = walletOperationalService.createWallet(requestContext.getChannelEntity(), requestJson.getMobileNumber(), nationalCode, WalletTypeRepositoryService.MERCHANT, List.of(WalletAccountCurrencyRepositoryService.GOLD, WalletAccountCurrencyRepositoryService.RIAL),
                 List.of(WalletAccountTypeRepositoryService.NORMAL));
         MerchantEntity merchantEntity = new MerchantEntity();
         merchantEntity.setName(requestJson.getName());

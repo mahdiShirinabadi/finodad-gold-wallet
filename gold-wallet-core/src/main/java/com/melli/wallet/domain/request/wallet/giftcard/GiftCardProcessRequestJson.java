@@ -2,6 +2,7 @@ package com.melli.wallet.domain.request.wallet.giftcard;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.melli.wallet.NamingProperty;
+import com.melli.wallet.annotation.national_code.NationalCodeValidation;
 import com.melli.wallet.annotation.number.NumberValidation;
 import com.melli.wallet.annotation.string.StringValidation;
 import com.melli.wallet.domain.request.wallet.CommissionObject;
@@ -21,7 +22,7 @@ public class GiftCardProcessRequestJson {
     @JsonProperty(NamingProperty.QUANTITY)
     private String quantity;
 
-    @StringValidation(label = NamingProperty.NATIONAL_CODE)
+    @NationalCodeValidation(label = NamingProperty.NATIONAL_CODE)
     @Schema(name = NamingProperty.NATIONAL_CODE, description = "کد ملی مبدا")
     @JsonProperty(NamingProperty.NATIONAL_CODE)
     private String nationalCode;

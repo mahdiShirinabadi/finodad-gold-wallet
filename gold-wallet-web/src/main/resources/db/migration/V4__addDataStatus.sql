@@ -177,11 +177,10 @@ CREATE TABLE if not exists gift_card_payment_request
     request_id        BIGINT primary key NOT NULL REFERENCES request,
     quantity          NUMERIC(15, 5), -- Purchased quantity
     gift_card_id      BIGINT             NOT NULL REFERENCES gift_card,
-    rrn_id            BIGINT             NOT NULL REFERENCES rrn,
     wallet_account_id BIGINT             NOT NULL REFERENCES wallet_account,
     additional_data   VARCHAR(500)
 );
-create unique index rrn_id_gift_card_payment_request_unique_idx on gift_card_payment_request (rrn_id);
+create unique index gift_card_id_gift_card_payment_request_unique_idx on gift_card_payment_request (gift_card_id);
 
 
 CREATE TABLE if not exists create_collateral_request

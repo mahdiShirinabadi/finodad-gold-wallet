@@ -357,7 +357,6 @@ CREATE TABLE if not exists merchant
     updated_at      TIMESTAMP WITHOUT TIME ZONE,
     name            VARCHAR(200)                NOT NULL UNIQUE,
     mobile          VARCHAR(200)                NOT NULL,
-    national_code   VARCHAR(200)                NOT NULL,
     economical_code VARCHAR(200)                NOT NULL,
     description            TEXT,
     logo            TEXT,

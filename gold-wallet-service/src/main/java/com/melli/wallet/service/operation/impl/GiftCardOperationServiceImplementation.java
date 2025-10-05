@@ -126,6 +126,11 @@ public class GiftCardOperationServiceImplementation implements GiftCardOperation
             }
             log.info("Gift card expiration check passed");
 
+            if(giftCardEntity.getStatus().getText().equalsIgnoreCase(GiftCardStepStatus.DEACTIVATED.getText())){
+                log.error("giftCard with code ({}) is deactivated", giftCardPaymentObjectDTO.getGiftCardUniqueCode());
+                throw new InternalServiceException("gift card not found", StatusRepositoryService.GIFT_CARD_DEACTIVATED, HttpStatus.OK);
+            }
+
             log.debug("Checking gift card ownership - assignedTo: {}, currentUser: {}", 
                 giftCardEntity.getNationalCodeBy(), giftCardPaymentObjectDTO.getNationalCode());
             if (StringUtils.hasText(giftCardEntity.getNationalCodeBy()) && !giftCardEntity.getNationalCodeBy().equalsIgnoreCase(giftCardPaymentObjectDTO.getNationalCode())) {
@@ -152,7 +157,6 @@ public class GiftCardOperationServiceImplementation implements GiftCardOperation
 
             GiftCardPaymentRequestEntity giftCardPaymentRequestEntity = new GiftCardPaymentRequestEntity();
             giftCardPaymentRequestEntity.setQuantity(new BigDecimal(giftCardPaymentObjectDTO.getQuantity()));
-            giftCardPaymentRequestEntity.setRrnEntity(giftCardEntity.getRrnEntity());
             giftCardPaymentRequestEntity.setGiftCardEntity(giftCardEntity);
             giftCardPaymentRequestEntity.setDestinationAccountWalletEntity(walletAccountEntity);
             giftCardPaymentRequestEntity.setAdditionalData(giftCardPaymentObjectDTO.getAdditionalData());

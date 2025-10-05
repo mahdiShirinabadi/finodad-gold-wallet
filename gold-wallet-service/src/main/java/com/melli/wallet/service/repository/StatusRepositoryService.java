@@ -123,6 +123,7 @@ public interface StatusRepositoryService {
     int COLLATERAL_NOT_FOUND = 103;
     int COLLATERAL_STEP_MUST_BE_SEIZE = 104;
     int COLLATERAL_SEIZE_BEFORE = 105;
+    int GIFT_CARD_DEACTIVATED = 106;
 
     // General Error Codes
 

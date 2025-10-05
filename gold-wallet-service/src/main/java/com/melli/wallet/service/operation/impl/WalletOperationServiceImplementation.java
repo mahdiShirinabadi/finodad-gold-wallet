@@ -42,8 +42,6 @@ public class WalletOperationServiceImplementation implements WalletOperationalSe
     private final WalletAccountRepositoryService walletAccountRepositoryService;
     private final WalletTypeRepositoryService walletTypeRepositoryService;
     private final WalletLevelRepositoryService walletLevelRepositoryService;
-    private final SettingGeneralRepositoryService settingGeneralRepositoryService;
-    private final TransactionRepositoryService transactionRepositoryService;
 
     @Override
     @LogExecutionTime("Creating wallet for user")

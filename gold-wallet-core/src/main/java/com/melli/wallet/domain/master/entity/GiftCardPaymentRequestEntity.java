@@ -20,10 +20,6 @@ public class GiftCardPaymentRequestEntity extends RequestEntity {
 	private BigDecimal quantity; // quantity
 
 	@ManyToOne
-	@JoinColumn(name = "rrn_id", nullable = false)
-	private RrnEntity rrnEntity;
-
-	@ManyToOne
 	@JoinColumn(name = "gift_card_id", nullable = false)
 	private GiftCardEntity giftCardEntity;
 
