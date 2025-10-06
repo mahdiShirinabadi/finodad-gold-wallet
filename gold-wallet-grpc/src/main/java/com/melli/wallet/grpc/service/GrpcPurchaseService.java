@@ -1,5 +1,6 @@
 package com.melli.wallet.grpc.service;
 
+import com.melli.wallet.domain.request.wallet.CommissionObject;
 import com.melli.wallet.grpc.*;
 import com.melli.wallet.grpc.config.RequestContext;
 import com.melli.wallet.service.operation.PurchaseOperationService;
@@ -200,8 +201,7 @@ public class GrpcPurchaseService extends PurchaseServiceGrpc.PurchaseServiceImpl
             buyRequest.setSign(request.getSign());
             
             // Convert CommissionObjectGrpc to CommissionObject
-            com.melli.wallet.domain.response.purchase.CommissionObject commissionObject = 
-                new com.melli.wallet.domain.response.purchase.CommissionObject();
+            CommissionObject commissionObject = new CommissionObject();
             commissionObject.setAmount(request.getCommissionObject().getAmount());
             commissionObject.setCurrency(request.getCommissionObject().getCurrency());
             buyRequest.setCommissionObject(commissionObject);
@@ -274,8 +274,7 @@ public class GrpcPurchaseService extends PurchaseServiceGrpc.PurchaseServiceImpl
             buyDirectRequest.setRefNumber(request.getRefNumber());
             
             // Convert CommissionObjectGrpc to CommissionObject
-            com.melli.wallet.domain.response.purchase.CommissionObject commissionObject = 
-                new com.melli.wallet.domain.response.purchase.CommissionObject();
+            CommissionObject commissionObject = new CommissionObject();
             commissionObject.setAmount(request.getCommissionObject().getAmount());
             commissionObject.setCurrency(request.getCommissionObject().getCurrency());
             buyDirectRequest.setCommissionObject(commissionObject);
@@ -347,8 +346,7 @@ public class GrpcPurchaseService extends PurchaseServiceGrpc.PurchaseServiceImpl
             sellRequest.setSign(request.getSign());
             
             // Convert CommissionObjectGrpc to CommissionObject
-            com.melli.wallet.domain.response.purchase.CommissionObject commissionObject = 
-                new com.melli.wallet.domain.response.purchase.CommissionObject();
+            CommissionObject commissionObject = new CommissionObject();
             commissionObject.setAmount(request.getCommissionObject().getAmount());
             commissionObject.setCurrency(request.getCommissionObject().getCurrency());
             sellRequest.setCommissionObject(commissionObject);

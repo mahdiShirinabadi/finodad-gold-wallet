@@ -49,6 +49,8 @@ message BaseResponseGrpc {
     ChannelListResponseGrpc channel_list_response = 38;
     GeneralLimitationListResponseGrpc general_limitation_list_response = 39;
     GeneralCustomLimitationListResponseGrpc general_custom_limitation_list_response = 40;
+    CollateralResponseGrpc collateral_response = 41;
+    CollateralListResponseGrpc collateral_list_response = 42;
   }
 }
 
@@ -57,28 +59,37 @@ message ErrorDetailGrpc {
   string message = 2;
 }
 
+message Empty {
+}
+
+// Authentication Messages
 message LoginResponseGrpc {
   ChannelObjectGrpc channel_object = 1;
-  TokenObjectGrpc access_token_object = 2;
-  TokenObjectGrpc refresh_token_object = 3;
+  TokenObjectGrpc access_object = 2;
+  TokenObjectGrpc refresh_object = 3;
 }
 
 message ChannelObjectGrpc {
-  string first_name = 1;
-  string last_name = 2;
+  int64 id = 1;
+  string name = 2;
   string username = 3;
   string mobile = 4;
+  string status = 5;
+  string status_description = 6;
 }
 
 message TokenObjectGrpc {
-  string token = 1;
-  int64 expire_time = 2;
+  string access_token = 1;
+  string refresh_token = 2;
+  int64 expires_in = 3;
 }
 
+// Common Response Messages
 message UuidResponseGrpc {
   string uuid = 1;
 }
 
+// Purchase Messages
 message PurchaseResponseGrpc {
   string national_code = 1;
   string amount = 2;
@@ -90,8 +101,26 @@ message PurchaseResponseGrpc {
   int64 create_time_timestamp = 8;
 }
 
-message Empty {}
+message PurchaseTrackResponseGrpc {
+  repeated PurchaseTrackObjectGrpc purchase_track_object_list = 1;
+}
 
+message PurchaseTrackObjectGrpc {
+  string id = 1;
+  string national_code = 2;
+  string amount = 3;
+  string price = 4;
+  string unique_identifier = 5;
+  string type = 6;
+  string account_number = 7;
+  string result = 8;
+  string description = 9;
+  string channel_name = 10;
+  string create_time = 11;
+  int64 create_time_timestamp = 12;
+}
+
+// Wallet Messages
 message CreateWalletResponseGrpc {
   string wallet_id = 1;
   string mobile = 2;
@@ -111,34 +140,7 @@ message WalletAccountObjectGrpc {
   string status_description = 7;
 }
 
-message WalletAccountTypeObjectGrpc {
-  string id = 1;
-  string name = 2;
-}
-
-message WalletAccountCurrencyObjectGrpc {
-  string id = 1;
-  string name = 2;
-}
-
-message PurchaseTrackResponseGrpc {
-  repeated PurchaseTrackObjectGrpc purchase_track_object_list = 1;
-}
-
-message PurchaseTrackObjectGrpc {
-  string national_code = 1;
-  string amount = 2;
-  string price = 3;
-  string unique_identifier = 4;
-  string type = 5;
-  string account_number = 6;
-  string result = 7;
-  string description = 8;
-  string channel_name = 9;
-  string create_time = 10;
-  int64 create_time_timestamp = 11;
-}
-
+// Merchant Messages
 message MerchantResponseGrpc {
   repeated MerchantObjectGrpc merchant_object_list = 1;
 }
@@ -149,8 +151,10 @@ message MerchantObjectGrpc {
   string logo = 3;
 }
 
+// Limitation Messages
 message LimitationCustomResponseGrpc {
   string value = 1;
+  string pattern = 2;
 }
 
 message LimitationListResponseGrpc {
@@ -162,6 +166,7 @@ message LimitationObjectGrpc {
   string description = 2;
 }
 
+// Cash In Messages
 message CashInResponseGrpc {
   string national_code = 1;
   string available_balance = 2;
@@ -174,7 +179,7 @@ message CashInTrackResponseGrpc {
   int64 id = 1;
   string national_code = 2;
   string ref_number = 3;
-  int64 amount = 4;
+  string amount = 4;
   string unique_identifier = 5;
   int32 result = 6;
   string description = 7;
@@ -183,6 +188,7 @@ message CashInTrackResponseGrpc {
   int64 create_time_timestamp = 10;
 }
 
+// Cash Out Messages
 message CashOutResponseGrpc {
   string national_code = 1;
   string available_balance = 2;
@@ -194,16 +200,16 @@ message CashOutResponseGrpc {
 message CashOutTrackResponseGrpc {
   int64 id = 1;
   string national_code = 2;
-  string iban = 3;
-  int64 amount = 4;
-  string unique_identifier = 5;
-  int32 result = 6;
-  string description = 7;
-  string wallet_account_number = 8;
-  string create_time = 9;
-  int64 create_time_timestamp = 10;
+  string amount = 3;
+  string unique_identifier = 4;
+  int32 result = 5;
+  string description = 6;
+  string wallet_account_number = 7;
+  string create_time = 8;
+  int64 create_time_timestamp = 9;
 }
 
+// Collateral Messages
 message CreateCollateralResponseGrpc {
   string collateral_code = 1;
   string quantity = 2;
@@ -221,6 +227,7 @@ message CommissionObjectGrpc {
   string currency = 2;
 }
 
+// P2P Messages
 message P2pUuidResponseGrpc {
   string uuid = 1;
 }
@@ -238,46 +245,50 @@ message P2pTrackResponseGrpc {
   int64 create_time_timestamp = 10;
 }
 
+// Statement Messages
 message StatementResponseGrpc {
   string national_code = 1;
   repeated StatementObjectGrpc transaction_object_list = 2;
 }
 
 message StatementObjectGrpc {
-  int64 id = 1;
-  string transaction_type = 2;
-  string amount = 3;
-  string balance = 4;
-  string description = 5;
-  string create_time = 6;
-  int64 create_time_timestamp = 7;
+  string id = 1;
+  string wallet_Account_number = 2;
+  string purchase_type = 3;
+  string unique_identifier = 4;
+  string currency = 5;
+  string quantity = 6;
+  string balance = 7;
+  string create_time = 8;
 }
 
+// Report Transaction Messages
 message ReportTransactionResponseGrpc {
-  repeated TransactionObjectGrpc transaction_list = 1;
-  int32 total_pages = 2;
-  int64 total_elements = 3;
+  repeated ReportTransactionObjectGrpc report_transaction_object_list = 1;
+  int64 total_elements = 2;
+  int32 total_pages = 3;
   int32 current_page = 4;
   int32 page_size = 5;
 }
 
-message TransactionObjectGrpc {
-  int64 id = 1;
-  string national_code = 2;
-  string transaction_type = 3;
-  string amount = 4;
-  string balance = 5;
-  string description = 6;
-  string create_time = 7;
-  int64 create_time_timestamp = 8;
+message ReportTransactionObjectGrpc {
+  string id = 1;
+  string wallet_Account_number = 2;
+  string purchase_type = 3;
+  string unique_identifier = 4;
+  string currency = 5;
+  string quantity = 6;
+  string balance = 7;
+  string create_time = 8;
+  string national_code = 9;
 }
 
+// Physical Cash Out Messages
 message PhysicalCashOutResponseGrpc {
   string national_code = 1;
-  string available_balance = 2;
-  string balance = 3;
-  string unique_identifier = 4;
-  string wallet_account_number = 5;
+  string balance = 2;
+  string unique_identifier = 3;
+  string wallet_account_number = 4;
 }
 
 message PhysicalCashOutTrackResponseGrpc {
@@ -290,123 +301,171 @@ message PhysicalCashOutTrackResponseGrpc {
   string wallet_account_number = 7;
   string create_time = 8;
   int64 create_time_timestamp = 9;
+  string commission = 10;
 }
 
+// Gift Card Messages
 message GiftCardUuidResponseGrpc {
   string uuid = 1;
 }
 
 message GiftCardResponseGrpc {
-  string gift_card_unique_code = 1;
+  string active_code = 1;
   string quantity = 2;
-  string national_code = 3;
-  string destination_national_code = 4;
+  string currency = 3;
+  string expire_time = 4;
+  int64  expire_time_time_stamp = 5;
 }
 
 message GiftCardTrackResponseGrpc {
   int64 id = 1;
   string national_code = 2;
-  string gift_card_unique_code = 3;
-  string quantity = 4;
+  string quantity = 3;
+  string active_code = 4;
   string unique_identifier = 5;
-  int32 result = 6;
+  string status = 6;
   string description = 7;
-  string create_time = 8;
-  int64 create_time_timestamp = 9;
+  string wallet_account_number = 8;
+  string dest_wallet_account_number = 9;
+  string dest_national_code = 10;
+  string create_time = 11;
+  int64 create_time_timestamp = 12;
+  string expire_time = 13;
+  int64 expire_time_timestamp = 14;
 }
 
+// Wallet Balance Messages
 message WalletBalanceResponseGrpc {
   repeated WalletAccountObjectGrpc wallet_account_object_list = 1;
 }
 
+// Panel Wallet Messages
 message WalletAccountCurrencyListResponseGrpc {
   repeated WalletAccountCurrencyObjectGrpc wallet_account_currency_object_list = 1;
+}
+
+message WalletAccountCurrencyObjectGrpc {
+  string id = 1;
+  string name = 2;
+  string suffix = 3;
+  string additional_Data = 4;
+  string description = 5;
 }
 
 message WalletLevelListResponseGrpc {
   repeated WalletLevelObjectGrpc wallet_level_object_list = 1;
 }
 
+message WalletLevelObjectGrpc {
+  string id = 1;
+  string name = 2;
+  string description = 3;
+}
+
 message WalletTypeListResponseGrpc {
   repeated WalletTypeObjectGrpc wallet_type_object_list = 1;
+}
+
+message WalletTypeObjectGrpc {
+  string id = 1;
+  string name = 2;
+  string description = 3;
 }
 
 message WalletAccountTypeListResponseGrpc {
   repeated WalletAccountTypeObjectGrpc wallet_account_type_object_list = 1;
 }
 
+message WalletAccountTypeObjectGrpc {
+  string id = 1;
+  string name = 2;
+  string description = 3;
+}
+
+// Customer Messages
 message CustomerListResponseGrpc {
   repeated CustomerObjectGrpc customer_object_list = 1;
-  int32 total_pages = 2;
-  int64 total_elements = 3;
+  int64 total_elements = 2;
+  int32 total_pages = 3;
   int32 current_page = 4;
   int32 page_size = 5;
-}
-
-message WalletLevelObjectGrpc {
-  string id = 1;
-  string name = 2;
-}
-
-message WalletTypeObjectGrpc {
-  string id = 1;
-  string name = 2;
 }
 
 message CustomerObjectGrpc {
   string id = 1;
   string national_code = 2;
   string mobile = 3;
-  string first_name = 4;
-  string last_name = 5;
+  string status = 4;
+  string status_description = 5;
   string create_time = 6;
   int64 create_time_timestamp = 7;
 }
 
+// Role Management Messages
 message RoleDetailResponseGrpc {
-  string id = 1;
+  int64 id = 1;
   string name = 2;
   string description = 3;
-  string create_time = 4;
-  int64 create_time_timestamp = 5;
+  string created_by = 4;
+  string create_time = 5;
+  int64 create_time_timestamp = 6;
+}
+
+message RoleListResponseGrpc {
+  repeated RoleDetailResponseGrpc role_list = 1;
+  int32 total_elements = 2;
+  int32 total_pages = 3;
+  int32 current_page = 4;
+  int32 page_size = 5;
+}
+
+message ResourceDetailResponseGrpc {
+  int64 id = 1;
+  string name = 2;
+  string fa_name = 3;
+  int32 display = 4;
+  string created_by = 5;
+  string create_time = 6;
+  int64 create_time_timestamp = 7;
 }
 
 message ResourceListResponseGrpc {
-  repeated ResourceObjectGrpc resource_list = 1;
+  repeated ResourceDetailResponseGrpc resource_list = 1;
+  int32 total_elements = 2;
+  int32 total_pages = 3;
+  int32 current_page = 4;
+  int32 page_size = 5;
 }
 
 message ResourceObjectGrpc {
-  string id = 1;
+  int64 id = 1;
   string name = 2;
-  string description = 3;
+  string fa_name = 3;
+  bool display = 4;
 }
 
+// Channel Messages
 message ChannelListResponseGrpc {
   repeated ChannelObjectGrpc channel_list = 1;
 }
 
+// Limitation Panel Messages
 message GeneralLimitationListResponseGrpc {
-  repeated GeneralLimitationObjectGrpc limitation_list = 1;
-  int32 total_pages = 2;
-  int64 total_elements = 3;
-  int32 current_page = 4;
-  int32 page_size = 5;
+  repeated GeneralLimitationObjectGrpc general_limitation_object_list = 1;
 }
 
 message GeneralLimitationObjectGrpc {
   string id = 1;
   string name = 2;
-  string description = 3;
-  string value = 4;
-  string pattern = 5;
+  string value = 3;
+  string pattern = 4;
+  string description = 5;
+  string create_time = 6;
+  int64 create_time_timestamp = 7;
 }
 
 message GeneralCustomLimitationListResponseGrpc {
-  repeated GeneralCustomLimitationObjectGrpc limitation_list = 1;
-  int32 total_pages = 2;
-  int64 total_elements = 3;
-  int32 current_page = 4;
-  int32 page_size = 5;
+  repeated GeneralCustomLimitationObjectGrpc general_custom_limitation_object_list = 1;
 }
 
 message GeneralCustomLimitationObjectGrpc {
@@ -419,10 +478,49 @@ message GeneralCustomLimitationObjectGrpc {
   string wallet_account_currency_id = 7;
   string wallet_type_id = 8;
   string channel_id = 9;
+  string create_time = 10;
+  int64 create_time_timestamp = 11;
 }
 
+// Collateral Panel Messages
+message CollateralResponseGrpc {
+  repeated CollateralObjectGrpc collateral_object_list = 1;
+}
 
+message CollateralObjectGrpc {
+  string id = 1;
+  string name = 2;
+  string logo = 3;
+}
 
+message CollateralListResponseGrpc {
+  repeated CollateralCreateTrackObjectGrpc collateral_create_track_object_list = 1;
+}
+
+message CollateralCreateTrackObjectGrpc {
+  string id = 1;
+  string unique_identifier = 2;
+  string collateral_code = 3;
+  string quantity = 4;
+  string final_quantity_block = 5;
+  string commission = 6;
+  string national_code = 7;
+  string status = 8;
+  string status_description = 9;
+  string additional_data = 10;
+  string currency = 11;
+  string wallet_account_number = 12;
+  string channel_name = 13;
+  string create_time = 14;
+  int64 create_time_timestamp = 15;
+  string result = 16;
+  string description = 17;
+}
+
+// Panel Base Search Request
+message PanelBaseSearchRequestGrpc {
+  map<string, string> map = 1;
+}
 
 message CollateralCreateTrackObject {
   int64 id = 1;

@@ -46,9 +46,9 @@ public class GrpcTransactionService extends TransactionServiceGrpc.TransactionSe
             if (statementResponse.getList() != null) {
                 for (var transactionObject : statementResponse.getList()) {
                     StatementObjectGrpc statementObjectGrpc = StatementObjectGrpc.newBuilder()
-                        .setId(Long.parseLong(transactionObject.getId()))
-                        .setTransactionType(transactionObject.getType() != null ? transactionObject.getType() : "")
-                        .setAmount(transactionObject.getQuantity() != null ? transactionObject.getQuantity() : "")
+                        .setId(transactionObject.getId())
+                        .setPurchaseType(transactionObject.getType() != null ? transactionObject.getType() : "")
+                        .setQuantity(transactionObject.getQuantity() != null ? transactionObject.getQuantity() : "")
                         .setBalance(transactionObject.getBalance() != null ? transactionObject.getBalance() : "")
                         .setCreateTime(transactionObject.getCreateTime() != null ? transactionObject.getCreateTime() : "")
                         .build();
@@ -75,52 +75,52 @@ public class GrpcTransactionService extends TransactionServiceGrpc.TransactionSe
         }
     }
 
+
+
     @Override
-    public void reportTransaction(ReportTransactionRequestGrpc request, StreamObserver<BaseResponseGrpc> responseObserver) {
+    public void generateReport(GenerateReportRequestGrpc request, StreamObserver<BaseResponseGrpc> responseObserver) {
         try {
             log.info("GRPC: ReportTransaction called with searchMap size: {}", request.getSearchMapMap().size());
-            
+
             Map<String, String> searchMap = request.getSearchMapMap();
             ReportTransactionResponse reportResponse = transactionRepositoryService.reportTransaction(
-                RequestContext.getChannelEntity(),
-                searchMap
+                    RequestContext.getChannelEntity(),
+                    searchMap
             );
-            
+
             // Convert to GRPC response
             ReportTransactionResponseGrpc.Builder reportResponseBuilder = ReportTransactionResponseGrpc.newBuilder();
             if (reportResponse != null && reportResponse.getList() != null) {
                 for (var transactionObject : reportResponse.getList()) {
-                    TransactionObjectGrpc transactionObjectGrpc = TransactionObjectGrpc.newBuilder()
-                        .setId(Long.parseLong(transactionObject.getId()))
-                        .setNationalCode(transactionObject.getNationalCode() != null ? transactionObject.getNationalCode() : "")
-                        .setTransactionType(transactionObject.getType() != null ? transactionObject.getType() : "")
-                        .setAmount(transactionObject.getQuantity() != null ? transactionObject.getQuantity() : "")
-                        .setBalance(transactionObject.getBalance() != null ? transactionObject.getBalance() : "")
-                        .setCreateTime(transactionObject.getCreateTime() != null ? transactionObject.getCreateTime() : "")
-                        .build();
-                    reportResponseBuilder.addTransactionList(transactionObjectGrpc);
+                    ReportTransactionObjectGrpc transactionObjectGrpc = ReportTransactionObjectGrpc.newBuilder()
+                            .setId(transactionObject.getId())
+                            .setNationalCode(transactionObject.getNationalCode() != null ? transactionObject.getNationalCode() : "")
+                            .setPurchaseType(transactionObject.getType() != null ? transactionObject.getType() : "")
+                            .setQuantity(transactionObject.getQuantity() != null ? transactionObject.getQuantity() : "")
+                            .setBalance(transactionObject.getBalance() != null ? transactionObject.getBalance() : "")
+                            .setCreateTime(transactionObject.getCreateTime() != null ? transactionObject.getCreateTime() : "")
+                            .setWalletAccountNumber(transactionObject.getAccountNumber() != null ? transactionObject.getAccountNumber() : "")
+                            .build();
+                    reportResponseBuilder.addReportTransactionObjectList(transactionObjectGrpc);
                 }
             }
-            
+
             reportResponseBuilder
-                .setTotalPages(reportResponse != null ? (int) reportResponse.getTotalPages() : 0)
-                .setTotalElements(reportResponse != null ? reportResponse.getTotalElements() : 0)
-                .setCurrentPage(reportResponse != null ? reportResponse.getNumber() : 0)
-                .setPageSize(reportResponse != null ? reportResponse.getSize() : 0);
-            
+                    .setTotalPages(reportResponse != null ? (int) reportResponse.getTotalPages() : 0)
+                    .setTotalElements(reportResponse != null ? reportResponse.getTotalElements() : 0)
+                    .setCurrentPage(reportResponse != null ? reportResponse.getNumber() : 0)
+                    .setPageSize(reportResponse != null ? reportResponse.getSize() : 0);
+
             BaseResponseGrpc response = BaseResponseGrpc.newBuilder()
-                .setSuccess(true)
-                .setReportTransactionResponse(reportResponseBuilder.build())
-                .build();
-            
+                    .setSuccess(true)
+                    .setReportTransactionResponse(reportResponseBuilder.build())
+                    .build();
+
             responseObserver.onNext(response);
             responseObserver.onCompleted();
-            
+
             log.info("GRPC: ReportTransaction completed successfully");
-            
-        } catch (InternalServiceException e) {
-            log.error("GRPC: ReportTransaction failed: {}", e.getMessage(), e);
-            handleError(responseObserver, e);
+
         } catch (Exception e) {
             log.error("GRPC: ReportTransaction unexpected error: {}", e.getMessage(), e);
             handleUnexpectedError(responseObserver, e);

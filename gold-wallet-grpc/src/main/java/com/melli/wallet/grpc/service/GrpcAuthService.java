@@ -142,8 +142,7 @@ public class GrpcAuthService extends AuthenticationServiceGrpc.AuthenticationSer
         
         if (loginResponse.getChannelObject() != null) {
             ChannelObjectGrpc channelObject = ChannelObjectGrpc.newBuilder()
-                    .setFirstName(loginResponse.getChannelObject().getFirstName())
-                    .setLastName(loginResponse.getChannelObject().getLastName())
+                    .setName(loginResponse.getChannelObject().getFirstName())
                     .setUsername(loginResponse.getChannelObject().getUsername())
                     .setMobile(loginResponse.getChannelObject().getMobile())
                     .build();
@@ -152,18 +151,18 @@ public class GrpcAuthService extends AuthenticationServiceGrpc.AuthenticationSer
         
         if (loginResponse.getAccessTokenObject() != null) {
             TokenObjectGrpc accessToken = TokenObjectGrpc.newBuilder()
-                    .setToken(loginResponse.getAccessTokenObject().getToken())
-                    .setExpireTime(loginResponse.getAccessTokenObject().getExpireTime())
+                    .setAccessToken(loginResponse.getAccessTokenObject().getToken())
+                    .setExpiresIn(loginResponse.getAccessTokenObject().getExpireTime())
                     .build();
-            builder.setAccessTokenObject(accessToken);
+            builder.setAccessObject(accessToken);
         }
         
         if (loginResponse.getRefreshTokenObject() != null) {
             TokenObjectGrpc refreshToken = TokenObjectGrpc.newBuilder()
-                    .setToken(loginResponse.getRefreshTokenObject().getToken())
-                    .setExpireTime(loginResponse.getRefreshTokenObject().getExpireTime())
+                    .setRefreshToken(loginResponse.getRefreshTokenObject().getToken())
+                    .setExpiresIn(loginResponse.getRefreshTokenObject().getExpireTime())
                     .build();
-            builder.setRefreshTokenObject(refreshToken);
+            builder.setRefreshObject(refreshToken);
         }
         
         return builder.build();

@@ -329,7 +329,7 @@ public class CashOutOperationServiceImplementation implements CashOutOperationSe
             BalanceDTO walletAccountServiceBalance = walletAccountRepositoryService.getBalance(walletAccountEntity.getId());
             stockRepositoryService.insertWithdraw(transaction);
 
-            return helper.fillPhysicalCashOutResponse(physicalCashOutObjectDTO.getNationalCode(), rrnEntity.getUuid(), String.valueOf(walletAccountServiceBalance.getRealBalance()), walletAccountEntity.getAccountNumber());
+            return helper.fillPhysicalCashOutResponse(physicalCashOutObjectDTO.getNationalCode(), rrnEntity.getUuid(), String.valueOf(walletAccountServiceBalance.getAvailableBalance()), walletAccountEntity.getAccountNumber());
         }, physicalCashOutObjectDTO.getUniqueIdentifier());
     }
 

@@ -11,6 +11,10 @@ import "base.proto";
 // Panel Collateral Service
 service PanelCollateralService {
   rpc CreateCollateralWallet(PanelCollateralCreateRequestGrpc) returns (BaseResponseGrpc) {}
+  rpc List(GetCollateralListRequestGrpc) returns (BaseResponseGrpc) {}
+  rpc CreateList(PanelBaseSearchRequestGrpc) returns (BaseResponseGrpc) {}
+  rpc GetBalance(GetCollateralBalanceRequestGrpc) returns (BaseResponseGrpc) {}
+  rpc Report(PanelBaseSearchRequestGrpc) returns (BaseResponseGrpc) {}
 }
 
 // Request Messages
@@ -19,4 +23,12 @@ message PanelCollateralCreateRequestGrpc {
   string mobile_number = 2;
   string economic_code = 3;
   string iban = 4;
+}
+
+message GetCollateralListRequestGrpc {
+  string currency = 1;
+}
+
+message GetCollateralBalanceRequestGrpc {
+  string collateral_id = 1;
 }

@@ -14,10 +14,5 @@ service PanelWalletService {
   rpc GetWalletLevelList(Empty) returns (BaseResponseGrpc) {}
   rpc GetWalletTypeList(Empty) returns (BaseResponseGrpc) {}
   rpc GetWalletAccountTypeList(Empty) returns (BaseResponseGrpc) {}
-  rpc GetCustomerList(GetCustomerListRequestGrpc) returns (BaseResponseGrpc) {}
-}
-
-// Request Messages
-message GetCustomerListRequestGrpc {
-  map<string, string> search_map = 1;
+  rpc GetCustomerList(PanelBaseSearchRequestGrpc) returns (BaseResponseGrpc) {}
 }

@@ -166,10 +166,7 @@ public class GrpcPanelCollateralService extends PanelCollateralServiceGrpc.Panel
             
             PanelBaseSearchJson searchRequest = new PanelBaseSearchJson();
             // Convert Map<String, String> from GRPC to Map<String, Object> for service
-            Map<String, Object> searchMap = new java.util.HashMap<>();
-            for (var entry : request.getMapMap().entrySet()) {
-                searchMap.put(entry.getKey(), entry.getValue());
-            }
+            Map<String, String> searchMap = new java.util.HashMap<>(request.getMapMap());
             searchRequest.setMap(searchMap);
             
             CollateralListResponse listResponse = collateralOperationService.list(
@@ -179,14 +176,28 @@ public class GrpcPanelCollateralService extends PanelCollateralServiceGrpc.Panel
             
             // Convert to GRPC response
             CollateralListResponseGrpc.Builder listResponseBuilder = CollateralListResponseGrpc.newBuilder();
-            if (listResponse != null && listResponse.getCollateralObjectList() != null) {
-                for (var collateralObject : listResponse.getCollateralObjectList()) {
-                    CollateralObjectGrpc collateralObjectGrpc = CollateralObjectGrpc.newBuilder()
+            if (listResponse != null && listResponse.getCollateralCreateTrackObjectList() != null) {
+                for (var collateralObject : listResponse.getCollateralCreateTrackObjectList()) {
+                    CollateralCreateTrackObjectGrpc collateralObjectGrpc = CollateralCreateTrackObjectGrpc.newBuilder()
                         .setId(collateralObject.getId() != null ? collateralObject.getId() : "")
-                        .setName(collateralObject.getName() != null ? collateralObject.getName() : "")
-                        .setLogo(collateralObject.getLogo() != null ? collateralObject.getLogo() : "")
+                        .setUniqueIdentifier(collateralObject.getUniqueIdentifier() != null ? collateralObject.getUniqueIdentifier() : "")
+                        .setCollateralCode(collateralObject.getCollateralCode() != null ? collateralObject.getCollateralCode() : "")
+                        .setQuantity(collateralObject.getQuantity() != null ? collateralObject.getQuantity() : "")
+                        .setFinalQuantityBlock(collateralObject.getFinalQuantityBlock() != null ? collateralObject.getFinalQuantityBlock() : "")
+                        .setCommission(collateralObject.getCommission() != null ? collateralObject.getCommission() : "")
+                        .setNationalCode(collateralObject.getNationalCode() != null ? collateralObject.getNationalCode() : "")
+                        .setStatus(collateralObject.getStatus() != null ? collateralObject.getStatus() : "")
+                        .setStatusDescription(collateralObject.getStatusDescription() != null ? collateralObject.getStatusDescription() : "")
+                        .setAdditionalData(collateralObject.getAdditionalData() != null ? collateralObject.getAdditionalData() : "")
+                        .setCurrency(collateralObject.getCurrency() != null ? collateralObject.getCurrency() : "")
+                        .setWalletAccountNumber(collateralObject.getWalletAccountNumber() != null ? collateralObject.getWalletAccountNumber() : "")
+                        .setChannelName(collateralObject.getChannelName() != null ? collateralObject.getChannelName() : "")
+                        .setCreateTime(collateralObject.getCreateTime() != null ? collateralObject.getCreateTime() : "")
+                        .setCreateTimeTimestamp(collateralObject.getCreateTimeTimestamp() != null ? collateralObject.getCreateTimeTimestamp() : 0)
+                        .setResult(collateralObject.getResult() != null ? collateralObject.getResult() : "")
+                        .setDescription(collateralObject.getDescription() != null ? collateralObject.getDescription() : "")
                         .build();
-                    listResponseBuilder.addCollateralObjectList(collateralObjectGrpc);
+                    listResponseBuilder.addCollateralCreateTrackObjectList(collateralObjectGrpc);
                 }
             }
             
@@ -227,12 +238,16 @@ public class GrpcPanelCollateralService extends PanelCollateralServiceGrpc.Panel
                     WalletAccountTypeObjectGrpc walletAccountTypeObjectGrpc = WalletAccountTypeObjectGrpc.newBuilder()
                         .setId(walletAccountObject.getWalletAccountTypeObject().getId() != null ? walletAccountObject.getWalletAccountTypeObject().getId() : "")
                         .setName(walletAccountObject.getWalletAccountTypeObject().getName() != null ? walletAccountObject.getWalletAccountTypeObject().getName() : "")
+                        .setDescription("") // WalletAccountTypeObject doesn't have description
                         .build();
 
                     // Build WalletAccountCurrencyObjectGrpc
                     WalletAccountCurrencyObjectGrpc walletAccountCurrencyObjectGrpc = WalletAccountCurrencyObjectGrpc.newBuilder()
                         .setId(walletAccountObject.getWalletAccountCurrencyObject().getId() != null ? walletAccountObject.getWalletAccountCurrencyObject().getId() : "")
                         .setName(walletAccountObject.getWalletAccountCurrencyObject().getName() != null ? walletAccountObject.getWalletAccountCurrencyObject().getName() : "")
+                        .setSuffix(walletAccountObject.getWalletAccountCurrencyObject().getSuffix()) // WalletAccountCurrencyObject doesn't have code in this context
+                            .setDescription(walletAccountObject.getWalletAccountCurrencyObject().getDescription() != null ? walletAccountObject.getWalletAccountCurrencyObject().getDescription() : "")
+                            .setAdditionalData(walletAccountObject.getWalletAccountCurrencyObject().getAdditionalData() != null ? walletAccountObject.getWalletAccountCurrencyObject().getAdditionalData() : "")
                         .build();
 
                     // Build WalletAccountObjectGrpc
@@ -276,7 +291,7 @@ public class GrpcPanelCollateralService extends PanelCollateralServiceGrpc.Panel
             
             PanelBaseSearchJson searchRequest = new PanelBaseSearchJson();
             // Convert Map<String, String> from GRPC to Map<String, Object> for service
-            Map<String, Object> searchMap = new java.util.HashMap<>();
+            Map<String, String> searchMap = new java.util.HashMap<>();
             for (var entry : request.getMapMap().entrySet()) {
                 searchMap.put(entry.getKey(), entry.getValue());
             }
@@ -289,16 +304,16 @@ public class GrpcPanelCollateralService extends PanelCollateralServiceGrpc.Panel
             
             // Convert to GRPC response
             ReportTransactionResponseGrpc.Builder reportResponseBuilder = ReportTransactionResponseGrpc.newBuilder();
-            if (reportResponse != null && reportResponse.getReportTransactionObjectList() != null) {
-                for (var reportObject : reportResponse.getReportTransactionObjectList()) {
+            if (reportResponse != null && reportResponse.getList() != null) {
+                for (var reportObject : reportResponse.getList()) {
                     ReportTransactionObjectGrpc reportObjectGrpc = ReportTransactionObjectGrpc.newBuilder()
-                        .setId(reportObject.getId())
-                        .setTransactionType(reportObject.getTransactionType() != null ? reportObject.getTransactionType() : "")
-                        .setAmount(reportObject.getAmount() != null ? reportObject.getAmount() : "")
+                        .setId(String.valueOf(reportObject.getId()))
+                        .setPurchaseType(reportObject.getType() != null ? reportObject.getType() : "")
+                        .setQuantity(reportObject.getQuantity() != null ? reportObject.getQuantity() : "")
                         .setBalance(reportObject.getBalance() != null ? reportObject.getBalance() : "")
-                        .setDescription(reportObject.getDescription() != null ? reportObject.getDescription() : "")
+//                        .setDescription(reportObject.getDescription() != null ? reportObject.getDescription() : "")
                         .setCreateTime(reportObject.getCreateTime() != null ? reportObject.getCreateTime() : "")
-                        .setCreateTimeTimestamp(reportObject.getCreateTimeTimestamp())
+//                        .setCreateTimeTimestamp(reportObject.getCreateTimeTimestamp())
                         .build();
                     reportResponseBuilder.addReportTransactionObjectList(reportObjectGrpc);
                 }

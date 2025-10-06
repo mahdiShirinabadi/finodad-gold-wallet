@@ -12,6 +12,8 @@ import "base.proto";
 service PanelChannelService {
   rpc CreateChannelWallet(ChannelCreateRequestGrpc) returns (BaseResponseGrpc) {}
   rpc CreateMerchantWallet(MerchantCreateRequestGrpc) returns (BaseResponseGrpc) {}
+  rpc GetWageBalance(Empty) returns (BaseResponseGrpc) {}
+  rpc Report(PanelBaseSearchRequestGrpc) returns (BaseResponseGrpc) {}
 }
 
 // Request Messages

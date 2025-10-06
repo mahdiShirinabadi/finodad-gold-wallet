@@ -1,5 +1,6 @@
 package com.melli.wallet.grpc.service;
 
+import com.melli.wallet.domain.request.wallet.CommissionObject;
 import com.melli.wallet.grpc.*;
 import com.melli.wallet.grpc.config.RequestContext;
 import com.melli.wallet.service.operation.CashOutOperationService;
@@ -87,8 +88,8 @@ public class GrpcPhysicalCashOutService extends PhysicalCashOutServiceGrpc.Physi
             withdrawalRequest.setCurrency(request.getCurrency());
             
             // Convert CommissionObjectGrpc to CommissionObject
-            com.melli.wallet.domain.response.cash.CommissionObject commissionObject = 
-                new com.melli.wallet.domain.response.cash.CommissionObject();
+            CommissionObject commissionObject =
+                new CommissionObject();
             commissionObject.setAmount(request.getCommissionObject().getAmount());
             commissionObject.setCurrency(request.getCommissionObject().getCurrency());
             withdrawalRequest.setCommissionObject(commissionObject);
@@ -111,7 +112,6 @@ public class GrpcPhysicalCashOutService extends PhysicalCashOutServiceGrpc.Physi
             // Convert to GRPC response
             PhysicalCashOutResponseGrpc withdrawalResponseGrpc = PhysicalCashOutResponseGrpc.newBuilder()
                 .setNationalCode(withdrawalResponse.getNationalCode() != null ? withdrawalResponse.getNationalCode() : "")
-                .setAvailableBalance(withdrawalResponse.getAvailableBalance() != null ? withdrawalResponse.getAvailableBalance() : "")
                 .setBalance(withdrawalResponse.getBalance() != null ? withdrawalResponse.getBalance() : "")
                 .setUniqueIdentifier(withdrawalResponse.getUniqueIdentifier() != null ? withdrawalResponse.getUniqueIdentifier() : "")
                 .setWalletAccountNumber(withdrawalResponse.getWalletAccountNumber() != null ? withdrawalResponse.getWalletAccountNumber() : "")
@@ -137,38 +137,38 @@ public class GrpcPhysicalCashOutService extends PhysicalCashOutServiceGrpc.Physi
     }
 
     @Override
-    public void inquiryPhysicalCashOut(InquiryPhysicalCashOutRequestGrpc request, StreamObserver<BaseResponseGrpc> responseObserver) {
+    public void inquiry(InquiryPhysicalCashOutRequestGrpc request, StreamObserver<BaseResponseGrpc> responseObserver) {
         try {
             log.info("GRPC: InquiryPhysicalCashOut called with uniqueIdentifier: {}", request.getUniqueIdentifier());
-            
+
             PhysicalCashOutTrackResponse trackResponse = cashOutOperationService.physicalInquiry(
-                RequestContext.getChannelEntity(),
-                request.getUniqueIdentifier(),
-                RequestContext.getClientIp()
+                    RequestContext.getChannelEntity(),
+                    request.getUniqueIdentifier(),
+                    RequestContext.getClientIp()
             );
-            
+
             // Convert to GRPC response
             PhysicalCashOutTrackResponseGrpc.Builder trackResponseBuilder = PhysicalCashOutTrackResponseGrpc.newBuilder()
                     .setId(trackResponse.getId())
                     .setNationalCode(trackResponse.getNationalCode() != null ? trackResponse.getNationalCode() : "")
-                    .setQuantity(trackResponse.getQuantity() != null ? trackResponse.getQuantity() : "")
+                    .setQuantity(trackResponse.getQuantity() != null ? String.valueOf(trackResponse.getQuantity()) : "")
                     .setUniqueIdentifier(trackResponse.getUniqueIdentifier() != null ? trackResponse.getUniqueIdentifier() : "")
                     .setResult(trackResponse.getResult())
                     .setDescription(trackResponse.getDescription() != null ? trackResponse.getDescription() : "")
                     .setWalletAccountNumber(trackResponse.getWalletAccountNumber() != null ? trackResponse.getWalletAccountNumber() : "")
                     .setCreateTime(trackResponse.getCreateTime() != null ? trackResponse.getCreateTime() : "")
                     .setCreateTimeTimestamp(trackResponse.getCreateTimeTimestamp());
-            
+
             BaseResponseGrpc response = BaseResponseGrpc.newBuilder()
-                .setSuccess(true)
-                .setPhysicalCashOutTrackResponse(trackResponseBuilder.build())
-                .build();
-            
+                    .setSuccess(true)
+                    .setPhysicalCashOutTrackResponse(trackResponseBuilder.build())
+                    .build();
+
             responseObserver.onNext(response);
             responseObserver.onCompleted();
-            
+
             log.info("GRPC: InquiryPhysicalCashOut completed successfully");
-            
+
         } catch (InternalServiceException e) {
             log.error("GRPC: InquiryPhysicalCashOut failed: {}", e.getMessage(), e);
             handleError(responseObserver, e);

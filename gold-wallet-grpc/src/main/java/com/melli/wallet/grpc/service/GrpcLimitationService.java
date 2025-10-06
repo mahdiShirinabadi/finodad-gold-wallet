@@ -46,7 +46,7 @@ public class GrpcLimitationService extends LimitationServiceGrpc.LimitationServi
             
             BaseResponseGrpc response = BaseResponseGrpc.newBuilder()
                 .setSuccess(true)
-                .setLimitationCustomResponse(limitationCustomResponseGrpc)
+                .setLimitationCustomResponseGrpc(limitationCustomResponseGrpc)
                 .build();
             
             responseObserver.onNext(response);
@@ -84,7 +84,7 @@ public class GrpcLimitationService extends LimitationServiceGrpc.LimitationServi
             
             BaseResponseGrpc response = BaseResponseGrpc.newBuilder()
                 .setSuccess(true)
-                .setLimitationListResponse(limitationListResponseBuilder.build())
+                .setLimitationListResponseGrpc(limitationListResponseBuilder.build())
                 .build();
             
             responseObserver.onNext(response);

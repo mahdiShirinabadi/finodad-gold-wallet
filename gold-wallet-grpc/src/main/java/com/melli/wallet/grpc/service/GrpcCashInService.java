@@ -141,7 +141,7 @@ public class GrpcCashInService extends CashInServiceGrpc.CashInServiceImplBase {
                     .setId(trackResponse.getId())
                     .setNationalCode(trackResponse.getNationalCode() != null ? trackResponse.getNationalCode() : "")
                     .setRefNumber(trackResponse.getRefNumber() != null ? trackResponse.getRefNumber() : "")
-                    .setAmount(trackResponse.getAmount())
+                    .setAmount(String.valueOf(trackResponse.getAmount()))
                     .setUniqueIdentifier(trackResponse.getUniqueIdentifier() != null ? trackResponse.getUniqueIdentifier() : "")
                     .setResult(trackResponse.getResult())
                     .setDescription(trackResponse.getDescription() != null ? trackResponse.getDescription() : "")

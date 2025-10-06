@@ -9,12 +9,9 @@ import com.melli.wallet.domain.request.setup.ChannelCreateRequestJson;
 import com.melli.wallet.domain.request.setup.MerchantCreateRequestJson;
 import com.melli.wallet.domain.request.PanelBaseSearchJson;
 import com.melli.wallet.domain.response.transaction.ReportTransactionResponse;
+import com.melli.wallet.domain.response.transaction.ReportTransactionObject;
 import com.melli.wallet.domain.response.wallet.CreateWalletResponse;
 import com.melli.wallet.domain.response.wallet.WalletBalanceResponse;
-import com.melli.wallet.domain.response.wallet.WalletAccountObject;
-import com.melli.wallet.domain.response.wallet.WalletAccountTypeObject;
-import com.melli.wallet.domain.response.wallet.WalletAccountCurrencyObject;
-import com.melli.wallet.domain.response.transaction.ReportTransactionObject;
 import com.melli.wallet.domain.master.entity.ChannelEntity;
 import com.melli.wallet.domain.master.entity.MerchantEntity;
 import com.melli.wallet.domain.master.entity.MerchantWalletAccountCurrencyEntity;
@@ -51,13 +48,13 @@ public class GrpcPanelChannelService extends PanelChannelServiceGrpc.PanelChanne
     @Override
     public void createChannelWallet(ChannelCreateRequestGrpc request, StreamObserver<BaseResponseGrpc> responseObserver) {
         try {
-            log.info("GRPC: CreateChannelWallet called with username: {}, nationalCode: {}", 
-                request.getUsername(), request.getNationalCode());
-            
+            log.info("GRPC: CreateChannelWallet called with username: {}, nationalCode: {}",
+                    request.getUsername(), request.getNationalCode());
+
             ChannelCreateRequestJson createRequest = new ChannelCreateRequestJson();
             createRequest.setUsername(request.getUsername());
             createRequest.setNationalCode(request.getNationalCode());
-            
+
             ChannelEntity channel = channelRepositoryService.getChannel(createRequest.getUsername());
             if (channel == null) {
                 log.error("channel with name ({}) is not exist", createRequest.getUsername());
@@ -66,29 +63,29 @@ public class GrpcPanelChannelService extends PanelChannelServiceGrpc.PanelChanne
 
             if (channel.getWalletEntity() == null) {
                 CreateWalletResponse createWalletResponse = walletOperationalService.createWallet(
-                    RequestContext.getChannelEntity(), 
-                    channel.getMobile(), 
-                    createRequest.getNationalCode(), 
-                    WalletTypeRepositoryService.CHANNEL, 
-                    List.of(WalletAccountCurrencyRepositoryService.GOLD, WalletAccountCurrencyRepositoryService.RIAL),
-                    List.of(WalletAccountTypeRepositoryService.WAGE)
+                        RequestContext.getChannelEntity(),
+                        channel.getMobile(),
+                        createRequest.getNationalCode(),
+                        WalletTypeRepositoryService.CHANNEL,
+                        List.of(WalletAccountCurrencyRepositoryService.GOLD, WalletAccountCurrencyRepositoryService.RIAL),
+                        List.of(WalletAccountTypeRepositoryService.WAGE)
                 );
                 channel.setWalletEntity(walletRepositoryService.findById(Long.parseLong(createWalletResponse.getWalletId())));
                 channelRepositoryService.save(channel);
             }
-            
+
             BaseResponseGrpc response = BaseResponseGrpc.newBuilder()
-                .setSuccess(true)
-                .setUuidResponse(UuidResponseGrpc.newBuilder()
-                    .setUuid("wage wallet created for channel")
-                    .build())
-                .build();
-            
+                    .setSuccess(true)
+                    .setUuidResponse(UuidResponseGrpc.newBuilder()
+                            .setUuid("wage wallet created for channel")
+                            .build())
+                    .build();
+
             responseObserver.onNext(response);
             responseObserver.onCompleted();
-            
+
             log.info("GRPC: CreateChannelWallet completed successfully");
-            
+
         } catch (InternalServiceException e) {
             log.error("GRPC: CreateChannelWallet failed: {}", e.getMessage(), e);
             handleError(responseObserver, e);
@@ -101,26 +98,26 @@ public class GrpcPanelChannelService extends PanelChannelServiceGrpc.PanelChanne
     @Override
     public void createMerchantWallet(MerchantCreateRequestGrpc request, StreamObserver<BaseResponseGrpc> responseObserver) {
         try {
-            log.info("GRPC: CreateMerchantWallet called with name: {}, mobileNumber: {}", 
-                request.getName(), request.getMobileNumber());
-            
+            log.info("GRPC: CreateMerchantWallet called with name: {}, mobileNumber: {}",
+                    request.getName(), request.getMobileNumber());
+
             MerchantCreateRequestJson createRequest = new MerchantCreateRequestJson();
             createRequest.setName(request.getName());
             createRequest.setMobileNumber(request.getMobileNumber());
             createRequest.setEconomicCode(request.getEconomicCode());
-            
-            String nationalCode = (createRequest.getEconomicCode().length() > 10) ? 
-                createRequest.getEconomicCode().substring(0, 10) : createRequest.getEconomicCode();
-            
+
+            String nationalCode = (createRequest.getEconomicCode().length() > 10) ?
+                    createRequest.getEconomicCode().substring(0, 10) : createRequest.getEconomicCode();
+
             CreateWalletResponse createWalletResponse = walletOperationalService.createWallet(
-                RequestContext.getChannelEntity(), 
-                createRequest.getMobileNumber(), 
-                nationalCode, 
-                WalletTypeRepositoryService.MERCHANT, 
-                List.of(WalletAccountCurrencyRepositoryService.GOLD, WalletAccountCurrencyRepositoryService.RIAL),
-                List.of(WalletAccountTypeRepositoryService.NORMAL)
+                    RequestContext.getChannelEntity(),
+                    createRequest.getMobileNumber(),
+                    nationalCode,
+                    WalletTypeRepositoryService.MERCHANT,
+                    List.of(WalletAccountCurrencyRepositoryService.GOLD, WalletAccountCurrencyRepositoryService.RIAL),
+                    List.of(WalletAccountTypeRepositoryService.NORMAL)
             );
-            
+
             MerchantEntity merchantEntity = new MerchantEntity();
             merchantEntity.setName(createRequest.getName());
             merchantEntity.setDescription("create merchant");
@@ -147,19 +144,19 @@ public class GrpcPanelChannelService extends PanelChannelServiceGrpc.PanelChanne
             rialEntity.setMerchantEntity(merchantEntity);
             rialEntity.setWalletAccountCurrencyEntity(walletAccountCurrencyRepositoryService.findCurrency(WalletAccountCurrencyRepositoryService.RIAL));
             merchantWalletAccountCurrencyRepository.save(rialEntity);
-            
+
             BaseResponseGrpc response = BaseResponseGrpc.newBuilder()
-                .setSuccess(true)
-                .setUuidResponse(UuidResponseGrpc.newBuilder()
-                    .setUuid("merchant created successful")
-                    .build())
-                .build();
-            
+                    .setSuccess(true)
+                    .setUuidResponse(UuidResponseGrpc.newBuilder()
+                            .setUuid("merchant created successful")
+                            .build())
+                    .build();
+
             responseObserver.onNext(response);
             responseObserver.onCompleted();
-            
+
             log.info("GRPC: CreateMerchantWallet completed successfully");
-            
+
         } catch (InternalServiceException e) {
             log.error("GRPC: CreateMerchantWallet failed: {}", e.getMessage(), e);
             handleError(responseObserver, e);
@@ -173,52 +170,52 @@ public class GrpcPanelChannelService extends PanelChannelServiceGrpc.PanelChanne
     public void getWageBalance(Empty request, StreamObserver<BaseResponseGrpc> responseObserver) {
         try {
             log.info("GRPC: GetWageBalance called for channel: {}", RequestContext.getChannelEntity().getUsername());
-            
+
             WalletBalanceResponse balanceResponse = channelOperationService.getBalance(
-                channelRepositoryService.findById(RequestContext.getChannelEntity().getId())
+                    channelRepositoryService.findById(RequestContext.getChannelEntity().getId())
             );
-            
+
             // Convert to GRPC response
             WalletBalanceResponseGrpc.Builder balanceResponseBuilder = WalletBalanceResponseGrpc.newBuilder();
             if (balanceResponse != null && balanceResponse.getWalletAccountObjectList() != null) {
                 for (var walletAccountObject : balanceResponse.getWalletAccountObjectList()) {
                     // Build WalletAccountTypeObjectGrpc
                     WalletAccountTypeObjectGrpc walletAccountTypeObjectGrpc = WalletAccountTypeObjectGrpc.newBuilder()
-                        .setId(walletAccountObject.getWalletAccountTypeObject().getId() != null ? walletAccountObject.getWalletAccountTypeObject().getId() : "")
-                        .setName(walletAccountObject.getWalletAccountTypeObject().getName() != null ? walletAccountObject.getWalletAccountTypeObject().getName() : "")
-                        .build();
+                            .setId(walletAccountObject.getWalletAccountTypeObject().getId() != null ? walletAccountObject.getWalletAccountTypeObject().getId() : "")
+                            .setName(walletAccountObject.getWalletAccountTypeObject().getName() != null ? walletAccountObject.getWalletAccountTypeObject().getName() : "")
+                            .build();
 
                     // Build WalletAccountCurrencyObjectGrpc
                     WalletAccountCurrencyObjectGrpc walletAccountCurrencyObjectGrpc = WalletAccountCurrencyObjectGrpc.newBuilder()
-                        .setId(walletAccountObject.getWalletAccountCurrencyObject().getId() != null ? walletAccountObject.getWalletAccountCurrencyObject().getId() : "")
-                        .setName(walletAccountObject.getWalletAccountCurrencyObject().getName() != null ? walletAccountObject.getWalletAccountCurrencyObject().getName() : "")
-                        .build();
+                            .setId(walletAccountObject.getWalletAccountCurrencyObject().getId() != null ? walletAccountObject.getWalletAccountCurrencyObject().getId() : "")
+                            .setName(walletAccountObject.getWalletAccountCurrencyObject().getName() != null ? walletAccountObject.getWalletAccountCurrencyObject().getName() : "")
+                            .build();
 
                     // Build WalletAccountObjectGrpc
                     WalletAccountObjectGrpc walletAccountObjectGrpc = WalletAccountObjectGrpc.newBuilder()
-                        .setWalletAccountTypeObject(walletAccountTypeObjectGrpc)
-                        .setWalletAccountCurrencyObject(walletAccountCurrencyObjectGrpc)
-                        .setAccountNumber(walletAccountObject.getAccountNumber() != null ? walletAccountObject.getAccountNumber() : "")
-                        .setBalance(walletAccountObject.getBalance() != null ? walletAccountObject.getBalance() : "")
-                        .setAvailableBalance(walletAccountObject.getAvailableBalance() != null ? walletAccountObject.getAvailableBalance() : "")
-                        .setStatus(walletAccountObject.getStatus() != null ? walletAccountObject.getStatus() : "")
-                        .setStatusDescription(walletAccountObject.getStatusDescription() != null ? walletAccountObject.getStatusDescription() : "")
-                        .build();
+                            .setWalletAccountTypeObject(walletAccountTypeObjectGrpc)
+                            .setWalletAccountCurrencyObject(walletAccountCurrencyObjectGrpc)
+                            .setAccountNumber(walletAccountObject.getAccountNumber() != null ? walletAccountObject.getAccountNumber() : "")
+                            .setBalance(walletAccountObject.getBalance() != null ? walletAccountObject.getBalance() : "")
+                            .setAvailableBalance(walletAccountObject.getAvailableBalance() != null ? walletAccountObject.getAvailableBalance() : "")
+                            .setStatus(walletAccountObject.getStatus() != null ? walletAccountObject.getStatus() : "")
+                            .setStatusDescription(walletAccountObject.getStatusDescription() != null ? walletAccountObject.getStatusDescription() : "")
+                            .build();
 
                     balanceResponseBuilder.addWalletAccountObjectList(walletAccountObjectGrpc);
                 }
             }
-            
+
             BaseResponseGrpc response = BaseResponseGrpc.newBuilder()
-                .setSuccess(true)
-                .setWalletBalanceResponse(balanceResponseBuilder.build())
-                .build();
-            
+                    .setSuccess(true)
+                    .setWalletBalanceResponse(balanceResponseBuilder.build())
+                    .build();
+
             responseObserver.onNext(response);
             responseObserver.onCompleted();
-            
+
             log.info("GRPC: GetWageBalance completed successfully");
-            
+
         } catch (InternalServiceException e) {
             log.error("GRPC: GetWageBalance failed: {}", e.getMessage(), e);
             handleError(responseObserver, e);
@@ -232,47 +229,45 @@ public class GrpcPanelChannelService extends PanelChannelServiceGrpc.PanelChanne
     public void report(PanelBaseSearchRequestGrpc request, StreamObserver<BaseResponseGrpc> responseObserver) {
         try {
             log.info("GRPC: Report called for channel: {}", RequestContext.getChannelEntity().getUsername());
-            
+
             PanelBaseSearchJson searchRequest = new PanelBaseSearchJson();
             // Convert Map<String, String> from GRPC to Map<String, Object> for service
-            Map<String, Object> searchMap = new java.util.HashMap<>();
+            Map<String, String> searchMap = new java.util.HashMap<>();
             for (var entry : request.getMapMap().entrySet()) {
                 searchMap.put(entry.getKey(), entry.getValue());
             }
             searchRequest.setMap(searchMap);
-            
+
             ReportTransactionResponse reportResponse = channelOperationService.report(
-                RequestContext.getChannelEntity(), 
-                searchRequest.getMap()
+                    RequestContext.getChannelEntity(),
+                    searchRequest.getMap()
             );
-            
+
             // Convert to GRPC response
             ReportTransactionResponseGrpc.Builder reportResponseBuilder = ReportTransactionResponseGrpc.newBuilder();
-            if (reportResponse != null && reportResponse.getReportTransactionObjectList() != null) {
-                for (var reportObject : reportResponse.getReportTransactionObjectList()) {
+            if (reportResponse != null && reportResponse.getList() != null) {
+                for (var reportObject : reportResponse.getList()) {
                     ReportTransactionObjectGrpc reportObjectGrpc = ReportTransactionObjectGrpc.newBuilder()
-                        .setId(reportObject.getId())
-                        .setTransactionType(reportObject.getTransactionType() != null ? reportObject.getTransactionType() : "")
-                        .setAmount(reportObject.getAmount() != null ? reportObject.getAmount() : "")
-                        .setBalance(reportObject.getBalance() != null ? reportObject.getBalance() : "")
-                        .setDescription(reportObject.getDescription() != null ? reportObject.getDescription() : "")
-                        .setCreateTime(reportObject.getCreateTime() != null ? reportObject.getCreateTime() : "")
-                        .setCreateTimeTimestamp(reportObject.getCreateTimeTimestamp())
-                        .build();
+                            .setId(reportObject.getId())
+                            .setPurchaseType(reportObject.getType())
+                            .setQuantity(reportObject.getQuantity())
+                            .setBalance(reportObject.getBalance())
+                            .setCreateTime(reportObject.getCreateTime() != null ? reportObject.getCreateTime() : "")
+                            .build();
                     reportResponseBuilder.addReportTransactionObjectList(reportObjectGrpc);
                 }
             }
-            
+
             BaseResponseGrpc response = BaseResponseGrpc.newBuilder()
-                .setSuccess(true)
-                .setReportTransactionResponse(reportResponseBuilder.build())
-                .build();
-            
+                    .setSuccess(true)
+                    .setReportTransactionResponse(reportResponseBuilder.build())
+                    .build();
+
             responseObserver.onNext(response);
             responseObserver.onCompleted();
-            
+
             log.info("GRPC: Report completed successfully");
-            
+
         } catch (InternalServiceException e) {
             log.error("GRPC: Report failed: {}", e.getMessage(), e);
             handleError(responseObserver, e);
@@ -297,13 +292,13 @@ public class GrpcPanelChannelService extends PanelChannelServiceGrpc.PanelChanne
 
     private void handleUnexpectedError(StreamObserver<BaseResponseGrpc> responseObserver, Exception e) {
         BaseResponseGrpc errorResponse = BaseResponseGrpc.newBuilder()
-            .setSuccess(false)
-            .setErrorDetail(ErrorDetailGrpc.newBuilder()
-                .setCode("UNEXPECTED_ERROR")
-                .setMessage("An unexpected error occurred: " + e.getMessage())
-                .build())
-            .build();
-        
+                .setSuccess(false)
+                .setErrorDetail(ErrorDetailGrpc.newBuilder()
+                        .setCode("UNEXPECTED_ERROR")
+                        .setMessage("An unexpected error occurred: " + e.getMessage())
+                        .build())
+                .build();
+
         responseObserver.onNext(errorResponse);
         responseObserver.onCompleted();
     }

@@ -139,7 +139,7 @@ public class GrpcCashOutService extends CashOutServiceGrpc.CashOutServiceImplBas
                     .setId(trackResponse.getId())
                     .setNationalCode(trackResponse.getNationalCode() != null ? trackResponse.getNationalCode() : "")
 //                    .setIban(trackResponse.getIban() != null ? trackResponse.getIban() : "")
-                    .setAmount(trackResponse.getAmount())
+                    .setAmount(String.valueOf(trackResponse.getAmount()))
                     .setUniqueIdentifier(trackResponse.getUniqueIdentifier() != null ? trackResponse.getUniqueIdentifier() : "")
                     .setResult(trackResponse.getResult())
                     .setDescription(trackResponse.getDescription() != null ? trackResponse.getDescription() : "")
