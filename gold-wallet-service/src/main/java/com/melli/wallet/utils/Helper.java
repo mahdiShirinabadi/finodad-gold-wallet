@@ -485,6 +485,7 @@ public class Helper {
         statementObject.setQuantity((reportTransactionEntity.getAmount().stripTrailingZeros().toPlainString()));
         statementObject.setBalance((reportTransactionEntity.getAvailableBalance().stripTrailingZeros().toPlainString()));
         statementObject.setCreateTime(DateUtils.getLocaleDate(DateUtils.FARSI_LOCALE, reportTransactionEntity.getCreatedAt(), FORMAT_DATE_RESPONSE, false));
+        statementObject.setDescription(reportTransactionEntity.getDescription());
         return statementObject;
     }
 

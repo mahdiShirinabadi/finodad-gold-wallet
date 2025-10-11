@@ -48,4 +48,8 @@ public class StatementObject {
     @Schema(name = NamingProperty.CREATE_TIME)
     @JsonProperty(NamingProperty.CREATE_TIME)
     private String createTime;
+
+    @Schema(name = NamingProperty.DESCRIPTION)
+    @JsonProperty(NamingProperty.DESCRIPTION)
+    private String description;
 }
