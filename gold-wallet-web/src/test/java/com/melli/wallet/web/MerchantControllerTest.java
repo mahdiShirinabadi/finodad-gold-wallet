@@ -7,6 +7,7 @@ import com.melli.wallet.domain.master.entity.MerchantWalletAccountCurrencyEntity
 import com.melli.wallet.domain.master.persistence.MerchantWalletAccountCurrencyRepository;
 import com.melli.wallet.domain.response.base.BaseResponse;
 import com.melli.wallet.domain.response.login.LoginResponse;
+import com.melli.wallet.domain.response.merchant.MerchantBalanceCalculationResponse;
 import com.melli.wallet.domain.response.purchase.MerchantResponse;
 import com.melli.wallet.domain.response.wallet.WalletAccountObject;
 import com.melli.wallet.domain.response.wallet.WalletBalanceResponse;
@@ -254,6 +255,83 @@ class MerchantControllerTest extends WalletApplicationTests {
         
         // Test with invalid merchant ID format (non-numeric)
         getMerchantBalance(mockMvc, ACCESS_TOKEN, "invalid_merchant_id", HttpStatus.OK, StatusRepositoryService.INPUT_PARAMETER_NOT_VALID, false);
+    }
+
+    /**
+     * Test successful merchant balance calculation from transactions.
+     * This method:
+     * - Gets merchant data to ensure merchant exists
+     * - Retrieves merchant ID from the first merchant
+     * - Calls calculate balance endpoint
+     * - Validates the calculated balance response
+     */
+    @Test
+    @Order(28)
+    @DisplayName("getMerchantBalanceCalculatedSuccess")
+    void getMerchantBalanceCalculatedSuccess() throws Exception {
+        log.info("start getMerchantBalanceCalculatedSuccess test");
+        
+        // Step 1: Get merchant data to ensure merchant exists
+        BaseResponse<MerchantResponse> merchantResponse = getMerchant(mockMvc, ACCESS_TOKEN, "GOLD", HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
+        Assert.assertNotNull(merchantResponse.getData());
+        Assert.assertNotNull(merchantResponse.getData().getMerchantObjectList());
+        Assert.assertTrue(merchantResponse.getData().getMerchantObjectList().size() > 0);
+        
+        // Step 2: Get merchant ID from the first merchant
+        String merchantId = String.valueOf(merchantResponse.getData().getMerchantObjectList().get(0).getId());
+        
+        // Step 3: Test the calculate balance endpoint
+        BaseResponse<MerchantBalanceCalculationResponse> response = getMerchantBalanceCalculated(mockMvc, ACCESS_TOKEN, merchantId, "GOLD", HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
+        Assert.assertNotNull(response.getData());
+        Assert.assertNotNull(response.getData().getBalance());
+        Assert.assertEquals(merchantId, response.getData().getMerchantId());
+        log.info("Merchant balance calculated successfully for merchantId: {} with balance: {}", merchantId, response.getData().getBalance());
+    }
+
+    /**
+     * Test merchant balance calculation failure when merchant not found.
+     * This method:
+     * - Attempts to calculate balance for non-existent merchant ID
+     * - Expects MERCHANT_IS_NOT_EXIST error
+     */
+    @Test
+    @Order(29)
+    @DisplayName("getMerchantBalanceCalculatedFail-MerchantNotFound")
+    void getMerchantBalanceCalculatedFailMerchantNotFound() throws Exception {
+        log.info("start getMerchantBalanceCalculatedFailMerchantNotFound test");
+        getMerchantBalanceCalculated(mockMvc, ACCESS_TOKEN, INVALID_MERCHANT_ID, "GOLD", HttpStatus.OK, StatusRepositoryService.MERCHANT_IS_NOT_EXIST, false);
+    }
+
+    /**
+     * Test merchant balance calculation failure with invalid merchant ID format.
+     * This method:
+     * - Attempts to calculate balance with non-numeric merchant ID
+     * - Expects INPUT_PARAMETER_NOT_VALID error
+     */
+    @Test
+    @Order(30)
+    @DisplayName("getMerchantBalanceCalculatedFail-InvalidMerchantId")
+    void getMerchantBalanceCalculatedFailInvalidMerchantId() throws Exception {
+        log.info("start getMerchantBalanceCalculatedFailInvalidMerchantId test");
+        
+        // Test with invalid merchant ID format (non-numeric)
+        getMerchantBalanceCalculated(mockMvc, ACCESS_TOKEN, "invalid_merchant_id", "GOLD", HttpStatus.OK, StatusRepositoryService.INPUT_PARAMETER_NOT_VALID, false);
+    }
+
+    /**
+     * Test merchant balance calculation failure with invalid currency.
+     * This method:
+     * - Attempts to calculate balance with invalid currency
+     * - Expects CURRENCY_NOT_FOUND error
+     */
+    @Test
+    @Order(31)
+    @DisplayName("getMerchantBalanceCalculatedFail-InvalidCurrency")
+    void getMerchantBalanceCalculatedFailInvalidCurrency() throws Exception {
+        log.info("start getMerchantBalanceCalculatedFailInvalidCurrency test");
+        
+        // Test with invalid currency
+        getMerchantBalanceCalculated(mockMvc, ACCESS_TOKEN, "1", "INVALID_CURRENCY", HttpStatus.OK, StatusRepositoryService.WALLET_ACCOUNT_CURRENCY_NOT_FOUND, false);
     }
 
 

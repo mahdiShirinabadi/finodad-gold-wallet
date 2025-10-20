@@ -1040,4 +1040,25 @@ class PhysicalCashOutControllerTest extends WalletApplicationTests {
         BigDecimal balance = walletAccountRepositoryService.getBalance(goldWalletAccountEntity.getId()).getRealBalance();
         walletAccountRepositoryService.decreaseBalance(goldWalletAccountEntity.getId(), balance);
     }
+
+    /**
+     * Test successful calculation of total quantity for physical cash out transactions.
+     * This method:
+     * - Calls the total quantity calculation endpoint
+     * - Validates the response structure
+     * - Verifies the total quantity calculation
+     */
+    @Test
+    @Order(50)
+    @DisplayName("calculateTotalQuantitySuccess")
+    void calculateTotalQuantitySuccess() throws Exception {
+        log.info("start calculateTotalQuantitySuccess test");
+        
+        // Test the calculate total quantity endpoint
+        BaseResponse<PhysicalCashOutTotalQuantityResponse> response = getPhysicalCashOutTotalQuantity(mockMvc, ACCESS_TOKEN, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
+        Assert.assertNotNull(response.getData());
+        Assert.assertNotNull(response.getData().getTotalQuantity());
+        Assert.assertEquals("physical_cash_out", response.getData().getRequestType());
+        log.info("Physical cash out total quantity calculated successfully: {}", response.getData().getTotalQuantity());
+    }
 } 

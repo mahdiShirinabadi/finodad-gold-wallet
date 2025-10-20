@@ -10,13 +10,13 @@ import org.springframework.context.annotation.Profile;
 public class FlywayConfig {
 
     @Bean
-    @Profile({"prod","staging","dev"})
+    @Profile({"prod","staging1","dev"})
     public FlywayMigrationStrategy migrate() {
         return Flyway::migrate;
     }
 
     @Bean
-    @Profile({"test","staging1","dev1"})
+    @Profile({"test","staging","dev1"})
     public FlywayMigrationStrategy cleanMigrate() {
         return flyway -> {
             flyway.clean();

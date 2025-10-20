@@ -43,10 +43,12 @@ import com.melli.wallet.domain.response.collateral.CreateCollateralResponse;
 import com.melli.wallet.domain.response.login.LoginResponse;
 import com.melli.wallet.domain.response.p2p.P2pTrackResponse;
 import com.melli.wallet.domain.response.p2p.P2pUuidResponse;
+import com.melli.wallet.domain.response.merchant.MerchantBalanceCalculationResponse;
 import com.melli.wallet.domain.response.purchase.MerchantResponse;
 import com.melli.wallet.domain.response.purchase.PurchaseResponse;
 import com.melli.wallet.domain.response.purchase.PurchaseTrackResponse;
 import com.melli.wallet.domain.response.wallet.CreateWalletResponse;
+import com.melli.wallet.domain.response.wallet.TotalWalletBalanceResponse;
 import com.melli.wallet.domain.response.wallet.WalletAccountObject;
 import com.melli.wallet.domain.response.wallet.WalletBalanceResponse;
 import com.melli.wallet.exception.InternalServiceException;
@@ -127,6 +129,7 @@ public class WalletApplicationTests {
 
     private static final String MERCHANT_GET_IN_PATH = "/api/v1/merchant/list";
     private static final String MERCHANT_BALANCE_PATH = "/api/v1/merchant/balance";
+    private static final String MERCHANT_BALANCE_CALCULATED_PATH = "/api/v1/merchant/balance/calculated";
     private static final String MERCHANT_BALANCE_INCREASE_PATH = "/api/v1/merchant/balance/increase";
     private static final String MERCHANT_BALANCE_DECREASE_PATH = "/api/v1/merchant/balance/decrease";
 
@@ -136,6 +139,8 @@ public class WalletApplicationTests {
     private static final String PHYSICAL_CASH_OUT_GENERATE_UUID_PATH = "/api/v1/physicalCashOut/generate/uuid";
     private static final String PHYSICAL_CASH_OUT_INQUIRY_PATH = "/api/v1/physicalCashOut/inquiry?uniqueIdentifier=";
     private static final String PHYSICAL_CASH_OUT_DO_PATH = "/api/v1/physicalCashOut/withdrawal";
+    private static final String PHYSICAL_CASH_OUT_TOTAL_QUANTITY_PATH = "/api/v1/physicalCashOut/totalQuantity";
+    private static final String WALLET_TOTAL_BALANCE_PATH = "/api/v1/wallet/totalBalance";
 
     private static final String GIFT_CARD_GENERATE_UUID_PATH = "/api/v1/giftCard/generate/uuid";
     private static final String GIFT_CARD_PROCESS_PATH = "/api/v1/giftCard/process";
@@ -559,6 +564,27 @@ public class WalletApplicationTests {
         MockHttpServletRequestBuilder getRequest = buildGetRequest(token, MERCHANT_BALANCE_PATH + "?merchantId=" + merchantId);
         String response = performTest(mockMvc, getRequest, httpStatus, success, errorCode);
         TypeReference<BaseResponse<WalletBalanceResponse>> typeReference = new TypeReference<>() {};
+        return objectMapper.readValue(response, typeReference);
+    }
+
+    public BaseResponse<MerchantBalanceCalculationResponse> getMerchantBalanceCalculated(MockMvc mockMvc, String token, String merchantId, String currency, HttpStatus httpStatus, int errorCode, boolean success) throws Exception {
+        MockHttpServletRequestBuilder getRequest = buildGetRequest(token, MERCHANT_BALANCE_CALCULATED_PATH + "?merchantId=" + merchantId + "&currency=" + currency);
+        String response = performTest(mockMvc, getRequest, httpStatus, success, errorCode);
+        TypeReference<BaseResponse<MerchantBalanceCalculationResponse>> typeReference = new TypeReference<>() {};
+        return objectMapper.readValue(response, typeReference);
+    }
+
+    public BaseResponse<PhysicalCashOutTotalQuantityResponse> getPhysicalCashOutTotalQuantity(MockMvc mockMvc, String token, HttpStatus httpStatus, int errorCode, boolean success) throws Exception {
+        MockHttpServletRequestBuilder getRequest = buildGetRequest(token, PHYSICAL_CASH_OUT_TOTAL_QUANTITY_PATH);
+        String response = performTest(mockMvc, getRequest, httpStatus, success, errorCode);
+        TypeReference<BaseResponse<PhysicalCashOutTotalQuantityResponse>> typeReference = new TypeReference<>() {};
+        return objectMapper.readValue(response, typeReference);
+    }
+
+    public BaseResponse<TotalWalletBalanceResponse> getWalletTotalBalance(MockMvc mockMvc, String token, String currency, HttpStatus httpStatus, int errorCode, boolean success) throws Exception {
+        MockHttpServletRequestBuilder getRequest = buildGetRequest(token, WALLET_TOTAL_BALANCE_PATH + "?currency=" + currency);
+        String response = performTest(mockMvc, getRequest, httpStatus, success, errorCode);
+        TypeReference<BaseResponse<TotalWalletBalanceResponse>> typeReference = new TypeReference<>() {};
         return objectMapper.readValue(response, typeReference);
     }
 

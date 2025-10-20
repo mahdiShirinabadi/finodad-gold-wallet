@@ -9,8 +9,10 @@ import com.melli.wallet.domain.response.cash.CashOutResponse;
 import com.melli.wallet.domain.response.cash.CashOutTrackResponse;
 import com.melli.wallet.domain.response.cash.PhysicalCashOutResponse;
 import com.melli.wallet.domain.response.cash.PhysicalCashOutTrackResponse;
+import com.melli.wallet.domain.response.cash.PhysicalCashOutTotalQuantityResponse;
 import com.melli.wallet.domain.slave.entity.ReportCashOutRequestEntity;
 import com.melli.wallet.domain.slave.entity.ReportPhysicalCashOutRequestEntity;
+import com.melli.wallet.domain.slave.persistence.ReportTransactionRepository;
 import com.melli.wallet.exception.InternalServiceException;
 import com.melli.wallet.service.operation.CashOutOperationService;
 import com.melli.wallet.service.operation.MessageResolverOperationService;
@@ -54,6 +56,7 @@ public class CashOutOperationServiceImplementation implements CashOutOperationSe
     private final MessageResolverOperationService messageResolverOperationService;
     private final StatusRepositoryService statusRepositoryService;
     private final StockRepositoryService stockRepositoryService;
+    private final ReportTransactionRepository reportTransactionRepository;
 
     @Override
     public UuidResponse generateUuid(ChannelEntity channelEntity, String nationalCode, String amount, String accountNumber) throws InternalServiceException {
@@ -355,5 +358,26 @@ public class CashOutOperationServiceImplementation implements CashOutOperationSe
         transaction.setRequestTypeId(requestTypeId);
         transaction.setRrnEntity(rrn);
         return transaction;
+    }
+
+    @Override
+    public PhysicalCashOutTotalQuantityResponse calculateTotalQuantity(ChannelEntity channelEntity) throws InternalServiceException {
+        log.info("start calculateTotalQuantity for physical cash out transactions");
+        
+        // Get request type ID for PHYSICAL_CASH_OUT
+        Long physicalCashOutRequestTypeId = requestTypeRepositoryService.getRequestType(RequestTypeRepositoryService.PHYSICAL_CASH_OUT).getId();
+        
+        // Calculate total quantity directly in database using aggregation
+        BigDecimal totalQuantity = reportTransactionRepository
+                .calculateTotalQuantityByRequestType(physicalCashOutRequestTypeId);
+        
+        // Handle null result (no transactions found)
+        if (totalQuantity == null) {
+            totalQuantity = BigDecimal.ZERO;
+        }
+        
+        log.info("finish calculateTotalQuantity for physical cash out transactions, totalQuantity: {}", totalQuantity);
+        
+        return helper.fillPhysicalCashOutTotalQuantityResponse(totalQuantity, RequestTypeRepositoryService.PHYSICAL_CASH_OUT);
     }
 }

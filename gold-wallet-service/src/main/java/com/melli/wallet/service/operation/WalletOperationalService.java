@@ -6,6 +6,7 @@ import com.melli.wallet.domain.master.entity.SettingGeneralEntity;
 import com.melli.wallet.domain.master.entity.WalletEntity;
 import com.melli.wallet.domain.response.base.BaseResponse;
 import com.melli.wallet.domain.response.wallet.CreateWalletResponse;
+import com.melli.wallet.domain.response.wallet.TotalWalletBalanceResponse;
 import com.melli.wallet.exception.InternalServiceException;
 import com.melli.wallet.service.repository.SettingGeneralRepositoryService;
 import org.apache.commons.lang3.ObjectUtils;
@@ -32,5 +33,6 @@ public interface WalletOperationalService {
     BaseResponse<ObjectUtils.Null> deleteWallet(ChannelEntity channel, String walletId, String ip) throws InternalServiceException;
     BaseResponse<ObjectUtils.Null> activateWallet(ChannelEntity channel, String walletId, String ip) throws InternalServiceException;
     WalletEntity findUserWallet(String nationalCode) throws InternalServiceException;
+    TotalWalletBalanceResponse calculateTotalBalance(ChannelEntity channelEntity, String currency) throws InternalServiceException;
 
 }

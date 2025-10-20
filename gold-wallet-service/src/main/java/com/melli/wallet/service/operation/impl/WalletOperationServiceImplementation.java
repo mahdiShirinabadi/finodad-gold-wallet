@@ -4,6 +4,8 @@ import com.melli.wallet.domain.enumaration.WalletStatusEnum;
 import com.melli.wallet.domain.master.entity.*;
 import com.melli.wallet.domain.response.base.BaseResponse;
 import com.melli.wallet.domain.response.wallet.CreateWalletResponse;
+import com.melli.wallet.domain.response.wallet.TotalWalletBalanceResponse;
+import com.melli.wallet.domain.slave.persistence.ReportWalletAccountRepository;
 import com.melli.wallet.exception.InternalServiceException;
 import com.melli.wallet.service.operation.WalletOperationalService;
 import com.melli.wallet.service.repository.*;
@@ -23,6 +25,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.*;
 
 /**
@@ -42,6 +45,8 @@ public class WalletOperationServiceImplementation implements WalletOperationalSe
     private final WalletAccountRepositoryService walletAccountRepositoryService;
     private final WalletTypeRepositoryService walletTypeRepositoryService;
     private final WalletLevelRepositoryService walletLevelRepositoryService;
+    private final ReportWalletAccountRepository reportWalletAccountRepository;
+    private final WalletAccountCurrencyRepositoryService walletAccountCurrencyRepositoryService;
 
     @Override
     @LogExecutionTime("Creating wallet for user")
@@ -220,5 +225,40 @@ public class WalletOperationServiceImplementation implements WalletOperationalSe
             throw new InternalServiceException("wallet for nationalCode (" + nationalCode + ") is not active!!", StatusRepositoryService.WALLET_IS_NOT_ACTIVE, HttpStatus.OK);
         }
         return wallet;
+    }
+
+    @Override
+    public TotalWalletBalanceResponse calculateTotalBalance(ChannelEntity channelEntity, String currency) throws InternalServiceException {
+        log.info("start calculateTotalBalance excluding MERCHANT wallets for currency: {}", currency);
+        
+        // Get currency entity to validate it exists
+        WalletAccountCurrencyEntity currencyEntity = walletAccountCurrencyRepositoryService.findCurrency(currency);
+        if (currencyEntity == null) {
+            log.error("Currency not found: {}", currency);
+            throw new InternalServiceException("Currency not found", StatusRepositoryService.WALLET_ACCOUNT_CURRENCY_NOT_FOUND, HttpStatus.OK);
+        }
+        
+        // Get MERCHANT wallet type ID first
+        WalletTypeEntity merchantWalletType = walletTypeRepositoryService.getByNameManaged(WalletTypeRepositoryService.MERCHANT);
+        if (merchantWalletType == null) {
+            log.error("MERCHANT wallet type not found");
+            throw new InternalServiceException("MERCHANT wallet type not found", StatusRepositoryService.WALLET_TYPE_NOT_FOUND, HttpStatus.OK);
+        }
+        
+        // Create list of excluded wallet type IDs (MERCHANT for now, but can be extended in future)
+        List<Long> excludedWalletTypeIds = List.of(merchantWalletType.getId());
+        
+        // Calculate total balance excluding specified wallet types and filtering by currency using slave database
+        BigDecimal totalBalance = reportWalletAccountRepository.calculateTotalBalanceExcludingWalletTypeIdsAndCurrency(
+                excludedWalletTypeIds, currencyEntity.getId());
+        
+        // Handle null result (no wallets found)
+        if (totalBalance == null) {
+            totalBalance = BigDecimal.ZERO;
+        }
+        
+        log.info("finish calculateTotalBalance excluding MERCHANT wallets for currency: {}, totalBalance: {}", currency, totalBalance);
+        
+        return helper.fillTotalWalletBalanceResponse(totalBalance, WalletTypeRepositoryService.MERCHANT);
     }
 }

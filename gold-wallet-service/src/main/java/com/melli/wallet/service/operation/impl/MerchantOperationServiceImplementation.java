@@ -2,6 +2,7 @@ package com.melli.wallet.service.operation.impl;
 
 import com.melli.wallet.domain.dto.BalanceDTO;
 import com.melli.wallet.domain.master.entity.*;
+import com.melli.wallet.domain.response.merchant.MerchantBalanceCalculationResponse;
 import com.melli.wallet.domain.response.transaction.ReportTransactionResponse;
 import com.melli.wallet.domain.response.wallet.WalletBalanceResponse;
 import com.melli.wallet.domain.slave.entity.ReportTransactionEntity;
@@ -47,6 +48,7 @@ public class MerchantOperationServiceImplementation implements MerchantOperation
     private final Helper helper;
     private final SettingGeneralRepositoryService settingGeneralRepositoryService;
     private final ReportTransactionRepository reportTransactionRepository;
+    private final WalletAccountCurrencyRepositoryService walletAccountCurrencyRepositoryService;
 
     @Override
     public WalletBalanceResponse getBalance(ChannelEntity channelEntity, String merchantId) throws InternalServiceException {
@@ -278,5 +280,55 @@ public class MerchantOperationServiceImplementation implements MerchantOperation
             log.info("finish decreaseBalance for merchant {} with amount {} and traceId {}", merchantId, amount, rrnEntity.getUuid());
             return rrnEntity.getUuid();
         }, merchantId);
+    }
+
+    @Override
+    public MerchantBalanceCalculationResponse calculateBalanceFromTransactions(ChannelEntity channelEntity, String merchantId, String currency) throws InternalServiceException {
+        log.info("start calculateBalanceFromTransactions for merchantId: {}, currency: {}", merchantId, currency);
+
+        // Get merchant entity to validate it exists
+        MerchantEntity merchant = merchantRepositoryService.findMerchant(merchantId);
+        if (merchant == null) {
+            log.error("Merchant not found with merchantId: {}", merchantId);
+            throw new InternalServiceException("Merchant not found", StatusRepositoryService.MERCHANT_IS_NOT_EXIST, HttpStatus.OK);
+        }
+
+        // Get currency entity to validate it exists
+        WalletAccountCurrencyEntity currencyEntity = walletAccountCurrencyRepositoryService.findCurrency(currency);
+        if (currencyEntity == null) {
+            log.error("Currency not found: {}", currency);
+            throw new InternalServiceException("Currency not found", StatusRepositoryService.WALLET_ACCOUNT_CURRENCY_NOT_FOUND, HttpStatus.OK);
+        }
+
+        // Get request type IDs for merchant balance operations
+        Long increaseRequestTypeId = requestTypeRepositoryService.getRequestType(RequestTypeRepositoryService.MERCHANT_INCREASE_BALANCE).getId();
+        Long decreaseRequestTypeId = requestTypeRepositoryService.getRequestType(RequestTypeRepositoryService.MERCHANT_DECREASE_BALANCE).getId();
+
+        // Get merchant's wallet accounts
+        List<WalletAccountEntity> walletAccountEntityList = walletAccountRepositoryService.findByWallet(merchant.getWalletEntity());
+
+        // Get wallet account IDs
+        List<Long> walletAccountIds = walletAccountEntityList.stream()
+                .map(WalletAccountEntity::getId)
+                .toList();
+
+        // Calculate balance directly in database using aggregation with currency filter
+        BigDecimal calculatedBalance = reportTransactionRepository
+                .calculateBalanceByWalletAccountIdsAndRequestTypesAndCurrency(
+                    walletAccountIds,
+                    increaseRequestTypeId,
+                    decreaseRequestTypeId,
+                    currencyEntity.getId()
+                );
+
+        // Handle null result (no transactions found)
+        if (calculatedBalance == null) {
+            calculatedBalance = BigDecimal.ZERO;
+        }
+
+        log.info("finish calculateBalanceFromTransactions for merchantId: {}, currency: {}, calculatedBalance: {}",
+                merchantId, currency, calculatedBalance);
+
+        return helper.fillMerchantBalanceCalculationResponse(merchantId, calculatedBalance);
     }
 }

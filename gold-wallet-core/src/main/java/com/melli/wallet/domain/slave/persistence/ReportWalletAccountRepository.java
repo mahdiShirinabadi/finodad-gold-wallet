@@ -71,4 +71,12 @@ public interface ReportWalletAccountRepository extends CrudRepository<ReportWall
             "INNER JOIN {h-schema}wallet_account_currency wac ON wa.wallet_account_currency_id = wac.id " +
             "WHERE wa.wallet_id IN :walletIds", nativeQuery = true)
     List<Object[]> findAccountDetailsByWalletIds(@Param("walletIds") List<Long> walletIds);
+
+    @Query(value = "SELECT SUM(wa.balance) FROM {h-schema}wallet_account wa " +
+                   "INNER JOIN {h-schema}wallet w ON wa.wallet_id = w.id " +
+                   "WHERE w.wallet_type_id NOT IN :excludedWalletTypeIds " +
+                   "AND wa.wallet_account_currency_id = :currencyId", nativeQuery = true)
+    BigDecimal calculateTotalBalanceExcludingWalletTypeIdsAndCurrency(
+            @Param("excludedWalletTypeIds") List<Long> excludedWalletTypeIds,
+            @Param("currencyId") Long currencyId);
 } 

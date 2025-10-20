@@ -8,6 +8,7 @@ import com.melli.wallet.domain.response.UuidResponse;
 import com.melli.wallet.domain.response.base.BaseResponse;
 import com.melli.wallet.domain.response.cash.PhysicalCashOutResponse;
 import com.melli.wallet.domain.response.cash.PhysicalCashOutTrackResponse;
+import com.melli.wallet.domain.response.cash.PhysicalCashOutTotalQuantityResponse;
 import com.melli.wallet.exception.InternalServiceException;
 import com.melli.wallet.security.RequestContext;
 import com.melli.wallet.service.operation.CashOutOperationService;
@@ -87,6 +88,19 @@ public class PhysicalCashOutController extends WebController {
         log.info("start call physicalInquiryCashOut in username ===> {}, nationalCode ===> {}, from ip ===> {}", username, uniqueIdentifier, channelIp);
         PhysicalCashOutTrackResponse response = cashOutOperationService.physicalInquiry(requestContext.getChannelEntity(), uniqueIdentifier, requestContext.getClientIp());
         return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse<>(true,response));
+    }
+
+    @Timed(description = "Time taken to calculate total quantity of physical cash out transactions")
+    @GetMapping(path = "/totalQuantity", produces = {MediaType.APPLICATION_JSON_VALUE})
+    @Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "محاسبه مجموع مقدار برداشت‌های فیزیکی")
+    @PreAuthorize("hasAuthority('" + ResourceDefinition.PHYSICAL_CASH_OUT_AUTH + "')")
+    @LogExecutionTime("Calculate total quantity of physical cash out transactions")
+    public ResponseEntity<BaseResponse<PhysicalCashOutTotalQuantityResponse>> calculateTotalQuantity() throws InternalServiceException {
+        String channelIp = requestContext.getClientIp();
+        String username = requestContext.getChannelEntity().getUsername();
+        log.info("start call calculateTotalQuantity in username ===> {}, from ip ===> {}", username, channelIp);
+        PhysicalCashOutTotalQuantityResponse response = cashOutOperationService.calculateTotalQuantity(requestContext.getChannelEntity());
+        return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse<>(true, response));
     }
 
 

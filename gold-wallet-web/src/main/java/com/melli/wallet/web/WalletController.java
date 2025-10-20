@@ -1,6 +1,7 @@
 package com.melli.wallet.web;
 
 import com.melli.wallet.annotation.LogExecutionTime;
+import com.melli.wallet.annotation.string.StringValidation;
 import com.melli.wallet.annotation.national_code.NationalCodeValidation;
 import com.melli.wallet.domain.enumaration.ResourceDefinition;
 import com.melli.wallet.domain.request.wallet.ActiveWalletRequestJson;
@@ -9,6 +10,7 @@ import com.melli.wallet.domain.request.wallet.DeactivatedWalletRequestJson;
 import com.melli.wallet.domain.request.wallet.DeleteWalletRequestJson;
 import com.melli.wallet.domain.response.base.BaseResponse;
 import com.melli.wallet.domain.response.wallet.CreateWalletResponse;
+import com.melli.wallet.domain.response.wallet.TotalWalletBalanceResponse;
 import com.melli.wallet.exception.InternalServiceException;
 import com.melli.wallet.security.RequestContext;
 import com.melli.wallet.service.operation.WalletOperationalService;
@@ -111,5 +113,19 @@ public class WalletController extends WebController {
 		log.info("start disable wallet with mobile ==> {}", requestJson.getId());
 		walletOperationalService.activateWallet(requestContext.getChannelEntity() ,requestJson.getId(), channelIp);
 		return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse<>(true));
+	}
+
+	@Timed(description = "Time taken to calculate total wallet balance")
+	@GetMapping(path = "/totalBalance", produces = {MediaType.APPLICATION_JSON_VALUE})
+	@Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "محاسبه مجموع مانده کیف‌پول‌ها")
+	@PreAuthorize("hasAuthority('" + ResourceDefinition.WALLET_INFO_AUTH + "')")
+	@LogExecutionTime("Calculate total wallet balance")
+	public ResponseEntity<BaseResponse<TotalWalletBalanceResponse>> calculateTotalBalance(
+			@Valid @StringValidation @RequestParam("currency") String currency) throws InternalServiceException {
+		String channelIp = requestContext.getClientIp();
+		String username = requestContext.getChannelEntity().getUsername();
+		log.info("start call calculateTotalBalance in username ===> {}, currency ===> {}, from ip ===> {}", username, currency, channelIp);
+		TotalWalletBalanceResponse response = walletOperationalService.calculateTotalBalance(requestContext.getChannelEntity(), currency);
+		return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse<>(true, response));
 	}
 }

@@ -7,6 +7,7 @@ import com.melli.wallet.domain.request.PanelBaseSearchJson;
 import com.melli.wallet.domain.request.merchant.MerchantBalanceRequest;
 import com.melli.wallet.domain.request.merchant.MerchantUpdateRequest;
 import com.melli.wallet.domain.response.base.BaseResponse;
+import com.melli.wallet.domain.response.merchant.MerchantBalanceCalculationResponse;
 import com.melli.wallet.domain.response.purchase.MerchantResponse;
 import com.melli.wallet.domain.response.transaction.ReportTransactionResponse;
 import com.melli.wallet.domain.response.wallet.WalletBalanceResponse;
@@ -74,6 +75,21 @@ public class MerchantController extends WebController {
         WalletBalanceResponse response = merchantOperationService.getBalance(requestContext.getChannelEntity(), merchantId);
         return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse<>(true, response));
     }
+
+	@Timed(description = "Time taken to calculate merchant balance from transactions")
+	@GetMapping(path = "/balance/calculated", produces = {MediaType.APPLICATION_JSON_VALUE})
+	@Operation(security = { @SecurityRequirement(name = "bearer-key") },summary = "محاسبه مانده پذیرنده از تراکنش‌ها")
+	@PreAuthorize("hasAuthority('" + ResourceDefinition.MERCHANT_BALANCE_AUTH + "')")
+	@LogExecutionTime("Calculate merchant balance from transactions")
+	public ResponseEntity<BaseResponse<MerchantBalanceCalculationResponse>> calculateMerchantBalance(
+			@Valid @NumberValidation @RequestParam("merchantId") String merchantId,
+			@Valid @StringValidation @RequestParam("currency") String currency) throws InternalServiceException {
+		String channelIp = requestContext.getClientIp();
+		String username = requestContext.getChannelEntity().getUsername();
+		log.info("start call calculateMerchantBalance in username ===> {}, merchantId ===> {}, currency ===> {}, from ip ===> {}", username, merchantId, currency, channelIp);
+		MerchantBalanceCalculationResponse response = merchantOperationService.calculateBalanceFromTransactions(requestContext.getChannelEntity(), merchantId, currency);
+		return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse<>(true, response));
+	}
 
     @Timed(description = "Time taken to inquiry gold amount")
     @PostMapping(path = "/updateStatus", produces = {MediaType.APPLICATION_JSON_VALUE})

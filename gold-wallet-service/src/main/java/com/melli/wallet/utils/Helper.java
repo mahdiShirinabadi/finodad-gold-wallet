@@ -21,6 +21,7 @@ import com.melli.wallet.domain.response.p2p.P2pUuidResponse;
 import com.melli.wallet.domain.response.panel.PanelResourceObject;
 import com.melli.wallet.domain.response.panel.PanelRoleListResponse;
 import com.melli.wallet.domain.response.panel.PanelRoleObject;
+import com.melli.wallet.domain.response.merchant.MerchantBalanceCalculationResponse;
 import com.melli.wallet.domain.response.purchase.*;
 import com.melli.wallet.domain.response.stock.StockCurrencyListResponse;
 import com.melli.wallet.domain.response.stock.StockCurrencyObject;
@@ -31,6 +32,7 @@ import com.melli.wallet.domain.response.transaction.ReportTransactionResponse;
 import com.melli.wallet.domain.response.transaction.StatementObject;
 import com.melli.wallet.domain.response.transaction.StatementResponse;
 import com.melli.wallet.domain.response.wallet.CreateWalletResponse;
+import com.melli.wallet.domain.response.wallet.TotalWalletBalanceResponse;
 import com.melli.wallet.domain.response.wallet.WalletAccountObject;
 import com.melli.wallet.domain.response.wallet.WalletBalanceResponse;
 import com.melli.wallet.domain.slave.entity.*;
@@ -552,6 +554,27 @@ public class Helper {
             walletAccountObjectList.add(walletAccountObject);
         }
         response.setWalletAccountObjectList(walletAccountObjectList);
+        return response;
+    }
+
+    public MerchantBalanceCalculationResponse fillMerchantBalanceCalculationResponse(String merchantId, BigDecimal balance) {
+        MerchantBalanceCalculationResponse response = new MerchantBalanceCalculationResponse();
+        response.setMerchantId(merchantId);
+        response.setBalance(balance != null ? balance : BigDecimal.ZERO);
+        return response;
+    }
+
+    public PhysicalCashOutTotalQuantityResponse fillPhysicalCashOutTotalQuantityResponse(BigDecimal totalQuantity, String requestType) {
+        PhysicalCashOutTotalQuantityResponse response = new PhysicalCashOutTotalQuantityResponse();
+        response.setTotalQuantity(totalQuantity != null ? totalQuantity : BigDecimal.ZERO);
+        response.setRequestType(requestType);
+        return response;
+    }
+
+    public TotalWalletBalanceResponse fillTotalWalletBalanceResponse(BigDecimal totalBalance, String excludedWalletType) {
+        TotalWalletBalanceResponse response = new TotalWalletBalanceResponse();
+        response.setTotalBalance(totalBalance != null ? totalBalance : BigDecimal.ZERO);
+        response.setExcludedWalletType(excludedWalletType);
         return response;
     }
 
