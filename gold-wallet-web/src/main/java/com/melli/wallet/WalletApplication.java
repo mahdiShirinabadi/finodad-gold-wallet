@@ -36,7 +36,6 @@ public class WalletApplication {
     public static void main(String[] args) {
 
         log.info("start app");
-
         SpringApplication.run(WalletApplication.class, args);
     }
 
