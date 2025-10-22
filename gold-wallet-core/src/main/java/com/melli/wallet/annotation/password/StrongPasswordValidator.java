@@ -4,6 +4,7 @@ import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 import lombok.extern.log4j.Log4j2;
 import org.apache.http.util.TextUtils;
+import org.springframework.util.StringUtils;
 
 @Log4j2
 public class StrongPasswordValidator implements ConstraintValidator<StrongPasswordValidation, String> {
@@ -43,7 +44,7 @@ public class StrongPasswordValidator implements ConstraintValidator<StrongPasswo
         StringBuilder patternRegx= new StringBuilder();
         patternRegx.append("^");
 
-        if (org.apache.commons.lang.StringUtils.isBlank(password)) {
+        if (!StringUtils.hasText(password)) {
             return false;
         }
 

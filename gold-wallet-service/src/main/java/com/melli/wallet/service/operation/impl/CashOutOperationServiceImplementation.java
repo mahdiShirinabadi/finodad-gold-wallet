@@ -96,7 +96,7 @@ public class CashOutOperationServiceImplementation implements CashOutOperationSe
             rrnRepositoryService.checkRrn(cashOutObjectDTO.getUniqueIdentifier(), cashOutObjectDTO.getChannel(), requestTypeEntity, String.valueOf(cashOutObjectDTO.getAmount()), cashOutObjectDTO.getAccountNumber());
             log.info("finish checking existence of traceId({})", cashOutObjectDTO.getUniqueIdentifier());
 
-            log.debug("Checking for duplicate cash out requests with rrnId: {}", rrnEntity.getId());
+            log.debug(": {}", rrnEntity.getId());
             requestRepositoryService.findCashOutDuplicateWithRrnId(rrnEntity.getId());
             log.debug("No duplicate cash out requests found");
 

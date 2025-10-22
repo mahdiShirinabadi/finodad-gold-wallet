@@ -9,7 +9,7 @@ import com.melli.wallet.sadad.SadadChannelInterface;
 import com.melli.wallet.service.operation.SadadOperationService;
 import com.melli.wallet.service.repository.ShahkarInfoRepositoryService;
 import com.melli.wallet.service.repository.StatusRepositoryService;
-import com.melli.wallet.util.StringUtils;
+import com.melli.wallet.util.CustomStringUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.json.JSONObject;
@@ -94,7 +94,7 @@ public class SadadOperationServiceImplementation implements SadadOperationServic
 
         if (sadadDailyTokenOptional.isPresent()) {
             long expireTime = sadadDailyTokenOptional.get().getExpireTime();
-            if (expireTime > new Date().getTime() && StringUtils.hasText(sadadDailyTokenOptional.get().getToken())) {
+            if (expireTime > new Date().getTime() && CustomStringUtils.hasText(sadadDailyTokenOptional.get().getToken())) {
                 log.info("token for scope ({}) is valid until ({})", scope, sadadDailyTokenOptional.get().getExpireTime());
                 return sadadDailyTokenOptional.get().getToken();
             } else {

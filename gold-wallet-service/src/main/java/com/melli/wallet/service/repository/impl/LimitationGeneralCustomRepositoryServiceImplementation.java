@@ -9,7 +9,7 @@ import com.melli.wallet.service.repository.LimitationGeneralCustomRepositoryServ
 import com.melli.wallet.service.repository.LimitationGeneralService;
 import com.melli.wallet.service.repository.SettingGeneralRepositoryService;
 import com.melli.wallet.service.repository.StatusRepositoryService;
-import com.melli.wallet.util.StringUtils;
+import com.melli.wallet.util.CustomStringUtils;
 import com.melli.wallet.util.Utility;
 import com.melli.wallet.utils.Helper;
 import jakarta.persistence.criteria.CriteriaBuilder;
@@ -205,31 +205,31 @@ public class LimitationGeneralCustomRepositoryServiceImplementation implements L
             predicates.add(criteriaBuilder.equal(root.get("limitationGeneralEntity").get("id"), limitationGeneralCustomDTO.getSettingGeneralEntityId()));
             predicates.add(criteriaBuilder.isNull(root.get("endTime")));
 
-            if(StringUtils.hasText(limitationGeneralCustomDTO.getChannelEntityId())){
+            if(CustomStringUtils.hasText(limitationGeneralCustomDTO.getChannelEntityId())){
                 predicates.add(criteriaBuilder.equal(root.get("channelEntity").get("id"), limitationGeneralCustomDTO.getChannelEntityId()));
             }else{
                 predicates.add(criteriaBuilder.isNull(root.get("channelEntity")));
             }
 
-            if(StringUtils.hasText(limitationGeneralCustomDTO.getWalletLevelEntityId())){
+            if(CustomStringUtils.hasText(limitationGeneralCustomDTO.getWalletLevelEntityId())){
                 predicates.add(criteriaBuilder.equal(root.get("walletLevelEntity").get("id"), limitationGeneralCustomDTO.getWalletLevelEntityId()));
             }else{
                 predicates.add(criteriaBuilder.isNull(root.get("walletLevelEntity")));
             }
 
-            if(StringUtils.hasText(limitationGeneralCustomDTO.getWalletAccountTypeEntityId())){
+            if(CustomStringUtils.hasText(limitationGeneralCustomDTO.getWalletAccountTypeEntityId())){
                 predicates.add(criteriaBuilder.equal(root.get("walletAccountTypeEntity").get("id"), limitationGeneralCustomDTO.getWalletAccountTypeEntityId()));
             }else{
                 predicates.add(criteriaBuilder.isNull(root.get("walletAccountTypeEntity")));
             }
 
-            if(StringUtils.hasText(limitationGeneralCustomDTO.getWalletAccountCurrencyEntityId())){
+            if(CustomStringUtils.hasText(limitationGeneralCustomDTO.getWalletAccountCurrencyEntityId())){
                 predicates.add(criteriaBuilder.equal(root.get("walletAccountCurrencyEntity").get("id"), limitationGeneralCustomDTO.getWalletAccountCurrencyEntityId()));
             }else{
                 predicates.add(criteriaBuilder.isNull(root.get("walletAccountCurrencyEntity")));
             }
 
-            if(StringUtils.hasText(limitationGeneralCustomDTO.getWalletTypeEntityId())){
+            if(CustomStringUtils.hasText(limitationGeneralCustomDTO.getWalletTypeEntityId())){
                 predicates.add(criteriaBuilder.equal(root.get("walletTypeEntity").get("id"), limitationGeneralCustomDTO.getWalletTypeEntityId()));
             }else{
                 predicates.add(criteriaBuilder.isNull(root.get("walletTypeEntity")));
@@ -278,31 +278,31 @@ public class LimitationGeneralCustomRepositoryServiceImplementation implements L
     private List<Predicate> buildPredicatesFromCriteria(Map<String, String> searchCriteria, Root<LimitationGeneralCustomEntity> root, CriteriaBuilder criteriaBuilder) {
         List<Predicate> predicates = new ArrayList<>();
 
-        if (StringUtils.hasText(searchCriteria.get("id"))) {
+        if (CustomStringUtils.hasText(searchCriteria.get("id"))) {
             predicates.add(criteriaBuilder.equal(root.get("id"), searchCriteria.get("id")));
         }
 
-        if (StringUtils.hasText(searchCriteria.get("limitationGeneralId"))) {
+        if (CustomStringUtils.hasText(searchCriteria.get("limitationGeneralId"))) {
             predicates.add(criteriaBuilder.equal(root.get("limitationGeneralEntity").get("id"), searchCriteria.get("limitationGeneralId")));
         }
 
-        if (StringUtils.hasText(searchCriteria.get("walletLevelId"))) {
+        if (CustomStringUtils.hasText(searchCriteria.get("walletLevelId"))) {
             predicates.add(criteriaBuilder.equal(root.get("walletLevelEntity").get("id"), searchCriteria.get("walletLevelId")));
         }
 
-        if (StringUtils.hasText(searchCriteria.get("walletAccountTypeId"))) {
+        if (CustomStringUtils.hasText(searchCriteria.get("walletAccountTypeId"))) {
             predicates.add(criteriaBuilder.equal(root.get("walletAccountTypeEntity").get("id"), searchCriteria.get("walletAccountTypeId")));
         }
 
-        if (StringUtils.hasText(searchCriteria.get("walletAccountCurrencyId"))) {
+        if (CustomStringUtils.hasText(searchCriteria.get("walletAccountCurrencyId"))) {
             predicates.add(criteriaBuilder.equal(root.get("walletAccountCurrencyEntity").get("id"), searchCriteria.get("walletAccountCurrencyId")));
         }
 
-        if (StringUtils.hasText(searchCriteria.get("walletTypeId"))) {
+        if (CustomStringUtils.hasText(searchCriteria.get("walletTypeId"))) {
             predicates.add(criteriaBuilder.equal(root.get("walletTypeEntity").get("id"), searchCriteria.get("walletTypeId")));
         }
 
-        if (StringUtils.hasText(searchCriteria.get("channelId"))) {
+        if (CustomStringUtils.hasText(searchCriteria.get("channelId"))) {
             predicates.add(criteriaBuilder.equal(root.get("channelEntity").get("id"), searchCriteria.get("channelId")));
         }
 

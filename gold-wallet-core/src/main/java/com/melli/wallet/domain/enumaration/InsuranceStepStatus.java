@@ -1,6 +1,6 @@
 package com.melli.wallet.domain.enumaration;
 
-import com.melli.wallet.util.StringUtils;
+import com.melli.wallet.util.CustomStringUtils;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -30,7 +30,7 @@ public enum InsuranceStepStatus {
     }
 
     public static String getPersianDescription(String text) {
-        if (!StringUtils.hasText(text)) {
+        if (!CustomStringUtils.hasText(text)) {
             return "";
         }
         return switch (text) {
@@ -45,7 +45,7 @@ public enum InsuranceStepStatus {
     }
 
     public static InsuranceStepStatus fromPersianDescription(String persianDescription) {
-        if (!StringUtils.hasText(persianDescription)) {
+        if (!CustomStringUtils.hasText(persianDescription)) {
             return null;
         }
         return persianDescriptionMap.getOrDefault(persianDescription, null);

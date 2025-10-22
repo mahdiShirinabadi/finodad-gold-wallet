@@ -62,7 +62,7 @@ public class Validator {
 
     public static boolean isValidCif(String cif) {
 
-        if (org.apache.commons.lang.StringUtils.isBlank(cif)) {
+        if (!StringUtils.hasText(cif)) {
             return false;
         }
 
@@ -83,7 +83,7 @@ public class Validator {
 
     public static boolean isValidNationalCode(String nationalCode) {
 
-        if (org.apache.commons.lang.StringUtils.isBlank(nationalCode)) {
+        if (nationalCode.isBlank()) {
             return false;
         }
 
@@ -197,11 +197,11 @@ public class Validator {
 
     public static boolean isValidAccount(String account) {
 
-        if (org.apache.commons.lang.StringUtils.isBlank(account)) {
+        if (!StringUtils.hasText(account)) {
             return false;
         }
 
-        if (!org.apache.commons.lang.StringUtils.isNumeric(account)) {
+        if (!CustomStringUtils.isNumber(account)) {
             return false;
         }
 

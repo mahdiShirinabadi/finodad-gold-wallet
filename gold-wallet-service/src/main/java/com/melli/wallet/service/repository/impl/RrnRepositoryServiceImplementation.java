@@ -8,7 +8,7 @@ import com.melli.wallet.domain.master.persistence.RrnRepository;
 import com.melli.wallet.exception.InternalServiceException;
 import com.melli.wallet.service.repository.RrnRepositoryService;
 import com.melli.wallet.service.repository.StatusRepositoryService;
-import com.melli.wallet.util.StringUtils;
+import com.melli.wallet.util.CustomStringUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.http.HttpStatus;
@@ -74,7 +74,7 @@ public class RrnRepositoryServiceImplementation implements RrnRepositoryService 
             throw new InternalServiceException(errorMessage, StatusRepositoryService.UUID_NOT_FOUND, HttpStatus.OK);
         }
 
-        if(StringUtils.hasText(amount)){
+        if(CustomStringUtils.hasText(amount)){
             String storedAmount = rrn.getExtraData().getAmount();
             if(!amount.equals(storedAmount)){
                 String errorMessage = String.format("price: (%s) mismatch for RRN UUID: %s with amount (%s)", amount, uuid, storedAmount);
@@ -83,7 +83,7 @@ public class RrnRepositoryServiceImplementation implements RrnRepositoryService 
             }
         }
 
-        if(StringUtils.hasText(accountNumber)){
+        if(CustomStringUtils.hasText(accountNumber)){
             String storedAccountNumber = rrn.getExtraData().getAccountNumber();
             if(!accountNumber.equals(storedAccountNumber)){
                 String errorMessage = String.format("Account number: (%s) mismatch for RRN UUID: %s with account (%s)", accountNumber, uuid, storedAccountNumber);

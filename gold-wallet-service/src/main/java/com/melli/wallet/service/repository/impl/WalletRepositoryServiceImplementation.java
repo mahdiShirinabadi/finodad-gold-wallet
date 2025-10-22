@@ -9,7 +9,7 @@ import com.melli.wallet.domain.slave.persistence.ReportWalletRepository;
 import com.melli.wallet.exception.InternalServiceException;
 import com.melli.wallet.service.repository.StatusRepositoryService;
 import com.melli.wallet.service.repository.WalletRepositoryService;
-import com.melli.wallet.util.StringUtils;
+import com.melli.wallet.util.CustomStringUtils;
 import com.melli.wallet.util.date.DateUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -93,7 +93,7 @@ public class WalletRepositoryServiceImplementation implements WalletRepositorySe
                 status, nationalCode, mobile, fromTime, toTime);
         
         String fromTimeStr = null;
-        if (StringUtils.hasText(fromTime)) {
+        if (CustomStringUtils.hasText(fromTime)) {
             Date sDate;
             if (Integer.parseInt(fromTime.substring(0, 4)) < 1900) {
                 sDate = DateUtils.parse(fromTime, DateUtils.PERSIAN_DATE_FORMAT, true, DateUtils.FARSI_LOCALE);
@@ -106,7 +106,7 @@ public class WalletRepositoryServiceImplementation implements WalletRepositorySe
         }
 
         String toTimeStr = null;
-        if (StringUtils.hasText(toTime)) {
+        if (CustomStringUtils.hasText(toTime)) {
             Date tDate;
             if (Integer.parseInt(toTime.substring(0, 4)) < 1900) {
                 tDate = DateUtils.parse(toTime, DateUtils.PERSIAN_DATE_FORMAT, true, DateUtils.FARSI_LOCALE);

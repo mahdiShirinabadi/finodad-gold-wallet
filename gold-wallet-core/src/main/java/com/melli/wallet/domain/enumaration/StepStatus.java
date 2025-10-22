@@ -1,6 +1,6 @@
 package com.melli.wallet.domain.enumaration;
 
-import com.melli.wallet.util.StringUtils;
+import com.melli.wallet.util.CustomStringUtils;
 
 public enum StepStatus {
     SAVE_IN_DATABASE("SAVE_IN_DATABASE", "ذخیره شده"),
@@ -24,7 +24,7 @@ public enum StepStatus {
     }
 
     public static String getPersianDescription(String text) {
-        if (!StringUtils.hasText(text)) {
+        if (!CustomStringUtils.hasText(text)) {
             return "";
         }
         return switch (text) {

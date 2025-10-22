@@ -17,7 +17,6 @@
         <module>gold-wallet-channel</module>
         <module>gold-wallet-util</module>
         <module>gold-wallet-grpc</module>
-<!--        <module>gold-wallet-portal</module>-->
     </modules>
 
     <properties>
@@ -43,7 +42,6 @@
                     <target>${java-version}</target> <!-- or your preferred Java version -->
                     <release>${java-version}</release>
                     <annotationProcessorPaths>
-
 
                         <path>
                             <groupId>org.projectlombok</groupId>
@@ -84,22 +82,22 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.1.5</version>
+        <version>3.2.0</version>
     </parent>
 
     <dependencies>
 
         <dependency>
-            <groupId>org.apache.httpcomponents</groupId>
-            <artifactId>httpclient</artifactId>
-            <version>4.5.9</version>
+            <groupId>org.apache.httpcomponents.client5</groupId>
+            <artifactId>httpclient5</artifactId>
+            <version>5.5.1</version>
         </dependency>
 
 
         <dependency>
             <groupId>org.json</groupId>
             <artifactId>json</artifactId>
-            <version>20200518</version>
+            <version>20250517</version>
         </dependency>
 
         <dependency>
@@ -117,20 +115,19 @@
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-engine</artifactId>
-            <version>5.7.2</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
             <scope>test</scope>
         </dependency>
 
         <dependency>
             <groupId>org.apache.commons</groupId>
-            <artifactId>commons-collections4</artifactId>
-            <version>4.4</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
-            <version>3.9</version>
+            <version>3.19.0</version>
         </dependency>
 
 
@@ -173,15 +170,16 @@
 
         <dependency>
             <groupId>org.bouncycastle</groupId>
-            <artifactId>bcpg-jdk15on</artifactId>
-            <version>1.54</version>
+            <artifactId>bcprov-jdk18on</artifactId>
+            <version>1.82</version>
         </dependency>
 
 
         <dependency>
-            <groupId>org.apache.axis</groupId>
-            <artifactId>axis</artifactId>
-            <version>1.4</version>
+            <groupId>org.apache.axis2</groupId>
+            <artifactId>axis2</artifactId>
+            <version>2.0.0</version>
+            <type>pom</type>
         </dependency>
 
         <dependency>
@@ -189,11 +187,7 @@
             <artifactId>flyway-core</artifactId>
         </dependency>
 
-        <dependency>
-            <groupId>commons-lang</groupId>
-            <artifactId>commons-lang</artifactId>
-            <version>2.6</version>
-        </dependency>
+
 
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -235,9 +229,9 @@
         </dependency>
 
         <dependency>
-            <groupId>commons-collections</groupId>
-            <artifactId>commons-collections</artifactId>
-            <version>3.2.1</version>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-collections4</artifactId>
+            <version>4.5.0</version>
         </dependency>
 
         <dependency>
@@ -284,13 +278,6 @@
             <artifactId>httpcore</artifactId>
             <version>4.4.6</version>
         </dependency>
-
-<!--
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-devtools</artifactId>
-        </dependency>
--->
 
         <dependency>
             <groupId>com.sun.xml.bind</groupId>
@@ -376,7 +363,7 @@
         <dependency>
             <groupId>org.apache.poi</groupId>
             <artifactId>poi-ooxml</artifactId>
-            <version>4.1.2</version>
+            <version>5.4.1</version>
         </dependency>
 
         <dependency>

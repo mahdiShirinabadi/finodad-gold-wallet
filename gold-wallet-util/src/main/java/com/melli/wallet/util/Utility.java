@@ -37,7 +37,7 @@ public class Utility {
     }
 
     public static boolean isAllowedList(String allowedList, String value) {
-        if (!StringUtils.hasText(allowedList)) {
+        if (!CustomStringUtils.hasText(allowedList)) {
             log.info("value for ip list is null");
             return true;
         }
@@ -64,7 +64,7 @@ public class Utility {
 
     public static String cleanPhoneNumber(String mobile) {
 
-        if (StringUtils.hasText(mobile)) {
+        if (CustomStringUtils.hasText(mobile)) {
             String onlyNumber = mobile.replaceAll("\\D", "");
             if (onlyNumber.startsWith("09")) {
                 return onlyNumber.replaceFirst("^09", "9");

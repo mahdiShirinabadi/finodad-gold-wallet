@@ -5,7 +5,7 @@ import com.itextpdf.text.pdf.BaseFont;
 import com.itextpdf.text.pdf.PdfPCell;
 import com.itextpdf.text.pdf.PdfPTable;
 import com.itextpdf.text.pdf.PdfWriter;
-import com.melli.wallet.util.StringUtils;
+import com.melli.wallet.util.CustomStringUtils;
 import com.melli.wallet.util.date.DateUtils;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Component;
@@ -52,10 +52,10 @@ public class SinaInsuranceTravelPdfCreator {
                 dateOfBirth != null ? DateUtils.getLocaleDate(DateUtils.ENGLISH_LOCALE, dateOfBirth, "yyyy/MM/dd", false) : "",
                 nationality != null ? nationality : "",
                 passportNo != null ? passportNo : "",
-                coverageEuro != null ? StringUtils.separateNumberByComma(coverageEuro) + " EUR" : "",
+                coverageEuro != null ? CustomStringUtils.separateNumberByComma(coverageEuro) + " EUR" : "",
                 zone != null ? zone : "",
                 destination != null ? destination : "",
-                priceRial != null ? StringUtils.separateNumberByComma(priceRial) + " Rials" : "",
+                priceRial != null ? CustomStringUtils.separateNumberByComma(priceRial) + " Rials" : "",
                 validityDays != null ? validityDays + " DAYS" : ""
         );
         PdfPTable validityNotice = createValidityNotice(FontFactory.getFont(PERSIAN_FONT, BaseFont.IDENTITY_H, BaseFont.EMBEDDED, 8, Font.BOLD, BaseColor.BLACK));
@@ -280,7 +280,7 @@ public class SinaInsuranceTravelPdfCreator {
         coverageInPersian.setPaddingBottom(6);
         coverageInPersian.setBorderWidthTop(1);
 
-        PdfPCell coverageLimit = new PdfPCell(new Phrase(StringUtils.separateNumberByComma(coverageEuro) + " یورو", font));
+        PdfPCell coverageLimit = new PdfPCell(new Phrase(CustomStringUtils.separateNumberByComma(coverageEuro) + " یورو", font));
         coverageLimit.setHorizontalAlignment(Element.ALIGN_CENTER);
         coverageLimit.setVerticalAlignment(Element.ALIGN_MIDDLE);
         coverageLimit.setBorder(Rectangle.NO_BORDER);

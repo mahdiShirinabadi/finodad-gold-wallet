@@ -326,7 +326,7 @@ class GiftCardControllerTest extends WalletApplicationTests {
 
         // Step 2: Try to process with invalid UUID
         CommissionObject commission = new CommissionObject("GOLD", commissionAmount);
-        BaseResponse<GiftCardResponse> response = processGiftCard(mockMvc, accessToken, invalidUUID, NATIONAL_CODE_CORRECT, giftCardQuantity, sourceAccount.getAccountNumber(), NATIONAL_CODE_DEST, additionalData, generateValidSign(invalidUUID + "|" + giftCardQuantity + "|" + NATIONAL_CODE_CORRECT), commission, CURRENCY_GOLD, HttpStatus.OK, StatusRepositoryService.UUID_NOT_FOUND, false);
+        BaseResponse<GiftCardResponse> response = processGiftCard(mockMvc, accessToken, invalidUUID, giftCardQuantity, NATIONAL_CODE_CORRECT, sourceAccount.getAccountNumber(), NATIONAL_CODE_DEST, additionalData, generateValidSign(invalidUUID + "|" + giftCardQuantity + "|" + NATIONAL_CODE_CORRECT), commission, CURRENCY_GOLD, HttpStatus.OK, StatusRepositoryService.UUID_NOT_FOUND, false);
 
         Assert.assertFalse(response.getSuccess());
         Assert.assertSame(StatusRepositoryService.UUID_NOT_FOUND, response.getErrorDetail().getCode());

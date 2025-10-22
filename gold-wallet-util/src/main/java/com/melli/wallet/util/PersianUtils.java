@@ -1,8 +1,13 @@
 package com.melli.wallet.util;
 
-import org.apache.commons.lang.StringUtils;
 
+import lombok.NoArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
+
+@NoArgsConstructor
 public class PersianUtils {
+
+
 	public static String toPersianNumeric(String s) {
 
 		return toPersianNumeric(s, false);

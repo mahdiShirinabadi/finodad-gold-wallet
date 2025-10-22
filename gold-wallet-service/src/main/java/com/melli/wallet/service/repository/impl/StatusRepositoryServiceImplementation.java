@@ -7,10 +7,8 @@ import com.melli.wallet.domain.slave.entity.ReportStatusEntity;
 import com.melli.wallet.domain.slave.persistence.ReportStatusRepository;
 import com.melli.wallet.exception.InternalServiceException;
 import com.melli.wallet.mapper.StatusMapper;
-import com.melli.wallet.service.repository.SettingGeneralRepositoryService;
 import com.melli.wallet.service.repository.StatusRepositoryService;
-import com.melli.wallet.util.StringUtils;
-import com.melli.wallet.utils.RedisLockService;
+import com.melli.wallet.util.CustomStringUtils;
 import jakarta.annotation.PostConstruct;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
@@ -101,14 +99,14 @@ public class StatusRepositoryServiceImplementation implements StatusRepositorySe
     private List<Predicate> buildPredicatesFromCriteria(Map<String, String> searchCriteria, Root<StatusEntity> root, CriteriaBuilder criteriaBuilder) {
         List<Predicate> predicates = new ArrayList<>();
 
-        if (StringUtils.hasText(searchCriteria.get("id"))) {
+        if (CustomStringUtils.hasText(searchCriteria.get("id"))) {
             predicates.add(criteriaBuilder.equal(root.get("id"), searchCriteria.get("id")));
         }
-        if (StringUtils.hasText(searchCriteria.get("code"))) {
+        if (CustomStringUtils.hasText(searchCriteria.get("code"))) {
             predicates.add(criteriaBuilder.like(criteriaBuilder.lower(root.get("code")), 
                 searchCriteria.get("code").toLowerCase()));
         }
-        if (StringUtils.hasText(searchCriteria.get("name"))) {
+        if (CustomStringUtils.hasText(searchCriteria.get("name"))) {
             predicates.add(criteriaBuilder.like(criteriaBuilder.lower(root.get("persianDescription")), 
                 "%" + searchCriteria.get("name").toLowerCase() + "%"));
         }

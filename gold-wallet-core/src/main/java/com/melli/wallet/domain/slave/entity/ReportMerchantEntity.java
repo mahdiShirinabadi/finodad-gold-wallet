@@ -26,9 +26,6 @@ public class ReportMerchantEntity extends ReportBaseEntityAudit implements Seria
 	@Column(name = "mobile", nullable = false)
 	private String mobile;
 
-	@Column(name = "national_code", nullable = false)
-	private String nationalCode;
-
 	@Column(name = "economical_code")
 	private String economicalCode;
 

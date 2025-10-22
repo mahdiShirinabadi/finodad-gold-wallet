@@ -2,10 +2,7 @@ package com.melli.wallet.service.repository.impl;
 
 import com.melli.wallet.annotation.LogExecutionTime;
 import com.melli.wallet.domain.master.entity.ChannelEntity;
-import com.melli.wallet.domain.master.entity.ChannelRoleEntity;
 import com.melli.wallet.domain.master.persistence.ChannelRepository;
-import com.melli.wallet.domain.master.persistence.SettingGeneralRepository;
-import com.melli.wallet.domain.request.PanelChannelResourceUpdateRequest;
 import com.melli.wallet.domain.response.PanelChannelResponse;
 import com.melli.wallet.domain.response.panel.PanelRoleListResponse;
 import com.melli.wallet.domain.slave.entity.ReportChannelEntity;
@@ -16,7 +13,7 @@ import com.melli.wallet.exception.InternalServiceException;
 import com.melli.wallet.service.repository.ChannelRepositoryService;
 import com.melli.wallet.service.repository.SettingGeneralRepositoryService;
 import com.melli.wallet.service.repository.StatusRepositoryService;
-import com.melli.wallet.util.StringUtils;
+import com.melli.wallet.util.CustomStringUtils;
 import com.melli.wallet.utils.Helper;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
@@ -116,7 +113,7 @@ public class ChannelRepositoryServiceImplementation implements ChannelRepository
             return new InternalServiceException("channel not found", StatusRepositoryService.CHANNEL_NOT_FOUND, HttpStatus.OK);
         });
 
-        if (!StringUtils.hasText(password)) {
+        if (!CustomStringUtils.hasText(password)) {
             log.error("in change Password Channel service ,password not valid by channel name = {} ", channelId);
             throw new InternalServiceException("channel not found", StatusRepositoryService.CHANNEL_NOT_FOUND, HttpStatus.OK);
         }
@@ -128,7 +125,7 @@ public class ChannelRepositoryServiceImplementation implements ChannelRepository
     public PanelRoleListResponse listChannelRoles(ChannelEntity channelEntity, Map<String, String> mapParameter) throws InternalServiceException {
         log.info("Fetching all channel roles for operator: {}, mapParameter: {}", channelEntity.getUsername(), mapParameter);
         Map<String, String> searchParams = Optional.ofNullable(mapParameter).orElseGet(HashMap::new);
-        if (!StringUtils.hasText(searchParams.get("channelId"))) {
+        if (!CustomStringUtils.hasText(searchParams.get("channelId"))) {
             log.error("channelId is empty");
             throw new InternalServiceException("channel Id is empty", StatusRepositoryService.CHANNEL_NOT_FOUND, HttpStatus.OK);
         }
@@ -146,7 +143,7 @@ public class ChannelRepositoryServiceImplementation implements ChannelRepository
         return (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
 
-            if (StringUtils.hasText(mapParameter.get("channelId"))) {
+            if (CustomStringUtils.hasText(mapParameter.get("channelId"))) {
                 predicates.add(cb.equal(root.get("channelEntity").get("id"), mapParameter.get("channelId"))
                 );
             }
@@ -201,7 +198,7 @@ public class ChannelRepositoryServiceImplementation implements ChannelRepository
     private List<Predicate> buildPredicatesFromCriteria(Map<String, String> searchCriteria, Root<ReportChannelEntity> root, CriteriaBuilder criteriaBuilder) {
         List<Predicate> predicates = new ArrayList<>();
 
-        if (StringUtils.hasText(searchCriteria.get("id"))) {
+        if (CustomStringUtils.hasText(searchCriteria.get("id"))) {
             predicates.add(criteriaBuilder.equal(root.get("id"), searchCriteria.get("id")));
         }
         predicates.add(criteriaBuilder.isNull(root.get("deleteTime")));

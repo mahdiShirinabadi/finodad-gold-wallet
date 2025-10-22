@@ -7,7 +7,7 @@ import com.melli.wallet.exception.InternalServiceException;
 import com.melli.wallet.service.operation.AlertService;
 import com.melli.wallet.service.operation.MessageOperationService;
 import com.melli.wallet.service.repository.SettingGeneralRepositoryService;
-import com.melli.wallet.util.StringUtils;
+import com.melli.wallet.util.CustomStringUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -63,7 +63,7 @@ public class AlertServiceImplementation implements AlertService {
             }
 
 
-            if (!StringUtils.hasText(errorCode)) {
+            if (!CustomStringUtils.hasText(errorCode)) {
                 log.info("The error code is null, and the system does not generate any error notifications");
                 return;
             }

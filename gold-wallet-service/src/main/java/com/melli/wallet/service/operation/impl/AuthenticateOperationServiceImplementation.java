@@ -42,7 +42,7 @@ public class AuthenticateOperationServiceImplementation implements AuthenticateO
 
         if (helper.notInAllowedList(channelEntity.getIp(), ip)) {
             log.error("ip ({}), not exist in valid ip list ({})", ip, channelEntity.getIp());
-            throw new InternalServiceException("ip (" + ip + ", not exist in valid ip list ( " + channelEntity.getIp() + ")", StatusRepositoryService.INVALID_IP_ADDRESS, HttpStatus.OK);
+            throw new InternalServiceException("ip (" + ip + ", not exist in valid ip list ( " + channelEntity.getIp() + ")", StatusRepositoryService.INVALID_IP_ADDRESS, HttpStatus.FORBIDDEN);
         }
 
         if (securityOperationService.isBlock(channelEntity)) {
@@ -62,13 +62,13 @@ public class AuthenticateOperationServiceImplementation implements AuthenticateO
 
         if (!channelAccessTokenEntityOld.getChannelEntity().getUsername().equalsIgnoreCase(nationalCode)) {
             log.error("username refreshToken ({}) not same username ({})", nationalCode, channelAccessTokenEntityOld.getChannelEntity().getUsername());
-            throw new InternalServiceException("Unauthorized access to resources", StatusRepositoryService.REFRESH_TOKEN_NOT_BELONG_TO_PROFILE, HttpStatus.OK);
+            throw new InternalServiceException("Unauthorized access to resources", StatusRepositoryService.REFRESH_TOKEN_NOT_BELONG_TO_PROFILE, HttpStatus.UNAUTHORIZED);
         }
 
         if (channelAccessTokenEntityOld.getRefreshTokenExpireTime().before(new Date())) {
             channelAccessTokenEntityOld.setEndTime(new Date());
             channelAccessTokenRepositoryService.save(channelAccessTokenEntityOld);
-            throw new InternalServiceException("refresh token is expire", StatusRepositoryService.REFRESH_TOKEN_IS_EXPIRE, HttpStatus.OK);
+            throw new InternalServiceException("refresh token is expire", StatusRepositoryService.REFRESH_TOKEN_IS_EXPIRE, HttpStatus.UNAUTHORIZED);
         }
 
 

@@ -14,7 +14,7 @@ import com.melli.wallet.service.operation.MessageResolverOperationService;
 import com.melli.wallet.service.operation.WalletGiftCardLimitationOperationService;
 import com.melli.wallet.service.operation.WalletOperationalService;
 import com.melli.wallet.service.repository.*;
-import com.melli.wallet.util.StringUtils;
+import com.melli.wallet.util.CustomStringUtils;
 import com.melli.wallet.util.date.DateUtils;
 import com.melli.wallet.utils.Helper;
 import com.melli.wallet.utils.RedisLockService;
@@ -133,7 +133,7 @@ public class GiftCardOperationServiceImplementation implements GiftCardOperation
 
             log.debug("Checking gift card ownership - assignedTo: {}, currentUser: {}", 
                 giftCardEntity.getNationalCodeBy(), giftCardPaymentObjectDTO.getNationalCode());
-            if (StringUtils.hasText(giftCardEntity.getNationalCodeBy()) && !giftCardEntity.getNationalCodeBy().equalsIgnoreCase(giftCardPaymentObjectDTO.getNationalCode())) {
+            if (CustomStringUtils.hasText(giftCardEntity.getNationalCodeBy()) && !giftCardEntity.getNationalCodeBy().equalsIgnoreCase(giftCardPaymentObjectDTO.getNationalCode())) {
                 log.error("Gift card ownership mismatch - assignedTo: {}, currentUser: {}", 
                     giftCardEntity.getNationalCodeBy(), giftCardPaymentObjectDTO.getNationalCode());
                 throw new InternalServiceException("for security reason nationalCode not permission for active", StatusRepositoryService.NATIONAL_CODE_NOT_PERMISSION_FOR_PAYMENT_GIFT_CARD, HttpStatus.OK);

@@ -3,7 +3,7 @@ package com.melli.wallet.service.repository.impl;
 import com.melli.wallet.domain.master.entity.StockHistoryEntity;
 import com.melli.wallet.domain.master.persistence.StockHistoryRepository;
 import com.melli.wallet.service.repository.StockHistoryRepositoryService;
-import com.melli.wallet.util.StringUtils;
+import com.melli.wallet.util.CustomStringUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.data.domain.Page;
@@ -55,23 +55,23 @@ public class StockHistoryRepositoryServiceImplementation implements StockHistory
     private List<Predicate> buildPredicatesFromCriteria(Map<String, String> searchCriteria, Root<StockHistoryEntity> root, CriteriaBuilder criteriaBuilder) {
         List<Predicate> predicates = new ArrayList<>();
 
-        if (StringUtils.hasText(searchCriteria.get("id"))) {
+        if (CustomStringUtils.hasText(searchCriteria.get("id"))) {
             predicates.add(criteriaBuilder.equal(root.get("id"), searchCriteria.get("id")));
         }
-        if (StringUtils.hasText(searchCriteria.get("stockId"))) {
+        if (CustomStringUtils.hasText(searchCriteria.get("stockId"))) {
             predicates.add(criteriaBuilder.equal(root.get("stockEntity").get("id"), searchCriteria.get("stockId")));
         }
-        if (StringUtils.hasText(searchCriteria.get("transactionId"))) {
+        if (CustomStringUtils.hasText(searchCriteria.get("transactionId"))) {
             predicates.add(criteriaBuilder.equal(root.get("transactionEntity").get("id"), searchCriteria.get("transactionId")));
         }
-        if (StringUtils.hasText(searchCriteria.get("type"))) {
+        if (CustomStringUtils.hasText(searchCriteria.get("type"))) {
             predicates.add(criteriaBuilder.like(criteriaBuilder.lower(root.get("type")), 
                 "%" + searchCriteria.get("type").toLowerCase() + "%"));
         }
-        if (StringUtils.hasText(searchCriteria.get("amount"))) {
+        if (CustomStringUtils.hasText(searchCriteria.get("amount"))) {
             predicates.add(criteriaBuilder.equal(root.get("amount"), searchCriteria.get("amount")));
         }
-        if (StringUtils.hasText(searchCriteria.get("balance"))) {
+        if (CustomStringUtils.hasText(searchCriteria.get("balance"))) {
             predicates.add(criteriaBuilder.equal(root.get("balance"), searchCriteria.get("balance")));
         }
         return predicates;

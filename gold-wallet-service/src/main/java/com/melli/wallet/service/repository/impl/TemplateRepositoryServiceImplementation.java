@@ -5,7 +5,7 @@ import com.melli.wallet.domain.master.persistence.TemplateRepository;
 import com.melli.wallet.exception.InternalServiceException;
 import com.melli.wallet.service.repository.StatusRepositoryService;
 import com.melli.wallet.service.repository.TemplateRepositoryService;
-import com.melli.wallet.util.StringUtils;
+import com.melli.wallet.util.CustomStringUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.cache.annotation.CacheConfig;
@@ -25,8 +25,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 
 import static com.melli.wallet.ConstantRedisName.WALLET_TEMPLATE;
 
@@ -116,18 +114,18 @@ public class TemplateRepositoryServiceImplementation implements TemplateReposito
     private List<Predicate> buildPredicatesFromCriteria(Map<String, String> searchCriteria, Root<TemplateEntity> root, CriteriaBuilder criteriaBuilder) {
         List<Predicate> predicates = new ArrayList<>();
 
-        if (StringUtils.hasText(searchCriteria.get("id"))) {
+        if (CustomStringUtils.hasText(searchCriteria.get("id"))) {
             predicates.add(criteriaBuilder.equal(root.get("id"), searchCriteria.get("id")));
         }
-        if (StringUtils.hasText(searchCriteria.get("code"))) {
+        if (CustomStringUtils.hasText(searchCriteria.get("code"))) {
             predicates.add(criteriaBuilder.like(criteriaBuilder.lower(root.get("name")), 
                 "%" + searchCriteria.get("code").toLowerCase() + "%"));
         }
-        if (StringUtils.hasText(searchCriteria.get("name"))) {
+        if (CustomStringUtils.hasText(searchCriteria.get("name"))) {
             predicates.add(criteriaBuilder.like(criteriaBuilder.lower(root.get("name")), 
                 "%" + searchCriteria.get("name").toLowerCase() + "%"));
         }
-        if (StringUtils.hasText(searchCriteria.get("value"))) {
+        if (CustomStringUtils.hasText(searchCriteria.get("value"))) {
             predicates.add(criteriaBuilder.like(criteriaBuilder.lower(root.get("value")), 
                 "%" + searchCriteria.get("value").toLowerCase() + "%"));
         }

@@ -1,7 +1,6 @@
 package com.melli.wallet.service.operation.impl;
 
 import com.melli.wallet.domain.master.entity.ChannelEntity;
-import com.melli.wallet.domain.master.entity.MerchantEntity;
 import com.melli.wallet.domain.master.entity.WalletAccountEntity;
 import com.melli.wallet.domain.master.persistence.ChannelRepository;
 import com.melli.wallet.domain.response.transaction.ReportTransactionResponse;
@@ -13,7 +12,7 @@ import com.melli.wallet.service.operation.ChannelOperationService;
 import com.melli.wallet.service.repository.SettingGeneralRepositoryService;
 import com.melli.wallet.service.repository.StatusRepositoryService;
 import com.melli.wallet.service.repository.WalletAccountRepositoryService;
-import com.melli.wallet.util.StringUtils;
+import com.melli.wallet.util.CustomStringUtils;
 import com.melli.wallet.util.date.DateUtils;
 import com.melli.wallet.utils.Helper;
 import jakarta.persistence.criteria.CriteriaBuilder;
@@ -96,24 +95,24 @@ public class ChannelOperationServiceImplementation implements ChannelOperationSe
         String walletAccountNumber = searchCriteria.get("walletAccountNumber");
         String uniqueIdentifier = searchCriteria.get("uniqueIdentifier");
 
-        if (StringUtils.hasText(searchCriteria.get("id"))) {
+        if (CustomStringUtils.hasText(searchCriteria.get("id"))) {
             predicates.add(criteriaBuilder.equal(root.get("id"), Long.parseLong(searchCriteria.get("id"))));
         }
 
-        if (StringUtils.hasText(nationalCode)) {
+        if (CustomStringUtils.hasText(nationalCode)) {
             predicates.add(criteriaBuilder.equal(root.get("walletAccountEntity").get("walletEntity").get("nationalCode"), nationalCode));
         }
 
-        if (StringUtils.hasText(walletAccountNumber)) {
+        if (CustomStringUtils.hasText(walletAccountNumber)) {
             List<String> stringList = Arrays.stream(walletAccountNumber.split(",")).toList();
             predicates.add(criteriaBuilder.in(root.get("walletAccountEntity").get("accountNumber")).value(stringList));
         }
 
-        if (StringUtils.hasText(uniqueIdentifier)) {
+        if (CustomStringUtils.hasText(uniqueIdentifier)) {
             predicates.add(criteriaBuilder.equal(root.get("rrnEntity").get("uuid"), uniqueIdentifier));
         }
 
-        if ((StringUtils.hasText(fromTime))) {
+        if ((CustomStringUtils.hasText(fromTime))) {
             Date sDate;
             if (Integer.parseInt(fromTime.substring(0, 4)) < 1900) {
                 sDate = DateUtils.parse(fromTime, DateUtils.PERSIAN_DATE_FORMAT, true, DateUtils.FARSI_LOCALE);
@@ -123,7 +122,7 @@ public class ChannelOperationServiceImplementation implements ChannelOperationSe
             predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("createdAt"), sDate));
         }
 
-        if (StringUtils.hasText(toTime)) {
+        if (CustomStringUtils.hasText(toTime)) {
             Date tDate;
             if (Integer.parseInt(toTime.substring(0, 4)) < 1900) {
                 tDate = DateUtils.parse(toTime, DateUtils.PERSIAN_DATE_FORMAT, true, DateUtils.FARSI_LOCALE);

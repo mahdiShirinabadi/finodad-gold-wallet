@@ -203,7 +203,7 @@ public class PanelRoleManagementController extends WebController {
 
     private ResourceListResponse mapToResourceListResponse(ResourceEntity resource) {
         return ResourceListResponse.builder()
-                .id(resource.getId())
+                .id((long) resource.getId())
                 .name(resource.getName())
                 .faName(resource.getFaName())
                 .display(resource.getDisplay())

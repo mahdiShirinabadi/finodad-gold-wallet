@@ -3,14 +3,13 @@ package com.melli.wallet.sadad.impl;
 import com.melli.wallet.ChannelException;
 import com.melli.wallet.sadad.SadadChannelInterface;
 import com.melli.wallet.sadad.config.SadadProperties;
-import com.melli.wallet.util.StringUtils;
+import com.melli.wallet.util.CustomStringUtils;
 import com.melli.wallet.util.Utility;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.entity.StringEntity;
 import org.json.JSONObject;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -140,7 +139,7 @@ public class SadadChannelInterfaceImpl implements SadadChannelInterface {
         json.put("dateTimeRange",jsonObjectDate);
         json.put("amountRange", jsonObjectAmount);
         json.put("creditDebit", creditDebit);
-        if(StringUtils.hasText(traceNumber)) {
+        if(CustomStringUtils.hasText(traceNumber)) {
             json.put("traceNumber", traceNumber);
         }
         StringEntity body = new StringEntity(json.toString(), StandardCharsets.UTF_8);

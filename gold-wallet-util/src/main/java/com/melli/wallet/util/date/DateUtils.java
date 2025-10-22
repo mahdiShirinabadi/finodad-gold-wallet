@@ -1,6 +1,7 @@
 package com.melli.wallet.util.date;
 
-import com.melli.wallet.util.StringUtils;
+import com.melli.wallet.util.CustomStringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.context.annotation.Profile;
@@ -196,7 +197,7 @@ public class DateUtils {
             dateFormat = new SimpleDateFormat((format == null) ? DEFAULT_DATE_FORMAT : format, Locale.getDefault());
         }
 
-        String result = translate ? StringUtils.getLocaleText(locale, dateFormat.format(date)) : dateFormat.format(date);
+        String result = translate ? CustomStringUtils.getLocaleText(locale, dateFormat.format(date)) : dateFormat.format(date);
 
         if (locale != null && FARSI_LOCALE.getLanguage().equals(locale.getLanguage())) {
             if (format != null && !format.startsWith("yyyy") && format.startsWith("yy")) {
@@ -669,14 +670,13 @@ public class DateUtils {
         int month = Integer.parseInt(currentDateStr.substring(4, 6));
         int day = 1;
 
-        Date firstDateOfMonth = DateUtils.getDate(year, month, day, DateUtils.FARSI_LOCALE);
-        return firstDateOfMonth;
+        return DateUtils.getDate(year, month, day, DateUtils.FARSI_LOCALE);
     }
 
     public static String getNextMonth(String currentMonth) { // 139701
 
-        int lastMonthOfCalculation = Integer.valueOf(currentMonth.substring(4, 6));
-        int lastYearOfCalculation = Integer.valueOf(currentMonth.substring(0, 4));
+        int lastMonthOfCalculation = Integer.parseInt(currentMonth.substring(4, 6));
+        int lastYearOfCalculation = Integer.parseInt(currentMonth.substring(0, 4));
 
         if (lastMonthOfCalculation + 1 > 12) {
             lastYearOfCalculation++;
@@ -685,9 +685,9 @@ public class DateUtils {
             lastMonthOfCalculation++;
         }
 
-        String nextmonth = String.valueOf(lastYearOfCalculation) + org.apache.commons.lang.StringUtils.leftPad(String.valueOf(lastMonthOfCalculation), 2, '0'); // 139702
+        // 139702
 
-        return nextmonth;
+        return lastYearOfCalculation + StringUtils.leftPad(String.valueOf(lastMonthOfCalculation), 2, '0');
 
     }
 
@@ -703,7 +703,7 @@ public class DateUtils {
             lastMonthOfCalculation--;
         }
 
-        String previousmonth = String.valueOf(lastYearOfCalculation) + org.apache.commons.lang.StringUtils.leftPad(String.valueOf(lastMonthOfCalculation), 2, '0'); // 139701
+        String previousmonth = String.valueOf(lastYearOfCalculation) + StringUtils.leftPad(String.valueOf(lastMonthOfCalculation), 2, '0'); // 139701
 
         return previousmonth;
 
@@ -754,7 +754,7 @@ public class DateUtils {
     }
 
     public static Date parseGregorian(String date) {
-        if (StringUtils.hasText(date)) {
+        if (CustomStringUtils.hasText(date)) {
             Date gregorianDate;
             if (Integer.parseInt(date.substring(0, Math.min(4, date.length() - 1))) < 1500) {
                 gregorianDate = DateUtils.parse(date, DateUtils.DEFAULT_DATE_FORMAT, true, DateUtils.FARSI_LOCALE);

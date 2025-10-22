@@ -1,5 +1,7 @@
 package com.melli.wallet.util;
 
+import org.apache.commons.lang3.StringUtils;
+
 import java.text.DecimalFormat;
 import java.util.Arrays;
 import java.util.Locale;
@@ -7,7 +9,7 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class StringUtils {
+public class CustomStringUtils {
 
     public static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat("###,###");
     public static final String FARSI_LANGUAGE = "fa";
@@ -120,8 +122,8 @@ public class StringUtils {
     }
 
     public static String fromPersianNumeric(String s) {
-        s = org.apache.commons.lang.StringUtils.replaceChars(s, "\u06f0\u06f1\u06f2\u06f3\u06f4\u06f5\u06f6\u06f7\u06f8\u06f9\u066a", "0123456789%");
-        s = org.apache.commons.lang.StringUtils.replaceChars(s, "\u0660\u0661\u0662\u0663\u0664\u0665\u0666\u0667\u0668\u0669", "0123456789");
+        s = StringUtils.replaceChars(s, "\u06f0\u06f1\u06f2\u06f3\u06f4\u06f5\u06f6\u06f7\u06f8\u06f9\u066a", "0123456789%");
+        s = StringUtils.replaceChars(s, "\u0660\u0661\u0662\u0663\u0664\u0665\u0666\u0667\u0668\u0669", "0123456789");
         return s;
     }
 
@@ -130,7 +132,7 @@ public class StringUtils {
          * return StringUtils.replaceChars(s, "0123456789%",
          * "\u06f0\u06f1\u06f2\u06f3\u06f4\u06f5\u06f6\u06f7\u06f8\u06f9\u066a");
          */
-        return org.apache.commons.lang.StringUtils.replaceChars(s, "0123456789", "\u06f0\u06f1\u06f2\u06f3\u06f4\u06f5\u06f6\u06f7\u06f8\u06f9");
+        return StringUtils.replaceChars(s, "0123456789", "\u06f0\u06f1\u06f2\u06f3\u06f4\u06f5\u06f6\u06f7\u06f8\u06f9");
     }
 
     public static String formatCardNumber(String str) {
@@ -240,7 +242,7 @@ public class StringUtils {
 
     public static String encode(String text) {
 
-        if (!StringUtils.hasText(text)) {
+        if (!CustomStringUtils.hasText(text)) {
             text = " ";
         }
         StringBuffer encoded = new StringBuffer();

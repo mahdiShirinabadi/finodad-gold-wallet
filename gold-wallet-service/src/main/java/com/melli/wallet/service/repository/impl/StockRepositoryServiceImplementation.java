@@ -10,13 +10,12 @@ import com.melli.wallet.service.operation.AlertService;
 import com.melli.wallet.service.repository.StatusRepositoryService;
 import com.melli.wallet.service.repository.StockRepositoryService;
 import com.melli.wallet.service.repository.WalletAccountCurrencyRepositoryService;
-import com.melli.wallet.util.StringUtils;
+import com.melli.wallet.util.CustomStringUtils;
 import com.melli.wallet.utils.Helper;
 import com.melli.wallet.utils.RedisLockService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.scheduling.annotation.Async;
@@ -167,18 +166,18 @@ public class StockRepositoryServiceImplementation implements StockRepositoryServ
     private List<Predicate> buildPredicatesFromCriteria(Map<String, String> searchCriteria, Root<StockEntity> root, CriteriaBuilder criteriaBuilder) {
         List<Predicate> predicates = new ArrayList<>();
 
-        if (StringUtils.hasText(searchCriteria.get("id"))) {
+        if (CustomStringUtils.hasText(searchCriteria.get("id"))) {
             predicates.add(criteriaBuilder.equal(root.get("id"), searchCriteria.get("id")));
         }
-        if (StringUtils.hasText(searchCriteria.get("code"))) {
+        if (CustomStringUtils.hasText(searchCriteria.get("code"))) {
             predicates.add(criteriaBuilder.like(criteriaBuilder.lower(root.get("code")), 
                 "%" + searchCriteria.get("code").toLowerCase() + "%"));
         }
-        if (StringUtils.hasText(searchCriteria.get("name"))) {
+        if (CustomStringUtils.hasText(searchCriteria.get("name"))) {
             predicates.add(criteriaBuilder.like(criteriaBuilder.lower(root.get("name")), 
                 "%" + searchCriteria.get("name").toLowerCase() + "%"));
         }
-        if (StringUtils.hasText(searchCriteria.get("walletAccountCurrencyId"))) {
+        if (CustomStringUtils.hasText(searchCriteria.get("walletAccountCurrencyId"))) {
             predicates.add(criteriaBuilder.equal(root.get("walletAccountCurrencyEntity").get("id"), searchCriteria.get("walletAccountCurrencyId")));
         }
         return predicates;

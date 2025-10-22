@@ -1,6 +1,6 @@
 package com.melli.wallet.domain.enumaration;
 
-import com.melli.wallet.util.StringUtils;
+import com.melli.wallet.util.CustomStringUtils;
 import lombok.Getter;
 
 @Getter
@@ -20,7 +20,7 @@ public enum RegisterProfileStepStatus {
     }
 
     public static String getPersianDescription(String text) {
-        if (!StringUtils.hasText(text)) {
+        if (!CustomStringUtils.hasText(text)) {
             return "";
         }
         return switch (text) {

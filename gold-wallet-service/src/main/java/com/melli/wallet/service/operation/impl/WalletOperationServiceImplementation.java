@@ -10,7 +10,7 @@ import com.melli.wallet.exception.InternalServiceException;
 import com.melli.wallet.service.operation.WalletOperationalService;
 import com.melli.wallet.service.repository.*;
 import com.melli.wallet.service.operation.ShahkarInfoOperationService;
-import com.melli.wallet.util.StringUtils;
+import com.melli.wallet.util.CustomStringUtils;
 import com.melli.wallet.util.Utility;
 import com.melli.wallet.utils.Helper;
 import com.melli.wallet.annotation.LogExecutionTime;
@@ -51,7 +51,7 @@ public class WalletOperationServiceImplementation implements WalletOperationalSe
     @Override
     @LogExecutionTime("Creating wallet for user")
     public CreateWalletResponse createWallet(ChannelEntity channelEntity, String mobile, String nationalCode, String walletTypeString, List<String> walletAccountCurrencyList, List<String> walletAccountTypeList) throws InternalServiceException {
-        if (channelEntity.getCheckShahkar() == ChannelRepositoryService.TRUE || StringUtils.hasText(nationalCode)) {
+        if (channelEntity.getCheckShahkar() == ChannelRepositoryService.TRUE || CustomStringUtils.hasText(nationalCode)) {
             log.info("Start checking if nationalCode({}) and mobile({}) are related from shahkar or not ...", nationalCode, mobile);
             shahkarInfoOperationService.checkShahkarInfo(mobile, nationalCode, false);
             log.info("nationalCode({}) and mobile({}) are related together.", nationalCode, mobile);
@@ -165,31 +165,31 @@ public class WalletOperationServiceImplementation implements WalletOperationalSe
     private List<Predicate> buildPredicatesFromCriteria(Map<String, String> searchCriteria, Root<LimitationGeneralCustomEntity> root, CriteriaBuilder criteriaBuilder) {
         List<Predicate> predicates = new ArrayList<>();
 
-        if (StringUtils.hasText(searchCriteria.get("id"))) {
+        if (CustomStringUtils.hasText(searchCriteria.get("id"))) {
             predicates.add(criteriaBuilder.equal(root.get("id"), searchCriteria.get("id")));
         }
 
-        if (StringUtils.hasText(searchCriteria.get("limitationGeneralId"))) {
+        if (CustomStringUtils.hasText(searchCriteria.get("limitationGeneralId"))) {
             predicates.add(criteriaBuilder.equal(root.get("limitationGeneralEntity").get("id"), searchCriteria.get("limitationGeneralId")));
         }
 
-        if (StringUtils.hasText(searchCriteria.get("walletLevelId"))) {
+        if (CustomStringUtils.hasText(searchCriteria.get("walletLevelId"))) {
             predicates.add(criteriaBuilder.equal(root.get("walletLevelEntity").get("id"), searchCriteria.get("walletLevelId")));
         }
 
-        if (StringUtils.hasText(searchCriteria.get("walletAccountTypeId"))) {
+        if (CustomStringUtils.hasText(searchCriteria.get("walletAccountTypeId"))) {
             predicates.add(criteriaBuilder.equal(root.get("walletAccountTypeEntity").get("id"), searchCriteria.get("walletAccountTypeId")));
         }
 
-        if (StringUtils.hasText(searchCriteria.get("walletAccountCurrencyId"))) {
+        if (CustomStringUtils.hasText(searchCriteria.get("walletAccountCurrencyId"))) {
             predicates.add(criteriaBuilder.equal(root.get("walletAccountCurrencyEntity").get("id"), searchCriteria.get("walletAccountCurrencyId")));
         }
 
-        if (StringUtils.hasText(searchCriteria.get("walletTypeId"))) {
+        if (CustomStringUtils.hasText(searchCriteria.get("walletTypeId"))) {
             predicates.add(criteriaBuilder.equal(root.get("walletTypeEntity").get("id"), searchCriteria.get("walletTypeId")));
         }
 
-        if (StringUtils.hasText(searchCriteria.get("channelId"))) {
+        if (CustomStringUtils.hasText(searchCriteria.get("channelId"))) {
             predicates.add(criteriaBuilder.equal(root.get("channelEntity").get("id"), searchCriteria.get("channelId")));
         }
 

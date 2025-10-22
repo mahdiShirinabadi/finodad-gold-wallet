@@ -44,7 +44,7 @@ import com.melli.wallet.domain.response.status.StatusObject;
 import com.melli.wallet.domain.slave.entity.*;
 import com.melli.wallet.exception.InternalServiceException;
 import com.melli.wallet.service.repository.*;
-import com.melli.wallet.util.StringUtils;
+import com.melli.wallet.util.CustomStringUtils;
 import com.melli.wallet.util.date.DateUtils;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.collections4.CollectionUtils;
@@ -53,7 +53,6 @@ import org.json.JSONException;
 import org.springframework.data.domain.Page;
 import org.json.JSONObject;
 import org.springframework.context.annotation.Profile;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -746,7 +745,7 @@ public class Helper {
 
 
     public static String findInListMapValueByKey(List<Map<String, String>> listOfMaps, String key) {
-        return listOfMaps.stream().filter(map -> map.containsKey(key) && StringUtils.hasText(map.get(key))).map(map -> map.get(key)).findFirst().orElse(null); // Return null if no match is found
+        return listOfMaps.stream().filter(map -> map.containsKey(key) && CustomStringUtils.hasText(map.get(key))).map(map -> map.get(key)).findFirst().orElse(null); // Return null if no match is found
     }
 
     public static boolean isValidJson(String json) {
@@ -775,7 +774,7 @@ public class Helper {
 
     public boolean notInAllowedList(String allowedList, String ip) {
         log.info("start check Ip ({}) in allowedList ({})", ip, allowedList);
-        if (!StringUtils.hasText(allowedList)) {
+        if (!CustomStringUtils.hasText(allowedList)) {
             log.info("allewdList is empty !!!");
             return false;
         }

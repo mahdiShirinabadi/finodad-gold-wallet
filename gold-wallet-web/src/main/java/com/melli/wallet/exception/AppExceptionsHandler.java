@@ -4,7 +4,7 @@ import com.melli.wallet.domain.response.base.BaseResponse;
 import com.melli.wallet.domain.response.base.ErrorDetail;
 import com.melli.wallet.service.operation.AlertService;
 import com.melli.wallet.service.repository.StatusRepositoryService;
-import com.melli.wallet.util.StringUtils;
+import com.melli.wallet.util.CustomStringUtils;
 import com.melli.wallet.utils.Helper;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
@@ -102,8 +102,8 @@ public class AppExceptionsHandler extends ResponseEntityExceptionHandler {
             ErrorDetail errorDetail = new ErrorDetail();
             errorDetail.setCode(exception.getStatus());
             String message = statusRepositoryService.findByCode(String.valueOf(exception.getStatus())).getPersianDescription();
-            if (StringUtils.isPersianString(exception.getMessage())) {
-                message = StringUtils.fixSomeWord(exception.getMessage());
+            if (CustomStringUtils.isPersianString(exception.getMessage())) {
+                message = CustomStringUtils.fixSomeWord(exception.getMessage());
             }
             if (exception.getParameters() != null) {
                 message = StringSubstitutor.replace(message, exception.getParameters(), "${", "}");

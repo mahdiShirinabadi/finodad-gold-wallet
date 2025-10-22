@@ -129,7 +129,7 @@ public class PanelChannelController extends WebController {
         String channelIp = requestContext.getClientIp();
         String username = requestContext.getChannelEntity().getUsername();
         log.info("start call balance getMerchant in username ===> {}, merchantId ===> {}, from ip ===> {}", username, requestContext.getChannelEntity().getId(), channelIp);
-        WalletBalanceResponse response = channelOperationService.getBalance(channelRepositoryService.findById(requestContext.getChannelEntity().getId()));
+        WalletBalanceResponse response = channelOperationService.getBalance(channelRepositoryService.findById((long) requestContext.getChannelEntity().getId()));
         return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse<>(true, response));
     }
 

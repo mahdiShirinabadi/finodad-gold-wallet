@@ -9,7 +9,7 @@ import com.melli.wallet.exception.InternalServiceException;
 import com.melli.wallet.service.repository.LimitationGeneralService;
 import com.melli.wallet.service.repository.SettingGeneralRepositoryService;
 import com.melli.wallet.service.repository.StatusRepositoryService;
-import com.melli.wallet.util.StringUtils;
+import com.melli.wallet.util.CustomStringUtils;
 import com.melli.wallet.util.Utility;
 import com.melli.wallet.utils.Helper;
 import com.melli.wallet.utils.RedisLockService;
@@ -111,11 +111,11 @@ public class LimitationGeneralServiceImplementation implements LimitationGeneral
     private List<Predicate> buildPredicatesFromCriteria(Map<String, String> searchCriteria, Root<LimitationGeneralEntity> root, CriteriaBuilder criteriaBuilder) {
         List<Predicate> predicates = new ArrayList<>();
 
-        if (StringUtils.hasText(searchCriteria.get("id"))) {
+        if (CustomStringUtils.hasText(searchCriteria.get("id"))) {
             predicates.add(criteriaBuilder.equal(root.get("id"), searchCriteria.get("id")));
         }
 
-        if (StringUtils.hasText(searchCriteria.get("name"))) {
+        if (CustomStringUtils.hasText(searchCriteria.get("name"))) {
             predicates.add(criteriaBuilder.equal(root.get("name"), searchCriteria.get("name")));
         }
 

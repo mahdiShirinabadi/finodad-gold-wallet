@@ -44,7 +44,7 @@ set account_number=LPAD((select id
                                               and wallet.description = 'merchant'))::text, 8, '0')
 where wallet_id = (select id from wallet where national_code = '1111111111' and wallet.description = 'merchant') and wallet_account_currency_id = (select id from wallet_account_currency where name = 'RIAL');
 
-insert into merchant(created_by, created_at, name, mobile, national_code, economical_code, wallet_id, settlement_type,status)
-values ('System',now(),'فروشگاه تست','09124162337','1111111111','123467980',
+insert into merchant(created_by, created_at, name, mobile, economical_code, wallet_id, settlement_type,status)
+values ('System',now(),'فروشگاه تست','09124162337','1111111111',
         (select id from wallet where national_code = '1111111111' and wallet.description = 'merchant'),1,1);
 
