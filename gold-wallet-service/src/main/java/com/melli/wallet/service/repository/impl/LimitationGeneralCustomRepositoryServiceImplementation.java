@@ -82,7 +82,7 @@ public class LimitationGeneralCustomRepositoryServiceImplementation implements L
 
         if (limitationGeneralEntity == null) {
             log.error("limitationGeneralEntity with name ({}) not exist", limitationGeneralName);
-            throw new InternalServiceException("General limitation with this name not found", StatusRepositoryService.LIMITATION_NOT_FOUND, HttpStatus.NOT_FOUND);
+            throw new InternalServiceException("General limitation with this name not found", StatusRepositoryService.LIMITATION_NOT_FOUND, HttpStatus.OK);
         }
 
         LimitationGeneralCustomDTO limitationGeneralCustomDTO = LimitationGeneralCustomDTO.builder().
@@ -98,7 +98,7 @@ public class LimitationGeneralCustomRepositoryServiceImplementation implements L
 
         if(CollectionUtils.isEmpty(settingGeneralCustomEntityList)){
             log.error("limitationGeneralCustomEntity with parameters ({}) not found", limitationGeneralCustomDTO);
-            throw new InternalServiceException("Custom limitation with these parameters not found", StatusRepositoryService.LIMITATION_NOT_FOUND, HttpStatus.NOT_FOUND);
+            throw new InternalServiceException("Custom limitation with these parameters not found", StatusRepositoryService.LIMITATION_NOT_FOUND, HttpStatus.OK);
         }else if(settingGeneralCustomEntityList.size() == 1){
             LimitationGeneralCustomEntity existingEntity = settingGeneralCustomEntityList.getFirst();
             

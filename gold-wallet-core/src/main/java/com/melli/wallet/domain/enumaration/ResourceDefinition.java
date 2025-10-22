@@ -52,6 +52,18 @@ public enum ResourceDefinition {
     //Collateral
     COLLATERAL("COLLATERAL","وثیقه"),
 
+    // Status Management
+    STATUS_MANAGE("STATUS_MANAGE", "مدیریت وضعیت ها"),
+    STATUS_LIST("STATUS_LIST", "لیست وضعیت ها"),
+    
+    // Template Management
+    TEMPLATE_MANAGE("TEMPLATE_MANAGE", "مدیریت قالب ها"),
+    TEMPLATE_LIST("TEMPLATE_LIST", "لیست قالب ها"),
+
+    // Stock Management
+    STOCK_LIST("STOCK_LIST", "لیست سهام"),
+    STOCK_HISTORY_LIST("STOCK_HISTORY_LIST", "لیست تاریخچه سهام"),
+
     // Other Resources
     STATEMENT("STATEMENT", "صورتحساب"),
     SETTING_LIST("SETTING_LIST", "لیست تنظیمات"),
@@ -90,6 +102,12 @@ public enum ResourceDefinition {
     public static final String GIFT_CARD_AUTH = "GIFT_CARD";
     public static final String LOGOUT_AUTH = "LOGOUT";
     public static final String COLLATERAL_AUTH = "COLLATERAL";
+    public static final String STATUS_MANAGE_AUTH = "STATUS_MANAGE";
+    public static final String STATUS_LIST_AUTH = "STATUS_LIST";
+    public static final String TEMPLATE_MANAGE_AUTH = "TEMPLATE_MANAGE";
+    public static final String TEMPLATE_LIST_AUTH = "TEMPLATE_LIST";
+    public static final String STOCK_LIST_AUTH = "STOCK_LIST";
+    public static final String STOCK_HISTORY_LIST_AUTH = "STOCK_HISTORY_LIST";
 
     private final String name;
     private final String persianDescription;

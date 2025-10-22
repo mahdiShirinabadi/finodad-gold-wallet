@@ -21,6 +21,8 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -79,26 +81,10 @@ public class StatusRepositoryServiceImplementation implements StatusRepositorySe
         ReportStatusEntity reportEntity = reportStatusRepository.findById(id).orElse(null);
         if (reportEntity == null) {
             log.error("status with id {} not found", id);
-            throw new InternalServiceException("status not found", StatusRepositoryService.STATUS_NOT_FOUND, HttpStatus.FORBIDDEN);
+            throw new InternalServiceException("status not found", StatusRepositoryService.STATUS_NOT_FOUND, HttpStatus.OK);
         }
         return statusMapper.toStatusEntity(reportEntity);
     }
-
-    private StatusEntity findByCodeOrNull(String code) {
-        ReportStatusEntity reportEntity = reportStatusRepository.findByCode(code);
-        return reportEntity != null ? statusMapper.toStatusEntity(reportEntity) : null;
-    }
-
-    private StatusEntity buildStatusEntity(String createdByUsername, String code, String persianDescription, String additionalData) {
-        StatusEntity entity = new StatusEntity();
-        entity.setCreatedBy(createdByUsername);
-        entity.setCreatedAt(new Date());
-        entity.setCode(code);
-        entity.setPersianDescription(persianDescription);
-        entity.setAdditionalData(additionalData);
-        return statusRepository.save(entity);
-    }
-
 
     public Specification<StatusEntity> getPredicate(Map<String, String> searchCriteria) {
         return (root, query, criteriaBuilder) -> {
@@ -119,7 +105,12 @@ public class StatusRepositoryServiceImplementation implements StatusRepositorySe
             predicates.add(criteriaBuilder.equal(root.get("id"), searchCriteria.get("id")));
         }
         if (StringUtils.hasText(searchCriteria.get("code"))) {
-            predicates.add(criteriaBuilder.equal(root.get("code"), searchCriteria.get("code")));
+            predicates.add(criteriaBuilder.like(criteriaBuilder.lower(root.get("code")), 
+                searchCriteria.get("code").toLowerCase()));
+        }
+        if (StringUtils.hasText(searchCriteria.get("name"))) {
+            predicates.add(criteriaBuilder.like(criteriaBuilder.lower(root.get("persianDescription")), 
+                "%" + searchCriteria.get("name").toLowerCase() + "%"));
         }
         return predicates;
     }
@@ -132,9 +123,53 @@ public class StatusRepositoryServiceImplementation implements StatusRepositorySe
         }
     }
 
+
     @Override
-    public StatusEntity findByPersianDescription(String persianDescription) {
-        ReportStatusEntity reportEntity = reportStatusRepository.findByPersianDescription(persianDescription).orElse(null);
-        return reportEntity != null ? statusMapper.toStatusEntity(reportEntity) : null;
+    @CacheEvict(allEntries = true)
+    public void createStatus(StatusEntity statusEntity) throws InternalServiceException {
+        log.info("start createStatus with code: {}", statusEntity.getCode());
+        
+        try {
+            statusRepository.save(statusEntity);
+            log.info("Status created successfully with code: {}", statusEntity.getCode());
+        } catch (Exception e) {
+            log.error("Error creating status with code: {}", statusEntity.getCode(), e);
+            throw new InternalServiceException("Error creating status", StatusRepositoryService.INTERNAL_ERROR, HttpStatus.OK);
+        }
+    }
+
+    @Override
+    @CacheEvict(allEntries = true)
+    public void updateStatus(StatusEntity statusEntity) throws InternalServiceException {
+        log.info("start updateStatus with id: {}", statusEntity.getId());
+        
+        // Check if status exists
+        StatusEntity existingStatus = statusRepository.findById(statusEntity.getId()).orElse(null);
+        if (existingStatus == null) {
+            log.error("Status not found with id: {}", statusEntity.getId());
+            throw new InternalServiceException("Status not found", StatusRepositoryService.STATUS_NOT_FOUND, HttpStatus.OK);
+        }
+        
+        // Check if another status with same code exists (excluding current one)
+        StatusEntity statusWithSameCode = statusRepository.findByCode(statusEntity.getCode());
+        if (statusWithSameCode != null && (statusWithSameCode.getId() != (statusEntity.getId()))) {
+            log.error("Another status with code {} already exists", statusEntity.getCode());
+            throw new InternalServiceException("Another status with this code already exists", StatusRepositoryService.STATUS_NOT_FOUND, HttpStatus.OK);
+        }
+        
+        try {
+            statusRepository.save(statusEntity);
+            log.info("Status updated successfully with id: {}", statusEntity.getId());
+        } catch (Exception e) {
+            log.error("Error updating status with id: {}", statusEntity.getId(), e);
+            throw new InternalServiceException("Error updating status", StatusRepositoryService.INTERNAL_ERROR, HttpStatus.OK);
+        }
+    }
+
+    @Override
+    public Page<StatusEntity> findAllWithSpecification(Map<String, String> searchCriteria, Pageable pageable) {
+        log.info("start findAllWithSpecification with searchCriteria: {}, pageable: {}", searchCriteria, pageable);
+        Specification<StatusEntity> specification = getPredicate(searchCriteria);
+        return statusRepository.findAll(specification, pageable);
     }
 }

@@ -78,7 +78,7 @@ public class AuthenticationController extends WebController {
             log.error("failed in login with BadCredentialsException ({})", ex.getMessage());
             ChannelEntity profileEntity = channelRepositoryService.findByUsername(loginJson.getUsername());
             securityOperationService.increaseFailLogin(profileEntity);
-            throw new InternalServiceException("invalid username password", StatusRepositoryService.INVALID_USERNAME_PASSWORD, HttpStatus.UNAUTHORIZED);
+            throw new InternalServiceException("invalid username password", StatusRepositoryService.INVALID_USERNAME_PASSWORD, HttpStatus.OK);
         } catch (Exception ex) {
             log.error("failed in login with Exception ({})", ex.getMessage());
             throw new InternalServiceException("general error", StatusRepositoryService.GENERAL_ERROR, HttpStatus.OK);

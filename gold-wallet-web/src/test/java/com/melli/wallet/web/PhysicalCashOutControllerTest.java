@@ -1055,7 +1055,7 @@ class PhysicalCashOutControllerTest extends WalletApplicationTests {
         log.info("start calculateTotalQuantitySuccess test");
         
         // Test the calculate total quantity endpoint
-        BaseResponse<PhysicalCashOutTotalQuantityResponse> response = getPhysicalCashOutTotalQuantity(mockMvc, ACCESS_TOKEN, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
+        BaseResponse<PhysicalCashOutTotalQuantityResponse> response = getPhysicalCashOutTotalQuantity(mockMvc, accessToken, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
         Assert.assertNotNull(response.getData());
         Assert.assertNotNull(response.getData().getTotalQuantity());
         Assert.assertEquals("physical_cash_out", response.getData().getRequestType());

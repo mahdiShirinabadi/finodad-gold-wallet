@@ -3,6 +3,10 @@ package com.melli.wallet.service.repository;
 
 import com.melli.wallet.domain.master.entity.StatusEntity;
 import com.melli.wallet.exception.InternalServiceException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
+import java.util.Map;
 
 public interface StatusRepositoryService {
 
@@ -124,6 +128,8 @@ public interface StatusRepositoryService {
     int COLLATERAL_STEP_MUST_BE_SEIZE = 104;
     int COLLATERAL_SEIZE_BEFORE = 105;
     int GIFT_CARD_DEACTIVATED = 106;
+    int TEMPLATE_NOT_FOUND = 107;
+    int TEMPLATE_WITH_NAME_EXIST = 108;
 
     // General Error Codes
 
@@ -145,5 +151,9 @@ public interface StatusRepositoryService {
 
     StatusEntity findById(long id) throws InternalServiceException;
 
-    StatusEntity findByPersianDescription(String persianDescription);
+    void createStatus(StatusEntity statusEntity) throws InternalServiceException;
+
+    void updateStatus(StatusEntity statusEntity) throws InternalServiceException;
+
+    Page<StatusEntity> findAllWithSpecification(Map<String, String> searchCriteria, Pageable pageable);
 }

@@ -49,7 +49,7 @@ import java.util.Set;
 @Validated
 @Log4j2
 @Tag(name = "Role Management", description = "Role and Resource Management APIs")
-public class RoleManagementController extends WebController {
+public class PanelRoleManagementController extends WebController {
 
     private final RequestContext requestContext;
     private final RoleResourceOperationService roleResourceOperationService;

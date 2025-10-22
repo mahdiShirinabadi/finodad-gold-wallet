@@ -102,6 +102,9 @@ public class NamingProperty {
     public static final String RELEASE_LIST = "releaseList";
     public static final String INCREASE_LIST = "increaseList";
     public static final String FINAL_QUANTITY_BLOCK = "finalQuantityBlock";
+    public static final String STOCK_ID = "stockId";
+    public static final String TRANSACTION_ID = "transactionId";
+    public static final String TYPE = "type";
 
 
 

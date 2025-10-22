@@ -33,7 +33,7 @@ public class ChannelAccessTokenRepositoryServiceImplementation implements Channe
     public ChannelAccessTokenEntity findTopByRefreshTokenEndTimeIsnUll(String refreshToken) throws InternalServiceException {
         return channelAccessTokenRepository.findTopByRefreshTokenAndEndTimeIsNull(refreshToken).orElseThrow(()->{
             log.error("refreshToken ({}) not exist", refreshToken);
-            return new InternalServiceException("refreshToken not found", StatusRepositoryService.REFRESH_TOKEN_NOT_FOUND, HttpStatus.UNAUTHORIZED);
+            return new InternalServiceException("refreshToken not found", StatusRepositoryService.REFRESH_TOKEN_NOT_FOUND, HttpStatus.OK);
         });
     }
 

@@ -5,6 +5,8 @@ import com.melli.wallet.NamingProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 
+import java.util.Date;
+
 /**
  * Class Name: StockObject
  * Author: Mahdi Shirinabadi
@@ -28,6 +30,4 @@ public class StockObject {
     @Schema(name = NamingProperty.CODE)
     @JsonProperty(NamingProperty.CODE)
     private String code;
-
-
 }

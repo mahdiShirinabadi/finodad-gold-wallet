@@ -53,7 +53,7 @@ public class WalletAccountRepositoryServiceImplementation implements WalletAccou
 
     @Override
     public WalletAccountEntity findById(Long id) throws InternalServiceException {
-        return walletAccountRepository.findById(id).orElseThrow(()->new InternalServiceException("walletAccount is not found", StatusRepositoryService.WALLET_ACCOUNT_NOT_FOUND, HttpStatus.INTERNAL_SERVER_ERROR));
+        return walletAccountRepository.findById(id).orElseThrow(()->new InternalServiceException("walletAccount is not found", StatusRepositoryService.WALLET_ACCOUNT_NOT_FOUND, HttpStatus.OK));
     }
 
     @Override

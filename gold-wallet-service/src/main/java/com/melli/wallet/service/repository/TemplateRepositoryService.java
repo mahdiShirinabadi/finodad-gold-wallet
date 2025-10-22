@@ -1,8 +1,12 @@
 package com.melli.wallet.service.repository;
 
 import com.melli.wallet.domain.master.entity.TemplateEntity;
+import com.melli.wallet.exception.InternalServiceException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
+import java.util.Map;
 
 
 public interface TemplateRepositoryService {
@@ -40,6 +44,14 @@ public interface TemplateRepositoryService {
 
 	String getTemplate(String name);
 
-	List<TemplateEntity> findAllTemplate();
+	TemplateEntity findById(Long id) throws InternalServiceException;
+
+	TemplateEntity findByName(String name) throws InternalServiceException;
+
+	void updateTemplate(TemplateEntity templateEntity) throws InternalServiceException;
+
+    Page<TemplateEntity> findAllWithSpecification(Map<String, String> searchCriteria, Pageable pageable);
+    
+    void createTemplate(TemplateEntity templateEntity) throws InternalServiceException;
 
 }

@@ -2,6 +2,7 @@ package com.melli.wallet.domain.master.persistence;
 
 import com.melli.wallet.domain.master.entity.StockEntity;
 import com.melli.wallet.domain.master.entity.WalletAccountCurrencyEntity;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
@@ -12,7 +13,7 @@ import java.math.BigDecimal;
 import java.util.List;
 
 @Repository
-public interface StockRepository extends CrudRepository<StockEntity, Long> {
+public interface StockRepository extends CrudRepository<StockEntity, Long>, JpaSpecificationExecutor<StockEntity> {
 
     StockEntity findByCodeAndWalletAccountCurrencyEntity(String code, WalletAccountCurrencyEntity walletAccountCurrencyEntity);
 

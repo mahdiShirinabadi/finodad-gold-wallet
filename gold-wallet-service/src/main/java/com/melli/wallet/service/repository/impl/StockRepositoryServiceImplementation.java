@@ -10,18 +10,30 @@ import com.melli.wallet.service.operation.AlertService;
 import com.melli.wallet.service.repository.StatusRepositoryService;
 import com.melli.wallet.service.repository.StockRepositoryService;
 import com.melli.wallet.service.repository.WalletAccountCurrencyRepositoryService;
+import com.melli.wallet.util.StringUtils;
 import com.melli.wallet.utils.Helper;
 import com.melli.wallet.utils.RedisLockService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 /**
  * Class Name: StockRepositoryServiceImplementation
@@ -39,6 +51,11 @@ public class StockRepositoryServiceImplementation implements StockRepositoryServ
     private final RedisLockService redisLockService;
     private final Helper helper;
     private final WalletAccountCurrencyRepositoryService walletAccountCurrencyRepositoryService;
+
+    @Override
+    public BigDecimal getBalance(long id) {
+        return stockRepository.getBalance(id);
+    }
 
     @Override
     public StockListResponse getAllBalance(WalletAccountCurrencyEntity walletAccountCurrencyEntity) {
@@ -126,5 +143,52 @@ public class StockRepositoryServiceImplementation implements StockRepositoryServ
             return null;
         }
         return stockEntity;
+    }
+
+    @Override
+    public Page<StockEntity> findAllWithSpecification(Map<String, String> searchCriteria, Pageable pageable) {
+        log.info("start findAllWithSpecification with searchCriteria: {}, pageable: {}", searchCriteria, pageable);
+        Specification<StockEntity> specification = getPredicate(searchCriteria);
+        return stockRepository.findAll(specification, pageable);
+    }
+
+    public Specification<StockEntity> getPredicate(Map<String, String> searchCriteria) {
+        return (root, query, criteriaBuilder) -> {
+            List<Predicate> predicates = buildPredicatesFromCriteria(searchCriteria, root, criteriaBuilder);
+            String orderBy = Optional.ofNullable(searchCriteria.get("orderBy")).orElse("id");
+            String sortDirection = Optional.ofNullable(searchCriteria.get("sort")).orElse("asc");
+
+            setOrder(query, orderBy, sortDirection, criteriaBuilder, root);
+
+            return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
+        };
+    }
+
+    private List<Predicate> buildPredicatesFromCriteria(Map<String, String> searchCriteria, Root<StockEntity> root, CriteriaBuilder criteriaBuilder) {
+        List<Predicate> predicates = new ArrayList<>();
+
+        if (StringUtils.hasText(searchCriteria.get("id"))) {
+            predicates.add(criteriaBuilder.equal(root.get("id"), searchCriteria.get("id")));
+        }
+        if (StringUtils.hasText(searchCriteria.get("code"))) {
+            predicates.add(criteriaBuilder.like(criteriaBuilder.lower(root.get("code")), 
+                "%" + searchCriteria.get("code").toLowerCase() + "%"));
+        }
+        if (StringUtils.hasText(searchCriteria.get("name"))) {
+            predicates.add(criteriaBuilder.like(criteriaBuilder.lower(root.get("name")), 
+                "%" + searchCriteria.get("name").toLowerCase() + "%"));
+        }
+        if (StringUtils.hasText(searchCriteria.get("walletAccountCurrencyId"))) {
+            predicates.add(criteriaBuilder.equal(root.get("walletAccountCurrencyEntity").get("id"), searchCriteria.get("walletAccountCurrencyId")));
+        }
+        return predicates;
+    }
+
+    private void setOrder(CriteriaQuery<?> query, String orderBy, String sortDirection, CriteriaBuilder criteriaBuilder, Root<StockEntity> root) {
+        if ("asc".equalsIgnoreCase(sortDirection)) {
+            query.orderBy(criteriaBuilder.asc(root.get(orderBy)));
+        } else {
+            query.orderBy(criteriaBuilder.desc(root.get(orderBy)));
+        }
     }
 }

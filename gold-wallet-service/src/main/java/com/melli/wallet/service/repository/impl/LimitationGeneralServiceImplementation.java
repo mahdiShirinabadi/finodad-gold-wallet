@@ -61,7 +61,7 @@ public class LimitationGeneralServiceImplementation implements LimitationGeneral
     public LimitationGeneralEntity getById(Long id) throws InternalServiceException {
         return limitationGeneralRepository.findById(id).orElseThrow(() -> {
             log.error("limitationGeneralEntity with id ({}) not found", id);
-            return new InternalServiceException("General limitation with this ID not found", StatusRepositoryService.LIMITATION_NOT_FOUND, org.springframework.http.HttpStatus.NOT_FOUND);
+            return new InternalServiceException("General limitation with this ID not found", StatusRepositoryService.LIMITATION_NOT_FOUND, org.springframework.http.HttpStatus.OK);
         });
     }
 

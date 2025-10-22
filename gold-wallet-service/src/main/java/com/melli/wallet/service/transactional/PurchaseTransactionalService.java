@@ -155,6 +155,7 @@ public class PurchaseTransactionalService {
         log.debug("Processing buy transactions - userRialAccount: {}, userCurrencyAccount: {}, merchantRialAccount: {}, merchantCurrencyAccount: {}", 
             purchaseObjectDto.getUserRialAccount().getId(), purchaseObjectDto.getUserCurrencyAccount().getId(),
             purchaseObjectDto.getMerchantRialAccount().getId(), purchaseObjectDto.getMerchantCurrencyAccount().getId());
+
         buyProcessTransactions(
                 purchaseRequest, purchaseObjectDto.getUserRialAccount(), purchaseObjectDto.getUserCurrencyAccount(),
                 purchaseObjectDto.getMerchantRialAccount(), purchaseObjectDto.getMerchantCurrencyAccount(), purchaseObjectDto.getChannelCommissionAccount(), purchaseObjectDto.getCommission());
@@ -272,7 +273,7 @@ public class PurchaseTransactionalService {
         }
 
         // Merchant deposit (rial)
-        BigDecimal merchantDepositPrice = BigDecimal.valueOf((purchaseRequest.getPrice())).subtract(purchaseRequest.getCommission());
+        BigDecimal merchantDepositPrice = BigDecimal.valueOf((purchaseRequest.getPrice()));
         log.info("start buy transaction for uniqueIdentifier ({}), price ({}), commission ({}), finalPrice ({}) for deposit merchant walletAccountId({})", purchaseRequest.getRrnEntity().getUuid(), purchaseRequest.getPrice(), commission, merchantDepositPrice, merchantRialAccount.getId());
         TransactionEntity merchantDeposit = createTransaction(
                 merchantRialAccount, merchantDepositPrice,
@@ -361,7 +362,7 @@ public class PurchaseTransactionalService {
 
         // merchant deposit (currency) (quantity - commission)
         log.info("start sell transaction for uniqueIdentifier ({}), quantity ({}) for merchant deposit currency user walletAccountId({})", purchaseRequest.getRrnEntity().getUuid(), purchaseRequest.getQuantity().subtract(commission), userCurrencyAccount.getId());
-        TransactionEntity merchantCurrencyDeposit = createTransaction(merchantCurrencyAccount, purchaseRequest.getQuantity().subtract(commission),
+        TransactionEntity merchantCurrencyDeposit = createTransaction(merchantCurrencyAccount, purchaseRequest.getQuantity(),
                 messageResolverOperationService.resolve(depositTemplate, model), purchaseRequest.getAdditionalData(), purchaseRequest, purchaseRequest.getRrnEntity());
         transactionRepositoryService.insertDeposit(merchantCurrencyDeposit);
         log.info("finish sell transaction for uniqueIdentifier ({}), quantity ({}) for merchant deposit currency user walletAccountId({}), transactionId ({})", purchaseRequest.getRrnEntity().getUuid(), purchaseRequest.getQuantity().subtract(commission), userCurrencyAccount.getId(), merchantCurrencyDeposit.getId());

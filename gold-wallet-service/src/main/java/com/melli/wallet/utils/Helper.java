@@ -25,6 +25,8 @@ import com.melli.wallet.domain.response.merchant.MerchantBalanceCalculationRespo
 import com.melli.wallet.domain.response.purchase.*;
 import com.melli.wallet.domain.response.stock.StockCurrencyListResponse;
 import com.melli.wallet.domain.response.stock.StockCurrencyObject;
+import com.melli.wallet.domain.response.stock.StockHistoryListResponse;
+import com.melli.wallet.domain.response.stock.StockHistoryObject;
 import com.melli.wallet.domain.response.stock.StockListResponse;
 import com.melli.wallet.domain.response.stock.StockObject;
 import com.melli.wallet.domain.response.transaction.ReportTransactionObject;
@@ -35,6 +37,10 @@ import com.melli.wallet.domain.response.wallet.CreateWalletResponse;
 import com.melli.wallet.domain.response.wallet.TotalWalletBalanceResponse;
 import com.melli.wallet.domain.response.wallet.WalletAccountObject;
 import com.melli.wallet.domain.response.wallet.WalletBalanceResponse;
+import com.melli.wallet.domain.response.template.TemplateListResponse;
+import com.melli.wallet.domain.response.template.TemplateObject;
+import com.melli.wallet.domain.response.status.StatusListResponse;
+import com.melli.wallet.domain.response.status.StatusObject;
 import com.melli.wallet.domain.slave.entity.*;
 import com.melli.wallet.exception.InternalServiceException;
 import com.melli.wallet.service.repository.*;
@@ -44,6 +50,7 @@ import lombok.extern.log4j.Log4j2;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.json.JSONException;
+import org.springframework.data.domain.Page;
 import org.json.JSONObject;
 import org.springframework.context.annotation.Profile;
 import org.springframework.data.domain.Page;
@@ -578,6 +585,26 @@ public class Helper {
         return response;
     }
 
+    public TemplateListResponse fillTemplateListResponse(List<TemplateObject> templateObjectList, Page<?> page) {
+        TemplateListResponse response = new TemplateListResponse();
+        response.setTemplateObjectList(templateObjectList);
+        response.setTotalElements(page.getTotalElements());
+        response.setTotalPages(page.getTotalPages());
+        response.setSize(page.getSize());
+        response.setNumber(page.getNumberOfElements());
+        return response;
+    }
+
+    public StatusListResponse fillStatusListResponse(List<StatusObject> statusObjectList, Page<?> page) {
+        StatusListResponse response = new StatusListResponse();
+        response.setStatusObjectList(statusObjectList);
+        response.setTotalElements(page.getTotalElements());
+        response.setTotalPages(page.getTotalPages());
+        response.setSize(page.getSize());
+        response.setNumber(page.getNumber());
+        return response;
+    }
+
     private String prettyBalance(BigDecimal num){
         DecimalFormat df = new DecimalFormat("0.#####");
         return df.format(num);
@@ -769,6 +796,26 @@ public class Helper {
     public static Integer generateRandomNumber() {
         Random r = new Random(System.currentTimeMillis());
         return ((1 + r.nextInt(2)) * 10000 + r.nextInt(10000));
+    }
+
+    public StockListResponse fillStockListResponse(List<StockObject> stockObjectList, Page<StockEntity> stockPage) {
+        StockListResponse response = new StockListResponse();
+        response.setStockObjectList(stockObjectList);
+        response.setTotalElements(stockPage.getTotalElements());
+        response.setTotalPages(stockPage.getTotalPages());
+        response.setSize(stockPage.getSize());
+        response.setNumber(stockPage.getNumber());
+        return response;
+    }
+
+    public StockHistoryListResponse fillStockHistoryListResponse(List<StockHistoryObject> stockHistoryObjectList, Page<StockHistoryEntity> stockHistoryPage) {
+        StockHistoryListResponse response = new StockHistoryListResponse();
+        response.setList(stockHistoryObjectList);
+        response.setTotalElements((stockHistoryPage.getTotalElements()));
+        response.setTotalPages((stockHistoryPage.getTotalPages()));
+        response.setSize((stockHistoryPage.getSize()));
+        response.setNumber((stockHistoryPage.getNumber()));
+        return response;
     }
 
     @Profile("dev")
