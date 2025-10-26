@@ -62,7 +62,6 @@ import org.springframework.security.web.util.matcher.IpAddressMatcher;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.text.DecimalFormat;
 import java.util.*;
 
 
@@ -96,7 +95,7 @@ public class Helper {
 
     public LoginResponse fillLoginResponse(ChannelEntity channelEntity, String accessToken, Long accessTokenExpireTime, String refreshToken, Long refreshTokenExpireTime) {
         LoginResponse loginResponse = new LoginResponse();
-        loginResponse.setChannelObject(convertChannelEntityToChannelObject(channelEntity));
+        loginResponse.setChannelObject(SubHelper.convertChannelEntityToChannelObject(channelEntity));
         loginResponse.setAccessTokenObject(new TokenObject(accessToken, accessTokenExpireTime));
         loginResponse.setRefreshTokenObject(new TokenObject(refreshToken, refreshTokenExpireTime));
         return loginResponse;
@@ -184,64 +183,16 @@ public class Helper {
     public CollateralTrackResponse fillCollateralTrackResponse(CreateCollateralRequestEntity createCollateralRequestEntity, List<ReleaseCollateralRequestEntity> releaseCollateralRequestEntityList,
                                                                List<IncreaseCollateralRequestEntity> increaseCollateralRequestEntityList, StatusRepositoryService statusRepositoryService) {
         CollateralTrackResponse response = new CollateralTrackResponse();
-        response.setCollateralCreateTrackObject(convertToCreateCollateralTrackResponse(createCollateralRequestEntity, statusRepositoryService));
+        response.setCollateralCreateTrackObject(SubHelper.convertToCreateCollateralTrackResponse(createCollateralRequestEntity, statusRepositoryService));
         if(CollectionUtils.isNotEmpty(releaseCollateralRequestEntityList)){
-            response.setCollateralReleaseTrackObject(releaseCollateralRequestEntityList.stream().map(x->convertToCollateralRelease(x, statusRepositoryService)).toList());
+            response.setCollateralReleaseTrackObject(releaseCollateralRequestEntityList.stream().map(x->SubHelper.convertToCollateralRelease(x, statusRepositoryService)).toList());
         }
         if(CollectionUtils.isNotEmpty(increaseCollateralRequestEntityList)){
-            response.setCollateralIncreaseTrackObject(increaseCollateralRequestEntityList.stream().map(x->convertToCollateralIncrease(x, statusRepositoryService)).toList());
+            response.setCollateralIncreaseTrackObject(increaseCollateralRequestEntityList.stream().map(x->SubHelper.convertToCollateralIncrease(x, statusRepositoryService)).toList());
         }
         return response;
     }
 
-    private CollateralCreateTrackObject convertToCreateCollateralTrackResponse(CreateCollateralRequestEntity createCollateralRequestEntity, StatusRepositoryService statusRepositoryService){
-        StatusEntity statusEntity = statusRepositoryService.findByCode(String.valueOf(createCollateralRequestEntity.getResult()));
-        CollateralCreateTrackObject response = new CollateralCreateTrackObject();
-        response.setUniqueIdentifier(createCollateralRequestEntity.getRrnEntity().getUuid());
-        response.setCollateralCode(createCollateralRequestEntity.getCode());
-        response.setQuantity((createCollateralRequestEntity.getQuantity().stripTrailingZeros().toPlainString()));
-        response.setFinalQuantityBlock((createCollateralRequestEntity.getFinalBlockQuantity().stripTrailingZeros().toPlainString()));
-        response.setCommission((createCollateralRequestEntity.getCommission().stripTrailingZeros().toPlainString()));
-        response.setNationalCode(createCollateralRequestEntity.getWalletAccountEntity().getWalletEntity().getNationalCode());
-        response.setStatus(createCollateralRequestEntity.getCollateralStatusEnum().toString());
-        response.setStatusDescription(createCollateralRequestEntity.getCollateralStatusEnum().toString());
-        response.setAdditionalData(createCollateralRequestEntity.getAdditionalData());
-        response.setCurrency(createCollateralRequestEntity.getWalletAccountEntity().getWalletAccountCurrencyEntity().getName());
-        response.setWalletAccountNumber(createCollateralRequestEntity.getWalletAccountEntity().getAccountNumber());
-        response.setChannelName(createCollateralRequestEntity.getChannel().getUsername());
-        response.setCreateTime(DateUtils.getLocaleDate(DateUtils.FARSI_LOCALE, createCollateralRequestEntity.getCreatedAt(), FORMAT_DATE_RESPONSE, false));
-        response.setCreateTimeTimestamp(createCollateralRequestEntity.getCreatedAt().getTime());
-        response.setResult(String.valueOf(createCollateralRequestEntity.getResult()));
-        response.setDescription(statusEntity != null ? statusEntity.getPersianDescription() : "");
-        return response;
-    }
-
-    private CollateralReleaseTrackObject convertToCollateralRelease(ReleaseCollateralRequestEntity releaseCollateralRequestEntity, StatusRepositoryService statusRepositoryService) {
-        StatusEntity statusEntity = statusRepositoryService.findByCode(String.valueOf(releaseCollateralRequestEntity.getResult()));
-        CollateralReleaseTrackObject trackObject = new CollateralReleaseTrackObject();
-        trackObject.setChannelName(releaseCollateralRequestEntity.getChannel().getUsername());
-        trackObject.setCreateTime(DateUtils.getLocaleDate(DateUtils.FARSI_LOCALE, releaseCollateralRequestEntity.getCreatedAt(), FORMAT_DATE_RESPONSE, false));
-        trackObject.setCreateTimeTimestamp(releaseCollateralRequestEntity.getCreatedAt().getTime());
-        trackObject.setQuantity((releaseCollateralRequestEntity.getQuantity().stripTrailingZeros().toPlainString()));
-        trackObject.setResult(String.valueOf(releaseCollateralRequestEntity.getResult()));
-        trackObject.setCommission((releaseCollateralRequestEntity.getCommission().stripTrailingZeros().toPlainString()));
-        trackObject.setDescription(statusEntity != null ? statusEntity.getPersianDescription() : "");
-        return trackObject;
-    }
-
-    private CollateralIncreaseTrackObject convertToCollateralIncrease(IncreaseCollateralRequestEntity increaseCollateralRequestEntity, StatusRepositoryService statusRepositoryService) {
-        StatusEntity statusEntity = statusRepositoryService.findByCode(String.valueOf(increaseCollateralRequestEntity.getResult()));
-        CollateralIncreaseTrackObject trackObject = new CollateralIncreaseTrackObject();
-        trackObject.setId(String.valueOf(increaseCollateralRequestEntity.getId()));
-        trackObject.setChannelName(increaseCollateralRequestEntity.getChannel().getUsername());
-        trackObject.setCreateTime(DateUtils.getLocaleDate(DateUtils.FARSI_LOCALE, increaseCollateralRequestEntity.getCreatedAt(), FORMAT_DATE_RESPONSE, false));
-        trackObject.setCreateTimeTimestamp(increaseCollateralRequestEntity.getCreatedAt().getTime());
-        trackObject.setQuantity((increaseCollateralRequestEntity.getQuantity().stripTrailingZeros().toPlainString()));
-        trackObject.setResult(String.valueOf(increaseCollateralRequestEntity.getResult()));
-        trackObject.setCommission((increaseCollateralRequestEntity.getCommission().stripTrailingZeros().toPlainString()));
-        trackObject.setDescription(statusEntity != null ? statusEntity.getPersianDescription() : "");
-        return trackObject;
-    }
 
     public CreateCollateralResponse fillCreateCollateralResponse(String collateralCode, String nationalCode, BigDecimal quantity) {
         CreateCollateralResponse response = new CreateCollateralResponse();
@@ -282,28 +233,10 @@ public class Helper {
         response.setNumber(channelEntityPage.getNumber());
         response.setTotalPages(channelEntityPage.getTotalPages());
         response.setTotalElements(channelEntityPage.getTotalElements());
-        response.setList(channelEntityPage.getContent().stream().map(this::fillPanelChannelObject).toList());
+        response.setList(channelEntityPage.getContent().stream().map(SubHelper::fillPanelChannelObject).toList());
         return response;
     }
 
-    private PanelChannelObject fillPanelChannelObject(ReportChannelEntity channelEntity) {
-        PanelChannelObject panelChannelObject = new PanelChannelObject();
-        panelChannelObject.setId(String.valueOf(channelEntity.getId()));
-        panelChannelObject.setIp(channelEntity.getIp());
-        panelChannelObject.setMobile(channelEntity.getMobile());
-        panelChannelObject.setUsername(channelEntity.getUsername());
-        panelChannelObject.setFirstName(channelEntity.getFirstName());
-        panelChannelObject.setLastName(channelEntity.getLastName());
-        panelChannelObject.setPublicKey(channelEntity.getPublicKey());
-        panelChannelObject.setStatus(String.valueOf(channelEntity.getStatus()));
-        panelChannelObject.setCreateBy(channelEntity.getCreatedBy());
-        panelChannelObject.setCreateTime(DateUtils.getLocaleDate(DateUtils.FARSI_LOCALE, channelEntity.getCreatedAt(), FORMAT_DATE_RESPONSE, false));
-        panelChannelObject.setUpdateTime(DateUtils.getLocaleDate(DateUtils.FARSI_LOCALE, channelEntity.getUpdatedAt(), FORMAT_DATE_RESPONSE, false));
-        panelChannelObject.setUpdateBy(channelEntity.getUpdatedBy());
-        panelChannelObject.setTrust(channelEntity.getTrust());
-        panelChannelObject.setSign(channelEntity.getSign());
-        return panelChannelObject;
-    }
 
     public PhysicalCashOutTrackResponse fillPhysicalCashOutTrackResponse(ReportPhysicalCashOutRequestEntity physicalCashOutRequestEntity, StatusRepositoryService statusRepositoryService) {
         StatusEntity statusEntity = statusRepositoryService.findByCode(String.valueOf(physicalCashOutRequestEntity.getResult()));
@@ -322,23 +255,17 @@ public class Helper {
 
     public MerchantResponse fillMerchantResponse(List<MerchantEntity> merchantEntityList){
         MerchantResponse response = new MerchantResponse();
-        response.setMerchantObjectList(merchantEntityList.stream().map(this::convertMerchantEntityToMerchantObject).toList());
+        response.setMerchantObjectList(merchantEntityList.stream().map(SubHelper::convertMerchantEntityToMerchantObject).toList());
         return response;
     }
 
-    private MerchantObject convertMerchantEntityToMerchantObject(MerchantEntity merchantEntity) {
-        return new MerchantObject(String.valueOf(merchantEntity.getId()), merchantEntity.getName(), merchantEntity.getLogo(), String.valueOf(merchantEntity.getStatus()));
-    }
 
     public CollateralResponse fillCollateralResponse(List<CollateralEntity> collateralEntityList){
         CollateralResponse response = new CollateralResponse();
-        response.setCollateralObjectList(collateralEntityList.stream().map(this::convertCollateralEntityToCollateralObject).toList());
+        response.setCollateralObjectList(collateralEntityList.stream().map(SubHelper::convertCollateralEntityToCollateralObject).toList());
         return response;
     }
 
-    private CollateralObject convertCollateralEntityToCollateralObject(CollateralEntity collateralEntity) {
-        return new CollateralObject(String.valueOf(collateralEntity.getId()), collateralEntity.getName(), collateralEntity.getLogo(), String.valueOf(collateralEntity.getStatus()),  collateralEntity.getIban());
-    }
 
     public PurchaseTrackResponse fillPurchaseTrackResponse(ReportPurchaseRequestEntity purchaseRequestEntity, StatusRepositoryService statusRepositoryService) {
         StatusEntity statusEntity = statusRepositoryService.findByCode(String.valueOf(purchaseRequestEntity.getResult()));
@@ -386,7 +313,7 @@ public class Helper {
         response.setNumber(limitationGeneralEntityPage.getNumber());
         response.setTotalPages(limitationGeneralEntityPage.getTotalPages());
         response.setTotalElements(limitationGeneralEntityPage.getTotalElements());
-        response.setGeneralLimitationList(limitationGeneralEntityPage.getContent().stream().map(this::fillGeneralLimitationObject).toList());
+        response.setGeneralLimitationList(limitationGeneralEntityPage.getContent().stream().map(SubHelper::fillGeneralLimitationObject).toList());
         return response;
     }
 
@@ -396,60 +323,8 @@ public class Helper {
         response.setNumber(limitationGeneralCustomEntityPage.getNumber());
         response.setTotalPages(limitationGeneralCustomEntityPage.getTotalPages());
         response.setTotalElements(limitationGeneralCustomEntityPage.getTotalElements());
-        response.setGeneralCustomLimitationList(limitationGeneralCustomEntityPage.getContent().stream().map(this::fillGeneralCustomLimitationObject).toList());
+        response.setGeneralCustomLimitationList(limitationGeneralCustomEntityPage.getContent().stream().map(SubHelper::fillGeneralCustomLimitationObject).toList());
         return response;
-    }
-
-    public GeneralLimitationObject fillGeneralLimitationObject(LimitationGeneralEntity limitationGeneralEntity) {
-        GeneralLimitationObject object = new GeneralLimitationObject();
-        object.setId(String.valueOf(limitationGeneralEntity.getId()));
-        object.setName(limitationGeneralEntity.getName());
-        object.setValue(limitationGeneralEntity.getValue());
-        object.setPattern(limitationGeneralEntity.getPattern());
-        object.setAdditionalData(limitationGeneralEntity.getAdditionalData());
-        object.setCreateTime(limitationGeneralEntity.getCreatedAt() != null ? 
-            DateUtils.getLocaleDate(DateUtils.FARSI_LOCALE, limitationGeneralEntity.getCreatedAt(), FORMAT_DATE_RESPONSE, false) : null);
-        object.setCreateBy(limitationGeneralEntity.getCreatedBy());
-        object.setUpdateTime(limitationGeneralEntity.getUpdatedAt() != null ? 
-            DateUtils.getLocaleDate(DateUtils.FARSI_LOCALE, limitationGeneralEntity.getUpdatedAt(), FORMAT_DATE_RESPONSE, false) : null);
-        object.setUpdateBy(limitationGeneralEntity.getUpdatedBy());
-        return object;
-    }
-
-    public GeneralCustomLimitationObject fillGeneralCustomLimitationObject(LimitationGeneralCustomEntity limitationGeneralCustomEntity) {
-        GeneralCustomLimitationObject object = new GeneralCustomLimitationObject();
-        object.setId(String.valueOf(limitationGeneralCustomEntity.getId()));
-        object.setLimitationGeneralId(String.valueOf(limitationGeneralCustomEntity.getLimitationGeneralEntity().getId()));
-        object.setLimitationGeneralName(limitationGeneralCustomEntity.getLimitationGeneralEntity().getName());
-        object.setGeneralLimitationObject(this.fillGeneralLimitationObject(limitationGeneralCustomEntity.getLimitationGeneralEntity()));
-        object.setValue(limitationGeneralCustomEntity.getValue());
-        object.setAdditionalData(limitationGeneralCustomEntity.getAdditionalData());
-        object.setWalletLevelId(limitationGeneralCustomEntity.getWalletLevelEntity() != null ? 
-            String.valueOf(limitationGeneralCustomEntity.getWalletLevelEntity().getId()) : null);
-        object.setWalletLevelName(limitationGeneralCustomEntity.getWalletLevelEntity() != null ? 
-            limitationGeneralCustomEntity.getWalletLevelEntity().getName() : null);
-        object.setWalletAccountTypeId(limitationGeneralCustomEntity.getWalletAccountTypeEntity() != null ? 
-            String.valueOf(limitationGeneralCustomEntity.getWalletAccountTypeEntity().getId()) : null);
-        object.setWalletAccountTypeName(limitationGeneralCustomEntity.getWalletAccountTypeEntity() != null ? 
-            limitationGeneralCustomEntity.getWalletAccountTypeEntity().getName() : null);
-        object.setWalletAccountCurrencyId(limitationGeneralCustomEntity.getWalletAccountCurrencyEntity() != null ? 
-            String.valueOf(limitationGeneralCustomEntity.getWalletAccountCurrencyEntity().getId()) : null);
-        object.setWalletAccountCurrencyName(limitationGeneralCustomEntity.getWalletAccountCurrencyEntity() != null ? 
-            limitationGeneralCustomEntity.getWalletAccountCurrencyEntity().getName() : null);
-        object.setWalletTypeId(limitationGeneralCustomEntity.getWalletTypeEntity() != null ? 
-            String.valueOf(limitationGeneralCustomEntity.getWalletTypeEntity().getId()) : null);
-        object.setWalletTypeName(limitationGeneralCustomEntity.getWalletTypeEntity() != null ? 
-            limitationGeneralCustomEntity.getWalletTypeEntity().getName() : null);
-        object.setChannelId(limitationGeneralCustomEntity.getChannelEntity() != null ? 
-            String.valueOf(limitationGeneralCustomEntity.getChannelEntity().getId()) : null);
-        object.setChannelName(limitationGeneralCustomEntity.getChannelEntity() != null ? 
-            limitationGeneralCustomEntity.getChannelEntity().getUsername() : null);
-        object.setCreateTime(limitationGeneralCustomEntity.getCreatedAt() != null ? 
-            DateUtils.getLocaleDate(DateUtils.FARSI_LOCALE, limitationGeneralCustomEntity.getCreatedAt(), FORMAT_DATE_RESPONSE, false) : null);
-        object.setCreateBy(limitationGeneralCustomEntity.getCreatedBy());
-        object.setEndTime(limitationGeneralCustomEntity.getEndTime() != null ? 
-            DateUtils.getLocaleDate(DateUtils.FARSI_LOCALE, limitationGeneralCustomEntity.getEndTime(), FORMAT_DATE_RESPONSE, false) : null);
-        return object;
     }
 
     public CashInResponse fillCashInResponse(String nationalCode,  String uuid, String availableBalance, String accountNumber, String balance) {
@@ -469,7 +344,7 @@ public class Helper {
         statementResponse.setSize(reportTransactionEntityPage.getSize());
         statementResponse.setTotalElements(reportTransactionEntityPage.getTotalElements());
         statementResponse.setTotalPages(reportTransactionEntityPage.getTotalPages());
-        statementResponse.setList(reportTransactionEntityPage.stream().map(this::convertToReportStatementObject).toList());
+        statementResponse.setList(reportTransactionEntityPage.stream().map(SubHelper::convertToReportStatementObject).toList());
         return statementResponse;
     }
 
@@ -479,7 +354,7 @@ public class Helper {
         response.setSize(createCollateralRequestEntityPage.getSize());
         response.setTotalElements(createCollateralRequestEntityPage.getTotalElements());
         response.setTotalPages(createCollateralRequestEntityPage.getTotalPages());
-        response.setCollateralCreateTrackObjectList(createCollateralRequestEntityPage.stream().map(x->convertToCreateCollateralTrackResponse(x, statusRepositoryService)).toList());
+        response.setCollateralCreateTrackObjectList(createCollateralRequestEntityPage.stream().map(x->SubHelper.convertToCreateCollateralTrackResponse(x, statusRepositoryService)).toList());
         return response;
     }
 
@@ -497,19 +372,6 @@ public class Helper {
         return statementObject;
     }
 
-    public ReportTransactionObject convertToReportStatementObject(ReportTransactionEntity reportTransactionEntity) {
-        ReportTransactionObject statementObject = new ReportTransactionObject();
-        statementObject.setNationalCode(reportTransactionEntity.getWalletAccountEntity().getWalletEntity().getNationalCode());
-        statementObject.setId(String.valueOf(reportTransactionEntity.getId()));
-        statementObject.setAccountNumber(reportTransactionEntity.getWalletAccountEntity().getAccountNumber());
-        statementObject.setType(reportTransactionEntity.getType());
-        statementObject.setUniqueIdentifier(reportTransactionEntity.getRrnEntity().getUuid());
-        statementObject.setCurrency(reportTransactionEntity.getWalletAccountEntity().getWalletAccountCurrencyEntity().getName());
-        statementObject.setQuantity(reportTransactionEntity.getAmount().stripTrailingZeros().toPlainString());
-        statementObject.setBalance(reportTransactionEntity.getAvailableBalance().stripTrailingZeros().toPlainString());
-        statementObject.setCreateTime(DateUtils.getLocaleDate(DateUtils.FARSI_LOCALE, reportTransactionEntity.getCreatedAt(), FORMAT_DATE_RESPONSE, false));
-        return statementObject;
-    }
 
     public CashOutResponse fillCashOutResponse(String nationalCode, String uuid, String balance, String accountNumber, String availableBalance) {
         return new CashOutResponse(nationalCode, availableBalance, balance, uuid, accountNumber);
@@ -594,6 +456,8 @@ public class Helper {
         return response;
     }
 
+
+
     public StatusListResponse fillStatusListResponse(List<StatusObject> statusObjectList, Page<?> page) {
         StatusListResponse response = new StatusListResponse();
         response.setStatusObjectList(statusObjectList);
@@ -604,20 +468,6 @@ public class Helper {
         return response;
     }
 
-    private String prettyBalance(BigDecimal num){
-        DecimalFormat df = new DecimalFormat("0.#####");
-        return df.format(num);
-    }
-
-
-    private ChannelObject convertChannelEntityToChannelObject(ChannelEntity channelEntity) {
-        ChannelObject channelObject = new ChannelObject();
-        channelObject.setFirstName(channelEntity.getFirstName());
-        channelObject.setLastName(channelEntity.getLastName());
-        channelObject.setUsername(channelEntity.getUsername());
-        channelObject.setMobile(channelEntity.getMobile());
-        return channelObject;
-    }
 
 
     public WalletAccountEntity checkWalletAndWalletAccount(WalletRepositoryService walletRepositoryService, String nationalCode, WalletAccountRepositoryService walletAccountRepositoryService, String accountNumber, WalletTypeEntity walletTypeEntity) throws InternalServiceException {
@@ -688,7 +538,7 @@ public class Helper {
         response.setNumber(page.getNumber());
         response.setTotalPages(page.getTotalPages());
         response.setTotalElements(page.getTotalElements());
-        response.setList(page.getContent().stream().map(this::fillChannelRoleListObject).toList());
+        response.setList(page.getContent().stream().map(SubHelper::fillChannelRoleListObject).toList());
         return response;
     }
 
@@ -718,30 +568,6 @@ public class Helper {
         return response;
     }
 
-    private PanelRoleObject fillChannelRoleListObject(ReportChannelRoleEntity channelRoleEntity) {
-        PanelRoleObject panelOperatorRoleObject = new PanelRoleObject();
-        ReportRoleEntity roleEntity = channelRoleEntity.getRoleEntity();
-        panelOperatorRoleObject.setId(String.valueOf(roleEntity.getId()));
-        panelOperatorRoleObject.setName(roleEntity.getName());
-        panelOperatorRoleObject.setCreatedTime(DateUtils.getLocaleDate(DateUtils.FARSI_LOCALE, roleEntity.getCreatedAt(), DateUtils.DEFAULT_DATE_TIME_FORMAT, false));
-        panelOperatorRoleObject.setCreatedBy(roleEntity.getCreatedBy());
-        panelOperatorRoleObject.setUpdatedTime(DateUtils.getLocaleDate(DateUtils.FARSI_LOCALE, roleEntity.getUpdatedAt(), DateUtils.DEFAULT_DATE_TIME_FORMAT, false));
-        panelOperatorRoleObject.setUpdatedBy(roleEntity.getUpdatedBy());
-        List<PanelResourceObject> resourceObjects = roleEntity.getResources().stream().map(this::fillPanelResourceListObject).toList();
-        panelOperatorRoleObject.setResources(resourceObjects);
-        return panelOperatorRoleObject;
-    }
-
-    private PanelResourceObject fillPanelResourceListObject(ReportResourceEntity resourceEntity) {
-        PanelResourceObject panelOperatorRoleObject = new PanelResourceObject();
-        panelOperatorRoleObject.setId(String.valueOf(resourceEntity.getId()));
-        panelOperatorRoleObject.setName(resourceEntity.getName());
-        panelOperatorRoleObject.setCreatedAt(DateUtils.getLocaleDate(DateUtils.FARSI_LOCALE, resourceEntity.getCreatedAt(), DateUtils.DEFAULT_DATE_FORMAT, false));
-        panelOperatorRoleObject.setCreatedBy(resourceEntity.getCreatedBy());
-        panelOperatorRoleObject.setUpdatedAt(DateUtils.getLocaleDate(DateUtils.FARSI_LOCALE, resourceEntity.getUpdatedAt(), DateUtils.DEFAULT_DATE_FORMAT, false));
-        panelOperatorRoleObject.setUpdatedBy(resourceEntity.getUpdatedBy());
-        return panelOperatorRoleObject;
-    }
 
 
     public static String findInListMapValueByKey(List<Map<String, String>> listOfMaps, String key) {

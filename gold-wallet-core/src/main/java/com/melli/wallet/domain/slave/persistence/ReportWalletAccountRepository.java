@@ -79,4 +79,27 @@ public interface ReportWalletAccountRepository extends CrudRepository<ReportWall
     BigDecimal calculateTotalBalanceExcludingWalletTypeIdsAndCurrency(
             @Param("excludedWalletTypeIds") List<Long> excludedWalletTypeIds,
             @Param("currencyId") Long currencyId);
+
+    /**
+     * Find wallet account creation statistics aggregated by channel for a specific date
+     * This query reads from slave database for statistics generation (heavy transaction)
+     */
+    @Query(value = "SELECT " +
+            "w.channel_id as channelId, " +
+            "COUNT(*) as count, " +
+            "DATE(wa.created_at) as createDateAt " +
+            "FROM {h-schema}wallet_account wa " +
+            "INNER JOIN {h-schema}wallet w ON wa.wallet_id = w.id " +
+            "WHERE DATE(wa.created_at) = DATE(:targetDate) " +
+            "GROUP BY w.channel_id, DATE(wa.created_at)", nativeQuery = true)
+    java.util.List<WalletStatPerDay> findWalletAggregationPerDay(@Param("targetDate") java.util.Date targetDate);
+
+    /**
+     * Interface for wallet statistics per day result
+     */
+    interface WalletStatPerDay {
+        Long getChannelId();
+        Long getCount();
+        String getCreateDateAt();
+    }
 } 

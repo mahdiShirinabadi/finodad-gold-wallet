@@ -184,6 +184,7 @@ public class RequestRepositoryServiceImplementation implements RequestRepository
 
     @Override
     public void findPhysicalCashOutDuplicateWithRrnId(long rrnId) throws InternalServiceException {
+        log.info("start check findPhysicalCashOutDuplicateWithRrnId ({})", rrnId);
         PhysicalCashOutRequestEntity physicalCashOutRequestEntity = physicalCashOutRequestRepository.findByRrnEntityId(rrnId);
         if(physicalCashOutRequestEntity != null) {
             log.error("findPhysicalCashOutDuplicateWithRrnId ({}) found", rrnId);

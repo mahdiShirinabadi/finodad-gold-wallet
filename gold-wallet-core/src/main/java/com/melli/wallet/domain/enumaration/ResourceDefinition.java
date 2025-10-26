@@ -108,6 +108,8 @@ public enum ResourceDefinition {
     public static final String TEMPLATE_LIST_AUTH = "TEMPLATE_LIST";
     public static final String STOCK_LIST_AUTH = "STOCK_LIST";
     public static final String STOCK_HISTORY_LIST_AUTH = "STOCK_HISTORY_LIST";
+    public static final String STAT_MANAGE_AUTH = "STAT_MANAGE";
+    public static final String STAT_LIST_AUTH = "STAT_LIST";
 
     private final String name;
     private final String persianDescription;

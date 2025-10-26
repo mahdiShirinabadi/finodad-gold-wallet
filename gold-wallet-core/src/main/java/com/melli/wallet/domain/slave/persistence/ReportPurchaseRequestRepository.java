@@ -27,4 +27,38 @@ public interface ReportPurchaseRequestRepository extends CrudRepository<ReportPu
             " and date(r.created_at) BETWEEN date(:fromDate) AND  date(:toDate) and r.result=0 and p.transaction_type = :transactionType", nativeQuery = true)
     AggregationPurchaseDTO findSumAmountByTransactionTypeBetweenDateByChannel(@Param("channelId") long channelId, @Param("transactionType") String transactionType, @Param("fromDate") Date fromDate, @Param("toDate") Date toDate);
 
+    /**
+     * Find purchase statistics aggregated by channel, currency, merchant, and result for a specific date
+     * This query reads from slave database for statistics generation (heavy transaction)
+     */
+    @Query(value = "SELECT " +
+            "r.channel_id as channelId, " +
+            "wa.currency_id as currencyId, " +
+            "p.merchant_id as merchantId, " +
+            "r.result as result, " +
+            "COUNT(*) as count, " +
+            "COALESCE(SUM(p.price), 0) as amount, " +
+            "COALESCE(AVG(p.price), 0) as price, " +
+            "DATE(r.created_at) as createDateAt " +
+            "FROM {h-schema}purchase_request p " +
+            "INNER JOIN {h-schema}request r ON p.request_id = r.id " +
+            "INNER JOIN {h-schema}wallet_account wa ON p.wallet_account_id = wa.id " +
+            "WHERE DATE(r.created_at) = DATE(:targetDate) " +
+            "GROUP BY r.channel_id, wa.currency_id, p.merchant_id, r.result, DATE(r.created_at)", nativeQuery = true)
+    java.util.List<PurchaseStatPerDay> findPurchaseAggregationPerDay(@Param("targetDate") Date targetDate);
+
+    /**
+     * Interface for purchase statistics per day result
+     */
+    interface PurchaseStatPerDay {
+        Long getChannelId();
+        Long getCurrencyId();
+        Long getMerchantId();
+        Integer getResult();
+        Long getCount();
+        Long getAmount();
+        Long getPrice();
+        String getCreateDateAt();
+    }
+
 } 
