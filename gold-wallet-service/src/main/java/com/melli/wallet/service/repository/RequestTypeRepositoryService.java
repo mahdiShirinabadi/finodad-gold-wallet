@@ -22,6 +22,7 @@ public interface RequestTypeRepositoryService {
 	String SEIZE_COLLATERAL = "seize_collateral";
 	String SELL_COLLATERAL = "sell_collateral";
 	RequestTypeEntity getRequestType(String name);
+    RequestTypeEntity getRequestTypeById(long id);
 	void clearCache (long id)throws InternalServiceException;
 	void clearCacheAllData();
 }

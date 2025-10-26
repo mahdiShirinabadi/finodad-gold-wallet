@@ -7,4 +7,5 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface ReportRequestTypeRepository extends CrudRepository<ReportRequestTypeEntity, Long> {
     ReportRequestTypeEntity findByName(String name);
-} 
+    ReportRequestTypeEntity findById(long id);
+}

@@ -104,6 +104,7 @@ public class NamingProperty {
     public static final String FINAL_QUANTITY_BLOCK = "finalQuantityBlock";
     public static final String STOCK_ID = "stockId";
     public static final String TRANSACTION_ID = "transactionId";
+    public static final String TRANSACTION_TYPE_DESC = "transactionTypeDesc";
     public static final String TYPE = "type";
 
 

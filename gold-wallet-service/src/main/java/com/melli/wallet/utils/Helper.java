@@ -3,12 +3,10 @@ package com.melli.wallet.utils;
 import com.melli.wallet.domain.enumaration.WalletStatusEnum;
 import com.melli.wallet.domain.master.entity.*;
 import com.melli.wallet.domain.master.persistence.StockRepository;
-import com.melli.wallet.domain.response.PanelChannelObject;
 import com.melli.wallet.domain.response.PanelChannelResponse;
 import com.melli.wallet.domain.response.base.BaseResponse;
 import com.melli.wallet.domain.response.base.ErrorDetail;
 import com.melli.wallet.domain.response.cash.*;
-import com.melli.wallet.domain.response.channel.ChannelObject;
 import com.melli.wallet.domain.response.collateral.*;
 import com.melli.wallet.domain.response.giftcard.GiftCardResponse;
 import com.melli.wallet.domain.response.giftcard.GiftCardTrackResponse;
@@ -18,9 +16,7 @@ import com.melli.wallet.domain.response.login.LoginResponse;
 import com.melli.wallet.domain.response.login.TokenObject;
 import com.melli.wallet.domain.response.p2p.P2pTrackResponse;
 import com.melli.wallet.domain.response.p2p.P2pUuidResponse;
-import com.melli.wallet.domain.response.panel.PanelResourceObject;
 import com.melli.wallet.domain.response.panel.PanelRoleListResponse;
-import com.melli.wallet.domain.response.panel.PanelRoleObject;
 import com.melli.wallet.domain.response.merchant.MerchantBalanceCalculationResponse;
 import com.melli.wallet.domain.response.purchase.*;
 import com.melli.wallet.domain.response.stock.StockCurrencyListResponse;
@@ -29,7 +25,6 @@ import com.melli.wallet.domain.response.stock.StockHistoryListResponse;
 import com.melli.wallet.domain.response.stock.StockHistoryObject;
 import com.melli.wallet.domain.response.stock.StockListResponse;
 import com.melli.wallet.domain.response.stock.StockObject;
-import com.melli.wallet.domain.response.transaction.ReportTransactionObject;
 import com.melli.wallet.domain.response.transaction.ReportTransactionResponse;
 import com.melli.wallet.domain.response.transaction.StatementObject;
 import com.melli.wallet.domain.response.transaction.StatementResponse;
@@ -70,6 +65,7 @@ import java.util.*;
 public class Helper {
 
     private final WalletTypeRepositoryService walletTypeRepositoryService;
+    private final SubHelper subHelper;
 
     public static final String FORMAT_DATE_RESPONSE = "yyyy/MM/dd HH:mm:ss";
 
@@ -78,8 +74,9 @@ public class Helper {
 
 
 
-    public Helper(WalletTypeRepositoryService walletTypeRepositoryService) {
+    public Helper(WalletTypeRepositoryService walletTypeRepositoryService, SubHelper subHelper) {
         this.walletTypeRepositoryService = walletTypeRepositoryService;
+        this.subHelper = subHelper;
     }
 
     public BaseResponse<ObjectUtils.Null> fillBaseResponse(boolean result, ErrorDetail errorDetail) {
@@ -95,7 +92,7 @@ public class Helper {
 
     public LoginResponse fillLoginResponse(ChannelEntity channelEntity, String accessToken, Long accessTokenExpireTime, String refreshToken, Long refreshTokenExpireTime) {
         LoginResponse loginResponse = new LoginResponse();
-        loginResponse.setChannelObject(SubHelper.convertChannelEntityToChannelObject(channelEntity));
+        loginResponse.setChannelObject(subHelper.convertChannelEntityToChannelObject(channelEntity));
         loginResponse.setAccessTokenObject(new TokenObject(accessToken, accessTokenExpireTime));
         loginResponse.setRefreshTokenObject(new TokenObject(refreshToken, refreshTokenExpireTime));
         return loginResponse;
@@ -183,12 +180,12 @@ public class Helper {
     public CollateralTrackResponse fillCollateralTrackResponse(CreateCollateralRequestEntity createCollateralRequestEntity, List<ReleaseCollateralRequestEntity> releaseCollateralRequestEntityList,
                                                                List<IncreaseCollateralRequestEntity> increaseCollateralRequestEntityList, StatusRepositoryService statusRepositoryService) {
         CollateralTrackResponse response = new CollateralTrackResponse();
-        response.setCollateralCreateTrackObject(SubHelper.convertToCreateCollateralTrackResponse(createCollateralRequestEntity, statusRepositoryService));
+        response.setCollateralCreateTrackObject(subHelper.convertToCreateCollateralTrackResponse(createCollateralRequestEntity, statusRepositoryService));
         if(CollectionUtils.isNotEmpty(releaseCollateralRequestEntityList)){
-            response.setCollateralReleaseTrackObject(releaseCollateralRequestEntityList.stream().map(x->SubHelper.convertToCollateralRelease(x, statusRepositoryService)).toList());
+            response.setCollateralReleaseTrackObject(releaseCollateralRequestEntityList.stream().map(x->subHelper.convertToCollateralRelease(x, statusRepositoryService)).toList());
         }
         if(CollectionUtils.isNotEmpty(increaseCollateralRequestEntityList)){
-            response.setCollateralIncreaseTrackObject(increaseCollateralRequestEntityList.stream().map(x->SubHelper.convertToCollateralIncrease(x, statusRepositoryService)).toList());
+            response.setCollateralIncreaseTrackObject(increaseCollateralRequestEntityList.stream().map(x->subHelper.convertToCollateralIncrease(x, statusRepositoryService)).toList());
         }
         return response;
     }
@@ -233,7 +230,7 @@ public class Helper {
         response.setNumber(channelEntityPage.getNumber());
         response.setTotalPages(channelEntityPage.getTotalPages());
         response.setTotalElements(channelEntityPage.getTotalElements());
-        response.setList(channelEntityPage.getContent().stream().map(SubHelper::fillPanelChannelObject).toList());
+        response.setList(channelEntityPage.getContent().stream().map(subHelper::fillPanelChannelObject).toList());
         return response;
     }
 
@@ -255,14 +252,14 @@ public class Helper {
 
     public MerchantResponse fillMerchantResponse(List<MerchantEntity> merchantEntityList){
         MerchantResponse response = new MerchantResponse();
-        response.setMerchantObjectList(merchantEntityList.stream().map(SubHelper::convertMerchantEntityToMerchantObject).toList());
+        response.setMerchantObjectList(merchantEntityList.stream().map(subHelper::convertMerchantEntityToMerchantObject).toList());
         return response;
     }
 
 
     public CollateralResponse fillCollateralResponse(List<CollateralEntity> collateralEntityList){
         CollateralResponse response = new CollateralResponse();
-        response.setCollateralObjectList(collateralEntityList.stream().map(SubHelper::convertCollateralEntityToCollateralObject).toList());
+        response.setCollateralObjectList(collateralEntityList.stream().map(subHelper::convertCollateralEntityToCollateralObject).toList());
         return response;
     }
 
@@ -313,7 +310,7 @@ public class Helper {
         response.setNumber(limitationGeneralEntityPage.getNumber());
         response.setTotalPages(limitationGeneralEntityPage.getTotalPages());
         response.setTotalElements(limitationGeneralEntityPage.getTotalElements());
-        response.setGeneralLimitationList(limitationGeneralEntityPage.getContent().stream().map(SubHelper::fillGeneralLimitationObject).toList());
+        response.setGeneralLimitationList(limitationGeneralEntityPage.getContent().stream().map(subHelper::fillGeneralLimitationObject).toList());
         return response;
     }
 
@@ -323,7 +320,7 @@ public class Helper {
         response.setNumber(limitationGeneralCustomEntityPage.getNumber());
         response.setTotalPages(limitationGeneralCustomEntityPage.getTotalPages());
         response.setTotalElements(limitationGeneralCustomEntityPage.getTotalElements());
-        response.setGeneralCustomLimitationList(limitationGeneralCustomEntityPage.getContent().stream().map(SubHelper::fillGeneralCustomLimitationObject).toList());
+        response.setGeneralCustomLimitationList(limitationGeneralCustomEntityPage.getContent().stream().map(subHelper::fillGeneralCustomLimitationObject).toList());
         return response;
     }
 
@@ -344,7 +341,7 @@ public class Helper {
         statementResponse.setSize(reportTransactionEntityPage.getSize());
         statementResponse.setTotalElements(reportTransactionEntityPage.getTotalElements());
         statementResponse.setTotalPages(reportTransactionEntityPage.getTotalPages());
-        statementResponse.setList(reportTransactionEntityPage.stream().map(SubHelper::convertToReportStatementObject).toList());
+        statementResponse.setList(reportTransactionEntityPage.stream().map(subHelper::convertToReportStatementObject).toList());
         return statementResponse;
     }
 
@@ -354,7 +351,7 @@ public class Helper {
         response.setSize(createCollateralRequestEntityPage.getSize());
         response.setTotalElements(createCollateralRequestEntityPage.getTotalElements());
         response.setTotalPages(createCollateralRequestEntityPage.getTotalPages());
-        response.setCollateralCreateTrackObjectList(createCollateralRequestEntityPage.stream().map(x->SubHelper.convertToCreateCollateralTrackResponse(x, statusRepositoryService)).toList());
+        response.setCollateralCreateTrackObjectList(createCollateralRequestEntityPage.stream().map(x->subHelper.convertToCreateCollateralTrackResponse(x, statusRepositoryService)).toList());
         return response;
     }
 
@@ -391,8 +388,8 @@ public class Helper {
         response.setStatusDescription(walletEntity.getStatus().getPersianDescription());
         for (WalletAccountEntity walletAccountEntity : walletAccountEntityList) {
             WalletAccountObject walletAccountObject = new WalletAccountObject();
-            walletAccountObject.setWalletAccountTypeObject(SubHelper.convertWalletAccountEntityToObject(walletAccountEntity.getWalletAccountTypeEntity()));
-            walletAccountObject.setWalletAccountCurrencyObject(SubHelper.convertWalletAccountCurrencyEntityToObject(walletAccountEntity.getWalletAccountCurrencyEntity()));
+            walletAccountObject.setWalletAccountTypeObject(subHelper.convertWalletAccountEntityToObject(walletAccountEntity.getWalletAccountTypeEntity()));
+            walletAccountObject.setWalletAccountCurrencyObject(subHelper.convertWalletAccountCurrencyEntityToObject(walletAccountEntity.getWalletAccountCurrencyEntity()));
             walletAccountObject.setAccountNumber(walletAccountEntity.getAccountNumber());
             walletAccountObject.setStatus(String.valueOf(walletAccountEntity.getStatus()));
             walletAccountObject.setBalance((walletAccountRepositoryService.getBalance(walletAccountEntity.getId()).getRealBalance().stripTrailingZeros().toPlainString()));
@@ -411,8 +408,8 @@ public class Helper {
         walletAccountEntityList.sort(Comparator.comparingDouble(WalletAccountEntity::getId));
         for (WalletAccountEntity walletAccountEntity : walletAccountEntityList) {
             WalletAccountObject walletAccountObject = new WalletAccountObject();
-            walletAccountObject.setWalletAccountTypeObject(SubHelper.convertWalletAccountEntityToObject(walletAccountEntity.getWalletAccountTypeEntity()));
-            walletAccountObject.setWalletAccountCurrencyObject(SubHelper.convertWalletAccountCurrencyEntityToObject(walletAccountEntity.getWalletAccountCurrencyEntity()));
+            walletAccountObject.setWalletAccountTypeObject(subHelper.convertWalletAccountEntityToObject(walletAccountEntity.getWalletAccountTypeEntity()));
+            walletAccountObject.setWalletAccountCurrencyObject(subHelper.convertWalletAccountCurrencyEntityToObject(walletAccountEntity.getWalletAccountCurrencyEntity()));
             walletAccountObject.setAccountNumber(walletAccountEntity.getAccountNumber());
             walletAccountObject.setStatus(String.valueOf(walletAccountEntity.getStatus()));
             walletAccountObject.setBalance(walletAccountRepositoryService.getBalance(walletAccountEntity.getId()).getRealBalance().stripTrailingZeros().toPlainString());
@@ -538,7 +535,7 @@ public class Helper {
         response.setNumber(page.getNumber());
         response.setTotalPages(page.getTotalPages());
         response.setTotalElements(page.getTotalElements());
-        response.setList(page.getContent().stream().map(SubHelper::fillChannelRoleListObject).toList());
+        response.setList(page.getContent().stream().map(subHelper::fillChannelRoleListObject).toList());
         return response;
     }
 

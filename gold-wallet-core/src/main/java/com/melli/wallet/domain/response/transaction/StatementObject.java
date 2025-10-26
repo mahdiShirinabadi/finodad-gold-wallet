@@ -29,6 +29,10 @@ public class StatementObject {
     @JsonProperty(NamingProperty.PURCHASE_TYPE)
     private String type;
 
+    @Schema(name = NamingProperty.TRANSACTION_TYPE_DESC)
+    @JsonProperty(NamingProperty.TRANSACTION_TYPE_DESC)
+    private String transactionTypeDesc;
+
     @Schema(name = NamingProperty.UNIQUE_IDENTIFIER)
     @JsonProperty(NamingProperty.UNIQUE_IDENTIFIER)
     private String uniqueIdentifier;

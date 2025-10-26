@@ -27,7 +27,6 @@ import java.util.Optional;
 @CacheConfig(cacheNames = ConstantRedisName.WALLET_REQUEST_TYPE)
 public class RequestTypeRepositoryServiceImplementation implements RequestTypeRepositoryService {
 
-    private final RequestTypeRepository requestTypeDAO;
     private final ReportRequestTypeRepository reportRequestTypeRepository;
     private final RequestTypeMapper requestTypeMapper;
 
@@ -40,6 +39,13 @@ public class RequestTypeRepositoryServiceImplementation implements RequestTypeRe
     }
 
 
+    @Override
+    @Cacheable(unless = "#result == null")
+    public RequestTypeEntity getRequestTypeById(long id) {
+        log.info("start get RequestType for id ==> ({})", id);
+        ReportRequestTypeEntity reportEntity = reportRequestTypeRepository.findById(id);
+        return requestTypeMapper.toRequestTypeEntity(reportEntity);
+    }
 
     @Override
     public void clearCache(long id) throws InternalServiceException {
@@ -63,13 +69,13 @@ public class RequestTypeRepositoryServiceImplementation implements RequestTypeRe
     }
 
     private RequestTypeEntity findById(long id) throws InternalServiceException{
-        Optional<ReportRequestTypeEntity> requestType=reportRequestTypeRepository.findById(id);
-        if(requestType.isEmpty()){
+        ReportRequestTypeEntity requestType=reportRequestTypeRepository.findById(id);
+        if(requestType == null){
             log.debug("request Type with Id ({}), not found !!! ", id);
             throw new InternalServiceException("request Type with Id (" + id + ") not found !!!", StatusRepositoryService.REQUEST_TYPE_NOT_FOUND, HttpStatus.OK);
         }
 
-        return requestTypeMapper.toRequestTypeEntity(requestType.get());
+        return requestTypeMapper.toRequestTypeEntity(requestType);
     }
 
 

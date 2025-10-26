@@ -16,6 +16,8 @@ public class RequestTypeMapper {
         
         RequestTypeEntity entity = RequestTypeEntity.builder()
                 .name(reportEntity.getName())
+                .faName(reportEntity.getFaName())
+                .display(reportEntity.getDisplay())
                 .build();
         // Always set ID
         entity.setId(reportEntity.getId());
@@ -29,6 +31,8 @@ public class RequestTypeMapper {
         
         ReportRequestTypeEntity reportEntity = ReportRequestTypeEntity.builder()
                 .name(entity.getName())
+                .faName(entity.getFaName())
+                .display(entity.getDisplay())
                 .build();
         // Always set ID
         reportEntity.setId(entity.getId());

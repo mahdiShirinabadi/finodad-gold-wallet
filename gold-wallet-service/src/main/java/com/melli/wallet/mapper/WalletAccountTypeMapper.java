@@ -17,6 +17,8 @@ public class WalletAccountTypeMapper {
         
         WalletAccountTypeEntity entity = WalletAccountTypeEntity.builder()
                 .name(reportEntity.getName())
+                .description(reportEntity.getDescription())
+                .additionalData(reportEntity.getAdditionalData())
                 .build();
         // Always set ID
         entity.setId(reportEntity.getId());
@@ -30,6 +32,8 @@ public class WalletAccountTypeMapper {
         
         ReportWalletAccountTypeEntity reportEntity = ReportWalletAccountTypeEntity.builder()
                 .name(entity.getName())
+                .description(entity.getDescription())
+                .additionalData(entity.getAdditionalData())
                 .build();
         // Always set ID
         reportEntity.setId(entity.getId());
