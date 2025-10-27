@@ -140,7 +140,7 @@ public class CashOutOperationServiceImplementation implements CashOutOperationSe
                 log.info("Cash out request entity saved successfully - requestId: {}", cashOutRequestEntity.getId());
             } catch (Exception ex) {
                 log.error("error in save cashOut with message ({})", ex.getMessage());
-                throw new InternalServiceException("error in save cashIn", StatusRepositoryService.GENERAL_ERROR, HttpStatus.OK);
+                throw new InternalServiceException("error in save cashOutRequestEntity", StatusRepositoryService.GENERAL_ERROR, HttpStatus.OK);
             }
             
             cashOutRequestEntity.setResult(StatusRepositoryService.SUCCESSFUL);

@@ -331,7 +331,7 @@ public class Helper {
     public StatementResponse fillStatementResponse(String nationalCode, List<ReportTransactionEntity> reportTransactionEntityList) {
         StatementResponse statementResponse = new StatementResponse();
         statementResponse.setNationalCode(nationalCode);
-        statementResponse.setList(reportTransactionEntityList.stream().map(this::convertToStatementObject).toList());
+        statementResponse.setList(reportTransactionEntityList.stream().map(subHelper::convertToStatementObject).toList());
         return statementResponse;
     }
 
@@ -353,20 +353,6 @@ public class Helper {
         response.setTotalPages(createCollateralRequestEntityPage.getTotalPages());
         response.setCollateralCreateTrackObjectList(createCollateralRequestEntityPage.stream().map(x->subHelper.convertToCreateCollateralTrackResponse(x, statusRepositoryService)).toList());
         return response;
-    }
-
-    public StatementObject convertToStatementObject(ReportTransactionEntity reportTransactionEntity) {
-        StatementObject statementObject = new StatementObject();
-        statementObject.setId(String.valueOf(reportTransactionEntity.getId()));
-        statementObject.setAccountNumber(reportTransactionEntity.getWalletAccountEntity().getAccountNumber());
-        statementObject.setType(reportTransactionEntity.getType());
-        statementObject.setUniqueIdentifier(reportTransactionEntity.getRrnEntity().getUuid());
-        statementObject.setCurrency(reportTransactionEntity.getWalletAccountEntity().getWalletAccountCurrencyEntity().getName());
-        statementObject.setQuantity((reportTransactionEntity.getAmount().stripTrailingZeros().toPlainString()));
-        statementObject.setBalance((reportTransactionEntity.getAvailableBalance().stripTrailingZeros().toPlainString()));
-        statementObject.setCreateTime(DateUtils.getLocaleDate(DateUtils.FARSI_LOCALE, reportTransactionEntity.getCreatedAt(), FORMAT_DATE_RESPONSE, false));
-        statementObject.setDescription(reportTransactionEntity.getDescription());
-        return statementObject;
     }
 
 

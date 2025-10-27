@@ -129,9 +129,8 @@ public class PurchaseOperationServiceImplementation implements PurchaseOperation
         WalletAccountCurrencyEntity rialCurrencyEntity = walletAccountCurrencyRepositoryService.findCurrency(WalletAccountCurrencyRepositoryService.RIAL);
         log.info("Rial currency entity found - currency: {}, id: {}", rialCurrencyEntity.getName(), rialCurrencyEntity.getId());
 
-        log.info("=== COMMISSION VALIDATION ===");
         BigDecimal netAmount = sellRequestDTO.getAmount().subtract(sellRequestDTO.getCommission());
-        log.debug("Calculating net amount - amount: {}, commission: {}, netAmount: {}", 
+        log.info("Calculating net amount - amount: {}, commission: {}, netAmount: {}",
             sellRequestDTO.getAmount(), sellRequestDTO.getCommission(), netAmount);
         
         if(netAmount.compareTo(new BigDecimal("0")) <= 0){

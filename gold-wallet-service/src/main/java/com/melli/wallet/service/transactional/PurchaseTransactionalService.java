@@ -236,6 +236,30 @@ public class PurchaseTransactionalService {
         return request;
     }
 
+    /**
+     * 1) User sends: quantity, price, commission
+     * 2) Database changes:
+     * user: - (price + commission)
+     * merchant: + quantity (gold sold)
+     * channel: + commission (wage)
+     * merchant: + price (cash received)
+     * Example:
+     User Rial Account: - (price + commission)
+     User Gold Account: +quantity
+     Merchant Rial Account: +price
+     Merchant Gold Account: -quantity
+     Channel Commission Account: +commission
+     * channel: +500 RIAL commission
+     * merchant: +10,000 RIAL
+     * @param purchaseRequest
+     * @param userRialAccount
+     * @param userCurrencyAccount
+     * @param merchantRialAccount
+     * @param merchantCurrencyAccount
+     * @param channelCommissionAccount
+     * @param commission
+     * @throws InternalServiceException
+     */
     private void buyProcessTransactions(
             PurchaseRequestEntity purchaseRequest, WalletAccountEntity userRialAccount,
             WalletAccountEntity userCurrencyAccount, WalletAccountEntity merchantRialAccount,

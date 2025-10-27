@@ -216,7 +216,7 @@ public class Person2PersonOperationServiceImplementation implements Person2Perso
                 log.info("P2P request entity saved successfully - requestId: {}", requestEntity.getId());
             } catch (Exception ex) {
                 log.error("Failed to save P2P request - error: {}", ex.getMessage());
-                throw new InternalServiceException("error in save cashIn", StatusRepositoryService.GENERAL_ERROR, HttpStatus.OK);
+                throw new InternalServiceException("error in save P2P", StatusRepositoryService.GENERAL_ERROR, HttpStatus.OK);
             }
             
             requestEntity.setResult(StatusRepositoryService.SUCCESSFUL);

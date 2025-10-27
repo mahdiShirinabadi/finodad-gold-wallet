@@ -26,6 +26,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -271,8 +272,106 @@ class P2pControllerTest extends WalletApplicationTests {
         chargeAccountForP2PToZero(sourceAccount.getAccountNumber());
     }
 
+    /**
+     * Test to verify all database values and balances after successful P2P transaction.
+     * This comprehensive test verifies:
+     * - Source account decreased by (quantity + commission)
+     * - Destination account increased by quantity
+     * - Channel commission account increased by commission
+     */
     @Test
     @Order(21)
+    @DisplayName("p2pProcess-VerifyAllBalances")
+    void p2pProcessVerifyAllBalances() throws Exception {
+        log.info("=== Starting P2P balance verification test ===");
+        
+        // Step 1: Setup test parameters
+        String quantity = "0.5";
+        String commission = "0.01";
+        String currency = CURRENCY_GOLD;
+        String additionalData = "balance-verification-test";
+        
+        // Step 2: Get source and destination accounts
+        WalletAccountObject sourceAccount = getAccountNumber(mockMvc, accessToken, NATIONAL_CODE_CORRECT, 
+            WalletAccountTypeRepositoryService.NORMAL, CURRENCY_GOLD);
+        WalletAccountObject destAccount = getAccountNumber(mockMvc, accessToken, NATIONAL_CODE_DEST, 
+            WalletAccountTypeRepositoryService.NORMAL, CURRENCY_GOLD);
+        
+        // Step 3: Get channel for commission account
+        ChannelEntity channel = channelRepositoryService.findByUsername(USERNAME_CORRECT);
+        WalletAccountEntity channelCommissionAccount = walletAccountRepositoryService.findChannelCommissionAccount(
+            channel, WalletAccountCurrencyRepositoryService.GOLD);
+        
+        // Step 4: Setup source account balance
+        WalletAccountEntity sourceAccountEntity = walletAccountRepositoryService.findByAccountNumber(sourceAccount.getAccountNumber());
+        walletAccountRepositoryService.increaseBalance(sourceAccountEntity.getId(), new BigDecimal("10.0"));
+        
+        // Step 5: Get initial balances
+        BigDecimal initialSourceBalance = walletAccountRepositoryService.getBalance(sourceAccountEntity.getId()).getRealBalance();
+        BigDecimal initialDestBalance = walletAccountRepositoryService.getBalance(
+            walletAccountRepositoryService.findByAccountNumber(destAccount.getAccountNumber()).getId()).getRealBalance();
+        BigDecimal initialChannelCommission = walletAccountRepositoryService.getBalance(channelCommissionAccount.getId()).getRealBalance();
+        
+        log.info("=== Initial Balances ===");
+        log.info("Source: {}", initialSourceBalance);
+        log.info("Destination: {}", initialDestBalance);
+        log.info("Channel Commission: {}", initialChannelCommission);
+        
+        // Step 6: Generate P2P UUID
+        BaseResponse<P2pUuidResponse> uuidResponse = generateP2pUuid(mockMvc, accessToken, NATIONAL_CODE_CORRECT, 
+            quantity, sourceAccount.getAccountNumber(), destAccount.getAccountNumber(), HttpStatus.OK, 
+            StatusRepositoryService.SUCCESSFUL, true);
+        
+        // Step 7: Execute P2P transaction
+        CommissionObject commissionObj = new CommissionObject("GOLD", commission);
+        BaseResponse<Void> p2pResponse = processP2p(mockMvc, accessToken, uuidResponse.getData().getUniqueIdentifier(), 
+            NATIONAL_CODE_CORRECT, quantity, sourceAccount.getAccountNumber(), destAccount.getAccountNumber(), 
+            additionalData, commissionObj, currency, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
+        
+        Assert.assertTrue("P2P should succeed", p2pResponse.getSuccess());
+        
+        // Step 8: Get final balances
+        BigDecimal finalSourceBalance = walletAccountRepositoryService.getBalance(sourceAccountEntity.getId()).getRealBalance();
+        BigDecimal finalDestBalance = walletAccountRepositoryService.getBalance(
+            walletAccountRepositoryService.findByAccountNumber(destAccount.getAccountNumber()).getId()).getRealBalance();
+        BigDecimal finalChannelCommission = walletAccountRepositoryService.getBalance(channelCommissionAccount.getId()).getRealBalance();
+        
+        log.info("=== Final Balances ===");
+        log.info("Source: {}", finalSourceBalance);
+        log.info("Destination: {}", finalDestBalance);
+        log.info("Channel Commission: {}", finalChannelCommission);
+        
+        // Step 9: Calculate expected values
+        BigDecimal p2pQuantity = new BigDecimal(quantity);
+        BigDecimal p2pCommission = new BigDecimal(commission);
+        BigDecimal totalDeduction = p2pQuantity.add(p2pCommission);
+        
+        // Step 10: Verify Source account decreased by (quantity + commission)
+        BigDecimal expectedSourceBalance = initialSourceBalance.subtract(totalDeduction);
+        Assert.assertEquals("Source should decrease by quantity + commission", 
+            expectedSourceBalance.setScale(5, RoundingMode.HALF_UP), 
+            finalSourceBalance.setScale(5, RoundingMode.HALF_UP));
+        
+        // Step 11: Verify Destination account increased by quantity
+        BigDecimal expectedDestBalance = initialDestBalance.add(p2pQuantity);
+        Assert.assertEquals("Destination should increase by quantity",
+            expectedDestBalance.setScale(5, RoundingMode.HALF_UP),
+            finalDestBalance.setScale(5, RoundingMode.HALF_UP));
+        
+        // Step 12: Verify Channel Commission increased by commission
+        BigDecimal expectedChannelCommission = initialChannelCommission.add(p2pCommission);
+        Assert.assertEquals("Channel Commission should increase by commission", 
+            expectedChannelCommission.setScale(5, RoundingMode.HALF_UP), 
+            finalChannelCommission.setScale(5, RoundingMode.HALF_UP));
+        
+        log.info("✓ All P2P balance verifications completed successfully!");
+        log.info("=== P2P balance verification test passed ===");
+        chargeAccountForP2PToZero(sourceAccount.getAccountNumber());
+        chargeAccountForP2PToZero(destAccount.getAccountNumber());
+    }
+
+    @Test
+    @Order(22)
     @DisplayName("p2pProcess-Fail-InvalidUUID")
     void p2pProcessFailInvalidUUID() throws Exception {
         // Step 1: Get account numbers

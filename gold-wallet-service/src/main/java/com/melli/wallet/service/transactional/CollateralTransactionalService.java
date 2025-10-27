@@ -282,7 +282,7 @@ public class CollateralTransactionalService {
             requestRepositoryService.save(cashOutRequestEntity);
         } catch (Exception ex) {
             log.error("error in save cashOut with message ({})", ex.getMessage());
-            throw new InternalServiceException("error in save cashIn", StatusRepositoryService.GENERAL_ERROR, HttpStatus.OK);
+            throw new InternalServiceException("error in save cashOutRequestEntity", StatusRepositoryService.GENERAL_ERROR, HttpStatus.OK);
         }
         cashOutRequestEntity.setResult(StatusRepositoryService.SUCCESSFUL);
         cashOutRequestEntity.setAdditionalData(cashOutRequestEntity.getAdditionalData());

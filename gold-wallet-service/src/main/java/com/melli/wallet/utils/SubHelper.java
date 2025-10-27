@@ -8,6 +8,7 @@ import com.melli.wallet.domain.response.limitation.GeneralCustomLimitationObject
 import com.melli.wallet.domain.response.limitation.GeneralLimitationObject;
 import com.melli.wallet.domain.response.purchase.MerchantObject;
 import com.melli.wallet.domain.response.transaction.ReportTransactionObject;
+import com.melli.wallet.domain.response.transaction.StatementObject;
 import com.melli.wallet.domain.response.wallet.WalletAccountCurrencyObject;
 import com.melli.wallet.domain.response.wallet.WalletAccountTypeObject;
 import com.melli.wallet.domain.response.panel.PanelResourceObject;
@@ -233,6 +234,21 @@ public class SubHelper {
         statementObject.setCreateTime(DateUtils.getLocaleDate(DateUtils.FARSI_LOCALE, reportTransactionEntity.getCreatedAt(), FORMAT_DATE_RESPONSE, false));
         statementObject.setTransactionTypeDesc(requestTypeRepositoryService.getRequestTypeById(reportTransactionEntity.getRequestTypeId()).getFaName());
         statementObject.setDescription(reportTransactionEntity.getDescription());
+        return statementObject;
+    }
+
+    public StatementObject convertToStatementObject(ReportTransactionEntity reportTransactionEntity) {
+        StatementObject statementObject = new StatementObject();
+        statementObject.setId(String.valueOf(reportTransactionEntity.getId()));
+        statementObject.setAccountNumber(reportTransactionEntity.getWalletAccountEntity().getAccountNumber());
+        statementObject.setType(reportTransactionEntity.getType());
+        statementObject.setUniqueIdentifier(reportTransactionEntity.getRrnEntity().getUuid());
+        statementObject.setCurrency(reportTransactionEntity.getWalletAccountEntity().getWalletAccountCurrencyEntity().getName());
+        statementObject.setQuantity((reportTransactionEntity.getAmount().stripTrailingZeros().toPlainString()));
+        statementObject.setBalance((reportTransactionEntity.getAvailableBalance().stripTrailingZeros().toPlainString()));
+        statementObject.setCreateTime(DateUtils.getLocaleDate(DateUtils.FARSI_LOCALE, reportTransactionEntity.getCreatedAt(), FORMAT_DATE_RESPONSE, false));
+        statementObject.setDescription(reportTransactionEntity.getDescription());
+        statementObject.setTransactionTypeDesc(requestTypeRepositoryService.getRequestTypeById(reportTransactionEntity.getRequestTypeId()).getFaName());
         return statementObject;
     }
 }

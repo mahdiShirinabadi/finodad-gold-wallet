@@ -262,8 +262,8 @@ public class GiftCardOperationServiceImplementation implements GiftCardOperation
             try {
                 giftCardRepositoryService.save(giftCardEntity);
             } catch (Exception ex) {
-                log.error("error in save cashIn with message ({})", ex.getMessage());
-                throw new InternalServiceException("error in save cashIn", StatusRepositoryService.GENERAL_ERROR, HttpStatus.OK);
+                log.error("error in save giftCardRepositoryService with message ({})", ex.getMessage());
+                throw new InternalServiceException("error in save giftCardRepositoryService", StatusRepositoryService.GENERAL_ERROR, HttpStatus.OK);
             }
 
 

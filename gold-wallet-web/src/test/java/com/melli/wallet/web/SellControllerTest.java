@@ -25,6 +25,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Date;
 import java.util.List;
 import java.util.ArrayList;
@@ -303,6 +304,150 @@ class SellControllerTest extends WalletApplicationTests {
         // Step 6: Perform sell operation
         BaseResponse<PurchaseResponse> response = sell(mockMvc, accessToken, uniqueIdentifier, quantity, price, CURRENCY_GOLD, "0.01", NATIONAL_CODE_CORRECT, CURRENCY_GOLD, "1", goldAccountObject.getAccountNumber(), "", "test sell success", HttpStatus.OK, "IR123456789012345678901234", StatusRepositoryService.SUCCESSFUL, true);
         Assert.assertNotNull(response.getData());
+    }
+
+    /**
+     * Test to verify all database values and balances after successful sell.
+     * This comprehensive test verifies:
+     * - User Gold account decreased by (quantity + commission)
+     * - User Rial account increased by price
+     * - Merchant Gold account increased by quantity
+     * - Merchant Rial account decreased by price
+     * - Channel commission Gold account increased by commission
+     */
+    @Test
+    @Order(71)
+    @DisplayName("sell-VerifyAllBalances")
+    void sellVerifyAllBalances() throws Exception {
+        log.info("=== Starting sell balance verification test ===");
+        
+        // Step 1: Setup test parameters
+        String quantity = "0.995";
+        String commission = "0.005";
+        String price = "1000000";
+        String commissionType = "GOLD";
+        String currency = CURRENCY_GOLD;
+        String merchantId = "1";
+        String merchantNationalCode = "1111111111";
+        String iban = "IR123456789012345678901234";
+        String additionalData = "balance-verification-test";
+        
+        // Step 2: Get user accounts
+        WalletAccountObject userGoldAccount = getAccountNumber(mockMvc, accessToken, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.GOLD);
+        WalletAccountObject userRialAccount = getAccountNumber(mockMvc, accessToken, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.RIAL);
+
+        setupBalancesForSellToZero(userRialAccount.getAccountNumber());
+        setupBalancesForSellToZero(userGoldAccount.getAccountNumber());
+        // Step 3: Get merchant entities and accounts
+        WalletEntity merchantWallet = walletRepositoryService.findByNationalCodeAndWalletTypeId(
+            merchantNationalCode, walletTypeRepositoryService.getByName(WalletTypeRepositoryService.MERCHANT).getId());
+        List<WalletAccountEntity> merchantAccounts = walletAccountRepositoryService.findByWallet(merchantWallet);
+        
+        WalletAccountEntity merchantGoldAccount = merchantAccounts.stream()
+            .filter(acc -> acc.getWalletAccountCurrencyEntity().getName().equals(WalletAccountCurrencyRepositoryService.GOLD))
+            .findFirst().orElse(null);
+        WalletAccountEntity merchantRialAccount = merchantAccounts.stream()
+            .filter(acc -> acc.getWalletAccountCurrencyEntity().getName().equals(WalletAccountCurrencyRepositoryService.RIAL))
+            .findFirst().orElse(null);
+        
+        // Step 4: Setup user Gold balance
+        walletAccountRepositoryService.increaseBalance(
+            walletAccountRepositoryService.findByAccountNumber(userGoldAccount.getAccountNumber()).getId(), 
+            new BigDecimal("2.0"));
+        
+        // Step 5: Setup merchant Rial balance
+        walletAccountRepositoryService.increaseBalance(merchantRialAccount.getId(), new BigDecimal(price));
+        
+        // Step 6: Get channel for commission account
+        ChannelEntity channel = channelRepositoryService.findByUsername(USERNAME_CORRECT);
+        WalletAccountEntity channelCommissionAccount = walletAccountRepositoryService.findChannelCommissionAccount(
+            channel, WalletAccountCurrencyRepositoryService.GOLD);
+        
+        // Step 7: Get initial balances
+        BigDecimal initialUserGold = walletAccountRepositoryService.getBalance(
+            walletAccountRepositoryService.findByAccountNumber(userGoldAccount.getAccountNumber()).getId()).getRealBalance();
+        BigDecimal initialUserRial = walletAccountRepositoryService.getBalance(
+            walletAccountRepositoryService.findByAccountNumber(userRialAccount.getAccountNumber()).getId()).getRealBalance();
+        BigDecimal initialMerchantGold = walletAccountRepositoryService.getBalance(merchantGoldAccount.getId()).getRealBalance();
+        BigDecimal initialMerchantRial = walletAccountRepositoryService.getBalance(merchantRialAccount.getId()).getRealBalance();
+        BigDecimal initialChannelCommission = walletAccountRepositoryService.getBalance(channelCommissionAccount.getId()).getRealBalance();
+        
+        log.info("=== Initial Balances ===");
+        log.info("User Gold: {}", initialUserGold);
+        log.info("User Rial: {}", initialUserRial);
+        log.info("Merchant Gold: {}", initialMerchantGold);
+        log.info("Merchant Rial: {}", initialMerchantRial);
+        log.info("Channel Commission: {}", initialChannelCommission);
+        
+        // Step 8: Generate sell UUID
+        BaseResponse<UuidResponse> sellUuid = generateSellUniqueIdentifier(mockMvc, accessToken, NATIONAL_CODE_CORRECT, 
+            quantity, userGoldAccount.getAccountNumber(), currency, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
+        
+        // Step 9: Execute sell
+        BaseResponse<PurchaseResponse> sellResponse = sell(mockMvc, accessToken, sellUuid.getData().getUniqueIdentifier(), 
+            quantity, price, commissionType, commission, NATIONAL_CODE_CORRECT, currency, merchantId, 
+            userGoldAccount.getAccountNumber(), "", additionalData, HttpStatus.OK, iban, 
+            StatusRepositoryService.SUCCESSFUL, true);
+        
+        Assert.assertTrue("Sell should succeed", sellResponse.getSuccess());
+        
+        // Step 10: Get final balances
+        BigDecimal finalUserGold = walletAccountRepositoryService.getBalance(
+            walletAccountRepositoryService.findByAccountNumber(userGoldAccount.getAccountNumber()).getId()).getRealBalance();
+        BigDecimal finalUserRial = walletAccountRepositoryService.getBalance(
+            walletAccountRepositoryService.findByAccountNumber(userRialAccount.getAccountNumber()).getId()).getRealBalance();
+        BigDecimal finalMerchantGold = walletAccountRepositoryService.getBalance(merchantGoldAccount.getId()).getRealBalance();
+        BigDecimal finalMerchantRial = walletAccountRepositoryService.getBalance(merchantRialAccount.getId()).getRealBalance();
+        BigDecimal finalChannelCommission = walletAccountRepositoryService.getBalance(channelCommissionAccount.getId()).getRealBalance();
+        
+        log.info("=== Final Balances ===");
+        log.info("User Gold: {}", finalUserGold);
+        log.info("User Rial: {}", finalUserRial);
+        log.info("Merchant Gold: {}", finalMerchantGold);
+        log.info("Merchant Rial: {}", finalMerchantRial);
+        log.info("Channel Commission: {}", finalChannelCommission);
+        
+        // Step 11: Calculate expected values
+        BigDecimal sellQuantity = new BigDecimal(quantity);
+        BigDecimal sellPrice = new BigDecimal(price);
+        BigDecimal sellCommission = new BigDecimal(commission);
+        BigDecimal totalDeduction = sellQuantity.add(sellCommission);
+        
+        // Step 12: Verify User Gold decreased by (quantity + commission)
+        BigDecimal expectedUserGold = initialUserGold.subtract(totalDeduction);
+        Assert.assertEquals("User Gold should decrease by quantity + commission", 
+            expectedUserGold.setScale(5, RoundingMode.HALF_UP), 
+            finalUserGold.setScale(5, RoundingMode.HALF_UP));
+        
+        // Step 13: Verify User Rial increased by price
+        BigDecimal expectedUserRial = initialUserRial.add(sellPrice);
+        Assert.assertEquals("User Rial should increase by price",
+            expectedUserRial.setScale(5, RoundingMode.HALF_UP),
+            finalUserRial.setScale(5, RoundingMode.HALF_UP));
+        
+        // Step 14: Verify Merchant Gold increased by quantity
+        BigDecimal expectedMerchantGold = initialMerchantGold.add(sellQuantity);
+        Assert.assertEquals("Merchant Gold should increase by quantity", 
+            expectedMerchantGold.setScale(5, RoundingMode.HALF_UP), 
+            finalMerchantGold.setScale(5, RoundingMode.HALF_UP));
+        
+        // Step 15: Verify Merchant Rial decreased by price
+        BigDecimal expectedMerchantRial = initialMerchantRial.subtract(sellPrice);
+        Assert.assertEquals("Merchant Rial should decrease by price", 
+            expectedMerchantRial.setScale(5, RoundingMode.HALF_UP), 
+            finalMerchantRial.setScale(5, RoundingMode.HALF_UP));
+        
+        // Step 16: Verify Channel Commission increased by commission
+        BigDecimal expectedChannelCommission = initialChannelCommission.add(sellCommission);
+        Assert.assertEquals("Channel Commission should increase by commission", 
+            expectedChannelCommission.setScale(5, RoundingMode.HALF_UP), 
+            finalChannelCommission.setScale(5, RoundingMode.HALF_UP));
+        
+        log.info("✓ All balance verifications completed successfully!");
+        log.info("=== sell balance verification test passed ===");
+
+        setupBalancesForSellToZero(userRialAccount.getAccountNumber());
+        setupBalancesForSellToZero(userGoldAccount.getAccountNumber());
     }
 
     /**
@@ -1059,7 +1204,7 @@ class SellControllerTest extends WalletApplicationTests {
         // Get account number
         WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, accessToken, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.GOLD);
 
-        setupBalancesForSellToZero(walletAccountObjectOptional);
+        setupBalancesForSellToZero(walletAccountObjectOptional.getAccountNumber());
         // Setup sufficient balances
         setupBalancesForSell(walletAccountObjectOptional, "2.02", "2000000");
 
@@ -1226,9 +1371,9 @@ class SellControllerTest extends WalletApplicationTests {
     /**
      * Helper method to setup balances for sell operations
      */
-    private void setupBalancesForSellToZero(WalletAccountObject walletAccountObjectOptional) {
+    private void setupBalancesForSellToZero(String walletAccountNumber) {
         // Ensure user has enough GOLD balance for selling
-        WalletAccountEntity goldWalletAccountEntity = walletAccountRepositoryService.findByAccountNumber(walletAccountObjectOptional.getAccountNumber());
+        WalletAccountEntity goldWalletAccountEntity = walletAccountRepositoryService.findByAccountNumber(walletAccountNumber);
         BigDecimal balance = walletAccountRepositoryService.getBalance(goldWalletAccountEntity.getId()).getRealBalance();
         walletAccountRepositoryService.decreaseBalance(goldWalletAccountEntity.getId(), balance);
     }
@@ -1244,7 +1389,7 @@ class SellControllerTest extends WalletApplicationTests {
         for (SellResult result : successfulResults) {
             log.info("✓ Thread {}: SUCCESS - Transaction completed successfully", result.threadId);
             if (result.response != null && result.response.getData() != null) {
-                log.debug("  └─ Response data: {}", result.response.getData());
+                log.info("  └─ Response data: {}", result.response.getData());
             }
         }
         
@@ -1253,10 +1398,10 @@ class SellControllerTest extends WalletApplicationTests {
         for (SellResult result : failedResults) {
             log.info("✗ Thread {}: FAILED - Error code: {}", result.threadId, result.errorCode);
             if (result.exception != null) {
-                log.debug("  └─ Exception: {}", result.exception.getMessage());
+                log.info("  └─ Exception: {}", result.exception.getMessage());
             }
             if (result.response != null && result.response.getErrorDetail() != null) {
-                log.debug("  └─ Error detail: {}", result.response.getErrorDetail());
+                log.info("  └─ Error detail: {}", result.response.getErrorDetail());
             }
         }
         
@@ -1325,7 +1470,7 @@ class SellControllerTest extends WalletApplicationTests {
         // Step 7: Set maximum quantity to allow this transaction
         setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MAX_QUANTITY_SELL, walletAccountEntity, "10.0");
         // Step 8: Set daily quantity limitation to allow this transaction
-        setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MAX_DAILY_QUANTITY_SELL, walletAccountEntity, "6.0");
+        setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MAX_DAILY_QUANTITY_SELL, walletAccountEntity, "10.0");
         // Step 9: Set daily count limitation to allow this transaction
         setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MAX_DAILY_COUNT_SELL, walletAccountEntity, "10");
         // Step 10: Set monthly quantity limitation to allow this transaction

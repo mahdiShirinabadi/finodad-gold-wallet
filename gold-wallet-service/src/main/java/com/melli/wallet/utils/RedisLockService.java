@@ -73,6 +73,7 @@ public class RedisLockService {
             long totalTime = System.currentTimeMillis() - lockStartTime;
             log.error("Unexpected error during lock operation - lockKey: {}, traceId: {}, class: {}, error: {}, totalTime: {}ms", 
                 lockKey, traceNumber, tClass.getSimpleName(), e.getMessage(), totalTime);
+            log.error(e);
             throw e;
         } finally {
             if (lockSuccess) {

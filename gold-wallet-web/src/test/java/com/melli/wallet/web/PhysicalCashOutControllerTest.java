@@ -24,6 +24,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Date;
 import java.util.List;
 import java.util.ArrayList;
@@ -301,6 +302,114 @@ class PhysicalCashOutControllerTest extends WalletApplicationTests {
     }
 
     /**
+     * Test to verify all database values and balances after successful physical cash out.
+     * This comprehensive test verifies:
+     * - User Gold account decreased by (quantity + commission)
+     * - Channel commission Gold account increased by commission
+     */
+    @Test
+    @Order(41)
+    @DisplayName("physicalCashOut-VerifyAllBalances")
+    void physicalCashOutVerifyAllBalances() throws Exception {
+        log.info("=== Starting physical cash out balance verification test ===");
+        
+        // Step 1: Setup test parameters
+        String quantity = "1.0";
+        String commission = "0.05";
+        String currency = CURRENCY_GOLD;
+        String sign = VALID_SIGN;
+        String additionalData = "balance-verification-test";
+        
+        // Step 2: Get user Gold account
+        WalletAccountObject userGoldAccount = getAccountNumber(mockMvc, accessToken, NATIONAL_CODE_CORRECT, 
+            WalletAccountTypeRepositoryService.NORMAL, WalletAccountCurrencyRepositoryService.GOLD);
+        
+        // Step 3: Get channel for commission account
+        ChannelEntity channel = channelRepositoryService.findByUsername(USERNAME_CORRECT);
+        WalletAccountEntity channelCommissionAccount = walletAccountRepositoryService.findChannelCommissionAccount(
+            channel, WalletAccountCurrencyRepositoryService.GOLD);
+        
+        // Step 4: Setup user Gold balance
+        WalletAccountEntity userGoldAccountEntity = walletAccountRepositoryService.findByAccountNumber(userGoldAccount.getAccountNumber());
+        walletAccountRepositoryService.increaseBalance(userGoldAccountEntity.getId(), new BigDecimal("5.0"));
+        
+        // Step 5: Enable physical cash out permission if disabled
+        String physicalCashOutValue = getLimitationSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, 
+            channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.ENABLE_PHYSICAL_CASH_OUT, userGoldAccount.getAccountNumber());
+        if("false".equalsIgnoreCase(physicalCashOutValue)){
+            setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.ENABLE_PHYSICAL_CASH_OUT, 
+                userGoldAccountEntity, "true");
+        }
+
+        String valueMinDailyPrice = getLimitationSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService,
+                channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.MIN_QUANTITY_PHYSICAL_CASH_OUT, userGoldAccount.getAccountNumber());
+        setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MIN_QUANTITY_PHYSICAL_CASH_OUT,
+                userGoldAccountEntity, "1");
+
+        String valueMaxDailyPrice = getLimitationSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, 
+            channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.MAX_QUANTITY_PHYSICAL_CASH_OUT, userGoldAccount.getAccountNumber());
+        setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MAX_QUANTITY_PHYSICAL_CASH_OUT, 
+            userGoldAccountEntity, "10");
+        
+        // Step 6: Get initial balances
+        BigDecimal initialUserGold = walletAccountRepositoryService.getBalance(userGoldAccountEntity.getId()).getRealBalance();
+        BigDecimal initialChannelCommission = walletAccountRepositoryService.getBalance(channelCommissionAccount.getId()).getRealBalance();
+        
+        log.info("=== Initial Balances ===");
+        log.info("User Gold: {}", initialUserGold);
+        log.info("Channel Commission: {}", initialChannelCommission);
+        
+        // Step 7: Generate physical cash out UUID
+        BaseResponse<UuidResponse> uuidResponse = generatePhysicalCashOutUuid(mockMvc, accessToken, NATIONAL_CODE_CORRECT, 
+            quantity, userGoldAccount.getAccountNumber(), HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true, currency);
+        
+        // Step 8: Execute physical cash out
+        BaseResponse<PhysicalCashOutResponse> response = physicalCashOut(mockMvc, accessToken, 
+            uuidResponse.getData().getUniqueIdentifier(), quantity, NATIONAL_CODE_CORRECT, userGoldAccount.getAccountNumber(), 
+            "", sign, additionalData, currency, commission, currency, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
+        
+        Assert.assertTrue("Physical cash out should succeed", response.getSuccess());
+        
+        // Step 9: Get final balances
+        BigDecimal finalUserGold = walletAccountRepositoryService.getBalance(userGoldAccountEntity.getId()).getRealBalance();
+        BigDecimal finalChannelCommission = walletAccountRepositoryService.getBalance(channelCommissionAccount.getId()).getRealBalance();
+        
+        log.info("=== Final Balances ===");
+        log.info("User Gold: {}", finalUserGold);
+        log.info("Channel Commission: {}", finalChannelCommission);
+        
+        // Step 10: Calculate expected values
+        BigDecimal cashOutQuantity = new BigDecimal(quantity);
+        BigDecimal cashOutCommission = new BigDecimal(commission);
+        BigDecimal totalDeduction = cashOutQuantity.add(cashOutCommission);
+        
+        // Step 11: Verify User Gold decreased by (quantity + commission)
+        BigDecimal expectedUserGold = initialUserGold.subtract(totalDeduction);
+        Assert.assertEquals("User Gold should decrease by quantity + commission", 
+            expectedUserGold.setScale(5, RoundingMode.HALF_UP), 
+            finalUserGold.setScale(5, RoundingMode.HALF_UP));
+        
+        // Step 12: Verify Channel Commission increased by commission
+        BigDecimal expectedChannelCommission = initialChannelCommission.add(cashOutCommission);
+        Assert.assertEquals("Channel Commission should increase by commission", 
+            expectedChannelCommission.setScale(5, RoundingMode.HALF_UP), 
+            finalChannelCommission.setScale(5, RoundingMode.HALF_UP));
+        
+        // Step 13: Restore original MAX_QUANTITY_PHYSICAL_CASH_OUT and MIN_QUANTITY_PHYSICAL_CASH_OUT limit
+        setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MAX_QUANTITY_PHYSICAL_CASH_OUT, 
+            userGoldAccountEntity, valueMaxDailyPrice);
+        setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MIN_QUANTITY_PHYSICAL_CASH_OUT,
+                userGoldAccountEntity, valueMinDailyPrice);
+
+
+        
+        log.info("All physical cash out balance verifications completed successfully!");
+        log.info("=== physical cash out balance verification test passed ===");
+
+        setupBalancesForSellToZero(userGoldAccount.getAccountNumber());
+    }
+
+    /**
      * Test physical cash out failure with invalid UUID.
      * This method:
      * - Attempts physical cash out with a non-existent UUID
@@ -518,7 +627,7 @@ class PhysicalCashOutControllerTest extends WalletApplicationTests {
         log.info("Generated UUID: {}", sharedUniqueIdentifier);
         
         // Test with 2 threads using the same UUID
-        final CountDownLatch latch = new CountDownLatch(2);
+        final CountDownLatch latch = new CountDownLatch(3);
         final List<PhysicalCashOutResult> results = new ArrayList<>();
         
         // Thread 1
@@ -590,12 +699,47 @@ class PhysicalCashOutControllerTest extends WalletApplicationTests {
                 log.info("Physical Cash Out Thread 2 countDown called");
             }
         });
+
+        Thread thread3 = new Thread(() -> {
+            try {
+                log.info("Physical Cash Out Thread 3 starting...");
+                BaseResponse<PhysicalCashOutResponse> response3 = physicalCashOutWithoutCheckResult(mockMvc, accessToken, sharedUniqueIdentifier, quantity,NATIONAL_CODE_CORRECT, walletAccountObjectOptional.getAccountNumber(), additionalData + "_2",sign,"", currency, commission,commissionType);
+
+                PhysicalCashOutResult result3 = new PhysicalCashOutResult();
+                result3.threadId = 3;
+                result3.success = response3.getSuccess();
+                result3.errorCode = response3.getSuccess() ? StatusRepositoryService.SUCCESSFUL : response3.getErrorDetail().getCode();
+                result3.response = response3;
+
+                synchronized (results) {
+                    results.add(result3);
+                    log.info("Physical Cash Out Thread 3 added result to collection. Collection size now: {}", results.size());
+                }
+                log.info("Physical Cash Out Thread 3 completed: Success={}, ErrorCode={}", result3.success, result3.errorCode);
+
+            } catch (Exception e) {
+                log.error("Physical Cash Out Thread 3 exception: {}", e.getMessage(), e);
+                PhysicalCashOutResult result3 = new PhysicalCashOutResult();
+                result3.threadId = 2;
+                result3.success = false;
+                result3.errorCode = -999;
+                result3.exception = e;
+                synchronized (results) {
+                    results.add(result3);
+                    log.info("Physical Cash Out Thread 3 added exception result to collection. Collection size now: {}", results.size());
+                }
+            } finally {
+                latch.countDown();
+                log.info("Physical Cash Out Thread 3 countDown called");
+            }
+        });
         
         // Start both threads
         log.info("Starting both physical cash out threads...");
         thread1.start();
         thread2.start();
-        
+        thread3.start();
+
         // Wait and analyze
         log.info("Waiting for threads to complete...");
         latch.await();
@@ -608,21 +752,19 @@ class PhysicalCashOutControllerTest extends WalletApplicationTests {
         }
         
         // Validation
-        Assert.assertEquals("Should have exactly 2 results", 2, results.size());
+        Assert.assertEquals("Should have exactly 3 results", 3, results.size());
         
         // Check concurrency behavior: one should succeed, one should fail with duplicate UUID error
         long successCount = results.stream().filter(r -> r.success).count();
         long failureCount = results.stream().filter(r -> !r.success).count();
         
         log.info("Success count: {}, Failure count: {}", successCount, failureCount);
-        Assert.assertTrue("Should have exactly 1 success and 1 failure", successCount == 1 && failureCount == 1);
+        Assert.assertTrue("Should have exactly 1 success and 1 failure", successCount == 1 && failureCount == 2);
         
         // Verify the failure is due to duplicate UUID
-        PhysicalCashOutResult failedResult = results.stream().filter(r -> !r.success).findFirst().orElse(null);
-        Assert.assertNotNull("Should have a failed result", failedResult);
-        Assert.assertEquals(StatusRepositoryService.DUPLICATE_UUID, failedResult.errorCode);
-        log.info("Failed result error code: {}", failedResult.errorCode);
-        
+        long failedResult = results.stream().filter(r -> !r.success).filter(x->x.errorCode == StatusRepositoryService.DUPLICATE_UUID).count();
+        Assert.assertEquals(failedResult, 2);
+
         log.info("=== Concurrent Physical Cash Out Test Completed ===");
     }
 
@@ -808,7 +950,7 @@ class PhysicalCashOutControllerTest extends WalletApplicationTests {
 
         // Get account
         WalletAccountObject walletAccountObjectOptional = getAccountNumber(mockMvc, accessToken, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, currency);
-        setupBalancesForSellToZero(walletAccountObjectOptional);
+        setupBalancesForSellToZero(walletAccountObjectOptional.getAccountNumber());
         setupBalancesForSell(walletAccountObjectOptional,"10.1","1000000");
 
         int numberOfThreads = 10;
@@ -1034,9 +1176,9 @@ class PhysicalCashOutControllerTest extends WalletApplicationTests {
     /**
      * Helper method to setup balances for sell operations
      */
-    private void setupBalancesForSellToZero(WalletAccountObject walletAccountObjectOptional) {
+    private void setupBalancesForSellToZero(String walletAccountNumber) {
         // Ensure user has enough GOLD balance for selling
-        WalletAccountEntity goldWalletAccountEntity = walletAccountRepositoryService.findByAccountNumber(walletAccountObjectOptional.getAccountNumber());
+        WalletAccountEntity goldWalletAccountEntity = walletAccountRepositoryService.findByAccountNumber(walletAccountNumber);
         BigDecimal balance = walletAccountRepositoryService.getBalance(goldWalletAccountEntity.getId()).getRealBalance();
         walletAccountRepositoryService.decreaseBalance(goldWalletAccountEntity.getId(), balance);
     }

@@ -14,6 +14,8 @@ import java.util.Optional;
 @Repository
 public interface PhysicalCashOutRequestRepository extends CrudRepository<PhysicalCashOutRequestEntity, Long> {
 
+    @Query(value = "select request_id from {h-schema}physical_cash_out_request p where p.rrn_id=:traceId", nativeQuery = true)
+    Long findByRrnEntityIdNative(@Param("traceId") long traceId);
     PhysicalCashOutRequestEntity findByRrnEntityId(long traceId);
     Optional<PhysicalCashOutRequestEntity> findOptionalByRrnEntityId(long traceId);
     PhysicalCashOutRequestEntity findByRrnEntity(RrnEntity rrn);
