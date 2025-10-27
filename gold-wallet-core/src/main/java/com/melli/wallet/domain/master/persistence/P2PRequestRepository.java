@@ -14,6 +14,9 @@ import java.util.Optional;
 @Repository
 public interface P2PRequestRepository extends CrudRepository<Person2PersonRequestEntity, Long> {
 
+    @Query(value = "select request_id from {h-schema}p_2_p_request p where p.rrn_id=:traceId", nativeQuery = true)
+    Long findByRrnEntityIdNative(@Param("traceId") long traceId);
+
     Person2PersonRequestEntity findByRrnEntityId(long traceId);
     Optional<Person2PersonRequestEntity> findOptionalByRrnEntityId(long traceId);
     Person2PersonRequestEntity findByRrnEntity(RrnEntity rrn);

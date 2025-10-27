@@ -69,7 +69,7 @@ public class CollateralTransactionalService {
         String uniqueIdentifier = requestEntity.getRrnEntity().getUuid();
         log.info("Starting Redis lock acquisition for account: {}", key);
         
-        redisLockService.runAfterLock(key, this.getClass(), () -> {
+        redisLockService.runWithLockUntilCommit(key, this.getClass(), () -> {
             log.info("=== LOCK ACQUIRED - STARTING UNBLOCK AND TRANSFER CRITICAL SECTION ===");
             log.info("Processing unblock and transfer transactions for uniqueIdentifier: {}", requestEntity.getRrnEntity().getUuid());
             

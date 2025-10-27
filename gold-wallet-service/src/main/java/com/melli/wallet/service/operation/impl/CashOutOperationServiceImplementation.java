@@ -91,8 +91,9 @@ public class CashOutOperationServiceImplementation implements CashOutOperationSe
         RrnEntity rrnEntity = rrnRepositoryService.findByUid(cashOutObjectDTO.getUniqueIdentifier());
         log.debug("RRN entity found - rrnId: {}, uuid: {}", rrnEntity.getId(), rrnEntity.getUuid());
 
+        // Use runWithLockUntilCommit to hold lock until transaction commits, ensuring other threads see the saved record
         log.info("Starting Redis lock acquisition for account: {}", cashOutObjectDTO.getAccountNumber());
-        return redisLockService.runAfterLock(cashOutObjectDTO.getAccountNumber(), this.getClass(), () -> {
+        return redisLockService.runWithLockUntilCommit(cashOutObjectDTO.getAccountNumber(), this.getClass(), () -> {
             log.info("=== LOCK ACQUIRED - STARTING CASH OUT CRITICAL SECTION ===");
             log.info("start checking existence of traceId({}) ...", cashOutObjectDTO.getUniqueIdentifier());
             rrnRepositoryService.checkRrn(cashOutObjectDTO.getUniqueIdentifier(), cashOutObjectDTO.getChannel(), requestTypeEntity, String.valueOf(cashOutObjectDTO.getAmount()), cashOutObjectDTO.getAccountNumber());
@@ -267,11 +268,13 @@ public class CashOutOperationServiceImplementation implements CashOutOperationSe
 
         RrnEntity rrnEntity = rrnRepositoryService.findByUid(physicalCashOutObjectDTO.getUniqueIdentifier());
 
-        return redisLockService.runAfterLock(physicalCashOutObjectDTO.getAccountNumber(), this.getClass(), () -> {
+        // Use runWithLockUntilCommit to hold lock until transaction commits, ensuring other threads see the saved record
+        return redisLockService.runWithLockUntilCommit(physicalCashOutObjectDTO.getAccountNumber(), this.getClass(), () -> {
             log.info("start physicalWithdrawal checking existence of traceId({}) ...", physicalCashOutObjectDTO.getUniqueIdentifier());
             rrnRepositoryService.checkRrn(physicalCashOutObjectDTO.getUniqueIdentifier(), physicalCashOutObjectDTO.getChannel(), requestTypeEntity, String.valueOf(physicalCashOutObjectDTO.getQuantity()), physicalCashOutObjectDTO.getAccountNumber());
             log.info("finish physicalWithdrawal checking existence of traceId({})", physicalCashOutObjectDTO.getUniqueIdentifier());
 
+            // Check for duplicate INSIDE the lock - this ensures we see uncommitted records from other threads
             requestRepositoryService.findPhysicalCashOutDuplicateWithRrnId(rrnEntity.getId());
 
             WalletAccountEntity walletAccountEntity = helper.checkWalletAndWalletAccountForNormalUser(walletRepositoryService, rrnEntity.getNationalCode(), walletAccountRepositoryService, physicalCashOutObjectDTO.getAccountNumber());
@@ -292,6 +295,7 @@ public class CashOutOperationServiceImplementation implements CashOutOperationSe
             physicalCashOutRequestEntity.setCreatedAt(new Date());
             try {
                 requestRepositoryService.save(physicalCashOutRequestEntity);
+                log.info("Physical cash out request saved with id: {}, rrnId: {}", physicalCashOutRequestEntity.getId(), physicalCashOutRequestEntity.getRrnEntity().getId());
             } catch (Exception ex) {
                 log.error("error in save physicalCashOutRequestEntity with message ({})", ex.getMessage());
                 throw new InternalServiceException("error in save cashIn", StatusRepositoryService.GENERAL_ERROR, HttpStatus.OK);

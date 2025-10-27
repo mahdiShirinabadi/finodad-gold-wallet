@@ -82,7 +82,7 @@ public class StockRepositoryServiceImplementation implements StockRepositoryServ
 
         String key = String.valueOf(stockEntity.getId());
 
-        redisLockService.runAfterLock(key, this.getClass(), () -> {
+        redisLockService.runWithLockUntilCommit(key, this.getClass(), () -> {
             StockHistoryEntity stockHistoryEntity = new StockHistoryEntity();
             stockHistoryEntity.setAmount(transaction.getAmount());
             stockHistoryEntity.setStockEntity(stockEntity);
@@ -114,7 +114,7 @@ public class StockRepositoryServiceImplementation implements StockRepositoryServ
 
         String key = String.valueOf(stockEntity.getId());
 
-        redisLockService.runAfterLock(key, this.getClass(), () -> {
+        redisLockService.runWithLockUntilCommit(key, this.getClass(), () -> {
             StockHistoryEntity stockHistoryEntity = new StockHistoryEntity();
             stockHistoryEntity.setAmount(transaction.getAmount());
             stockHistoryEntity.setStockEntity(stockEntity);

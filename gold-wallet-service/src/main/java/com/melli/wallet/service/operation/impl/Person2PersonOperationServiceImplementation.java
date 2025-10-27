@@ -139,7 +139,7 @@ public class Person2PersonOperationServiceImplementation implements Person2Perso
         log.debug("RRN entity found - rrnId: {}, uuid: {}", rrnEntity.getId(), rrnEntity.getUuid());
 
         log.info("Starting Redis lock acquisition for account: {}", p2pObjectDTO.getAccountNumber());
-        redisLockService.runAfterLock(p2pObjectDTO.getAccountNumber(), this.getClass(), () -> {
+        redisLockService.runWithLockUntilCommit(p2pObjectDTO.getAccountNumber(), this.getClass(), () -> {
             log.info("=== LOCK ACQUIRED - STARTING P2P PROCESS CRITICAL SECTION ===");
             log.info("Checking existence of traceId: {}", p2pObjectDTO.getUniqueIdentifier());
             rrnRepositoryService.checkRrn(p2pObjectDTO.getUniqueIdentifier(), p2pObjectDTO.getChannel(), requestTypeEntity, String.valueOf(p2pObjectDTO.getQuantity()), p2pObjectDTO.getAccountNumber());

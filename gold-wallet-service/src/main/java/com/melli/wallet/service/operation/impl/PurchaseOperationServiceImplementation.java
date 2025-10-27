@@ -366,7 +366,7 @@ public class PurchaseOperationServiceImplementation implements PurchaseOperation
         walletBuyLimitationOperationService.checkDailyLimitation(buyRequestDTO.getChannel(), userCurrencyAccount.getWalletEntity(), buyRequestDTO.getQuantity(), userCurrencyAccount, buyRequestDTO.getUniqueIdentifier(), walletAccountCurrencyRepositoryService.findCurrency(buyRequestDTO.getCurrency()));
         walletBuyLimitationOperationService.checkMonthlyLimitation(buyRequestDTO.getChannel(), userCurrencyAccount.getWalletEntity(), buyRequestDTO.getQuantity(), userCurrencyAccount, buyRequestDTO.getUniqueIdentifier(), walletAccountCurrencyRepositoryService.findCurrency(buyRequestDTO.getCurrency()));
 
-        return redisLockService.runAfterLock(buyRequestDTO.getWalletAccountNumber(), this.getClass(), () -> purchaseTransactionalService.processBuy(new PurchaseObjectDto(
+        return redisLockService.runWithLockUntilCommit(buyRequestDTO.getWalletAccountNumber(), this.getClass(), () -> purchaseTransactionalService.processBuy(new PurchaseObjectDto(
                         buyRequestDTO.getChannel(),
                         buyRequestDTO.getUniqueIdentifier(),
                         buyRequestDTO.getQuantity(),

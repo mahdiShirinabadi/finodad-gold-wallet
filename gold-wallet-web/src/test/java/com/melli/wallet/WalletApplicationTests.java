@@ -874,7 +874,7 @@ public class WalletApplicationTests {
         return objectMapper.readValue(response, typeReference);
     }
 
-    public BaseResponse<ObjectUtils.Null> paymentGiftCard(MockMvc mockMvc, String token, String giftCardUniqueCode, String quantity, String currency, String nationalCode, String accountNumber, String additionalData, HttpStatus httpStatus, int errorCode, boolean success) throws Exception {
+    public BaseResponse<ObjectUtils.Null> paymentGiftCard(MockMvc mockMvc, String token, String giftCardUniqueCode, String quantity, String currency, String nationalCode, String accountNumber, String additionalData, HttpStatus httpStatus, int errorCode, boolean success, boolean checkResult) throws Exception {
         PaymentGiftCardRequestJson requestJson = new PaymentGiftCardRequestJson();
         requestJson.setGiftCardUniqueCode(giftCardUniqueCode);
         requestJson.setQuantity(quantity);
@@ -884,7 +884,12 @@ public class WalletApplicationTests {
         requestJson.setAdditionalData(additionalData);
         
         MockHttpServletRequestBuilder postRequest = buildPostRequest(token, GIFT_CARD_PAYMENT_PATH, mapToJson(requestJson));
-        String response = performTest(mockMvc, postRequest, httpStatus, success, errorCode);
+        String response;
+        if(checkResult){
+            response = performTest(mockMvc, postRequest, httpStatus, success, errorCode);
+        }else{
+            response = performTestWithoutCheckResult(mockMvc, postRequest);
+        }
         TypeReference<BaseResponse<ObjectUtils.Null>> typeReference = new TypeReference<>() {};
         return objectMapper.readValue(response, typeReference);
     }
@@ -917,7 +922,7 @@ public class WalletApplicationTests {
         return objectMapper.readValue(response, typeReference);
     }
 
-    public BaseResponse<CreateCollateralResponse> createCollateral(MockMvc mockMvc, String token, String uniqueIdentifier, String quantity, String accountNumber, String description, String sign, CommissionObject commissionObject, String collateralId, HttpStatus httpStatus, int errorCode, boolean success) throws Exception {
+    public BaseResponse<CreateCollateralResponse> createCollateral(MockMvc mockMvc, String token, String uniqueIdentifier, String quantity, String accountNumber, String description, String sign, CommissionObject commissionObject, String collateralId, HttpStatus httpStatus, int errorCode, boolean success, boolean checkResult) throws Exception {
         CreateCollateralRequestJson requestJson = new CreateCollateralRequestJson();
         requestJson.setUniqueIdentifier(uniqueIdentifier);
         requestJson.setQuantity(quantity);
@@ -928,12 +933,17 @@ public class WalletApplicationTests {
         requestJson.setCollateralId(collateralId);
         
         MockHttpServletRequestBuilder postRequest = buildPostRequest(token, COLLATERAL_CREATE_PATH, mapToJson(requestJson));
-        String response = performTest(mockMvc, postRequest, httpStatus, success, errorCode);
+        String response;
+        if(checkResult){
+            response = performTest(mockMvc, postRequest, httpStatus, success, errorCode);
+        }else{
+            response = performTestWithoutCheckResult(mockMvc, postRequest);
+        }
         TypeReference<BaseResponse<CreateCollateralResponse>> typeReference = new TypeReference<>() {};
         return objectMapper.readValue(response, typeReference);
     }
 
-    public BaseResponse<ObjectUtils.Null> releaseCollateral(MockMvc mockMvc, String token, String collateralCode, String quantity, String nationalCode, String additionalData, String sign, CommissionObject commissionObject, HttpStatus httpStatus, int errorCode, boolean success) throws Exception {
+    public BaseResponse<ObjectUtils.Null> releaseCollateral(MockMvc mockMvc, String token, String collateralCode, String quantity, String nationalCode, String additionalData, String sign, CommissionObject commissionObject, HttpStatus httpStatus, int errorCode, boolean success, boolean checkResult) throws Exception {
         ReleaseCollateralRequestJson requestJson = new ReleaseCollateralRequestJson();
         requestJson.setCollateralCode(collateralCode);
         requestJson.setQuantity(quantity);
@@ -943,7 +953,12 @@ public class WalletApplicationTests {
         requestJson.setCommissionObject(commissionObject);
         
         MockHttpServletRequestBuilder postRequest = buildPostRequest(token, COLLATERAL_RELEASE_PATH, mapToJson(requestJson));
-        String response = performTest(mockMvc, postRequest, httpStatus, success, errorCode);
+        String response;
+        if(checkResult){
+            response = performTest(mockMvc, postRequest, httpStatus, success, errorCode);
+        }else{
+            response = performTestWithoutCheckResult(mockMvc, postRequest);
+        }
         TypeReference<BaseResponse<ObjectUtils.Null>> typeReference = new TypeReference<>() {};
         return objectMapper.readValue(response, typeReference);
     }
@@ -964,19 +979,24 @@ public class WalletApplicationTests {
         return objectMapper.readValue(response, typeReference);
     }
 
-    public BaseResponse<ObjectUtils.Null> seizeCollateral(MockMvc mockMvc, String token, String collateralCode, String nationalCode, String additionalData, HttpStatus httpStatus, int errorCode, boolean success) throws Exception {
+    public BaseResponse<ObjectUtils.Null> seizeCollateral(MockMvc mockMvc, String token, String collateralCode, String nationalCode, String additionalData, HttpStatus httpStatus, int errorCode, boolean success, boolean checkResult) throws Exception {
         SeizeCollateralRequestJson requestJson = new SeizeCollateralRequestJson();
         requestJson.setCollateralCode(collateralCode);
         requestJson.setNationalCode(nationalCode);
         requestJson.setAdditionalData(additionalData);
         
         MockHttpServletRequestBuilder postRequest = buildPostRequest(token, COLLATERAL_SEIZE_PATH, mapToJson(requestJson));
-        String response = performTest(mockMvc, postRequest, httpStatus, success, errorCode);
+        String response;
+        if(checkResult){
+            response = performTest(mockMvc, postRequest, httpStatus, success, errorCode);
+        }else{
+            response = performTestWithoutCheckResult(mockMvc, postRequest);
+        }
         TypeReference<BaseResponse<ObjectUtils.Null>> typeReference = new TypeReference<>() {};
         return objectMapper.readValue(response, typeReference);
     }
 
-    public BaseResponse<ObjectUtils.Null> sellCollateral(MockMvc mockMvc, String token, String collateralCode, String quantity, String price, String nationalCode, String additionalData, String merchantId, String sign, CommissionObject commissionObject, HttpStatus httpStatus, int errorCode, boolean success) throws Exception {
+    public BaseResponse<ObjectUtils.Null> sellCollateral(MockMvc mockMvc, String token, String collateralCode, String quantity, String price, String nationalCode, String additionalData, String merchantId, String sign, CommissionObject commissionObject, HttpStatus httpStatus, int errorCode, boolean success, boolean checkResult) throws Exception {
         SellCollateralRequestJson requestJson = new SellCollateralRequestJson();
         requestJson.setCollateralCode(collateralCode);
         requestJson.setQuantity(quantity);
@@ -988,7 +1008,12 @@ public class WalletApplicationTests {
         requestJson.setCommissionObject(commissionObject);
         
         MockHttpServletRequestBuilder postRequest = buildPostRequest(token, COLLATERAL_SELL_PATH, mapToJson(requestJson));
-        String response = performTest(mockMvc, postRequest, httpStatus, success, errorCode);
+        String response;
+        if(checkResult){
+            response = performTest(mockMvc, postRequest, httpStatus, success, errorCode);
+        }else{
+            response = performTestWithoutCheckResult(mockMvc, postRequest);
+        }
         TypeReference<BaseResponse<ObjectUtils.Null>> typeReference = new TypeReference<>() {};
         return objectMapper.readValue(response, typeReference);
     }

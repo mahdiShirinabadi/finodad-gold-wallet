@@ -467,7 +467,7 @@ class GiftCardControllerTest extends WalletApplicationTests {
         BaseResponse<GiftCardResponse> responseProcess = processGiftCard(mockMvc, accessToken, uuidResponse.getData().getUniqueIdentifier(), giftCardQuantity, NATIONAL_CODE_CORRECT, sourceAccount.getAccountNumber(), NATIONAL_CODE_DEST, additionalData, generateValidSign(uuidResponse.getData().getUniqueIdentifier() + "|" + giftCardQuantity + "|" + NATIONAL_CODE_CORRECT), commission, CURRENCY_GOLD, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
 
         // Step 2: Payment Gift Card successfully
-        BaseResponse<ObjectUtils.Null> response = paymentGiftCard(mockMvc, accessToken, responseProcess.getData().getActiveCode(), responseProcess.getData().getQuantity(), CURRENCY_GOLD, NATIONAL_CODE_DEST, destAccount.getAccountNumber(), paymentAdditionalData, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
+        BaseResponse<ObjectUtils.Null> response = paymentGiftCard(mockMvc, accessToken, responseProcess.getData().getActiveCode(), responseProcess.getData().getQuantity(), CURRENCY_GOLD, NATIONAL_CODE_DEST, destAccount.getAccountNumber(), paymentAdditionalData, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true, true);
 
         Assert.assertNotNull(response);
         Assert.assertTrue(response.getSuccess());
@@ -488,7 +488,7 @@ class GiftCardControllerTest extends WalletApplicationTests {
         WalletAccountObject account = getAccountNumber(mockMvc, accessToken, NATIONAL_CODE_DEST, WalletAccountTypeRepositoryService.NORMAL, CURRENCY_GOLD);
 
         // Step 2: Try to payment with invalid gift card code
-        BaseResponse<ObjectUtils.Null> response = paymentGiftCard(mockMvc, accessToken, invalidGiftCard, giftCardQuantity, CURRENCY_GOLD, NATIONAL_CODE_DEST, account.getAccountNumber(), additionalData, HttpStatus.OK, StatusRepositoryService.GIFT_CARD_NOT_FOUND, false);
+        BaseResponse<ObjectUtils.Null> response = paymentGiftCard(mockMvc, accessToken, invalidGiftCard, giftCardQuantity, CURRENCY_GOLD, NATIONAL_CODE_DEST, account.getAccountNumber(), additionalData, HttpStatus.OK, StatusRepositoryService.GIFT_CARD_NOT_FOUND, false, true);
 
         Assert.assertFalse(response.getSuccess());
         Assert.assertSame(StatusRepositoryService.GIFT_CARD_NOT_FOUND, response.getErrorDetail().getCode());
@@ -505,7 +505,7 @@ class GiftCardControllerTest extends WalletApplicationTests {
         String additionalData = "payment test";
 
         // Step 1: Try to payment with invalid account number
-        BaseResponse<ObjectUtils.Null> response = paymentGiftCard(mockMvc, accessToken, validGiftCard, giftCardQuantity, CURRENCY_GOLD, NATIONAL_CODE_DEST, invalidAccount, additionalData, HttpStatus.OK, StatusRepositoryService.WALLET_ACCOUNT_NOT_FOUND, false);
+        BaseResponse<ObjectUtils.Null> response = paymentGiftCard(mockMvc, accessToken, validGiftCard, giftCardQuantity, CURRENCY_GOLD, NATIONAL_CODE_DEST, invalidAccount, additionalData, HttpStatus.OK, StatusRepositoryService.WALLET_ACCOUNT_NOT_FOUND, false, true);
 
         Assert.assertFalse(response.getSuccess());
         Assert.assertSame(StatusRepositoryService.WALLET_ACCOUNT_NOT_FOUND, response.getErrorDetail().getCode());
@@ -544,7 +544,7 @@ class GiftCardControllerTest extends WalletApplicationTests {
         giftCardRepositoryService.save(giftCardEntity.get());
 
         // Step 2: Payment Gift Card successfully
-        BaseResponse<ObjectUtils.Null> response = paymentGiftCard(mockMvc, accessToken, responseProcess.getData().getActiveCode(), responseProcess.getData().getQuantity(), CURRENCY_GOLD, NATIONAL_CODE_DEST, destAccount.getAccountNumber(), paymentAdditionalData, HttpStatus.OK, StatusRepositoryService.GIFT_CARD_IS_EXPIRE, false);
+        BaseResponse<ObjectUtils.Null> response = paymentGiftCard(mockMvc, accessToken, responseProcess.getData().getActiveCode(), responseProcess.getData().getQuantity(), CURRENCY_GOLD, NATIONAL_CODE_DEST, destAccount.getAccountNumber(), paymentAdditionalData, HttpStatus.OK, StatusRepositoryService.GIFT_CARD_IS_EXPIRE, false, true);
 
         Assert.assertNotNull(response);
         Assert.assertFalse(response.getSuccess());
@@ -586,7 +586,7 @@ class GiftCardControllerTest extends WalletApplicationTests {
 
         // Step 2: Try to payment with national code that doesn't have gift card payment permission
         BaseResponse<ObjectUtils.Null> response = paymentGiftCard(mockMvc, accessToken, validGiftCard, giftCardQuantity, CURRENCY_GOLD, invalidNationalCode, account.getAccountNumber(),
-                additionalData, HttpStatus.OK, StatusRepositoryService.WALLET_NOT_FOUND, false);
+                additionalData, HttpStatus.OK, StatusRepositoryService.WALLET_NOT_FOUND, false, true);
 
         Assert.assertFalse(response.getSuccess());
         Assert.assertSame(StatusRepositoryService.WALLET_NOT_FOUND, response.getErrorDetail().getCode());
@@ -706,7 +706,7 @@ class GiftCardControllerTest extends WalletApplicationTests {
             final int index = i;
             executor.submit(() -> {
                 try {
-                    BaseResponse<ObjectUtils.Null> response = paymentGiftCard(mockMvc, accessToken, giftCardCodes.get(index), giftCardQuantity, CURRENCY_GOLD, NATIONAL_CODE_DEST, destAccount.getAccountNumber(), "concurrent payment test " + index, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
+                    BaseResponse<ObjectUtils.Null> response = paymentGiftCard(mockMvc, accessToken, giftCardCodes.get(index), giftCardQuantity, CURRENCY_GOLD, NATIONAL_CODE_DEST, destAccount.getAccountNumber(), "concurrent payment test " + index, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true, true);
                     results.add(response);
                 } catch (Exception e) {
                     log.error("Error in concurrent payment " + index, e);
@@ -840,7 +840,6 @@ class GiftCardControllerTest extends WalletApplicationTests {
         executor.submit(() -> {
             try {
                 // Small delay to ensure second request starts after first
-                Thread.sleep(100);
                 BaseResponse<GiftCardResponse> response = processGiftCard(mockMvc, accessToken, uniqueIdentifier, giftCardQuantity, NATIONAL_CODE_CORRECT, sourceAccount.getAccountNumber(), NATIONAL_CODE_DEST, additionalData2, sign, commission, CURRENCY_GOLD, HttpStatus.OK, StatusRepositoryService.DUPLICATE_UUID, false);
                 results.add(response);
                 log.info("Second concurrent process completed with success: {}", response.getSuccess());
@@ -922,7 +921,7 @@ class GiftCardControllerTest extends WalletApplicationTests {
         executor.submit(() -> {
             try {
                 log.info("Starting first concurrent payment with gift card code: {}", giftCardCode);
-                BaseResponse<ObjectUtils.Null> response = paymentGiftCard(mockMvc, accessToken, giftCardCode, giftCardQuantity, CURRENCY_GOLD, NATIONAL_CODE_DEST, destAccount.getAccountNumber(), paymentAdditionalData1, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
+                BaseResponse<ObjectUtils.Null> response = paymentGiftCard(mockMvc, accessToken, giftCardCode, giftCardQuantity, CURRENCY_GOLD, NATIONAL_CODE_DEST, destAccount.getAccountNumber(), paymentAdditionalData1, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true, false);
                 results.add(response);
                 log.info("First payment completed with success: {}", response.getSuccess());
             } catch (Exception e) {
@@ -936,9 +935,8 @@ class GiftCardControllerTest extends WalletApplicationTests {
         executor.submit(() -> {
             try {
                 // Small delay to ensure second request starts after first
-                Thread.sleep(100);
                 log.info("Starting second concurrent payment with SAME gift card code: {}", giftCardCode);
-                BaseResponse<ObjectUtils.Null> response = paymentGiftCard(mockMvc, accessToken, giftCardCode, giftCardQuantity, CURRENCY_GOLD, NATIONAL_CODE_DEST, destAccount.getAccountNumber(), paymentAdditionalData2, HttpStatus.OK, StatusRepositoryService.GIFT_CARD_NOT_FOUND, false);
+                BaseResponse<ObjectUtils.Null> response = paymentGiftCard(mockMvc, accessToken, giftCardCode, giftCardQuantity, CURRENCY_GOLD, NATIONAL_CODE_DEST, destAccount.getAccountNumber(), paymentAdditionalData2, HttpStatus.OK, StatusRepositoryService.GIFT_CARD_NOT_FOUND, false, false);
                 results.add(response);
                 log.info("Second payment completed with success: {}", response.getSuccess());
             } catch (Exception e) {

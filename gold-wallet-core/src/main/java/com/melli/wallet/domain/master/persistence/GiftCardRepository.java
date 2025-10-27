@@ -22,6 +22,9 @@ import java.util.Optional;
 @Repository
 public interface GiftCardRepository extends CrudRepository<GiftCardEntity, Long> {
 
+    @Query(value = "select request_id from {h-schema}gift_card p where p.rrn_id=:traceId", nativeQuery = true)
+    Long findByRrnEntityIdNative(@Param("traceId") long traceId);
+
     Optional<GiftCardEntity> findByRrnEntity_Id(Long rrnId);
     Optional<GiftCardEntity> findByActiveCodeAndQuantityAndStatus(String uniqueCode, BigDecimal quantity, GiftCardStepStatus status);
     Optional<GiftCardEntity> findByActiveCode(String uniqueCode);

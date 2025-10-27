@@ -1449,9 +1449,7 @@ class BuyControllerTest extends WalletApplicationTests {
         log.info("Testing Scenario 1: Different UUIDs with same refNumber");
         testScenario1_DifferentUuidsWithSameRefNumber(price, quantity, merchantId, commission, commissionType, currency, sign, additionalData, walletAccountObjectOptional);
         
-        // Wait a bit between scenarios
-        Thread.sleep(1000);
-        
+
         // SCENARIO 2: Same UUID with different refNumbers
         log.info("Testing Scenario 2: Same UUID with different refNumbers");
         testScenario2_SameUuidWithDifferentRefNumbers(price, quantity, merchantId, commission, commissionType, currency, sign, additionalData, walletAccountObjectOptional);

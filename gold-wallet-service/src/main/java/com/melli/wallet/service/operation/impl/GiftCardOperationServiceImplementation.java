@@ -93,7 +93,7 @@ public class GiftCardOperationServiceImplementation implements GiftCardOperation
         String key = giftCardPaymentObjectDTO.getGiftCardUniqueCode();
         log.info("Starting Redis lock acquisition for giftCardCode: {}", key);
         
-        redisLockService.runAfterLock(key, this.getClass(), () -> {
+        redisLockService.runWithLockUntilCommit(key, this.getClass(), () -> {
             log.info("=== LOCK ACQUIRED - STARTING GIFT CARD PAYMENT CRITICAL SECTION ===");
             log.info("start checking existence of giftCardCode({}) ...", giftCardPaymentObjectDTO.getGiftCardUniqueCode());
 
@@ -224,7 +224,7 @@ public class GiftCardOperationServiceImplementation implements GiftCardOperation
         RrnEntity rrnEntity = rrnRepositoryService.findByUid(giftCardProcessObjectDTO.getUniqueIdentifier());
 
         String key = giftCardProcessObjectDTO.getNationalCode();
-        return redisLockService.runAfterLock(key, this.getClass(), () -> {
+        return redisLockService.runWithLockUntilCommit(key, this.getClass(), () -> {
             log.info("start checking existence of traceId({}) ...", giftCardProcessObjectDTO.getUniqueIdentifier());
             rrnRepositoryService.checkRrn(giftCardProcessObjectDTO.getUniqueIdentifier(), giftCardProcessObjectDTO.getChannelEntity(), requestTypeEntity, String.valueOf(giftCardProcessObjectDTO.getQuantity()), giftCardProcessObjectDTO.getAccountNumber());
             log.info("finish checking existence of traceId({})", giftCardProcessObjectDTO.getUniqueIdentifier());

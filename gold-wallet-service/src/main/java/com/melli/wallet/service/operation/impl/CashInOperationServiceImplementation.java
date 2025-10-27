@@ -91,7 +91,7 @@ public class CashInOperationServiceImplementation implements CashInOperationServ
         log.debug("RRN entity found - rrnId: {}, uuid: {}", rrnEntity.getId(), rrnEntity.getUuid());
 
         log.info("Starting Redis lock acquisition for account: {}", chargeObjectDTO.getAccountNumber());
-        return redisLockService.runAfterLock(chargeObjectDTO.getAccountNumber(), this.getClass(), () -> {
+        return redisLockService.runWithLockUntilCommit(chargeObjectDTO.getAccountNumber(), this.getClass(), () -> {
             log.info("=== LOCK ACQUIRED - STARTING CASH IN CRITICAL SECTION ===");
             log.info("start checking existence of traceId({}) ...", chargeObjectDTO.getUniqueIdentifier());
             rrnRepositoryService.checkRrn(chargeObjectDTO.getUniqueIdentifier(), chargeObjectDTO.getChannel(), requestTypeEntity, String.valueOf(chargeObjectDTO.getAmount()), chargeObjectDTO.getAccountNumber());

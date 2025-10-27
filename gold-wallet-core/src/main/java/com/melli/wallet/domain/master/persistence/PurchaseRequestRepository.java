@@ -14,6 +14,8 @@ import java.util.Optional;
 @Repository
 public interface PurchaseRequestRepository extends CrudRepository<PurchaseRequestEntity, Long> {
 
+    @Query(value = "select request_id from {h-schema}purchase_request p where p.rrn_id=:traceId", nativeQuery = true)
+    Long findByRrnEntityIdNative(@Param("traceId") long traceId);
     PurchaseRequestEntity findByRrnEntityId(long traceId);
     Optional<PurchaseRequestEntity> findOptionalByRrnEntityId(long traceId);
     PurchaseRequestEntity findByRrnEntity(RrnEntity rrn);
