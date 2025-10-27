@@ -94,6 +94,7 @@ public class TransactionRepositoryServiceImplementation implements TransactionRe
         String fromTime = searchCriteria.get("fromTime");
         String toTime = searchCriteria.get("toTime");
         String nationalCode = searchCriteria.get("nationalCode");
+        String currencyName = searchCriteria.get("currencyName");
         String walletAccountNumber = searchCriteria.get("walletAccountNumber");
         String uniqueIdentifier = searchCriteria.get("uniqueIdentifier");
 
@@ -103,6 +104,10 @@ public class TransactionRepositoryServiceImplementation implements TransactionRe
 
         if (CustomStringUtils.hasText(nationalCode)) {
             predicates.add(criteriaBuilder.equal(root.get("walletAccountEntity").get("walletEntity").get("nationalCode"), nationalCode));
+        }
+
+        if (CustomStringUtils.hasText(currencyName)) {
+            predicates.add(criteriaBuilder.equal(root.get("walletAccountEntity").get("walletAccountCurrencyEntity").get("name"), currencyName));
         }
 
         if (CustomStringUtils.hasText(walletAccountNumber)) {

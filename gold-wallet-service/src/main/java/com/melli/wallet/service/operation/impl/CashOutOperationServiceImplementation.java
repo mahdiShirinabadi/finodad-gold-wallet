@@ -12,6 +12,7 @@ import com.melli.wallet.domain.response.cash.PhysicalCashOutTrackResponse;
 import com.melli.wallet.domain.response.cash.PhysicalCashOutTotalQuantityResponse;
 import com.melli.wallet.domain.slave.entity.ReportCashOutRequestEntity;
 import com.melli.wallet.domain.slave.entity.ReportPhysicalCashOutRequestEntity;
+import com.melli.wallet.domain.slave.persistence.ReportPhysicalCashOutRequestRepository;
 import com.melli.wallet.domain.slave.persistence.ReportTransactionRepository;
 import com.melli.wallet.exception.InternalServiceException;
 import com.melli.wallet.service.operation.CashOutOperationService;
@@ -57,6 +58,7 @@ public class CashOutOperationServiceImplementation implements CashOutOperationSe
     private final StatusRepositoryService statusRepositoryService;
     private final StockRepositoryService stockRepositoryService;
     private final ReportTransactionRepository reportTransactionRepository;
+    private final ReportPhysicalCashOutRequestRepository reportPhysicalCashOutRequestRepository;
 
     @Override
     public UuidResponse generateUuid(ChannelEntity channelEntity, String nationalCode, String amount, String accountNumber) throws InternalServiceException {
@@ -365,11 +367,9 @@ public class CashOutOperationServiceImplementation implements CashOutOperationSe
         log.info("start calculateTotalQuantity for physical cash out transactions");
         
         // Get request type ID for PHYSICAL_CASH_OUT
-        Long physicalCashOutRequestTypeId = requestTypeRepositoryService.getRequestType(RequestTypeRepositoryService.PHYSICAL_CASH_OUT).getId();
-        
+
         // Calculate total quantity directly in database using aggregation
-        BigDecimal totalQuantity = reportTransactionRepository
-                .calculateTotalQuantityByRequestType(physicalCashOutRequestTypeId);
+        BigDecimal totalQuantity = reportPhysicalCashOutRequestRepository.calculateTotalQuantity();
         
         // Handle null result (no transactions found)
         if (totalQuantity == null) {

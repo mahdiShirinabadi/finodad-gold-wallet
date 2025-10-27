@@ -59,6 +59,7 @@ public class TransactionController extends WebController {
                                 "nationalCode": "1234567890",
                                 "fromTime":"1403/01/01",
                                 "toTime":"1403/09/01",
+                                "currencyName":"GOLD/RIAL"
                                 "page": "0",
                                 "size": "10",
                                 "orderBy": "id",
