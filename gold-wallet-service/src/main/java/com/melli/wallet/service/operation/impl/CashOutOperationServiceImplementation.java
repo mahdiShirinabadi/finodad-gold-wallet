@@ -154,6 +154,7 @@ public class CashOutOperationServiceImplementation implements CashOutOperationSe
             transaction.setWalletAccountEntity(walletAccountEntity);
             transaction.setAdditionalData(cashOutRequestEntity.getAdditionalData());
             transaction.setRequestTypeId(cashOutRequestEntity.getRequestTypeEntity().getId());
+            transaction.setRrnEntity(rrnEntity);
             log.debug("Transaction entity created - amount: {}, accountId: {}", 
                 transaction.getAmount(), transaction.getWalletAccountEntity().getId());
 

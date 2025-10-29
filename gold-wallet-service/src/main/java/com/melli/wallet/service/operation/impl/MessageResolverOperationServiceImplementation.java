@@ -6,6 +6,7 @@ import lombok.extern.log4j.Log4j2;
 import org.apache.commons.text.StringSubstitutor;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -54,5 +55,14 @@ public class MessageResolverOperationServiceImplementation implements MessageRes
         result = result.replace("9", "\u06F9");
 
         return result;
+    }
+
+    public static void main(String[] args) {
+        String value = "واریز {price}$ ریال از فروش به ${merchant} - شناسه: {traceId}$";
+        Map<String, String> parameters = new HashMap<>();
+        parameters.put("merchant","mahdi");
+        StringSubstitutor sub = new StringSubstitutor(parameters);
+        System.out.printf(sub.replace(value));
+
     }
 }
