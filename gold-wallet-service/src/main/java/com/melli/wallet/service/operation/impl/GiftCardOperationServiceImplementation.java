@@ -193,7 +193,7 @@ public class GiftCardOperationServiceImplementation implements GiftCardOperation
 
             TransactionEntity userFirstWithdrawal = createTransaction(
                     giftCardEntity.getGiftWalletAccountEntity(), giftCardEntity.getQuantity(),
-                    messageResolverOperationService.resolve(depositTemplate, model), giftCardEntity.getActiveCode(), requestTypeEntity, giftCardEntity.getRrnEntity());
+                    messageResolverOperationService.resolve(withdrawalTemplate, model), giftCardEntity.getActiveCode(), requestTypeEntity, giftCardEntity.getRrnEntity());
             transactionRepositoryService.insertWithdraw(userFirstWithdrawal);
             log.info("finish payment giftCard transaction for uniqueIdentifier ({}), quantity ({}) for withdrawal walletAccountId ({})", giftCardEntity.getRrnEntity().getUuid(), giftCardEntity.getQuantity(), walletAccountEntity.getId());
 
@@ -201,7 +201,7 @@ public class GiftCardOperationServiceImplementation implements GiftCardOperation
             // user second deposit (currency)
             log.info("start payment giftCard transaction for uniqueIdentifier ({}), price ({}) for user deposit currency user walletAccountId({})", giftCardEntity.getRrnEntity().getUuid(), giftCardEntity.getQuantity(), walletAccountEntity.getId());
             TransactionEntity giftCardDeposit = createTransaction(walletAccountEntity,
-                    giftCardEntity.getQuantity(), messageResolverOperationService.resolve(withdrawalTemplate, model), giftCardEntity.getActiveCode(), requestTypeEntity, giftCardEntity.getRrnEntity());
+                    giftCardEntity.getQuantity(), messageResolverOperationService.resolve(depositTemplate, model), giftCardEntity.getActiveCode(), requestTypeEntity, giftCardEntity.getRrnEntity());
             transactionRepositoryService.insertDeposit(giftCardDeposit);
             log.info("finish payment giftCard transaction for uniqueIdentifier ({}), price ({}) for user deposit currency user walletAccountId({})", giftCardEntity.getRrnEntity().getUuid(), giftCardEntity.getQuantity(), walletAccountEntity.getId());
 
@@ -254,7 +254,7 @@ public class GiftCardOperationServiceImplementation implements GiftCardOperation
             giftCardEntity.setDestinationWalletAccountEntity(null);
             giftCardEntity.setWalletAccountCurrencyEntity(walletAccountEntity.getWalletAccountCurrencyEntity());
             giftCardEntity.setExpireAt(DateUtils.getNNextDayReturnDate(new Date(), 360));
-            giftCardEntity.setNationalCodeBy(giftCardEntity.getNationalCodeBy());
+            giftCardEntity.setNationalCodeBy(giftCardProcessObjectDTO.getDestinationNationalCode());
             giftCardEntity.setCreatedBy(walletAccountEntity.getWalletEntity().getNationalCode());
             giftCardEntity.setCommission(giftCardProcessObjectDTO.getCommission());
             giftCardEntity.setCreatedAt(new Date());

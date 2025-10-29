@@ -31,33 +31,33 @@ public class GrpcCashOutService extends CashOutServiceGrpc.CashOutServiceImplBas
     @Override
     public void generateUuid(CashGenerateUuidRequestGrpc request, StreamObserver<BaseResponseGrpc> responseObserver) {
         try {
-            log.info("GRPC: GenerateUuid called with nationalCode: {}, amount: {}, accountNumber: {}", 
-                request.getNationalCode(), request.getAmount(), request.getAccountNumber());
-            
+            log.info("GRPC: GenerateUuid called with nationalCode: {}, amount: {}, accountNumber: {}",
+                    request.getNationalCode(), request.getAmount(), request.getAccountNumber());
+
             CashGenerateUuidRequestJson generateUuidRequest = new CashGenerateUuidRequestJson();
             generateUuidRequest.setNationalCode(request.getNationalCode());
             generateUuidRequest.setAmount(request.getAmount());
             generateUuidRequest.setAccountNumber(request.getAccountNumber());
-            
+
             UuidResponse uuid = cashOutOperationService.generateUuid(
-                RequestContext.getChannelEntity(),
-                generateUuidRequest.getNationalCode(),
-                generateUuidRequest.getAmount(),
-                generateUuidRequest.getAccountNumber()
+                    RequestContext.getChannelEntity(),
+                    generateUuidRequest.getNationalCode(),
+                    generateUuidRequest.getAmount(),
+                    generateUuidRequest.getAccountNumber()
             );
-            
+
             BaseResponseGrpc response = BaseResponseGrpc.newBuilder()
-                .setSuccess(true)
-                .setUuidResponse(UuidResponseGrpc.newBuilder()
-                    .setUuid(uuid.getUniqueIdentifier())
-                    .build())
-                .build();
-            
+                    .setSuccess(true)
+                    .setUuidResponse(UuidResponseGrpc.newBuilder()
+                            .setUuid(uuid.getUniqueIdentifier())
+                            .build())
+                    .build();
+
             responseObserver.onNext(response);
             responseObserver.onCompleted();
-            
+
             log.info("GRPC: GenerateUuid completed successfully with uuid: {}", uuid);
-            
+
         } catch (InternalServiceException e) {
             log.error("GRPC: GenerateUuid failed: {}", e.getMessage(), e);
             handleError(responseObserver, e);
@@ -70,9 +70,9 @@ public class GrpcCashOutService extends CashOutServiceGrpc.CashOutServiceImplBas
     @Override
     public void withdraw(CashOutWalletRequestGrpc request, StreamObserver<BaseResponseGrpc> responseObserver) {
         try {
-            log.info("GRPC: Withdraw called with uniqueIdentifier: {}, nationalCode: {}", 
-                request.getUniqueIdentifier(), request.getNationalCode());
-            
+            log.info("GRPC: Withdraw called with uniqueIdentifier: {}, nationalCode: {}",
+                    request.getUniqueIdentifier(), request.getNationalCode());
+
             CashOutWalletRequestJson cashOutRequest = new CashOutWalletRequestJson();
             cashOutRequest.setUniqueIdentifier(request.getUniqueIdentifier());
             cashOutRequest.setAmount(request.getAmount());
@@ -81,39 +81,40 @@ public class GrpcCashOutService extends CashOutServiceGrpc.CashOutServiceImplBas
             cashOutRequest.setAdditionalData(request.getAdditionalData());
             cashOutRequest.setAccountNumber(request.getAccountNumber());
             cashOutRequest.setSign(request.getSign());
-            
+
             CashOutResponse cashOutResponse = cashOutOperationService.withdrawal(
-                new CashOutObjectDTO(
-                    RequestContext.getChannelEntity(),
-                    cashOutRequest.getNationalCode(),
-                    cashOutRequest.getUniqueIdentifier(),
-                    cashOutRequest.getAmount(),
-                    cashOutRequest.getIban(),
-                    cashOutRequest.getAccountNumber(),
-                    cashOutRequest.getAdditionalData(),
-                    RequestContext.getClientIp()
-                )
+                    new CashOutObjectDTO(
+                            RequestContext.getChannelEntity(),
+                            cashOutRequest.getNationalCode(),
+                            cashOutRequest.getUniqueIdentifier(),
+                            cashOutRequest.getAmount(),
+                            cashOutRequest.getIban(),
+                            cashOutRequest.getAccountNumber(),
+                            cashOutRequest.getAdditionalData(),
+                            RequestContext.getClientIp(),
+                            cashOutRequest.getMerchantId()
+                    )
             );
-            
+
             // Convert to GRPC response
             CashOutResponseGrpc cashOutResponseGrpc = CashOutResponseGrpc.newBuilder()
-                .setNationalCode(cashOutResponse.getNationalCode() != null ? cashOutResponse.getNationalCode() : "")
-                .setAvailableBalance(cashOutResponse.getAvailableBalance() != null ? cashOutResponse.getAvailableBalance() : "")
-                .setBalance(cashOutResponse.getBalance() != null ? cashOutResponse.getBalance() : "")
-                .setUniqueIdentifier(cashOutResponse.getUniqueIdentifier() != null ? cashOutResponse.getUniqueIdentifier() : "")
-                .setWalletAccountNumber(cashOutResponse.getWalletAccountNumber() != null ? cashOutResponse.getWalletAccountNumber() : "")
-                .build();
-            
+                    .setNationalCode(cashOutResponse.getNationalCode() != null ? cashOutResponse.getNationalCode() : "")
+                    .setAvailableBalance(cashOutResponse.getAvailableBalance() != null ? cashOutResponse.getAvailableBalance() : "")
+                    .setBalance(cashOutResponse.getBalance() != null ? cashOutResponse.getBalance() : "")
+                    .setUniqueIdentifier(cashOutResponse.getUniqueIdentifier() != null ? cashOutResponse.getUniqueIdentifier() : "")
+                    .setWalletAccountNumber(cashOutResponse.getWalletAccountNumber() != null ? cashOutResponse.getWalletAccountNumber() : "")
+                    .build();
+
             BaseResponseGrpc response = BaseResponseGrpc.newBuilder()
-                .setSuccess(true)
-                .setCashOutResponse(cashOutResponseGrpc)
-                .build();
-            
+                    .setSuccess(true)
+                    .setCashOutResponse(cashOutResponseGrpc)
+                    .build();
+
             responseObserver.onNext(response);
             responseObserver.onCompleted();
-            
+
             log.info("GRPC: Withdraw completed successfully");
-            
+
         } catch (InternalServiceException e) {
             log.error("GRPC: Withdraw failed: {}", e.getMessage(), e);
             handleError(responseObserver, e);
@@ -127,13 +128,13 @@ public class GrpcCashOutService extends CashOutServiceGrpc.CashOutServiceImplBas
     public void inquiryCashOut(InquiryCashOutRequestGrpc request, StreamObserver<BaseResponseGrpc> responseObserver) {
         try {
             log.info("GRPC: InquiryCashOut called with uniqueIdentifier: {}", request.getUniqueIdentifier());
-            
+
             CashOutTrackResponse trackResponse = cashOutOperationService.inquiry(
-                RequestContext.getChannelEntity(),
-                request.getUniqueIdentifier(),
-                RequestContext.getClientIp()
+                    RequestContext.getChannelEntity(),
+                    request.getUniqueIdentifier(),
+                    RequestContext.getClientIp()
             );
-            
+
             // Convert to GRPC response
             CashOutTrackResponseGrpc.Builder trackResponseBuilder = CashOutTrackResponseGrpc.newBuilder()
                     .setId(trackResponse.getId())
@@ -146,17 +147,17 @@ public class GrpcCashOutService extends CashOutServiceGrpc.CashOutServiceImplBas
                     .setWalletAccountNumber(trackResponse.getWalletAccountNumber() != null ? trackResponse.getWalletAccountNumber() : "")
                     .setCreateTime(trackResponse.getCreateTime() != null ? trackResponse.getCreateTime() : "")
                     .setCreateTimeTimestamp(trackResponse.getCreateTimeTimestamp());
-            
+
             BaseResponseGrpc response = BaseResponseGrpc.newBuilder()
-                .setSuccess(true)
-                .setCashOutTrackResponse(trackResponseBuilder.build())
-                .build();
-            
+                    .setSuccess(true)
+                    .setCashOutTrackResponse(trackResponseBuilder.build())
+                    .build();
+
             responseObserver.onNext(response);
             responseObserver.onCompleted();
-            
+
             log.info("GRPC: InquiryCashOut completed successfully");
-            
+
         } catch (InternalServiceException e) {
             log.error("GRPC: InquiryCashOut failed: {}", e.getMessage(), e);
             handleError(responseObserver, e);
@@ -181,13 +182,13 @@ public class GrpcCashOutService extends CashOutServiceGrpc.CashOutServiceImplBas
 
     private void handleUnexpectedError(StreamObserver<BaseResponseGrpc> responseObserver, Exception e) {
         BaseResponseGrpc errorResponse = BaseResponseGrpc.newBuilder()
-            .setSuccess(false)
-            .setErrorDetail(ErrorDetailGrpc.newBuilder()
-                .setCode("UNEXPECTED_ERROR")
-                .setMessage("An unexpected error occurred: " + e.getMessage())
-                .build())
-            .build();
-        
+                .setSuccess(false)
+                .setErrorDetail(ErrorDetailGrpc.newBuilder()
+                        .setCode("UNEXPECTED_ERROR")
+                        .setMessage("An unexpected error occurred: " + e.getMessage())
+                        .build())
+                .build();
+
         responseObserver.onNext(errorResponse);
         responseObserver.onCompleted();
     }

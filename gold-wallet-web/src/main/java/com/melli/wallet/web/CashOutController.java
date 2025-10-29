@@ -67,7 +67,7 @@ public class CashOutController extends WebController {
         log.info("start call cashOut in username ===> {}, nationalCode ===> {}, from ip ===> {}", username, requestJson.getNationalCode(), channelIp);
         CashOutResponse cashOutResponse = cashOutOperationService.withdrawal(new CashOutObjectDTO(requestContext.getChannelEntity(), requestJson.getNationalCode(),
                 requestJson.getUniqueIdentifier(),requestJson.getAmount(), requestJson.getIban(),
-                requestJson.getAccountNumber(), requestJson.getAdditionalData(), requestContext.getClientIp()));
+                requestJson.getAccountNumber(), requestJson.getAdditionalData(), requestContext.getClientIp(), requestJson.getMerchantId()));
         return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse<>(true,cashOutResponse));
     }
 

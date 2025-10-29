@@ -130,6 +130,9 @@ public interface StatusRepositoryService {
     int GIFT_CARD_DEACTIVATED = 106;
     int TEMPLATE_NOT_FOUND = 107;
     int TEMPLATE_WITH_NAME_EXIST = 108;
+    int FUND_TRANSFER_IS_NOT_SUCCESS = 109;
+    int FUND_TRANSFER_IS_SUSPEND = 110;
+    int BANK_ACCOUNT_BALANCE_NOT_ENOUGH = 111;
 
     // General Error Codes
 

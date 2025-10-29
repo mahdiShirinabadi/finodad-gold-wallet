@@ -304,7 +304,7 @@ class GiftCardControllerTest extends WalletApplicationTests {
         // Step 4: Process Gift Card transaction
         CommissionObject commission = new CommissionObject("GOLD", commissionAmount);
         BaseResponse<GiftCardResponse> response = processGiftCard(mockMvc, accessToken, uuidResponse.getData().getUniqueIdentifier(), giftCardQuantity, NATIONAL_CODE_CORRECT, sourceAccount.getAccountNumber(), NATIONAL_CODE_DEST, additionalData,
-                generateValidSign(uuidResponse.getData().getUniqueIdentifier() + "|" + giftCardQuantity + "|" + NATIONAL_CODE_CORRECT), commission, CURRENCY_GOLD, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
+                generateValidSign(uuidResponse.getData().getUniqueIdentifier() + "|" + giftCardQuantity + "|" + NATIONAL_CODE_CORRECT), commission, CURRENCY_GOLD, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true, true);
 
         Assert.assertNotNull(response);
         Assert.assertTrue(response.getSuccess());
@@ -326,7 +326,7 @@ class GiftCardControllerTest extends WalletApplicationTests {
 
         // Step 2: Try to process with invalid UUID
         CommissionObject commission = new CommissionObject("GOLD", commissionAmount);
-        BaseResponse<GiftCardResponse> response = processGiftCard(mockMvc, accessToken, invalidUUID, giftCardQuantity, NATIONAL_CODE_CORRECT, sourceAccount.getAccountNumber(), NATIONAL_CODE_DEST, additionalData, generateValidSign(invalidUUID + "|" + giftCardQuantity + "|" + NATIONAL_CODE_CORRECT), commission, CURRENCY_GOLD, HttpStatus.OK, StatusRepositoryService.UUID_NOT_FOUND, false);
+        BaseResponse<GiftCardResponse> response = processGiftCard(mockMvc, accessToken, invalidUUID, giftCardQuantity, NATIONAL_CODE_CORRECT, sourceAccount.getAccountNumber(), NATIONAL_CODE_DEST, additionalData, generateValidSign(invalidUUID + "|" + giftCardQuantity + "|" + NATIONAL_CODE_CORRECT), commission, CURRENCY_GOLD, HttpStatus.OK, StatusRepositoryService.UUID_NOT_FOUND, false, true);
 
         Assert.assertFalse(response.getSuccess());
         Assert.assertSame(StatusRepositoryService.UUID_NOT_FOUND, response.getErrorDetail().getCode());
@@ -356,7 +356,7 @@ class GiftCardControllerTest extends WalletApplicationTests {
         // Step 3: Try to process without sufficient balance
         CommissionObject commission = new CommissionObject("GOLD", commissionAmount);
         BaseResponse<GiftCardResponse> response = processGiftCard(mockMvc, accessToken, uuidResponse.getData().getUniqueIdentifier(), giftCardQuantity, NATIONAL_CODE_CORRECT, sourceAccount.getAccountNumber(), NATIONAL_CODE_DEST, additionalData, generateValidSign(uuidResponse.getData().getUniqueIdentifier() + "|" + giftCardQuantity + "|" + NATIONAL_CODE_CORRECT), commission, CURRENCY_GOLD, HttpStatus.OK,
-                StatusRepositoryService.EXCEEDED_COUNT_DAILY_LIMITATION, false);
+                StatusRepositoryService.EXCEEDED_COUNT_DAILY_LIMITATION, false, true);
         setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MAX_DAILY_COUNT_GIFT_CARD, walletAccountEntity, String.valueOf(Long.parseLong(value)));
         Assert.assertFalse(response.getSuccess());
         Assert.assertSame(StatusRepositoryService.EXCEEDED_COUNT_DAILY_LIMITATION, response.getErrorDetail().getCode());
@@ -411,7 +411,7 @@ class GiftCardControllerTest extends WalletApplicationTests {
 
 
         CommissionObject commission = new CommissionObject("GOLD", commissionAmount);
-        processGiftCard(mockMvc, accessToken, uuidResponse.getData().getUniqueIdentifier(), giftCardQuantity, NATIONAL_CODE_CORRECT, sourceAccount.getAccountNumber(), NATIONAL_CODE_DEST, additionalData, generateValidSign(uuidResponse.getData().getUniqueIdentifier() + "|" + giftCardQuantity + "|" + NATIONAL_CODE_CORRECT), commission, CURRENCY_GOLD, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
+        processGiftCard(mockMvc, accessToken, uuidResponse.getData().getUniqueIdentifier(), giftCardQuantity, NATIONAL_CODE_CORRECT, sourceAccount.getAccountNumber(), NATIONAL_CODE_DEST, additionalData, generateValidSign(uuidResponse.getData().getUniqueIdentifier() + "|" + giftCardQuantity + "|" + NATIONAL_CODE_CORRECT), commission, CURRENCY_GOLD, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true, true);
 
         // Step 2: Inquiry the transaction
         BaseResponse<GiftCardTrackResponse> response = inquiryGiftCard(mockMvc, accessToken, uuidResponse.getData().getUniqueIdentifier(), HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
@@ -441,6 +441,36 @@ class GiftCardControllerTest extends WalletApplicationTests {
     // ==================== PAYMENT TESTS ====================
 
     @Test
+    @Order(39)
+    @DisplayName("paymentGiftCardFailNationalCodeNotPermission")
+    void paymentGiftCardFailNationalCodeNotPermission() throws Exception {
+        // Define amounts and commissions
+        String chargeAmount = "10";
+        String giftCardQuantity = "0.002";
+        String commissionAmount = "0.001";
+        String additionalData = "test data";
+        String paymentAdditionalData = "payment test";
+
+        // Step 1: Setup and process a Gift Card transaction first
+        WalletAccountObject sourceAccount = getAccountNumber(mockMvc, accessToken, NATIONAL_CODE_CORRECT, WalletAccountTypeRepositoryService.NORMAL, CURRENCY_GOLD);
+
+        chargeAccountForGiftCard(sourceAccount.getAccountNumber(), chargeAmount);
+
+        BaseResponse<GiftCardUuidResponse> uuidResponse = generateGiftCardUuid(mockMvc, accessToken, NATIONAL_CODE_CORRECT, giftCardQuantity, sourceAccount.getAccountNumber(), CURRENCY_GOLD, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
+
+        CommissionObject commission = new CommissionObject("GOLD", commissionAmount);
+        String value = getLimitationSettingValue(walletAccountRepositoryService, limitationGeneralCustomRepositoryService, channelRepositoryService, USERNAME_CORRECT, LimitationGeneralService.MAX_DAILY_COUNT_GIFT_CARD, sourceAccount.getAccountNumber());
+        WalletAccountEntity walletAccountEntity = walletAccountRepositoryService.findByAccountNumber(sourceAccount.getAccountNumber());
+        setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MAX_DAILY_COUNT_GIFT_CARD, walletAccountEntity, String.valueOf(Long.parseLong(value)+ 100));
+
+        BaseResponse<GiftCardResponse> responseProcess = processGiftCard(mockMvc, accessToken, uuidResponse.getData().getUniqueIdentifier(), giftCardQuantity, NATIONAL_CODE_CORRECT, sourceAccount.getAccountNumber(), NATIONAL_CODE_DEST, additionalData, generateValidSign(uuidResponse.getData().getUniqueIdentifier() + "|" + giftCardQuantity + "|" + NATIONAL_CODE_CORRECT), commission, CURRENCY_GOLD, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true, true);
+
+        // Step 2: Payment Gift Card successfully
+      paymentGiftCard(mockMvc, accessToken, responseProcess.getData().getActiveCode(), responseProcess.getData().getQuantity(), CURRENCY_GOLD, NATIONAL_CODE_CORRECT, sourceAccount.getAccountNumber(), paymentAdditionalData, HttpStatus.OK, StatusRepositoryService.NATIONAL_CODE_NOT_PERMISSION_FOR_PAYMENT_GIFT_CARD, false, true);
+
+    }
+
+    @Test
     @Order(40)
     @DisplayName("paymentGiftCard-Success")
     void paymentGiftCardSuccess() throws Exception {
@@ -464,7 +494,7 @@ class GiftCardControllerTest extends WalletApplicationTests {
         WalletAccountEntity walletAccountEntity = walletAccountRepositoryService.findByAccountNumber(sourceAccount.getAccountNumber());
         setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MAX_DAILY_COUNT_GIFT_CARD, walletAccountEntity, String.valueOf(Long.parseLong(value)+ 100));
 
-        BaseResponse<GiftCardResponse> responseProcess = processGiftCard(mockMvc, accessToken, uuidResponse.getData().getUniqueIdentifier(), giftCardQuantity, NATIONAL_CODE_CORRECT, sourceAccount.getAccountNumber(), NATIONAL_CODE_DEST, additionalData, generateValidSign(uuidResponse.getData().getUniqueIdentifier() + "|" + giftCardQuantity + "|" + NATIONAL_CODE_CORRECT), commission, CURRENCY_GOLD, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
+        BaseResponse<GiftCardResponse> responseProcess = processGiftCard(mockMvc, accessToken, uuidResponse.getData().getUniqueIdentifier(), giftCardQuantity, NATIONAL_CODE_CORRECT, sourceAccount.getAccountNumber(), NATIONAL_CODE_DEST, additionalData, generateValidSign(uuidResponse.getData().getUniqueIdentifier() + "|" + giftCardQuantity + "|" + NATIONAL_CODE_CORRECT), commission, CURRENCY_GOLD, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true, true);
 
         // Step 2: Payment Gift Card successfully
         BaseResponse<ObjectUtils.Null> response = paymentGiftCard(mockMvc, accessToken, responseProcess.getData().getActiveCode(), responseProcess.getData().getQuantity(), CURRENCY_GOLD, NATIONAL_CODE_DEST, destAccount.getAccountNumber(), paymentAdditionalData, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true, true);
@@ -536,7 +566,7 @@ class GiftCardControllerTest extends WalletApplicationTests {
         WalletAccountEntity walletAccountEntity = walletAccountRepositoryService.findByAccountNumber(sourceAccount.getAccountNumber());
         setLimitationGeneralCustomValue(USERNAME_CORRECT, LimitationGeneralService.MAX_DAILY_COUNT_GIFT_CARD, walletAccountEntity, String.valueOf(Long.parseLong(value)+ 100));
 
-        BaseResponse<GiftCardResponse> responseProcess = processGiftCard(mockMvc, accessToken, uuidResponse.getData().getUniqueIdentifier(), giftCardQuantity, NATIONAL_CODE_CORRECT, sourceAccount.getAccountNumber(), NATIONAL_CODE_DEST, additionalData, generateValidSign(uuidResponse.getData().getUniqueIdentifier() + "|" + giftCardQuantity + "|" + NATIONAL_CODE_CORRECT), commission, CURRENCY_GOLD, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
+        BaseResponse<GiftCardResponse> responseProcess = processGiftCard(mockMvc, accessToken, uuidResponse.getData().getUniqueIdentifier(), giftCardQuantity, NATIONAL_CODE_CORRECT, sourceAccount.getAccountNumber(), NATIONAL_CODE_DEST, additionalData, generateValidSign(uuidResponse.getData().getUniqueIdentifier() + "|" + giftCardQuantity + "|" + NATIONAL_CODE_CORRECT), commission, CURRENCY_GOLD, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true, true);
 
         Optional<GiftCardEntity> giftCardEntity = giftCardRepositoryService.findByUniqueCode(responseProcess.getData().getActiveCode());
         Assert.assertTrue(giftCardEntity.isPresent());
@@ -692,7 +722,7 @@ class GiftCardControllerTest extends WalletApplicationTests {
             CommissionObject commission = new CommissionObject("GOLD", commissionAmount);
             BaseResponse<GiftCardResponse> giftCardResponseBaseResponse = processGiftCard(mockMvc, accessToken, uuidResponse.getData().getUniqueIdentifier(), giftCardQuantity, NATIONAL_CODE_CORRECT, sourceAccount.getAccountNumber(), NATIONAL_CODE_DEST, additionalData,
                     generateValidSign(uuidResponse.getData().getUniqueIdentifier() + "|" + giftCardQuantity + "|" + NATIONAL_CODE_CORRECT), commission, CURRENCY_GOLD, HttpStatus.OK,
-                    StatusRepositoryService.SUCCESSFUL, true);
+                    StatusRepositoryService.SUCCESSFUL, true, true);
 
             giftCardCodes.add(giftCardResponseBaseResponse.getData().getActiveCode());
         }
@@ -760,7 +790,7 @@ class GiftCardControllerTest extends WalletApplicationTests {
                     BaseResponse<GiftCardUuidResponse> uuidResponse = generateGiftCardUuid(mockMvc, accessToken, NATIONAL_CODE_CORRECT, giftCardQuantity, sourceAccount.getAccountNumber(), CURRENCY_GOLD, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
                     BaseResponse<GiftCardResponse> giftCardResponseBaseResponse = processGiftCard(mockMvc, accessToken, uuidResponse.getData().getUniqueIdentifier(), giftCardQuantity, NATIONAL_CODE_CORRECT, sourceAccount.getAccountNumber(), NATIONAL_CODE_DEST, "count",
                             generateValidSign(uuidResponse.getData().getUniqueIdentifier() + "|" + giftCardQuantity + "|" + NATIONAL_CODE_CORRECT), commission, CURRENCY_GOLD, HttpStatus.OK,
-                            StatusRepositoryService.SUCCESSFUL, true);
+                            StatusRepositoryService.SUCCESSFUL, true, true);
                     results.add(giftCardResponseBaseResponse);
                 } catch (Exception e) {
                     log.error("Error in concurrent generation with insufficient balance", e);
@@ -825,7 +855,7 @@ class GiftCardControllerTest extends WalletApplicationTests {
         // First concurrent request
         executor.submit(() -> {
             try {
-                BaseResponse<GiftCardResponse> response = processGiftCard(mockMvc, accessToken, uniqueIdentifier, giftCardQuantity, NATIONAL_CODE_CORRECT, sourceAccount.getAccountNumber(), NATIONAL_CODE_DEST, additionalData1, sign, commission, CURRENCY_GOLD, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
+                BaseResponse<GiftCardResponse> response = processGiftCard(mockMvc, accessToken, uniqueIdentifier, giftCardQuantity, NATIONAL_CODE_CORRECT, sourceAccount.getAccountNumber(), NATIONAL_CODE_DEST, additionalData1, sign, commission, CURRENCY_GOLD, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true, false);
                 results.add(response);
                 log.info("First concurrent process completed with success: {}", response.getSuccess());
             } catch (Exception e) {
@@ -840,7 +870,7 @@ class GiftCardControllerTest extends WalletApplicationTests {
         executor.submit(() -> {
             try {
                 // Small delay to ensure second request starts after first
-                BaseResponse<GiftCardResponse> response = processGiftCard(mockMvc, accessToken, uniqueIdentifier, giftCardQuantity, NATIONAL_CODE_CORRECT, sourceAccount.getAccountNumber(), NATIONAL_CODE_DEST, additionalData2, sign, commission, CURRENCY_GOLD, HttpStatus.OK, StatusRepositoryService.DUPLICATE_UUID, false);
+                BaseResponse<GiftCardResponse> response = processGiftCard(mockMvc, accessToken, uniqueIdentifier, giftCardQuantity, NATIONAL_CODE_CORRECT, sourceAccount.getAccountNumber(), NATIONAL_CODE_DEST, additionalData2, sign, commission, CURRENCY_GOLD, HttpStatus.OK, StatusRepositoryService.DUPLICATE_UUID, false, false);
                 results.add(response);
                 log.info("Second concurrent process completed with success: {}", response.getSuccess());
             } catch (Exception e) {
@@ -850,6 +880,7 @@ class GiftCardControllerTest extends WalletApplicationTests {
             }
         });
 
+        latch.await(10, TimeUnit.SECONDS);
         // Step 5: Wait for both requests to complete
         Assert.assertTrue("Concurrent process requests should complete within 10 seconds", latch.await(10, TimeUnit.SECONDS));
         executor.shutdown();
@@ -906,7 +937,7 @@ class GiftCardControllerTest extends WalletApplicationTests {
 
         CommissionObject commission = new CommissionObject("GOLD", commissionAmount);
         BaseResponse<GiftCardResponse> giftCardResponseBaseResponse = processGiftCard(mockMvc, accessToken, uuidResponse.getData().getUniqueIdentifier(), giftCardQuantity, NATIONAL_CODE_CORRECT, sourceAccount.getAccountNumber(), NATIONAL_CODE_DEST, additionalData, generateValidSign(uuidResponse.getData().getUniqueIdentifier() + "|" + giftCardQuantity + "|" + NATIONAL_CODE_CORRECT),
-                commission, CURRENCY_GOLD, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
+                commission, CURRENCY_GOLD, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true, true);
 
         // This is the gift card code that will be used for payment
         String giftCardCode = giftCardResponseBaseResponse.getData().getActiveCode();

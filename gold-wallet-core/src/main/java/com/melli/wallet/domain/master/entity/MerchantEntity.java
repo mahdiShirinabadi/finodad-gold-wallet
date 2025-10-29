@@ -29,6 +29,9 @@ public class MerchantEntity extends BaseEntityAudit implements Serializable {
 	@Column(name = "economical_code")
 	private String economicalCode;
 
+    @Column(name = "bank_account_number")
+    private String bankAccountNumber;
+
 	@Column(name = "logo")
 	private String logo;
 

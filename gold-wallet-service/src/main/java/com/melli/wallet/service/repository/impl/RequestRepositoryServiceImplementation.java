@@ -46,6 +46,7 @@ public class RequestRepositoryServiceImplementation implements RequestRepository
     private final IncreaseCollateralRequestRepository increaseCollateralRequestRepository;
     private final SeizeCollateralRequestRepository seizeCollateralRequestRepository;
     private final SellCollateralRequestRepository sellCollateralRequestRepository;
+    private final FundTransferAccountToAccountRepository fundTransferAccountToAccountRequestEntityRepository;
 
 
     @Override
@@ -64,6 +65,7 @@ public class RequestRepositoryServiceImplementation implements RequestRepository
             case SeizeCollateralRequestEntity seizeCollateralRequestEntity -> seizeCollateralRequestRepository.save(seizeCollateralRequestEntity);
             case IncreaseCollateralRequestEntity increaseCollateralRequestEntity -> increaseCollateralRequestRepository.save(increaseCollateralRequestEntity);
             case SellCollateralRequestEntity sellCollateralRequestEntity -> sellCollateralRequestRepository.save(sellCollateralRequestEntity);
+            case FundTransferAccountToAccountRequestEntity fundTransferAccountToAccountRequestEntity -> fundTransferAccountToAccountRequestEntityRepository.save(fundTransferAccountToAccountRequestEntity);
             case null, default -> {
                 log.error("requestEntity is not instanceof");
                 throw new InternalServiceException("error in save request, instance not define", StatusRepositoryService.GENERAL_ERROR, HttpStatus.OK);

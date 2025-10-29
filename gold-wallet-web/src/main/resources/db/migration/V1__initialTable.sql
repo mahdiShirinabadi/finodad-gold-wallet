@@ -364,6 +364,7 @@ CREATE TABLE if not exists merchant
     wallet_id       BIGINT                      NOT NULL UNIQUE REFERENCES wallet,
     settlement_type INTEGER,
     status          INTEGER,
+    bank_account_number varchar(100),
     end_time        TIMESTAMP WITHOUT TIME ZONE
 );
 
@@ -535,7 +536,9 @@ CREATE TABLE if not exists cash_out_request
     iban              VARCHAR(100),
     wallet_account_id BIGINT NOT NULL REFERENCES wallet_account,
     rrn_id            BIGINT NOT NULL REFERENCES rrn,
-    additional_data   VARCHAR(500)
+    additional_data   VARCHAR(500),
+    merchant_id       BIGINT NOT NULL REFERENCES merchant,
+    settlement_step   varchar(100)
 );
 create unique index rrn_id_cash_out_request_unique_idx on cash_out_request (rrn_id);
 

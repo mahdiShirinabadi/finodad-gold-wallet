@@ -16,6 +16,9 @@ public interface SadadChannelInterface {
     String SCOPE_SHAHKAR = "icms-shahkar-inquiry";
     String SCOPE_STATEMENT = "svc-mgmt-mq-stmt-info";
     String SCOPE_SEND_SMS = "sadad-send-sms";
+    String SCOPE_GET_MOBILE = "";
+    String SCOPE_GET_BALANCE = "account";
+    String SCOPE_GET_ACCOUNT = "svc-mgmt-agg-cust-id-acc-num";
 
     String shahkar(String token ,String nationalCode, String mobile) throws ChannelException, URISyntaxException;
     String getToken(String clientId, String clientSecret, String scope) throws ChannelException, URISyntaxException;

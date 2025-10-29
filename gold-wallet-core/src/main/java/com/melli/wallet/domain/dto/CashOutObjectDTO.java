@@ -23,4 +23,5 @@ public class CashOutObjectDTO {
     private String accountNumber;
     private String additionalData;
     private String ip;
+    private String merchantId;
 }

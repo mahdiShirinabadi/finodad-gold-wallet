@@ -14,4 +14,5 @@ public class MerchantCreateRequestJson {
     private String name;
     private String mobileNumber;
     private String economicCode;
+    private String bankAccountNumber;
 }

@@ -25,6 +25,7 @@ message CashOutWalletRequestGrpc {
   string additional_data = 5;
   string account_number = 6;
   string sign = 7;
+  string merchantId = 8;
 }
 
 message InquiryCashOutRequestGrpc {

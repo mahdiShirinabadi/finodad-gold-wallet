@@ -646,7 +646,7 @@ public class WalletApplicationTests {
         return objectMapper.readValue(response, typeReference);
     }
 
-    public BaseResponse<CashOutResponse> cashOut(MockMvc mockMvc, String token, String uniqueIdentifier, String amount, String nationalCode, String accountNumber, String iban, String sign, String additionalData, HttpStatus httpStatus, int errorCode, boolean success) throws Exception {
+    public BaseResponse<CashOutResponse> cashOut(MockMvc mockMvc, String token, String uniqueIdentifier, String amount, String nationalCode, String accountNumber, String iban, String sign, String additionalData, HttpStatus httpStatus, int errorCode, boolean success, String merchantId) throws Exception {
         CashOutWalletRequestJson requestJson = new CashOutWalletRequestJson();
         requestJson.setUniqueIdentifier(uniqueIdentifier);
         requestJson.setAmount(amount);
@@ -655,13 +655,14 @@ public class WalletApplicationTests {
         requestJson.setIban(iban);
         requestJson.setSign(sign);
         requestJson.setAdditionalData(additionalData);
+        requestJson.setMerchantId(merchantId);
         MockHttpServletRequestBuilder postRequest = buildPostRequest(token, CASH_OUT_PATH, mapToJson(requestJson));
         String response = performTest(mockMvc, postRequest, httpStatus, success, errorCode);
         TypeReference<BaseResponse<CashOutResponse>> typeReference = new TypeReference<>() {};
         return objectMapper.readValue(response, typeReference);
     }
 
-    public BaseResponse<CashOutResponse> cashOutWithoutCheckResult(MockMvc mockMvc, String token, String uniqueIdentifier, String amount, String nationalCode, String accountNumber, String iban, String sign, String additionalData) throws Exception {
+    public BaseResponse<CashOutResponse> cashOutWithoutCheckResult(MockMvc mockMvc, String token, String uniqueIdentifier, String amount, String nationalCode, String accountNumber, String iban, String sign, String additionalData, String merchantId) throws Exception {
         CashOutWalletRequestJson requestJson = new CashOutWalletRequestJson();
         requestJson.setUniqueIdentifier(uniqueIdentifier);
         requestJson.setAmount(amount);
@@ -670,6 +671,7 @@ public class WalletApplicationTests {
         requestJson.setIban(iban);
         requestJson.setSign(sign);
         requestJson.setAdditionalData(additionalData);
+        requestJson.setMerchantId(merchantId);
         MockHttpServletRequestBuilder postRequest = buildPostRequest(token, CASH_OUT_PATH, mapToJson(requestJson));
         String response = performTestWithoutCheckResult(mockMvc, postRequest);
         TypeReference<BaseResponse<CashOutResponse>> typeReference = new TypeReference<>() {};
@@ -849,7 +851,7 @@ public class WalletApplicationTests {
         return objectMapper.readValue(response, typeReference);
     }
 
-    public BaseResponse<GiftCardResponse> processGiftCard(MockMvc mockMvc, String token, String uniqueIdentifier, String quantity, String nationalCode, String accountNumber, String destinationNationalCode, String additionalData, String sign, CommissionObject commissionObject, String currency, HttpStatus httpStatus, int errorCode, boolean success) throws Exception {
+    public BaseResponse<GiftCardResponse> processGiftCard(MockMvc mockMvc, String token, String uniqueIdentifier, String quantity, String nationalCode, String accountNumber, String destinationNationalCode, String additionalData, String sign, CommissionObject commissionObject, String currency, HttpStatus httpStatus, int errorCode, boolean success, boolean checkResult) throws Exception {
         GiftCardProcessRequestJson requestJson = new GiftCardProcessRequestJson();
         requestJson.setUniqueIdentifier(uniqueIdentifier);
         requestJson.setQuantity(quantity);
@@ -862,7 +864,12 @@ public class WalletApplicationTests {
         requestJson.setCurrency(currency);
         
         MockHttpServletRequestBuilder postRequest = buildPostRequest(token, GIFT_CARD_PROCESS_PATH, mapToJson(requestJson));
-        String response = performTest(mockMvc, postRequest, httpStatus, success, errorCode);
+        String response= null;
+        if(checkResult) {
+            response = performTest(mockMvc, postRequest, httpStatus, success, errorCode);
+        }else{
+            response = performTestWithoutCheckResult(mockMvc, postRequest);
+        }
         TypeReference<BaseResponse<GiftCardResponse>> typeReference = new TypeReference<>() {};
         return objectMapper.readValue(response, typeReference);
     }

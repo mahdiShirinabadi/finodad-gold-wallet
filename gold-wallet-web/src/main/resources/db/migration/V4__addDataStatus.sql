@@ -72,7 +72,7 @@ insert into status(created_by, created_at, code, persian_description)
 values ('admin', now(), '90', 'کارت هدیه یافت نشد')
 on conflict do nothing;
 insert into status(created_by, created_at, code, persian_description)
-values ('admin', now(), '91', 'کد ملی اجازه پرداخت کارت هدیه را ندارد')
+values ('admin', now(), '91', 'کد ملی اجازه مصرف کارت هدیه را ندارد')
 on conflict do nothing;
 insert into status(created_by, created_at, code, persian_description)
 values ('admin', now(), '92', 'کارت هدیه منقضی شده است')

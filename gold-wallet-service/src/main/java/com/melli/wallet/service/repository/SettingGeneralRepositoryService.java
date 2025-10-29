@@ -12,6 +12,7 @@ public interface SettingGeneralRepositoryService {
     String SETTLE_DEFAULT_PAGE = "SETTLE_DEFAULT_PAGE";
     String SETTLE_DEFAULT_SIZE = "SETTLE_DEFAULT_SIZE";
     String GIFT_CARD_RANDOM_STRING = "GIFT_CARD_RANDOM_STRING";
+    String SETTLEMENT_BATCH = "SETTLEMENT_BATCH";
 
 
     SettingGeneralEntity getSetting(String name);

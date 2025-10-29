@@ -3,7 +3,9 @@ package com.melli.wallet.service.operation.impl;
 import com.melli.wallet.domain.dto.BalanceDTO;
 import com.melli.wallet.domain.dto.CashOutObjectDTO;
 import com.melli.wallet.domain.dto.PhysicalCashOutObjectDTO;
+import com.melli.wallet.domain.enumaration.SettlementStepEnum;
 import com.melli.wallet.domain.master.entity.*;
+import com.melli.wallet.domain.master.persistence.SettingGeneralRepository;
 import com.melli.wallet.domain.response.UuidResponse;
 import com.melli.wallet.domain.response.cash.CashOutResponse;
 import com.melli.wallet.domain.response.cash.CashOutTrackResponse;
@@ -15,9 +17,7 @@ import com.melli.wallet.domain.slave.entity.ReportPhysicalCashOutRequestEntity;
 import com.melli.wallet.domain.slave.persistence.ReportPhysicalCashOutRequestRepository;
 import com.melli.wallet.domain.slave.persistence.ReportTransactionRepository;
 import com.melli.wallet.exception.InternalServiceException;
-import com.melli.wallet.service.operation.CashOutOperationService;
-import com.melli.wallet.service.operation.MessageResolverOperationService;
-import com.melli.wallet.service.operation.WalletCashLimitationOperationService;
+import com.melli.wallet.service.operation.*;
 import com.melli.wallet.service.repository.*;
 import com.melli.wallet.util.Utility;
 import com.melli.wallet.utils.Helper;
@@ -33,6 +33,7 @@ import java.math.BigDecimal;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * Class Name: CashOutServiceImplementation
@@ -57,8 +58,10 @@ public class CashOutOperationServiceImplementation implements CashOutOperationSe
     private final MessageResolverOperationService messageResolverOperationService;
     private final StatusRepositoryService statusRepositoryService;
     private final StockRepositoryService stockRepositoryService;
-    private final ReportTransactionRepository reportTransactionRepository;
     private final ReportPhysicalCashOutRequestRepository reportPhysicalCashOutRequestRepository;
+    private final SettingGeneralRepositoryService settingGeneralRepositoryService;
+    private final SettlementService settlementService;
+    private final MerchantRepositoryService merchantRepositoryService;
 
     @Override
     public UuidResponse generateUuid(ChannelEntity channelEntity, String nationalCode, String amount, String accountNumber) throws InternalServiceException {
@@ -81,13 +84,13 @@ public class CashOutOperationServiceImplementation implements CashOutOperationSe
     withdrawal(CashOutObjectDTO cashOutObjectDTO) throws InternalServiceException {
 
         log.info("=== CASH OUT WITHDRAWAL OPERATION START ===");
-        log.info("Input parameters - uniqueIdentifier: {}, accountNumber: {}, amount: {}, iban: {}, nationalCode: {}", 
-            cashOutObjectDTO.getUniqueIdentifier(), cashOutObjectDTO.getAccountNumber(), 
-            cashOutObjectDTO.getAmount(), cashOutObjectDTO.getIban(), cashOutObjectDTO.getNationalCode());
+        log.info("Input parameters - uniqueIdentifier: {}, accountNumber: {}, amount: {}, iban: {}, nationalCode: {}",
+                cashOutObjectDTO.getUniqueIdentifier(), cashOutObjectDTO.getAccountNumber(),
+                cashOutObjectDTO.getAmount(), cashOutObjectDTO.getIban(), cashOutObjectDTO.getNationalCode());
 
         RequestTypeEntity requestTypeEntity = requestTypeRepositoryService.getRequestType(RequestTypeRepositoryService.CASH_OUT);
         log.debug("Request type retrieved - type: {}", requestTypeEntity.getName());
-        
+
         RrnEntity rrnEntity = rrnRepositoryService.findByUid(cashOutObjectDTO.getUniqueIdentifier());
         log.debug("RRN entity found - rrnId: {}, uuid: {}", rrnEntity.getId(), rrnEntity.getUuid());
 
@@ -103,16 +106,16 @@ public class CashOutOperationServiceImplementation implements CashOutOperationSe
             requestRepositoryService.findCashOutDuplicateWithRrnId(rrnEntity.getId());
             log.debug("No duplicate cash out requests found");
 
-            log.debug("Validating wallet and account for nationalCode: {}, accountNumber: {}", 
-                rrnEntity.getNationalCode(), cashOutObjectDTO.getAccountNumber());
+            log.debug("Validating wallet and account for nationalCode: {}, accountNumber: {}",
+                    rrnEntity.getNationalCode(), cashOutObjectDTO.getAccountNumber());
             WalletAccountEntity walletAccountEntity = helper.checkWalletAndWalletAccountForNormalUser(walletRepositoryService, rrnEntity.getNationalCode(), walletAccountRepositoryService, cashOutObjectDTO.getAccountNumber());
-            log.info("Wallet account validated - accountId: {}, accountNumber: {}", 
-                walletAccountEntity.getId(), walletAccountEntity.getAccountNumber());
+            log.info("Wallet account validated - accountId: {}, accountNumber: {}",
+                    walletAccountEntity.getId(), walletAccountEntity.getAccountNumber());
 
             log.debug("Retrieving current balance for accountId: {}", walletAccountEntity.getId());
             BalanceDTO balanceBefore = walletAccountRepositoryService.getBalance(walletAccountEntity.getId());
-            log.info("Current balance - real: {}, available: {}", 
-                balanceBefore.getRealBalance(), balanceBefore.getAvailableBalance());
+            log.info("Current balance - real: {}, available: {}",
+                    balanceBefore.getRealBalance(), balanceBefore.getAvailableBalance());
 
             BigDecimal withdrawalAmount = BigDecimal.valueOf(Long.parseLong(cashOutObjectDTO.getAmount()));
             log.debug("Checking cash out limitations - amount: {}, accountId: {}", withdrawalAmount, walletAccountEntity.getId());
@@ -131,9 +134,11 @@ public class CashOutOperationServiceImplementation implements CashOutOperationSe
             cashOutRequestEntity.setChannelIp(cashOutObjectDTO.getIp());
             cashOutRequestEntity.setRequestTypeEntity(requestTypeEntity);
             cashOutRequestEntity.setCreatedBy(cashOutObjectDTO.getChannel().getUsername());
+            cashOutRequestEntity.setMerchantEntity(merchantRepositoryService.findMerchant(cashOutObjectDTO.getMerchantId()));
             cashOutRequestEntity.setCreatedAt(new Date());
-            log.info("Cash out request entity created - amount: {}, iban: {}, channel: {}", 
-                cashOutRequestEntity.getAmount(), cashOutRequestEntity.getIban(), cashOutRequestEntity.getChannel().getUsername());
+            cashOutRequestEntity.setSettlementStepEnum(SettlementStepEnum.INITIAL);
+            log.info("Cash out request entity created - amount: {}, iban: {}, channel: {}",
+                    cashOutRequestEntity.getAmount(), cashOutRequestEntity.getIban(), cashOutRequestEntity.getChannel().getUsername());
             log.info("=== SAVING CASH OUT REQUEST ===");
             try {
                 log.debug("Saving cash out request entity to database - amount: {}", cashOutRequestEntity.getAmount());
@@ -143,7 +148,7 @@ public class CashOutOperationServiceImplementation implements CashOutOperationSe
                 log.error("error in save cashOut with message ({})", ex.getMessage());
                 throw new InternalServiceException("error in save cashOutRequestEntity", StatusRepositoryService.GENERAL_ERROR, HttpStatus.OK);
             }
-            
+
             cashOutRequestEntity.setResult(StatusRepositoryService.SUCCESSFUL);
             cashOutRequestEntity.setAdditionalData(cashOutRequestEntity.getAdditionalData());
             log.info("Cash out request status set to SUCCESSFUL");
@@ -155,16 +160,16 @@ public class CashOutOperationServiceImplementation implements CashOutOperationSe
             transaction.setAdditionalData(cashOutRequestEntity.getAdditionalData());
             transaction.setRequestTypeId(cashOutRequestEntity.getRequestTypeEntity().getId());
             transaction.setRrnEntity(rrnEntity);
-            log.debug("Transaction entity created - amount: {}, accountId: {}", 
-                transaction.getAmount(), transaction.getWalletAccountEntity().getId());
+            log.debug("Transaction entity created - amount: {}, accountId: {}",
+                    transaction.getAmount(), transaction.getWalletAccountEntity().getId());
 
             log.debug("Preparing transaction template model");
             Map<String, Object> model = new HashMap<>();
             model.put("amount", Utility.addComma(cashOutRequestEntity.getAmount()));
             model.put("traceId", String.valueOf(rrnEntity.getId()));
             model.put("additionalData", cashOutRequestEntity.getAdditionalData());
-            log.debug("Template model prepared - amount: {}, traceId: {}", 
-                model.get("amount"), model.get("traceId"));
+            log.debug("Template model prepared - amount: {}, traceId: {}",
+                    model.get("amount"), model.get("traceId"));
 
             String templateMessage = templateRepositoryService.getTemplate(TemplateRepositoryService.CASH_OUT);
             transaction.setDescription(messageResolverOperationService.resolve(templateMessage, model));
@@ -172,8 +177,8 @@ public class CashOutOperationServiceImplementation implements CashOutOperationSe
 
             log.debug("Executing withdrawal transaction - amount: {}", transaction.getAmount());
             transactionRepositoryService.insertWithdraw(transaction);
-            log.info("Withdrawal transaction executed successfully - transactionId: {}, amount: {}", 
-                transaction.getId(), transaction.getAmount());
+            log.info("Withdrawal transaction executed successfully - transactionId: {}, amount: {}",
+                    transaction.getId(), transaction.getAmount());
             log.info("balance for walletAccount ===> {} update successful", walletAccountEntity.getAccountNumber());
 
             log.debug("Saving final cash out request with updated status");
@@ -187,48 +192,57 @@ public class CashOutOperationServiceImplementation implements CashOutOperationSe
 
             log.info("=== RETRIEVING FINAL BALANCE ===");
             BalanceDTO walletAccountServiceBalance = walletAccountRepositoryService.getBalance(walletAccountEntity.getId());
-            log.info("Final balance after withdrawal - real: {}, available: {}", 
-                walletAccountServiceBalance.getRealBalance(), walletAccountServiceBalance.getAvailableBalance());
+            log.info("Final balance after withdrawal - real: {}, available: {}",
+                    walletAccountServiceBalance.getRealBalance(), walletAccountServiceBalance.getAvailableBalance());
 
             BigDecimal actualWithdrawal = balanceBefore.getRealBalance().subtract(walletAccountServiceBalance.getRealBalance());
             log.info("Actual withdrawal amount: {} (expected: {})", actualWithdrawal, withdrawalAmount);
 
-            log.info("=== CREATING RESPONSE ===");
-            CashOutResponse response = helper.fillCashOutResponse(cashOutObjectDTO.getNationalCode(), rrnEntity.getUuid(), String.valueOf(walletAccountServiceBalance.getRealBalance()), walletAccountEntity.getAccountNumber(), String.valueOf(walletAccountServiceBalance.getAvailableBalance()));
-            log.info("Response created - nationalCode: {}, uuid: {}, availableBalance: {}, accountNumber: {}", 
-                response.getNationalCode(), response.getUniqueIdentifier(), response.getAvailableBalance(), response.getWalletAccountNumber());
+            boolean settlementBatch = Boolean.parseBoolean(settingGeneralRepositoryService.getSetting(SettingGeneralRepositoryService.SETTLEMENT_BATCH).getValue());
+            String uuid = UUID.randomUUID().toString();
 
-            log.info("=== CASH OUT WITHDRAWAL OPERATION COMPLETED SUCCESSFULLY ===");
-            return response;
+            if (settlementBatch) {
+                log.info("settlementBatch setting is true and stop this method and send to job");
+                log.info("=== CREATING RESPONSE ===");
+                CashOutResponse response = helper.fillCashOutResponse(walletAccountEntity.getWalletEntity().getNationalCode(),
+                        uuid, String.valueOf(walletAccountServiceBalance.getRealBalance()), walletAccountEntity.getAccountNumber(), String.valueOf(walletAccountServiceBalance.getAvailableBalance()));
+                log.info("Response created - nationalCode: {}, uuid: {}, availableBalance: {}, accountNumber: {}",
+                        response.getNationalCode(), response.getUniqueIdentifier(), response.getAvailableBalance(), response.getWalletAccountNumber());
+            }
+
+            log.info("start settlement for uuid ({}) in another thread", rrnEntity.getUuid());
+            settlementService.settlement(cashOutRequestEntity);
+
+            return helper.fillCashOutResponse(cashOutObjectDTO.getNationalCode(), rrnEntity.getUuid(), String.valueOf(walletAccountServiceBalance.getRealBalance()), walletAccountEntity.getAccountNumber(), String.valueOf(walletAccountServiceBalance.getAvailableBalance()));
         }, cashOutObjectDTO.getUniqueIdentifier());
     }
 
     @Override
     public CashOutTrackResponse inquiry(ChannelEntity channelEntity, String uuid, String channelIp) throws InternalServiceException {
         log.info("=== CASH OUT INQUIRY OPERATION START ===");
-        log.info("Input parameters - uuid: {}, channel: {}, channelIp: {}", 
-            uuid, channelEntity.getUsername(), channelIp);
+        log.info("Input parameters - uuid: {}, channel: {}, channelIp: {}",
+                uuid, channelEntity.getUsername(), channelIp);
 
         RequestTypeEntity requestTypeEntity = requestTypeRepositoryService.getRequestType(RequestTypeRepositoryService.CASH_OUT);
         log.debug("Request type retrieved - type: {}", requestTypeEntity.getName());
-        
+
         RrnEntity rrnEntity = rrnRepositoryService.findByUid(uuid);
         log.debug("RRN entity found - rrnId: {}, uuid: {}", rrnEntity.getId(), rrnEntity.getUuid());
-        
+
         log.debug("Validating RRN for inquiry - uuid: {}, channel: {}", uuid, channelEntity.getUsername());
-        rrnRepositoryService.checkRrn(uuid, channelEntity, requestTypeEntity,"","");
+        rrnRepositoryService.checkRrn(uuid, channelEntity, requestTypeEntity, "", "");
         log.info("RRN validation passed for inquiry");
-        
+
         log.debug("Retrieving cash out request with rrnId: {}", rrnEntity.getId());
         ReportCashOutRequestEntity cashOutRequestEntity = requestRepositoryService.findCashOutWithRrnId(rrnEntity.getId());
-        log.info("Cash out request found - requestId: {}, amount: {}, status: {}", 
-            cashOutRequestEntity.getId(), cashOutRequestEntity.getAmount(), cashOutRequestEntity.getResult());
-        
+        log.info("Cash out request found - requestId: {}, amount: {}, status: {}",
+                cashOutRequestEntity.getId(), cashOutRequestEntity.getAmount(), cashOutRequestEntity.getResult());
+
         log.info("=== CREATING INQUIRY RESPONSE ===");
         CashOutTrackResponse response = helper.fillCashOutTrackResponse(cashOutRequestEntity, statusRepositoryService);
-        log.info("Inquiry response created - status: {}, amount: {}", 
-            response.getResult(), response.getAmount());
-        
+        log.info("Inquiry response created - status: {}, amount: {}",
+                response.getResult(), response.getAmount());
+
         log.info("=== CASH OUT INQUIRY OPERATION COMPLETED ===");
         return response;
     }
@@ -261,7 +275,7 @@ public class CashOutOperationServiceImplementation implements CashOutOperationSe
         RequestTypeEntity requestTypeEntity = requestTypeRepositoryService.getRequestType(RequestTypeRepositoryService.PHYSICAL_CASH_OUT);
         WalletAccountEntity channelCommissionAccount = walletAccountRepositoryService.findChannelCommissionAccount(physicalCashOutObjectDTO.getChannel(), physicalCashOutObjectDTO.getCommissionType());
 
-        if((physicalCashOutObjectDTO.getQuantity().subtract(physicalCashOutObjectDTO.getCommission())).compareTo(new BigDecimal("0")) <= 0){
+        if ((physicalCashOutObjectDTO.getQuantity().subtract(physicalCashOutObjectDTO.getCommission())).compareTo(new BigDecimal("0")) <= 0) {
             log.error("commission ({}) is bigger than quantity ({})", physicalCashOutObjectDTO.getCommission(), physicalCashOutObjectDTO.getQuantity());
             throw new InternalServiceException("commission is bigger than quantity", StatusRepositoryService.COMMISSION_BIGGER_THAN_QUANTITY, HttpStatus.OK);
         }
@@ -352,11 +366,10 @@ public class CashOutOperationServiceImplementation implements CashOutOperationSe
     public PhysicalCashOutTrackResponse physicalInquiry(ChannelEntity channelEntity, String uuid, String channelIp) throws InternalServiceException {
         RequestTypeEntity requestTypeEntity = requestTypeRepositoryService.getRequestType(RequestTypeRepositoryService.PHYSICAL_CASH_OUT);
         RrnEntity rrnEntity = rrnRepositoryService.findByUid(uuid);
-        rrnRepositoryService.checkRrn(uuid, channelEntity, requestTypeEntity,"","");
+        rrnRepositoryService.checkRrn(uuid, channelEntity, requestTypeEntity, "", "");
         ReportPhysicalCashOutRequestEntity requestEntity = requestRepositoryService.findPhysicalCashOutWithRrnId(rrnEntity.getId());
         return helper.fillPhysicalCashOutTrackResponse(requestEntity, statusRepositoryService);
     }
-
 
 
     private TransactionEntity createTransaction(WalletAccountEntity account, BigDecimal amount, String description,
@@ -375,19 +388,19 @@ public class CashOutOperationServiceImplementation implements CashOutOperationSe
     @Override
     public PhysicalCashOutTotalQuantityResponse calculateTotalQuantity(ChannelEntity channelEntity) throws InternalServiceException {
         log.info("start calculateTotalQuantity for physical cash out transactions");
-        
+
         // Get request type ID for PHYSICAL_CASH_OUT
 
         // Calculate total quantity directly in database using aggregation
         BigDecimal totalQuantity = reportPhysicalCashOutRequestRepository.calculateTotalQuantity();
-        
+
         // Handle null result (no transactions found)
         if (totalQuantity == null) {
             totalQuantity = BigDecimal.ZERO;
         }
-        
+
         log.info("finish calculateTotalQuantity for physical cash out transactions, totalQuantity: {}", totalQuantity);
-        
+
         return helper.fillPhysicalCashOutTotalQuantityResponse(totalQuantity, RequestTypeRepositoryService.PHYSICAL_CASH_OUT);
     }
 }

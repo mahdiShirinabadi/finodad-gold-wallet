@@ -59,6 +59,11 @@ INSERT INTO setting_general(created_by, created_at, name, value, additional_data
 VALUES ('System', now(), 'SETTLE_DEFAULT_SIZE', '10', 'اندازه پیش‌فرض برای صفحه‌بندی')
 on conflict do nothing;
 
+INSERT INTO setting_general(created_by, created_at, name, value, additional_data)
+VALUES ('System', now(), 'SETTLEMENT_BATCH', 'false', 'تسویه به صورت گروهی')
+on conflict do nothing;
+
+
 -- Physical Cash Out resource moved to V9 migration
 
 -- Physical Cash Out status codes
