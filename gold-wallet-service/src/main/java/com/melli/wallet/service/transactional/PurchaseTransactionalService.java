@@ -12,6 +12,7 @@ import com.melli.wallet.service.operation.WalletBuyLimitationOperationService;
 import com.melli.wallet.service.operation.WalletSellLimitationOperationService;
 import com.melli.wallet.service.repository.*;
 import com.melli.wallet.service.operation.CashInOperationService;
+import com.melli.wallet.util.Utility;
 import com.melli.wallet.utils.Helper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
@@ -278,7 +279,7 @@ public class PurchaseTransactionalService {
         model.put("amount", purchaseRequest.getQuantity());
         model.put("price", purchaseRequest.getPrice() + purchaseRequest.getCommission().longValue());
         model.put("merchant", purchaseRequest.getMerchantEntity().getName());
-        model.put("nationalCode", purchaseRequest.getNationalCode());
+        model.put("nationalCode", Utility.maskNationalCode(purchaseRequest.getNationalCode()));
 
         // User withdrawal (rial)
         log.info("start buy transaction for uniqueIdentifier ({}), price ({}) for withdrawal user from nationalCode ({}), walletAccountId ({})", purchaseRequest.getRrnEntity().getUuid(), purchaseRequest.getPrice() + purchaseRequest.getCommission().longValue(), purchaseRequest.getNationalCode(), userRialAccount.getId());
@@ -289,9 +290,16 @@ public class PurchaseTransactionalService {
 
         // commission must be rial
         if (commission.compareTo(BigDecimal.valueOf(0L)) > 0) {
+
+            String commissionTemplate = templateRepositoryService.getTemplate(TemplateRepositoryService.COMMISSION);
+            Map<String, Object> modelCommission = new HashMap<>();
+            model.put("traceId", String.valueOf(purchaseRequest.getRrnEntity().getId()));
+            model.put("commission", purchaseRequest.getCommission());
+            model.put("requestType", purchaseRequest.getRequestTypeEntity().getFaName());
+
             log.info("start buy transaction for uniqueIdentifier ({}), commission ({}) for deposit commission from nationalCode ({}), walletAccountId ({})", purchaseRequest.getRrnEntity().getUuid(), commission, purchaseRequest.getNationalCode(), channelCommissionAccount.getId());
             TransactionEntity commissionDeposit = createTransaction(channelCommissionAccount, commission,
-                    messageResolverOperationService.resolve(depositTemplate, model), purchaseRequest.getAdditionalData(), purchaseRequest, purchaseRequest.getRrnEntity());
+                    messageResolverOperationService.resolve(commissionTemplate, modelCommission), purchaseRequest.getAdditionalData(), purchaseRequest, purchaseRequest.getRrnEntity());
             transactionRepositoryService.insertDeposit(commissionDeposit);
             log.info("finish buy transaction for uniqueIdentifier ({}), commission ({}) for deposit commission from nationalCode ({}) with transactionId ({})", purchaseRequest.getRrnEntity().getId(), commission, purchaseRequest.getNationalCode(), commissionDeposit.getId());
         }
@@ -369,8 +377,13 @@ public class PurchaseTransactionalService {
         //commission type must be currency
         if (commission.compareTo(BigDecimal.valueOf(0L)) > 0) {
             log.info("start sell transaction for uniqueIdentifier ({}), commission ({}) for deposit commission from nationalCode ({}), walletAccountId ({})", purchaseRequest.getRrnEntity().getUuid(), commission, purchaseRequest.getNationalCode(), channelCommissionAccount.getId());
+            String commissionTemplate = templateRepositoryService.getTemplate(TemplateRepositoryService.COMMISSION);
+            Map<String, Object> modelCommission = new HashMap<>();
+            model.put("traceId", String.valueOf(purchaseRequest.getRrnEntity().getId()));
+            model.put("commission", purchaseRequest.getCommission());
+            model.put("requestType", purchaseRequest.getRequestTypeEntity().getFaName());
             TransactionEntity commissionDeposit = createTransaction(channelCommissionAccount, commission,
-                    messageResolverOperationService.resolve(depositTemplate, model), purchaseRequest.getAdditionalData(), purchaseRequest, purchaseRequest.getRrnEntity());
+                    messageResolverOperationService.resolve(commissionTemplate, modelCommission), purchaseRequest.getAdditionalData(), purchaseRequest, purchaseRequest.getRrnEntity());
             transactionRepositoryService.insertDeposit(commissionDeposit);
             log.info("finish sell transaction for uniqueIdentifier ({}), commission ({}) for deposit commission from nationalCode ({}) with transactionId ({})", purchaseRequest.getRrnEntity().getId(), commission, purchaseRequest.getNationalCode(), commissionDeposit.getId());
         }

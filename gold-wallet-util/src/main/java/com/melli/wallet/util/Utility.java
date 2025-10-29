@@ -5,6 +5,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.melli.wallet.util.date.DateUtils;
 import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.codec.binary.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.context.annotation.Profile;
@@ -114,6 +115,13 @@ public class Utility {
         return id + "|" + amount;
     }
 
+    public static String maskNationalCode(String nationalCode) {
+        if(!CustomStringUtils.hasText(nationalCode)) {
+            return null;
+        }
+        return nationalCode.substring(0,3) + "*****" + nationalCode.substring(7, 10);
+    }
+
     public static double distance(double lat1, double lon1, double lat2, double lon2, String unit) {
         if ((lat1 == lat2) && (lon1 == lon2)) {
             return 0;
@@ -189,6 +197,7 @@ public class Utility {
             log.debug("SignValue: {}", signValue);
             boolean resultVerify = verifySignature(input.getBytes(), signValue.getBytes(), publicKey);
             log.debug("ResultVerify: {}", resultVerify);
+            System.out.printf(maskNationalCode("0077847660"));
         } catch (Exception e) {
            log.error(e);
         }

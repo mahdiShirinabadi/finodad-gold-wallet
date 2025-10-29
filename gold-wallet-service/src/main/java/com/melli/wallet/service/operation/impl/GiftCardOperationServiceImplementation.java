@@ -15,6 +15,7 @@ import com.melli.wallet.service.operation.WalletGiftCardLimitationOperationServi
 import com.melli.wallet.service.operation.WalletOperationalService;
 import com.melli.wallet.service.repository.*;
 import com.melli.wallet.util.CustomStringUtils;
+import com.melli.wallet.util.Utility;
 import com.melli.wallet.util.date.DateUtils;
 import com.melli.wallet.utils.Helper;
 import com.melli.wallet.utils.RedisLockService;
@@ -87,7 +88,7 @@ public class GiftCardOperationServiceImplementation implements GiftCardOperation
             giftCardPaymentObjectDTO.getNationalCode(), giftCardPaymentObjectDTO.getGiftCardUniqueCode(), 
             giftCardPaymentObjectDTO.getQuantity(), giftCardPaymentObjectDTO.getAccountNumber());
 
-        RequestTypeEntity requestTypeEntity = requestTypeRepositoryService.getRequestType(RequestTypeRepositoryService.GIFT_CARD);
+        RequestTypeEntity requestTypeEntity = requestTypeRepositoryService.getRequestType(RequestTypeRepositoryService.PAYMENT_GIFT_CARD);
         log.debug("Request type retrieved - type: {}", requestTypeEntity.getName());
 
         String key = giftCardPaymentObjectDTO.getGiftCardUniqueCode();
@@ -184,8 +185,9 @@ public class GiftCardOperationServiceImplementation implements GiftCardOperation
 
             Map<String, Object> model = new HashMap<>();
             model.put("traceId", String.valueOf(giftCardEntity.getRrnEntity().getId()));
-            model.put("srcAccountNumber", giftCardEntity.getGiftWalletAccountEntity().getAccountNumber());
-            model.put("amount", giftCardEntity.getQuantity().add(giftCardEntity.getCommission()));
+            model.put("srcNationalCode", Utility.maskNationalCode(giftCardEntity.getWalletAccountEntity().getWalletEntity().getNationalCode()));
+            model.put("dstNationalCode", Utility.maskNationalCode(giftCardEntity.getDestinationWalletAccountEntity().getWalletEntity().getNationalCode()));
+            model.put("amount", giftCardEntity.getQuantity());
             // user first withdrawal (currency)
             log.info("start payment giftCard transaction for uniqueIdentifier ({}), quantity ({}) for withdrawal walletAccountId ({})", giftCardEntity.getRrnEntity().getUuid(), giftCardEntity.getQuantity(), walletAccountEntity.getId());
 
@@ -273,7 +275,7 @@ public class GiftCardOperationServiceImplementation implements GiftCardOperation
 
             Map<String, Object> model = new HashMap<>();
             model.put("traceId", String.valueOf(rrnEntity.getId()));
-            model.put("srcAccountNumber", walletAccountEntity.getAccountNumber());
+            model.put("srcNationalCode", Utility.maskNationalCode(walletAccountEntity.getWalletEntity().getNationalCode()));
             model.put("amount", giftCardEntity.getQuantity().add(giftCardEntity.getCommission()));
             // user first withdrawal (currency)
             log.info("start giftCard transaction for uniqueIdentifier ({}), quantity ({}) for withdrawal walletAccountId ({})", rrnEntity.getUuid(), giftCardEntity.getQuantity(), walletAccountEntity.getId());
@@ -285,10 +287,17 @@ public class GiftCardOperationServiceImplementation implements GiftCardOperation
             log.info("finish giftCard transaction for uniqueIdentifier ({}), quantity ({}) for withdrawal walletAccountId ({})", rrnEntity.getUuid(), giftCardEntity.getQuantity(), walletAccountEntity.getId());
 
             if (giftCardProcessObjectDTO.getCommission().compareTo(BigDecimal.valueOf(0L)) > 0) {
+
+                String commissionTemplate = templateRepositoryService.getTemplate(TemplateRepositoryService.COMMISSION);
+                Map<String, Object> modelCommission = new HashMap<>();
+                model.put("traceId", String.valueOf(giftCardEntity.getRrnEntity().getId()));
+                model.put("commission", giftCardEntity.getCommission());
+                model.put("requestType", "کارت هدیه");
+
                 WalletAccountEntity channelCommissionAccount = walletAccountRepositoryService.findChannelCommissionAccount(giftCardProcessObjectDTO.getChannelEntity(), WalletAccountCurrencyRepositoryService.GOLD);
                 log.info("start sell transaction for uniqueIdentifier ({}), commission ({}) for deposit commission from nationalCode ({}), walletAccountId ({})", rrnEntity.getUuid(), giftCardEntity.getCommission(), giftCardEntity.getWalletAccountEntity().getWalletEntity().getNationalCode(), channelCommissionAccount.getId());
                 TransactionEntity commissionDeposit = createTransaction(channelCommissionAccount, giftCardEntity.getCommission(),
-                        messageResolverOperationService.resolve(depositTemplate, model), giftCardProcessObjectDTO.getAdditionalData(), requestTypeEntity, rrnEntity);
+                        messageResolverOperationService.resolve(commissionTemplate, modelCommission), giftCardProcessObjectDTO.getAdditionalData(), requestTypeEntity, rrnEntity);
                 transactionRepositoryService.insertDeposit(commissionDeposit);
                 log.info("finish sell transaction for uniqueIdentifier ({}), commission ({}) for deposit commission from nationalCode ({}) with transactionId ({})", rrnEntity.getId(), giftCardEntity.getCommission(), giftCardEntity.getWalletAccountEntity().getWalletEntity().getNationalCode(), commissionDeposit.getId());
             }

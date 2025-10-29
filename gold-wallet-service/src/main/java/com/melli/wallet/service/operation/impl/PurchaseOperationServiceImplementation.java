@@ -179,7 +179,7 @@ public class PurchaseOperationServiceImplementation implements PurchaseOperation
         log.info("=== STARTING TRANSACTIONAL SELL PROCESS ===");
         log.info("Starting Redis lock acquisition for walletAccount: {}", sellRequestDTO.getWalletAccountNumber());
         
-        return redisLockService.runAfterLock(sellRequestDTO.getWalletAccountNumber(), this.getClass(), () -> {
+        return redisLockService.runWithLockUntilCommit(sellRequestDTO.getWalletAccountNumber(), this.getClass(), () -> {
             log.info("=== LOCK ACQUIRED - STARTING SELL TRANSACTIONAL PROCESS ===");
             log.info("Creating PurchaseObjectDto for sell transaction");
             

@@ -8,6 +8,7 @@ import com.melli.wallet.exception.InternalServiceException;
  */
 public interface RequestTypeRepositoryService {
 	String GIFT_CARD = "gift_card";
+	String PAYMENT_GIFT_CARD = "payment_gift_card";
 	String P2P = "p2p";
 	String CASH_IN = "cash_in";
 	String CASH_OUT = "cash_out";

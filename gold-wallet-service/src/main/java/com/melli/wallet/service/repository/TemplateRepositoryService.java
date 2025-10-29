@@ -11,6 +11,7 @@ import java.util.Map;
 
 public interface TemplateRepositoryService {
 
+    String COMMISSION = "COMMISSION";
 	String P2P_DEPOSIT = "p2p_deposit";
 	String P2P_WITHDRAWAL = "p2p_withdrawal";
 	String CASH_IN = "cash_in";

@@ -110,8 +110,8 @@ public class RedisLockService {
                 throw new InternalServiceException("general error", StatusRepositoryService.ERROR_IN_LOCK, HttpStatus.OK);
             }
 
-            final boolean txActive = TransactionSynchronizationManager.isSynchronizationActive();
-            if (txActive) {
+            final boolean transactionIsActive = TransactionSynchronizationManager.isSynchronizationActive();
+            if (transactionIsActive) {
                 final Lock heldLock = lock;
                 TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
 

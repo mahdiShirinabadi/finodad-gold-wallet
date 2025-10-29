@@ -323,8 +323,13 @@ public class CashOutOperationServiceImplementation implements CashOutOperationSe
             if (physicalCashOutObjectDTO.getCommission().compareTo(BigDecimal.valueOf(0L)) > 0) {
                 log.info("start sell transaction for uniqueIdentifier ({}), commission ({}) for deposit commission from nationalCode ({}), walletAccountId ({})", physicalCashOutRequestEntity.getRrnEntity().getUuid(), physicalCashOutObjectDTO.getCommission(), physicalCashOutObjectDTO.getNationalCode()
                         , channelCommissionAccount.getId());
+                String commissionTemplate = templateRepositoryService.getTemplate(TemplateRepositoryService.COMMISSION);
+                Map<String, Object> modelCommission = new HashMap<>();
+                model.put("traceId", String.valueOf(physicalCashOutRequestEntity.getRrnEntity().getId()));
+                model.put("commission", physicalCashOutRequestEntity.getCommission());
+                model.put("requestType", physicalCashOutRequestEntity.getRequestTypeEntity().getFaName());
                 TransactionEntity commissionDeposit = createTransaction(channelCommissionAccount, physicalCashOutObjectDTO.getCommission(),
-                        messageResolverOperationService.resolve(templateMessage, model), physicalCashOutRequestEntity.getAdditionalData(), physicalCashOutRequestEntity.getRequestTypeEntity().getId(), physicalCashOutRequestEntity.getRrnEntity());
+                        messageResolverOperationService.resolve(commissionTemplate, modelCommission), physicalCashOutRequestEntity.getAdditionalData(), physicalCashOutRequestEntity.getRequestTypeEntity().getId(), physicalCashOutRequestEntity.getRrnEntity());
                 transactionRepositoryService.insertDeposit(commissionDeposit);
                 log.info("finish sell transaction for uniqueIdentifier ({}), commission ({}) for deposit commission from nationalCode ({}) with transactionId ({})", physicalCashOutRequestEntity.getRrnEntity().getId(), physicalCashOutObjectDTO.getCommission(), physicalCashOutObjectDTO.getNationalCode(), commissionDeposit.getId());
             }

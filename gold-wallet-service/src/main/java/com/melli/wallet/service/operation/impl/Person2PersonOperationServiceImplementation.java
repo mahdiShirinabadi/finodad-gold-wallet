@@ -9,6 +9,7 @@ import com.melli.wallet.service.operation.MessageResolverOperationService;
 import com.melli.wallet.service.operation.Person2PersonOperationService;
 import com.melli.wallet.service.operation.WalletP2pLimitationOperationService;
 import com.melli.wallet.service.repository.*;
+import com.melli.wallet.util.Utility;
 import com.melli.wallet.utils.Helper;
 import com.melli.wallet.utils.RedisLockService;
 import lombok.RequiredArgsConstructor;
@@ -234,9 +235,9 @@ public class Person2PersonOperationServiceImplementation implements Person2Perso
             log.debug("Preparing transaction model");
             Map<String, Object> model = new HashMap<>();
             model.put("traceId", String.valueOf(requestEntity.getRrnEntity().getId()));
-            model.put("srcAccountNumber", requestEntity.getSourceAccountWalletEntity().getAccountNumber());
+            model.put("srcNationalCode", Utility.maskNationalCode(requestEntity.getSourceAccountWalletEntity().getWalletEntity().getNationalCode()));
             model.put("amount", requestEntity.getAmount());
-            model.put("dstAccountNumber", requestEntity.getDestinationAccountWalletEntity().getAccountNumber());
+            model.put("dstNationalCode", Utility.maskNationalCode(requestEntity.getDestinationAccountWalletEntity().getWalletEntity().getNationalCode()));
             log.debug("Transaction model prepared - traceId: {}, srcAccount: {}, amount: {}, dstAccount: {}", 
                 model.get("traceId"), model.get("srcAccountNumber"), model.get("amount"), model.get("dstAccountNumber"));
             log.info("=== CREATING SOURCE WITHDRAWAL TRANSACTION ===");
@@ -256,6 +257,13 @@ public class Person2PersonOperationServiceImplementation implements Person2Perso
                 userFirstWithdrawal.getId(), userFirstWithdrawal.getAmount());
 
             if (requestEntity.getCommission().compareTo(BigDecimal.valueOf(0L)) > 0) {
+
+                String commissionTemplate = templateRepositoryService.getTemplate(TemplateRepositoryService.COMMISSION);
+                Map<String, Object> modelCommission = new HashMap<>();
+                model.put("traceId", String.valueOf(requestEntity.getRrnEntity().getId()));
+                model.put("commission", requestEntity.getCommission());
+                model.put("requestType", requestEntity.getRequestTypeEntity().getFaName());
+
                 log.info("=== PROCESSING COMMISSION TRANSACTION ===");
                 log.debug("Commission amount greater than zero - processing commission deposit");
                 WalletAccountEntity channelCommissionAccount = walletAccountRepositoryService.findChannelCommissionAccount(p2pObjectDTO.getChannel(), WalletAccountCurrencyRepositoryService.GOLD);
@@ -266,7 +274,7 @@ public class Person2PersonOperationServiceImplementation implements Person2Perso
                     requestEntity.getRrnEntity().getUuid(), requestEntity.getCommission(), channelCommissionAccount.getId());
                 
                 TransactionEntity commissionDeposit = createTransaction(channelCommissionAccount, requestEntity.getCommission(),
-                        messageResolverOperationService.resolve(depositTemplate, model), requestEntity.getAdditionalData(), requestEntity, requestEntity.getRrnEntity());
+                        messageResolverOperationService.resolve(commissionTemplate, modelCommission), requestEntity.getAdditionalData(), requestEntity, requestEntity.getRrnEntity());
                 
                 log.debug("Executing commission deposit transaction - transactionId: {}, amount: {}", 
                     commissionDeposit.getId(), commissionDeposit.getAmount());

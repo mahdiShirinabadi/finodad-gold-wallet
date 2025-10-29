@@ -206,8 +206,15 @@ public class CollateralOperationServiceImplementation implements CollateralOpera
                         requestEntity.getWalletAccountEntity().getWalletEntity().getNationalCode(), channelCommissionAccount.getId());
                 
                 log.debug("Creating commission deposit transaction");
+
+                String commissionTemplate = templateRepositoryService.getTemplate(TemplateRepositoryService.COMMISSION);
+                Map<String, Object> modelCommission = new HashMap<>();
+                model.put("traceId", String.valueOf(requestEntity.getRrnEntity().getId()));
+                model.put("commission", requestEntity.getCommission());
+                model.put("requestType", requestEntity.getRequestTypeEntity().getFaName());
+
                 TransactionEntity commissionDeposit = collateralHelperService.createTransaction(channelCommissionAccount, requestEntity.getCommission(),
-                        messageResolverOperationService.resolve(depositTemplate, model), requestEntity.getAdditionalData(), requestEntity.getRequestTypeEntity(), requestEntity.getRrnEntity());
+                        messageResolverOperationService.resolve(commissionTemplate, modelCommission), requestEntity.getAdditionalData(), requestEntity.getRequestTypeEntity(), requestEntity.getRrnEntity());
                 log.debug("Commission deposit transaction created - amount: {}, description: {}", 
                     commissionDeposit.getAmount(), commissionDeposit.getDescription());
                 
