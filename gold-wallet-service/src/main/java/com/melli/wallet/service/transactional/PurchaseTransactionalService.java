@@ -52,47 +52,24 @@ public class PurchaseTransactionalService {
     public PurchaseResponse processSell(
             PurchaseObjectDto purchaseObjectDto
     ) throws InternalServiceException {
-        log.info("=== PURCHASE TRANSACTIONAL SELL PROCESS START ===");
-        log.info("Input parameters - uniqueIdentifier: {}, nationalCode: {}, quantity: {}, price: {}, commission: {}", 
-            purchaseObjectDto.getUniqueIdentifier(), purchaseObjectDto.getNationalCode(), 
-            purchaseObjectDto.getQuantity(), purchaseObjectDto.getPrice(), purchaseObjectDto.getCommission());
-
-        log.info("=== TRANSACTION VALIDATION ===");
-        log.debug("Validating transaction - uniqueIdentifier: {}, accountNumber: {}", 
-            purchaseObjectDto.getUniqueIdentifier(), purchaseObjectDto.getUserCurrencyAccount().getAccountNumber());
         RrnEntity rrn = validateTransaction(purchaseObjectDto.getChannel(), purchaseObjectDto.getUniqueIdentifier(), requestTypeRepositoryService.getRequestType(RequestTypeRepositoryService.SELL), purchaseObjectDto.getQuantity(), purchaseObjectDto.getUserCurrencyAccount().getAccountNumber());
         log.info("Transaction validation completed - rrnId: {}, uuid: {}", rrn.getId(), rrn.getUuid());
-
-        log.info("=== CREATING PURCHASE REQUEST ===");
-        log.debug("Creating purchase request entity for sell transaction");
         PurchaseRequestEntity purchaseRequest = createPurchaseRequest(
                 purchaseObjectDto, requestTypeRepositoryService.getRequestType(RequestTypeRepositoryService.SELL), rrn, TransactionTypeEnum.SELL);
         log.info("Purchase request entity created - requestId: {}, price: {}, terminalAmount: {}, finalQuantity: {}", 
             purchaseRequest.getId(), purchaseRequest.getPrice(), purchaseRequest.getTerminalAmount(), purchaseRequest.getFinalQuantity());
 
-        log.info("=== PROCESSING SELL TRANSACTIONS ===");
-        log.debug("Processing sell transactions - userRialAccount: {}, userCurrencyAccount: {}, merchantRialAccount: {}, merchantCurrencyAccount: {}", 
-            purchaseObjectDto.getUserRialAccount().getId(), purchaseObjectDto.getUserCurrencyAccount().getId(),
-            purchaseObjectDto.getMerchantRialAccount().getId(), purchaseObjectDto.getMerchantCurrencyAccount().getId());
         sellProcessTransactions(
                 purchaseRequest, purchaseObjectDto.getUserRialAccount(), purchaseObjectDto.getUserCurrencyAccount(),
                 purchaseObjectDto.getMerchantRialAccount(), purchaseObjectDto.getMerchantCurrencyAccount(), purchaseObjectDto.getChannelCommissionAccount(),
                 purchaseObjectDto.getCommission());
         log.info("Sell transactions processed successfully");
-
-        log.info("=== FINALIZING PURCHASE ===");
         purchaseRequest.setResult(StatusRepositoryService.SUCCESSFUL);
         log.info("Purchase request status set to SUCCESSFUL");
-        
-        log.debug("Saving final purchase request - requestId: {}", purchaseRequest.getId());
         requestRepositoryService.save(purchaseRequest);
         log.info("Purchase request saved successfully");
-        
-        log.info("=== CREATING RESPONSE ===");
         PurchaseResponse response = helper.fillPurchaseResponse(purchaseRequest);
         log.info("Response created successfully - response: {}", response);
-        
-        log.info("=== PURCHASE TRANSACTIONAL SELL PROCESS COMPLETED SUCCESSFULLY ===");
         return response;
     }
 
@@ -104,24 +81,13 @@ public class PurchaseTransactionalService {
             boolean directCharge
     ) throws InternalServiceException {
 
-        log.info("=== PURCHASE TRANSACTIONAL BUY PROCESS START ===");
-        log.info("Input parameters - uniqueIdentifier: {}, nationalCode: {}, quantity: {}, price: {}, commission: {}, directCharge: {}", 
-            purchaseObjectDto.getUniqueIdentifier(), purchaseObjectDto.getNationalCode(), 
-            purchaseObjectDto.getQuantity(), purchaseObjectDto.getPrice(), purchaseObjectDto.getCommission(), directCharge);
-
         BigDecimal price = purchaseObjectDto.getPrice();
         BigDecimal commission = purchaseObjectDto.getCommission();
-        log.debug("Price and commission extracted - price: {}, commission: {}", price, commission);
 
         if(directCharge){
-            log.info("=== DIRECT CHARGE PROCESS ===");
             log.info("Direct charge enabled - charging account for customer with nationalCode: {}, walletAccount: {}", 
                 purchaseObjectDto.getNationalCode(), purchaseObjectDto.getUserRialAccount().getAccountNumber());
-            
             BigDecimal totalChargeAmount = purchaseObjectDto.getPrice().add(commission);
-            log.debug("Total charge amount calculated - price: {} + commission: {} = total: {}", 
-                purchaseObjectDto.getPrice(), commission, totalChargeAmount);
-            
             ChargeObjectDTO chargeObject = new ChargeObjectDTO(
                 purchaseObjectDto.getChannel(), 
                 purchaseObjectDto.getNationalCode(), 
@@ -133,66 +99,38 @@ public class PurchaseTransactionalService {
                 "0.0.0.0", 
                 CashInPaymentTypeEnum.ACCOUNT_TO_ACCOUNT.getText()
             );
-            
-            log.debug("Calling cashInOperationService.charge with amount: {}", totalChargeAmount);
             cashInOperationService.charge(chargeObject);
             log.info("Direct charge completed successfully");
         }
 
-        log.info("=== TRANSACTION VALIDATION ===");
-        log.debug("Validating transaction - uniqueIdentifier: {}, accountNumber: {}", 
-            purchaseObjectDto.getUniqueIdentifier(), purchaseObjectDto.getUserCurrencyAccount().getAccountNumber());
         RrnEntity rrn = validateTransaction(purchaseObjectDto.getChannel(), purchaseObjectDto.getUniqueIdentifier(), requestTypeRepositoryService.getRequestType(RequestTypeRepositoryService.BUY), price, purchaseObjectDto.getUserCurrencyAccount().getAccountNumber());
         log.info("Transaction validation completed - rrnId: {}, uuid: {}", rrn.getId(), rrn.getUuid());
-
-        log.info("=== CREATING PURCHASE REQUEST ===");
-        log.debug("Creating purchase request entity for buy transaction");
         PurchaseRequestEntity purchaseRequest = createPurchaseRequest(
                 purchaseObjectDto, requestTypeRepositoryService.getRequestType(RequestTypeRepositoryService.BUY), rrn, TransactionTypeEnum.BUY);
         log.info("Purchase request entity created - requestId: {}, price: {}, terminalAmount: {}, finalQuantity: {}", 
             purchaseRequest.getId(), purchaseRequest.getPrice(), purchaseRequest.getTerminalAmount(), purchaseRequest.getFinalQuantity());
 
-        log.info("=== PROCESSING BUY TRANSACTIONS ===");
-        log.debug("Processing buy transactions - userRialAccount: {}, userCurrencyAccount: {}, merchantRialAccount: {}, merchantCurrencyAccount: {}", 
-            purchaseObjectDto.getUserRialAccount().getId(), purchaseObjectDto.getUserCurrencyAccount().getId(),
-            purchaseObjectDto.getMerchantRialAccount().getId(), purchaseObjectDto.getMerchantCurrencyAccount().getId());
-
         buyProcessTransactions(
                 purchaseRequest, purchaseObjectDto.getUserRialAccount(), purchaseObjectDto.getUserCurrencyAccount(),
                 purchaseObjectDto.getMerchantRialAccount(), purchaseObjectDto.getMerchantCurrencyAccount(), purchaseObjectDto.getChannelCommissionAccount(), purchaseObjectDto.getCommission());
         log.info("Buy transactions processed successfully");
-
-        log.info("=== UPDATING BUY LIMITATIONS ===");
         log.info("Updating buy limitations - uniqueIdentifier: {}, walletAccountId: {}", 
             purchaseRequest.getRrnEntity().getUuid(), purchaseRequest.getWalletAccount().getId());
         walletBuyLimitationOperationService.updateLimitation(purchaseObjectDto.getUserCurrencyAccount(), purchaseObjectDto.getPrice(), purchaseObjectDto.getQuantity(), purchaseObjectDto.getUniqueIdentifier(), purchaseRequest.getWalletAccount().getWalletAccountCurrencyEntity());
         log.info("Buy limitations updated successfully");
-
-        log.info("=== COMMISSION VALIDATION ===");
         BigDecimal netAmount = purchaseObjectDto.getPrice().subtract(purchaseObjectDto.getCommission());
-        log.debug("Calculating net amount - price: {} - commission: {} = netAmount: {}", 
-            purchaseObjectDto.getPrice(), purchaseObjectDto.getCommission(), netAmount);
-        
         if(netAmount.compareTo(new BigDecimal("0")) <= 0){
             log.error("Commission validation failed - commission: {} is bigger than or equal to price: {}", 
                 purchaseObjectDto.getCommission(), purchaseObjectDto.getPrice());
             throw new InternalServiceException("commission is bigger than quantity", StatusRepositoryService.COMMISSION_BIGGER_THAN_QUANTITY, HttpStatus.OK);
         }
         log.info("Commission validation passed - netAmount: {}", netAmount);
-
-        log.info("=== FINALIZING PURCHASE ===");
         purchaseRequest.setResult(StatusRepositoryService.SUCCESSFUL);
         log.info("Purchase request status set to SUCCESSFUL");
-        
-        log.debug("Saving final purchase request - requestId: {}", purchaseRequest.getId());
         requestRepositoryService.save(purchaseRequest);
         log.info("Purchase request saved successfully");
-        
-        log.info("=== CREATING RESPONSE ===");
         PurchaseResponse response = helper.fillPurchaseResponse(purchaseRequest);
         log.info("Response created successfully - response: {}", response);
-        
-        log.info("=== PURCHASE TRANSACTIONAL BUY PROCESS COMPLETED SUCCESSFULLY ===");
         return response;
     }
 

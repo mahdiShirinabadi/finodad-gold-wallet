@@ -111,7 +111,6 @@ public class SettlementServiceImplementation implements SettlementService {
             cashoutFundTransferEntity.setCashoutRequestEntity(cashOutRequestEntity);
             cashoutFundTransferEntity.setFundTransferAccountToAccountRequestEntity(fundTransferAccountToAccountRequestEntity);
             cashoutFundtransferRepositoryService.save(cashoutFundTransferEntity);
-            log.info("=== CASH OUT WITHDRAWAL OPERATION COMPLETED SUCCESSFULLY ===");
             return null;
         }, key);
     }
