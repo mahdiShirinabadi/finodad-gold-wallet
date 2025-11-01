@@ -1,13 +1,17 @@
 package com.melli.wallet.service.repository;
 
 import com.melli.wallet.domain.dto.*;
+import com.melli.wallet.domain.enumaration.SettlementStepEnum;
 import com.melli.wallet.domain.master.entity.*;
 import com.melli.wallet.domain.slave.entity.ReportCashOutRequestEntity;
+import com.melli.wallet.domain.slave.entity.ReportFundTransferAccountToAccountRequestEntity;
 import com.melli.wallet.domain.slave.entity.ReportPhysicalCashOutRequestEntity;
 import com.melli.wallet.domain.slave.entity.ReportPurchaseRequestEntity;
 import com.melli.wallet.exception.InternalServiceException;
+import org.springframework.data.repository.query.Param;
 
 import java.util.Date;
+import java.util.List;
 
 public interface RequestRepositoryService {
 
@@ -36,4 +40,10 @@ public interface RequestRepositoryService {
     AggregationCashInDTO findSumAmountCashInBetweenDate(long[] walletAccountId, Date fromDate, Date toDate);
     AggregationCashOutDTO findSumAmountCashOutBetweenDate(long[] walletAccountId, Date fromDate, Date toDate);
     AggregationCashOutDTO findSumAmountPhysicalCashOutBetweenDate(long[] walletAccountId, Date fromDate, Date toDate);
+    List<CashOutRequestEntity> findAllCashOutByStep(SettlementStepEnum settlementStepEnum, int limit);
+    int updateSettlementStepAtomically(List<Long> ids, SettlementStepEnum oldStep, SettlementStepEnum newStep);
+    List<CashOutRequestEntity> findCashOutByIdsAndSettlementStep(List<Long> ids, SettlementStepEnum settlementStep);
+    CashOutRequestEntity findCashOutById(Long id);
+
+    ReportFundTransferAccountToAccountRequestEntity findFundTransferById(long id);
 }

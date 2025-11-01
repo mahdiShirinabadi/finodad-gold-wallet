@@ -68,6 +68,7 @@ public class NamingProperty {
     public static final String IBAN = "iban";
     public static final String AMOUNT = "amount";
     public static final String SETTLEMENT_STATUS = "settlementStatus";
+    public static final String SETTLEMENT_STATUS_DESCRIPTION = "settlementStatusDescription";
     public static final String CASH_IN_TYPE = "cashInType";
     public static final String LIMITATION_GENERAL_ID = "limitationGeneralId";
     public static final String LIMITATION_GENERAL_NAME = "limitationGeneralName";
@@ -106,6 +107,9 @@ public class NamingProperty {
     public static final String TRANSACTION_ID = "transactionId";
     public static final String TRANSACTION_TYPE_DESC = "transactionTypeDesc";
     public static final String TYPE = "type";
+    public static final String SETTLEMENT_OBJECT = "settlementObject";
+    public static final String CHANNEL_RESPONSE = "channelResponse";
+
 
 
 

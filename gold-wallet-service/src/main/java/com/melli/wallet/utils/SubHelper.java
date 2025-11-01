@@ -6,6 +6,7 @@ import com.melli.wallet.domain.response.channel.ChannelObject;
 import com.melli.wallet.domain.response.collateral.*;
 import com.melli.wallet.domain.response.limitation.GeneralCustomLimitationObject;
 import com.melli.wallet.domain.response.limitation.GeneralLimitationObject;
+import com.melli.wallet.domain.response.panel.PanelShedlockObject;
 import com.melli.wallet.domain.response.purchase.MerchantObject;
 import com.melli.wallet.domain.response.transaction.ReportTransactionObject;
 import com.melli.wallet.domain.response.transaction.StatementObject;
@@ -22,6 +23,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -250,5 +252,18 @@ public class SubHelper {
         statementObject.setDescription(reportTransactionEntity.getDescription());
         statementObject.setTransactionTypeDesc(requestTypeRepositoryService.getRequestTypeById(reportTransactionEntity.getRequestTypeId()).getFaName());
         return statementObject;
+    }
+
+    public List<PanelShedlockObject> convertFromEntityToObject(List<ShedLockEntity> entityList) {
+        List<PanelShedlockObject> panelFlywayObjectList = new ArrayList<>();
+        for (ShedLockEntity entity : entityList) {
+            PanelShedlockObject object = new PanelShedlockObject();
+            object.setName(entity.getName());
+            object.setLockedBy(entity.getLockedBy());
+            object.setLockAt(DateUtils.getLocaleDate(DateUtils.FARSI_LOCALE, entity.getLockAt(), DateUtils.DEFAULT_DATE_TIME_FORMAT, false));
+            object.setLockUntil(DateUtils.getLocaleDate(DateUtils.FARSI_LOCALE, entity.getLockUntil(), DateUtils.DEFAULT_DATE_TIME_FORMAT, false));
+            panelFlywayObjectList.add(object);
+        }
+        return panelFlywayObjectList;
     }
 }

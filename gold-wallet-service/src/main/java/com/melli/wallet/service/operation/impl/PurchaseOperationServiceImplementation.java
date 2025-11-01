@@ -119,9 +119,6 @@ public class PurchaseOperationServiceImplementation implements PurchaseOperation
             throw new InternalServiceException("commission and currency not be same", StatusRepositoryService.COMMISSION_CURRENCY_NOT_VALID, HttpStatus.OK);
         }
         log.info("Commission currency validation passed - currency: {}", sellRequestDTO.getCurrency());
-
-        log.debug("Validating and retrieving currencies - currency: {}, commissionCurrency: {}", 
-            sellRequestDTO.getCurrency(), sellRequestDTO.getCommissionCurrency());
         
         WalletAccountCurrencyEntity currencyEntity = walletAccountCurrencyRepositoryService.findCurrency(sellRequestDTO.getCurrency());
         log.info("Currency entity found - currency: {}, id: {}", currencyEntity.getName(), currencyEntity.getId());
@@ -164,12 +161,18 @@ public class PurchaseOperationServiceImplementation implements PurchaseOperation
         WalletEntity userWallet = walletOperationalService.findUserWallet(sellRequestDTO.getNationalCode());
         log.info("User wallet found - walletId: {}, nationalCode: {}", 
             userWallet.getId(), userWallet.getNationalCode());
+
+
         
         log.debug("Retrieving user wallet accounts");
         WalletAccountEntity userRialAccount = walletAccountRepositoryService.findUserWalletAccount(userWallet, rialCurrencyEntity, sellRequestDTO.getCurrency());
         WalletAccountEntity userCurrencyAccount = walletAccountRepositoryService.checkUserAccount(userWallet, currencyEntity, sellRequestDTO.getWalletAccountNumber(), sellRequestDTO.getNationalCode());
         log.info("User accounts found - rialAccount: {}, currencyAccount: {}", 
             userRialAccount.getId(), userCurrencyAccount.getId());
+
+        walletSellLimitationOperationService.checkGeneral(sellRequestDTO.getChannel(), userWallet, sellRequestDTO.getAmount(), userCurrencyAccount, sellRequestDTO.getWalletAccountNumber());
+        walletSellLimitationOperationService.checkDailyLimitation(sellRequestDTO.getChannel(), userWallet, sellRequestDTO.getAmount(), userCurrencyAccount, sellRequestDTO.getWalletAccountNumber());
+        walletSellLimitationOperationService.checkMonthlyLimitation(sellRequestDTO.getChannel(), userWallet, sellRequestDTO.getAmount(), userCurrencyAccount, sellRequestDTO.getWalletAccountNumber());
 
         log.info("=== CHANNEL COMMISSION VALIDATION ===");
         WalletAccountEntity channelCommissionAccount = walletAccountRepositoryService.findChannelCommissionAccount(sellRequestDTO.getChannel(), sellRequestDTO.getCommissionCurrency());

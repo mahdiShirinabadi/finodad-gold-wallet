@@ -5,7 +5,6 @@ import com.melli.wallet.domain.dto.CashOutObjectDTO;
 import com.melli.wallet.domain.dto.PhysicalCashOutObjectDTO;
 import com.melli.wallet.domain.enumaration.SettlementStepEnum;
 import com.melli.wallet.domain.master.entity.*;
-import com.melli.wallet.domain.master.persistence.SettingGeneralRepository;
 import com.melli.wallet.domain.response.UuidResponse;
 import com.melli.wallet.domain.response.cash.CashOutResponse;
 import com.melli.wallet.domain.response.cash.CashOutTrackResponse;
@@ -13,9 +12,11 @@ import com.melli.wallet.domain.response.cash.PhysicalCashOutResponse;
 import com.melli.wallet.domain.response.cash.PhysicalCashOutTrackResponse;
 import com.melli.wallet.domain.response.cash.PhysicalCashOutTotalQuantityResponse;
 import com.melli.wallet.domain.slave.entity.ReportCashOutRequestEntity;
+import com.melli.wallet.domain.slave.entity.ReportCashoutFundTransferEntity;
+import com.melli.wallet.domain.slave.entity.ReportFundTransferAccountToAccountRequestEntity;
 import com.melli.wallet.domain.slave.entity.ReportPhysicalCashOutRequestEntity;
+import com.melli.wallet.domain.slave.persistence.ReportFundTransferAccountToAccountRepository;
 import com.melli.wallet.domain.slave.persistence.ReportPhysicalCashOutRequestRepository;
-import com.melli.wallet.domain.slave.persistence.ReportTransactionRepository;
 import com.melli.wallet.exception.InternalServiceException;
 import com.melli.wallet.service.operation.*;
 import com.melli.wallet.service.repository.*;
@@ -30,10 +31,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * Class Name: CashOutServiceImplementation
@@ -62,6 +60,7 @@ public class CashOutOperationServiceImplementation implements CashOutOperationSe
     private final SettingGeneralRepositoryService settingGeneralRepositoryService;
     private final SettlementService settlementService;
     private final MerchantRepositoryService merchantRepositoryService;
+    private final CashoutFundtransferRepositoryService cashoutFundtransferRepositoryService;
 
     @Override
     public UuidResponse generateUuid(ChannelEntity channelEntity, String nationalCode, String amount, String accountNumber) throws InternalServiceException {
@@ -238,10 +237,21 @@ public class CashOutOperationServiceImplementation implements CashOutOperationSe
         log.info("Cash out request found - requestId: {}, amount: {}, status: {}",
                 cashOutRequestEntity.getId(), cashOutRequestEntity.getAmount(), cashOutRequestEntity.getResult());
 
+        ReportFundTransferAccountToAccountRequestEntity reportFundTransferAccountToAccountRequestEntity = null;
+        if (cashOutRequestEntity.getSettlementStepEnum().equals(SettlementStepEnum.SUCCESS)) {
+            List<ReportCashoutFundTransferEntity> cashoutFundtransferRepositoryServiceList = cashoutFundtransferRepositoryService.findAllByCashout(cashOutRequestEntity);
+            for (ReportCashoutFundTransferEntity reportCashoutFundTransferEntity : cashoutFundtransferRepositoryServiceList) {
+                if (reportCashoutFundTransferEntity.getFundTransferAccountToAccountRequestEntity().getResult() == StatusRepositoryService.SUCCESSFUL) {
+                    reportFundTransferAccountToAccountRequestEntity = requestRepositoryService.findFundTransferById(
+                            reportCashoutFundTransferEntity.getFundTransferAccountToAccountRequestEntity().getId());
+                    break;
+                }
+            }
+        }
+
         log.info("=== CREATING INQUIRY RESPONSE ===");
-        CashOutTrackResponse response = helper.fillCashOutTrackResponse(cashOutRequestEntity, statusRepositoryService);
-        log.info("Inquiry response created - status: {}, amount: {}",
-                response.getResult(), response.getAmount());
+        CashOutTrackResponse response = helper.fillCashOutTrackResponse(cashOutRequestEntity, statusRepositoryService, reportFundTransferAccountToAccountRequestEntity);
+        log.info("Inquiry response created - status: {}, amount: {}", response.getResult(), response.getPrice());
 
         log.info("=== CASH OUT INQUIRY OPERATION COMPLETED ===");
         return response;

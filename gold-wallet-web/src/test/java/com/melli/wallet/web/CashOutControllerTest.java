@@ -377,7 +377,7 @@ class CashOutControllerTest extends WalletApplicationTests {
         BaseResponse<CashOutTrackResponse> response = inquiryCashOut(mockMvc, ACCESS_TOKEN, uniqueIdentifier, HttpStatus.OK, StatusRepositoryService.SUCCESSFUL, true);
         Assert.assertNotNull(response.getData());
         Assert.assertEquals(NATIONAL_CODE_CORRECT, response.getData().getNationalCode());
-        Assert.assertEquals(Long.parseLong(cashOutAmount), response.getData().getAmount());
+        Assert.assertEquals(Long.parseLong(cashOutAmount), response.getData().getPrice());
         Assert.assertEquals(uniqueIdentifier, response.getData().getUniqueIdentifier());
         Assert.assertEquals(StatusRepositoryService.SUCCESSFUL, response.getData().getResult());
         log.info("Cashout inquiry completed successfully");

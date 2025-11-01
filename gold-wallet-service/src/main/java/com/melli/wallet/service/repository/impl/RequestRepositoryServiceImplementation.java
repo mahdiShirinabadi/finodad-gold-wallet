@@ -1,12 +1,15 @@
 package com.melli.wallet.service.repository.impl;
 
 import com.melli.wallet.domain.dto.*;
+import com.melli.wallet.domain.enumaration.SettlementStepEnum;
 import com.melli.wallet.domain.master.entity.*;
 import com.melli.wallet.domain.master.persistence.*;
 import com.melli.wallet.domain.slave.entity.ReportCashOutRequestEntity;
+import com.melli.wallet.domain.slave.entity.ReportFundTransferAccountToAccountRequestEntity;
 import com.melli.wallet.domain.slave.entity.ReportPhysicalCashOutRequestEntity;
 import com.melli.wallet.domain.slave.entity.ReportPurchaseRequestEntity;
 import com.melli.wallet.domain.slave.persistence.ReportCashOutRequestRepository;
+import com.melli.wallet.domain.slave.persistence.ReportFundTransferAccountToAccountRepository;
 import com.melli.wallet.domain.slave.persistence.ReportPhysicalCashOutRequestRepository;
 import com.melli.wallet.domain.slave.persistence.ReportPurchaseRequestRepository;
 import com.melli.wallet.exception.InternalServiceException;
@@ -18,6 +21,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -47,6 +51,7 @@ public class RequestRepositoryServiceImplementation implements RequestRepository
     private final SeizeCollateralRequestRepository seizeCollateralRequestRepository;
     private final SellCollateralRequestRepository sellCollateralRequestRepository;
     private final FundTransferAccountToAccountRepository fundTransferAccountToAccountRequestEntityRepository;
+    private final ReportFundTransferAccountToAccountRepository reportFundTransferAccountToAccountRequestEntityRepository;
 
 
     @Override
@@ -72,6 +77,8 @@ public class RequestRepositoryServiceImplementation implements RequestRepository
             }
         }
     }
+
+
 
     @Override
     public void checkTraceIdIsUnique(long traceId, RequestEntity requestEntity) throws InternalServiceException {
@@ -265,5 +272,30 @@ public class RequestRepositoryServiceImplementation implements RequestRepository
     @Override
     public AggregationGiftCardPaymentDTO findGiftCardPaymentSumAmountByTransactionTypeBetweenDate(long[] walletAccountId, Date fromDate, Date toDate) {
         return giftCardPaymentRequestRepository.findSumAmountBetweenDate(walletAccountId, fromDate, toDate);
+    }
+
+    @Override
+    public List<CashOutRequestEntity> findAllCashOutByStep(SettlementStepEnum settlementStepEnum, int limit) {
+        return cashOutRequestRepository.findAllBySettlementStepEnumOrderByIdAscWithLimit(settlementStepEnum.name(), limit);
+    }
+
+    @Override
+    public int updateSettlementStepAtomically(List<Long> ids, SettlementStepEnum oldStep, SettlementStepEnum newStep) {
+        return cashOutRequestRepository.updateSettlementStepAtomically(ids, oldStep.name(), newStep.name());
+    }
+
+    @Override
+    public List<CashOutRequestEntity> findCashOutByIdsAndSettlementStep(List<Long> ids, SettlementStepEnum settlementStep) {
+        return cashOutRequestRepository.findByIdsAndSettlementStep(ids, settlementStep.name());
+    }
+
+    @Override
+    public CashOutRequestEntity findCashOutById(Long id) {
+        return cashOutRequestRepository.findById(id).orElse(null);
+    }
+
+    @Override
+    public ReportFundTransferAccountToAccountRequestEntity findFundTransferById(long id) {
+        return reportFundTransferAccountToAccountRequestEntityRepository.findFundTransferById(id);
     }
 }

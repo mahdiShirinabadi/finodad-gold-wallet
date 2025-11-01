@@ -13,6 +13,7 @@ public interface SettingGeneralRepositoryService {
     String SETTLE_DEFAULT_SIZE = "SETTLE_DEFAULT_SIZE";
     String GIFT_CARD_RANDOM_STRING = "GIFT_CARD_RANDOM_STRING";
     String SETTLEMENT_BATCH = "SETTLEMENT_BATCH";
+    String COUNT_LIMIT_JOB_SETTLEMENT = "COUNT_LIMIT_JOB_SETTLEMENT";
 
 
     SettingGeneralEntity getSetting(String name);

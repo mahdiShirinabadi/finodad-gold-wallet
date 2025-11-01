@@ -151,7 +151,6 @@ public class SadadOperationServiceImplementation implements SadadOperationServic
         try {
             log.info("Start call fundTransfer for uuid ({})", uuid);
             fundTransferAccountToAccountRequestEntity.setChannelRequestTime(new Date());
-            fundTransferAccountToAccountRequestEntity.setTraceNumber(UUID.randomUUID().toString());
             String response = sadadChannel.fundTransfer(token, fundTransferAccountToAccountRequestEntity.getTraceNumber(),
                     String.valueOf(fundTransferAccountToAccountRequestEntity.getId()), fundTransferAccountToAccountRequestEntity.getFromAccount(),
                     fundTransferAccountToAccountRequestEntity.getToAccount(), String.valueOf(fundTransferAccountToAccountRequestEntity.getAmount()), new Date(),
@@ -295,7 +294,7 @@ public class SadadOperationServiceImplementation implements SadadOperationServic
         }
 
         fundTransferAccountToAccountRequestEntity.setResult(StatusRepositoryService.SUCCESSFUL);
-        fundTransferAccountToAccountRequestEntity.setAdditionalData(innerResponseObject.optString("traceNo"));
+        fundTransferAccountToAccountRequestEntity.setRefNumber(innerResponseObject.optString("traceNo"));
     }
 
     private static String convertDateTimeToInstant(Date date) {

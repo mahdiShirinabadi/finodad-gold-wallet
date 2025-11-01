@@ -1,6 +1,7 @@
 package com.melli.wallet.domain.slave.persistence;
 
 import com.melli.wallet.domain.dto.AggregationCashOutDTO;
+import com.melli.wallet.domain.master.entity.CashoutFundTransferEntity;
 import com.melli.wallet.domain.slave.entity.ReportCashOutRequestEntity;
 import com.melli.wallet.domain.slave.entity.ReportRrnEntity;
 import org.springframework.data.jpa.repository.Query;
@@ -9,6 +10,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 
 @Repository

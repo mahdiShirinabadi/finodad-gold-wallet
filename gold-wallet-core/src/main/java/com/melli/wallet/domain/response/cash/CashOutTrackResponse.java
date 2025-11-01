@@ -18,13 +18,9 @@ public class CashOutTrackResponse {
     @JsonProperty(NamingProperty.NATIONAL_CODE)
     private String nationalCode;
 
-    @Schema(name = NamingProperty.REFERENCE_NUMBER)
-    @JsonProperty(NamingProperty.REFERENCE_NUMBER)
-    private String refNumber;
-
-    @Schema(name = NamingProperty.QUANTITY)
-    @JsonProperty(NamingProperty.QUANTITY)
-    private long amount;
+    @Schema(name = NamingProperty.PRICE)
+    @JsonProperty(NamingProperty.PRICE)
+    private long price;
 
     @Schema(name = NamingProperty.UNIQUE_IDENTIFIER)
     @JsonProperty(NamingProperty.UNIQUE_IDENTIFIER)
@@ -37,6 +33,10 @@ public class CashOutTrackResponse {
     @Schema(name = NamingProperty.SETTLEMENT_STATUS)
     @JsonProperty(NamingProperty.SETTLEMENT_STATUS)
     private String settlementStatus;
+
+    @Schema(name = NamingProperty.SETTLEMENT_STATUS_DESCRIPTION)
+    @JsonProperty(NamingProperty.SETTLEMENT_STATUS_DESCRIPTION)
+    private String settlementStatusDescription;
 
     @Schema(name = NamingProperty.DESCRIPTION)
     @JsonProperty(NamingProperty.DESCRIPTION)
@@ -53,4 +53,9 @@ public class CashOutTrackResponse {
     @Schema(name = NamingProperty.CREATE_TIMESTAMP)
     @JsonProperty(NamingProperty.CREATE_TIMESTAMP)
     private long createTimeTimestamp;
+
+    @Schema(name = NamingProperty.SETTLEMENT_OBJECT)
+    @JsonProperty(NamingProperty.SETTLEMENT_OBJECT)
+    private SettlementObject settlementObject;
+
 }

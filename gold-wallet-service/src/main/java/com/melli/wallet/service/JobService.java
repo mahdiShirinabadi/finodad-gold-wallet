@@ -46,4 +46,6 @@ public interface JobService {
      * @param creator Creator identifier for audit purposes
      */
     void generatePhysicalCashOutStatistics(String fromDate, String toDate, String creator) throws InternalServiceException;
+
+    void batchSettlement() throws InternalServiceException;
 }

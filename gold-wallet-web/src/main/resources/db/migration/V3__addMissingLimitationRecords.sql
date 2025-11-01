@@ -5,11 +5,11 @@ VALUES ('System', now(), 'MIN_AMOUNT_CASH_OUT', '1000', 'حداقل مبلغ ب�
 on conflict do nothing;
 
 INSERT INTO limitation_general(created_by, created_at, name, value, additional_data)
-VALUES ('System', now(), 'MAX_AMOUNT_CASH_OUT', '1000000', 'حداکثر مبلغ برداشت از کیف پول')
+VALUES ('System', now(), 'MAX_AMOUNT_CASH_OUT', '10000000000', 'حداکثر مبلغ برداشت از کیف پول')
 on conflict do nothing;
 
 INSERT INTO limitation_general(created_by, created_at, name, value, additional_data)
-VALUES ('System', now(), 'MAX_WALLET_AMOUNT_DAILY_CASH_OUT', '10000000', 'حداکثر مبالغ برداشت از کیف پول در روز')
+VALUES ('System', now(), 'MAX_WALLET_AMOUNT_DAILY_CASH_OUT', '10000000000', 'حداکثر مبالغ برداشت از کیف پول در روز')
 on conflict do nothing;
 
 -- Physical Cash Out limitations
@@ -62,6 +62,12 @@ on conflict do nothing;
 INSERT INTO setting_general(created_by, created_at, name, value, additional_data)
 VALUES ('System', now(), 'SETTLEMENT_BATCH', 'false', 'تسویه به صورت گروهی')
 on conflict do nothing;
+
+INSERT INTO setting_general(created_by, created_at, name, value, additional_data)
+VALUES ('System', now(), 'COUNT_LIMIT_JOB_SETTLEMENT', '100', 'تعداد رکورد برای تسویه')
+on conflict do nothing;
+
+
 
 
 -- Physical Cash Out resource moved to V9 migration

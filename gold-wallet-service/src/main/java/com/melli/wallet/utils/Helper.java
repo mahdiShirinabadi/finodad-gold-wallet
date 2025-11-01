@@ -1,5 +1,6 @@
 package com.melli.wallet.utils;
 
+import com.melli.wallet.domain.enumaration.SettlementStepEnum;
 import com.melli.wallet.domain.enumaration.WalletStatusEnum;
 import com.melli.wallet.domain.master.entity.*;
 import com.melli.wallet.domain.master.persistence.StockRepository;
@@ -18,6 +19,7 @@ import com.melli.wallet.domain.response.p2p.P2pTrackResponse;
 import com.melli.wallet.domain.response.p2p.P2pUuidResponse;
 import com.melli.wallet.domain.response.panel.PanelRoleListResponse;
 import com.melli.wallet.domain.response.merchant.MerchantBalanceCalculationResponse;
+import com.melli.wallet.domain.response.panel.PanelShedlockResponse;
 import com.melli.wallet.domain.response.purchase.*;
 import com.melli.wallet.domain.response.stock.StockCurrencyListResponse;
 import com.melli.wallet.domain.response.stock.StockCurrencyObject;
@@ -26,7 +28,6 @@ import com.melli.wallet.domain.response.stock.StockHistoryObject;
 import com.melli.wallet.domain.response.stock.StockListResponse;
 import com.melli.wallet.domain.response.stock.StockObject;
 import com.melli.wallet.domain.response.transaction.ReportTransactionResponse;
-import com.melli.wallet.domain.response.transaction.StatementObject;
 import com.melli.wallet.domain.response.transaction.StatementResponse;
 import com.melli.wallet.domain.response.wallet.CreateWalletResponse;
 import com.melli.wallet.domain.response.wallet.TotalWalletBalanceResponse;
@@ -209,18 +210,26 @@ public class Helper {
         return response;
     }
 
-    public CashOutTrackResponse fillCashOutTrackResponse(ReportCashOutRequestEntity cashOutRequestEntity, StatusRepositoryService statusRepositoryService) {
+    public CashOutTrackResponse fillCashOutTrackResponse(ReportCashOutRequestEntity cashOutRequestEntity, StatusRepositoryService statusRepositoryService, ReportFundTransferAccountToAccountRequestEntity reportFt) {
         StatusEntity statusEntity = statusRepositoryService.findByCode(String.valueOf(cashOutRequestEntity.getResult()));
         CashOutTrackResponse response = new CashOutTrackResponse();
         response.setId(cashOutRequestEntity.getId());
         response.setNationalCode(cashOutRequestEntity.getWalletAccountEntity().getWalletEntity().getNationalCode());
-        response.setAmount(cashOutRequestEntity.getAmount());
+        response.setPrice(cashOutRequestEntity.getAmount());
         response.setUniqueIdentifier(cashOutRequestEntity.getRrnEntity().getUuid());
         response.setResult(cashOutRequestEntity.getResult());
         response.setDescription(statusEntity != null ? statusEntity.getPersianDescription() : "");
         response.setWalletAccountNumber(cashOutRequestEntity.getWalletAccountEntity().getAccountNumber());
         response.setCreateTime(DateUtils.getLocaleDate(DateUtils.FARSI_LOCALE, cashOutRequestEntity.getCreatedAt(), FORMAT_DATE_RESPONSE, false));
         response.setCreateTimeTimestamp(cashOutRequestEntity.getCreatedAt().getTime());
+        response.setSettlementStatus(cashOutRequestEntity.getSettlementStepEnum() != null ? cashOutRequestEntity.getSettlementStepEnum().toString() : null);
+        response.setSettlementStatusDescription(cashOutRequestEntity.getSettlementStepEnum() != null ? SettlementStepEnum.getPersianDescription(cashOutRequestEntity.getSettlementStepEnum().toString()) : null);
+        if(reportFt != null){
+            response.setSettlementObject(new SettlementObject(reportFt.getId(), reportFt.getRefNumber(), reportFt.getChannelResponse(), reportFt.getAmount(),
+                    DateUtils.getLocaleDate(DateUtils.FARSI_LOCALE, reportFt.getChannelRequestTime(), FORMAT_DATE_RESPONSE, false),
+                    reportFt.getChannelRequestTime().getTime())
+            );
+        }
         return response;
     }
 
@@ -623,6 +632,16 @@ public class Helper {
         response.setTotalPages((stockHistoryPage.getTotalPages()));
         response.setSize((stockHistoryPage.getSize()));
         response.setNumber((stockHistoryPage.getNumber()));
+        return response;
+    }
+
+    public PanelShedlockResponse fillPanelShedlockResponse(Page<ShedLockEntity> entityPage) {
+        PanelShedlockResponse response = new PanelShedlockResponse();
+        response.setSize(entityPage.getSize());
+        response.setNumber(entityPage.getNumber());
+        response.setTotalPages(entityPage.getTotalPages());
+        response.setTotalElements(entityPage.getTotalElements());
+        response.setList(subHelper.convertFromEntityToObject(entityPage.stream().toList()));
         return response;
     }
 

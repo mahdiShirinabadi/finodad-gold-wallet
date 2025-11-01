@@ -16,7 +16,7 @@ import java.util.UUID;
 @Log4j2
 @Component
 @RequiredArgsConstructor
-@Profile({"prod", "staging"})
+@Profile({"prod", "staging","dev"})
 public class StatBuyJob {
 
     private final JobService jobService;

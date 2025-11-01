@@ -357,7 +357,7 @@ public class PurchaseTransactionalService {
 
         // user withdrawal (currency) (quantity)
         log.info("start sell transaction for uniqueIdentifier ({}), quantity ({}) for user withdrawal user walletAccountId({})", purchaseRequest.getRrnEntity().getUuid(), purchaseRequest.getQuantity(), merchantCurrencyAccount.getId());
-        TransactionEntity userCurrencyWithdrawal = createTransaction(userCurrencyAccount, (purchaseRequest.getQuantity().add(purchaseRequest.getCommission())),
+        TransactionEntity userCurrencyWithdrawal = createTransaction(userCurrencyAccount, purchaseRequest.getQuantity(),
                 messageResolverOperationService.resolve(withdrawalTemplate, model), purchaseRequest.getAdditionalData(), purchaseRequest, purchaseRequest.getRrnEntity());
         transactionRepositoryService.insertWithdraw(userCurrencyWithdrawal);
         log.info("start sell transaction for uniqueIdentifier ({}), quantity ({}) for user withdrawal user walletAccountId({})", purchaseRequest.getRrnEntity().getUuid(), purchaseRequest.getQuantity(), merchantCurrencyAccount.getId());
@@ -399,7 +399,7 @@ public class PurchaseTransactionalService {
 
         // merchant deposit (currency) (quantity - commission)
         log.info("start sell transaction for uniqueIdentifier ({}), quantity ({}) for merchant deposit currency user walletAccountId({})", purchaseRequest.getRrnEntity().getUuid(), purchaseRequest.getQuantity().subtract(commission), userCurrencyAccount.getId());
-        TransactionEntity merchantCurrencyDeposit = createTransaction(merchantCurrencyAccount, purchaseRequest.getQuantity(),
+        TransactionEntity merchantCurrencyDeposit = createTransaction(merchantCurrencyAccount, purchaseRequest.getQuantity().subtract(purchaseRequest.getCommission()),
                 messageResolverOperationService.resolve(depositTemplate, model), purchaseRequest.getAdditionalData(), purchaseRequest, purchaseRequest.getRrnEntity());
         transactionRepositoryService.insertDeposit(merchantCurrencyDeposit);
         log.info("finish sell transaction for uniqueIdentifier ({}), quantity ({}) for merchant deposit currency user walletAccountId({}), transactionId ({})", purchaseRequest.getRrnEntity().getUuid(), purchaseRequest.getQuantity().subtract(commission), userCurrencyAccount.getId(), merchantCurrencyDeposit.getId());

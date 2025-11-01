@@ -8,5 +8,6 @@ public class Constant {
     public static final String STAT_WALLET_JOB_LOCK = "STAT_WALLET_JOB_LOCK";
     public static final String STAT_PERSON2PERSON_JOB_LOCK = "STAT_PERSON2PERSON_JOB_LOCK";
     public static final String STAT_PHYSICAL_CASH_OUT_JOB_LOCK = "STAT_PHYSICAL_CASH_OUT_JOB_LOCK";
+    public static final String BATCH_SETTLEMENT_JOB_LOCK = "BATCH_SETTLEMENT_JOB_LOCK";
 
 }

@@ -133,6 +133,8 @@ public interface StatusRepositoryService {
     int FUND_TRANSFER_IS_NOT_SUCCESS = 109;
     int FUND_TRANSFER_IS_SUSPEND = 110;
     int BANK_ACCOUNT_BALANCE_NOT_ENOUGH = 111;
+    int JOB_IS_RUNNING = 112;
+    int SETTLEMENT_BATCH_NOT_ACTIVE = 113;
 
     // General Error Codes
 

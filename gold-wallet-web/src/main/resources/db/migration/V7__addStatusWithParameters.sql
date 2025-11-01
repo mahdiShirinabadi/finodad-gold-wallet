@@ -91,3 +91,11 @@ ON CONFLICT (code) DO UPDATE SET persian_description = 'برداشت فیزیک�
 INSERT INTO status(created_by, created_at, code, persian_description)
 VALUES ('System', now(), '71', 'برداشت فیزیکی وجه از محدودیت مبلغ روزانه فراتر رفته است- مجموع فعلی: [${1}]، حداکثر مجاز روزانه: [${2}]')
 ON CONFLICT (code) DO UPDATE SET persian_description = 'برداشت فیزیکی وجه از محدودیت مبلغ روزانه فراتر رفته است- مجموع فعلی: [${1}]، حداکثر مجاز روزانه: [${2}]';
+
+CREATE TABLE shedlock(
+                         name VARCHAR(64) NOT NULL,
+                         lock_until TIMESTAMP NOT NULL,
+                         locked_at TIMESTAMP NOT NULL,
+                         locked_by VARCHAR(255) NOT NULL,
+                         PRIMARY KEY (name)
+);

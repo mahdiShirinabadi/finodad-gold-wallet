@@ -1,8 +1,6 @@
 package com.melli.wallet.service.operation;
 
 import com.melli.wallet.domain.master.entity.CashOutRequestEntity;
-import com.melli.wallet.domain.master.entity.CashoutFundTransferEntity;
-import com.melli.wallet.domain.master.entity.FundTransferAccountToAccountRequestEntity;
 import com.melli.wallet.exception.InternalServiceException;
 
 import java.util.List;
@@ -15,6 +13,8 @@ import java.util.List;
 public interface SettlementService {
 
     void settlement(CashOutRequestEntity cashOutRequestEntity) throws InternalServiceException;
+
+    void settlementById(long id) throws InternalServiceException;
 
     void bachSettlement(List<CashOutRequestEntity> cashOutRequestEntity) throws InternalServiceException;
 }
